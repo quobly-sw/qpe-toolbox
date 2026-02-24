@@ -12,7 +12,7 @@ def test_walk_qpe():
     E0, psi0_mps = do_dmrg(H)
     lmb = sum([abs(P[0]) for P in H.terms])
 
-    _traces, theta = lcu.qpe_walk(H, psi0_mps, m_ph, verbose=False)
+    _traces, theta = lcu.qpe_walk(H, psi0_mps, m_ph, verbosity=0)
     energy = lcu.energy_from_theta(theta, lmb)
     delta_e = lcu.energy_error_bound(m_ph, E0, lmb)
 
