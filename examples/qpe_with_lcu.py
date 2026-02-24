@@ -273,7 +273,7 @@ assert np.isclose(
 
 # %%
 n_phase_qubits = 4
-traces, theta = lcu.qpe_walk(H, psi0_mps, n_phase_qubits, verbose=True)
+traces, theta = lcu.qpe_walk(H, psi0_mps, n_phase_qubits, verbosity=1)
 
 # %% [markdown]
 # Now we compute the energy from the eigenphase of $\mathcal{W}$:
@@ -305,7 +305,7 @@ durations = []
 energies = []
 for m_ph in tqdm.tqdm(n_phase_bits_list):
     st = time.time()
-    traces, theta = lcu.qpe_walk(H, psi0_mps, m_ph, verbose=False)
+    traces, theta = lcu.qpe_walk(H, psi0_mps, m_ph)
     thetas.append(theta)
     durations.append(time.time() - st)
     energies.append(lcu.energy_from_theta(theta, λ))
@@ -412,7 +412,7 @@ print(f"L={L_H2} terms in the LCU decomposition \nLCU 1-norm λ = {λ_H2:.4f}")
 m_ph = 4  # number of phase qubits
 
 # QPE on Walk operator
-traces, theta = lcu.qpe_walk(H_H2, psi0_H2, m_ph, verbose=True)
+traces, theta = lcu.qpe_walk(H_H2, psi0_H2, m_ph, verbosity=1)
 # Get the energy
 energy = lcu.energy_from_theta(theta, λ_H2)
 print(f"\nenergy = {energy:.4f}, error={abs(E0_H2 - energy):.4f}")
@@ -430,7 +430,7 @@ durations = []
 energies = []
 for m_ph in tqdm.tqdm(n_phase_bits_list):
     st = time.time()
-    traces, theta = lcu.qpe_walk(H_H2, psi0_H2, m_ph, verbose=False)
+    traces, theta = lcu.qpe_walk(H_H2, psi0_H2, m_ph)
     thetas.append(theta)
     durations.append(time.time() - st)
     energies.append(lcu.energy_from_theta(theta, λ_H2))

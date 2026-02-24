@@ -69,7 +69,7 @@ def kron_mpos(mpo1, mpo2):
     return qtn.MatrixProductOperator(arrays)
 
 
-def kron_mps(mps1, mps2, *, verbose=False):
+def kron_mps(mps1, mps2, *, verbosity=0):
     """
     Construct the Kronecker (tensor) product of two MPS objects.
 
@@ -82,8 +82,8 @@ def kron_mps(mps1, mps2, *, verbose=False):
         First MPS operand.
     mps2 : quimb.tensor.MatrixProductState
         Second MPS operand.
-    verbose : bool, default ``False``
-        If ``True``, print the shapes of the resulting tensors.
+    verbosity : int, default ``0``
+        If ``> 0``, print the shapes of the resulting tensors.
 
     Returns
     -------
@@ -121,7 +121,7 @@ def kron_mps(mps1, mps2, *, verbose=False):
     else:
         raise ValueError("Weird shape mps2")
 
-    if verbose:
+    if verbosity > 0:
         print([np.shape(array) for array in arrays])
 
     return qtn.MatrixProductState(arrays, shape="lrp")
