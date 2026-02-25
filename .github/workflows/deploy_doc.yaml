@@ -35,6 +35,12 @@ jobs:
     - name: Build doc
       run: uv run sphinx-build -b html -W docs/source docs/build
 
+    - name: Upload doc
+      id: deployment
+      uses: actions/upload-pages-artifact@v4
+      with:
+        path: docs/build
+
   deploy:
     needs: build
 
