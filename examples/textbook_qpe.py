@@ -24,7 +24,7 @@
 #
 # The QPE circuit contains two registers: a physical register with $n$ qubits and a phase register with $m$ qubits, with $m \geq t$.
 #
-# <img src='./figures/qpe.png'>
+# <img src="./figures/qpe.png" align="center">
 #
 # 1. The physical register in initially in state $\ket{\psi}$, where $\ket{\psi}$ is an estimate of $\ket{u}$ with fidelity $\Omega = \vert \langle \psi \vert u \rangle \vert^2$.
 # 2. The phase register is initially in state $\ket{0}$.

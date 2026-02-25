@@ -399,7 +399,7 @@ print(f"Approximation ratio: {100 * np.abs(min(fevals) / max_energy):.2f}%")
 #  We can implement the same pipeline for the Erdos-Renyi graph. To do so, we wrapped up the loops of the last cells in the function `study_optimization_time_costs`, which can be found on `src/qpe_toolbox/circuit/qaoa.py` .
 
 # %% [markdown]
-# <img src='./figures/qaoa_opt_wER.svg'/>
+# <img src="./figures/qaoa_opt_wER.svg" align="center">
 
 # %% [markdown]
 #  In this optimization procedure, the graph instances where so small that contraction costs have not been prohibitive for the optimization, so tuning the options of the HyperOptimizer was pointless. Nevertheless, if we scale up the instances or change the underlying couplings, it does become a requirement. The trees present on the former examples required $C \simeq$ 4 and 7.5 on average for the random regular and Erdos-Renyi respectively, ultimately translating into average contraction times of around 2 seconds; for an increasing number of nodes and depth of the circuit, this will definetly rise if a proper path is not found.
