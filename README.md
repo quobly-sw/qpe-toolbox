@@ -81,7 +81,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
    See the tutorials on [`building_circuits`](examples/building_circuits.py), [`performance_mps`](examples/performance_mps.py)
     and [`hyperoptimization`](examples/hyperoptimization.py) for an introduction on circuit simulation with `quimb`.
 
-5. Run QPE: in the `estimation` module, chose between
+5. Run QPE: in the `estimation` module, choose between
 
    5.1. Textbook QPE: see the corresponding tutorial [`textbook_qpe`](examples/textbook_qpe.py).
 
