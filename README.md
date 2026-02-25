@@ -53,7 +53,7 @@ See https://jupytext.readthedocs.io/en/latest/ for more on how Jupytext works.
 
 To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
-1. The `Hamiltonian` class describes the qubit Hamiltonian. Chose a system:
+1. The `Hamiltonian` class describes the qubit Hamiltonian. Choose a system:
 
    1.1. Spin model with e.g. `heisenberg_hamiltonian` or a custom `Hamiltonian` instance.
 
