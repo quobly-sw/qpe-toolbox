@@ -26,8 +26,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import notebook as tqdm
 
+import qpe_toolbox.estimation as qpe
 from qpe_toolbox.circuit import count_gates_by_qb, make_circ, make_circMPS
-from qpe_toolbox.estimation import iqft_sw, quantum_phase_estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 # %%
@@ -86,7 +86,7 @@ _, circ = qpe.qpe_first_stage(
 )
 
 phase_reg = list(range(n_phase_bits0))
-circ.apply_gates(iqft_sw(phase_reg))
+circ.apply_gates(qpe.iqft_swapped(phase_reg))
 
 circ.psi.draw(
     figsize=(12, 12),

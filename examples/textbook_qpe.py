@@ -48,8 +48,8 @@ from IPython.display import display
 from quimb.tensor import MatrixProductState
 from tqdm import notebook as tqdm
 
+import qpe_toolbox.estimation as qpe
 from qpe_toolbox.circuit import make_circ
-from qpe_toolbox.estimation import quantum_phase_estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 # %% [markdown]

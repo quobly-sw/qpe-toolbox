@@ -10,7 +10,7 @@
 import numpy as np
 
 
-def qft_sw(wires):
+def qft_swapped(wires):
     """
     Generate the sequence of gates for a recursive QFT with reversed ordering.
 
@@ -47,12 +47,12 @@ def qft_sw(wires):
 
     for i in range(1, n):
         routine.append(("CPHASE", np.pi / 2**i, wires[i], wires[0]))
-    routine += qft_sw(wires[1:])
+    routine += qft_swapped(wires[1:])
 
     return routine
 
 
-def iqft_sw(wires):
+def iqft_swapped(wires):
     """
     Generate the inverse QFT gate sequence with reversed bit ordering.
 
@@ -72,16 +72,16 @@ def iqft_sw(wires):
     - No final SWAP gates are included.
 
     """
-    qftsw_routine = qft_sw(wires)
+    qftsw_routine = qft_swapped(wires)
     depth = len(qftsw_routine)
-    iqft_routine = []
+    result = []
     for i in range(depth - 1, -1, -1):
         gate = qftsw_routine[i]
         if gate[0] == "CPHASE":
-            iqft_routine.append(("CPHASE", -gate[1], gate[2], gate[3]))
+            result.append(("CPHASE", -gate[1], gate[2], gate[3]))
         else:
-            iqft_routine.append(gate)
-    return iqft_routine
+            result.append(gate)
+    return result
 
 
 def qft(wires):
@@ -104,7 +104,7 @@ def qft(wires):
     - Combines ``qft_sw`` with SWAP gates to reorder qubits to standard output order.
 
     """
-    routine = qft_sw(wires)
+    routine = qft_swapped(wires)
     n = len(wires)
 
     for i in range(n // 2):
@@ -148,9 +148,9 @@ def iqft(wires):
     return iqft_routine
 
 
-def nb_gates_qftsw(m):
+def count_gates_qft_swapped(m):
     """
-    Compute the number of gates in the recursive QFT (without swaps).
+    Compute the number of gates in the recursive QFT (reversed bit ordering).
 
     Parameters
     ----------

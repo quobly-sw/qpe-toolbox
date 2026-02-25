@@ -4,7 +4,7 @@ import numpy as np
 import quimb.tensor as qtn
 from scipy.linalg import dft
 
-from qpe_toolbox.estimation import iqft, iqft_sw
+from qpe_toolbox.estimation import iqft, iqft_swapped
 
 
 def test_qft():
@@ -25,7 +25,7 @@ def test_gate_count():
         c1 = 0
         c2 = 0
 
-        for gate in iqft_sw(list(range(m))):
+        for gate in iqft_swapped(list(range(m))):
             if gate[0] == "H":
                 c1 += 1
             elif gate[0] == "CPHASE":
