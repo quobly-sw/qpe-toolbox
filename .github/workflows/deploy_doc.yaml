@@ -27,7 +27,7 @@ jobs:
     - name: Run examples
       run: |
         export TQDM_DISABLE=1
-        uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --run-path examples
+        uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb
 
     - name: Copy figures
       run: cp -r examples/figures docs/source/customapi/tutorials
