@@ -16,5 +16,5 @@ jobs:
     - name: Install ruff
       run: uv sync --locked --only-group={lint}
 
-    - name: format src
+    - name: ruff check
       run: uv run --no-sync ruff check --target-version=py313

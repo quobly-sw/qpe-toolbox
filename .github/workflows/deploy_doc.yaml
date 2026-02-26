@@ -50,13 +50,13 @@ jobs:
       - name: Run examples
         run: |
           export TQDM_DISABLE=1
-          uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
+          uv run --no-sync jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
 
       - name: Copy figures
         run: cp -r examples/figures docs/source/customapi/tutorials
 
       - name: Build doc
-        run: uv run sphinx-build -b html -W docs/source docs/build
+        run: uv run --no-sync sphinx-build -b html -W docs/source docs/build
 
       - name: Upload doc
         id: deployment
