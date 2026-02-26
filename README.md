@@ -26,7 +26,7 @@ Create a virtual environment with either `pip` or `uv`
 python3 -m venv --system-site-packages .venv
 
 # with uv
-uv venv
+uv sync --locked
 ```
 Activate it
 ```bash
