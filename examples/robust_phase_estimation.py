@@ -333,7 +333,7 @@ print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
 n_shots = 1
 
 theta_list = robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, "exact", n_shots, verbose=True
+    H, psi0, epsilon, sign_E0, "exact", n_shots, verbosity=1
 )
 
 # %%
@@ -354,9 +354,7 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shot_list = [1, 2, 3, 4]
 
 for n_shots in n_shot_list:
-    theta_list = robust_phase_estimation(
-        H, psi0, epsilon, sign_E0, "exact", n_shots, verbose=False
-    )
+    theta_list = robust_phase_estimation(H, psi0, epsilon, sign_E0, "exact", n_shots)
     plt.semilogy(
         [distance(theta, E0) for theta in theta_list[1:]],
         "-o",
@@ -387,7 +385,7 @@ n_shots = 4
 thetas_ttr_list = []
 
 thetas_ttr = robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbose=True
+    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -412,7 +410,7 @@ plt.ylabel("error");
 
 n_steps = 2
 thetas_ttr = robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbose=True
+    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
 thetas_ttr_list.append(thetas_ttr)
 
@@ -447,9 +445,7 @@ res_list = []
 for epsilon in epsilon_list:
     M = int(np.ceil(np.log2(1 / epsilon)))
     cost_list.append(sum([n_shots * 2**m for m in range(M + 1)]))
-    theta_list = robust_phase_estimation(
-        H, psi0, epsilon, sign_E0, "exact", n_shots, verbose=False
-    )
+    theta_list = robust_phase_estimation(H, psi0, epsilon, sign_E0, "exact", n_shots)
     res_list.append(theta_list[-1])
 
 # %%
@@ -504,7 +500,7 @@ n_shot_list = [2, 3, 4]
 
 for n_shots in n_shot_list:
     theta_list = robust_phase_estimation(
-        H_H2, psi0_H2, epsilon, sign_E0, "exact", n_shots, verbose=False
+        H_H2, psi0_H2, epsilon, sign_E0, "exact", n_shots
     )
     plt.semilogy(
         [distance(theta, E0_H2) for theta in theta_list[1:]],
@@ -529,7 +525,7 @@ n_shots = 2
 n_steps = 1
 
 thetas_ttr = robust_phase_estimation(
-    H_H2, psi0_H2, epsilon, sign_E0, n_steps, n_shots, verbose=True
+    H_H2, psi0_H2, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
 
 # %% [markdown]

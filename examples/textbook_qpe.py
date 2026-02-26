@@ -213,7 +213,7 @@ print(
 
 circ = make_circ(n_phase_bits=n_phase_bits, psi_mps=psi0_mps)
 traces, energy = qpe.qpe_energy(
-    h_spin, circ, "exact", E_target, size_interval, verbose=True
+    h_spin, circ, "exact", E_target, size_interval, verbosity=1
 )
 
 print("\nBest guess =", np.real(energy))
@@ -262,7 +262,7 @@ print(
 
 circ = make_circ(n_phase_bits, psi0_mps)
 traces, energy = qpe.qpe_energy(
-    h_spin, circ, "exact", E_target, size_interval, verbose=True
+    h_spin, circ, "exact", E_target, size_interval, verbosity=1
 )
 
 # %%
@@ -296,7 +296,7 @@ print(
 
 circ = make_circ(n_phase_bits, psi0_mps)
 traces, energy = qpe.qpe_energy(
-    h_spin, circ, "exact", E_target, size_interval, verbose=True
+    h_spin, circ, "exact", E_target, size_interval, verbosity=1
 )
 
 # %%
@@ -342,7 +342,7 @@ def qpe_with_prob_success(
     size_interval,
     n_precision_bits,
     *,
-    verbose=False,
+    verbosity=0,
 ):
     """Build the circuit and perform the quantum phase estimation algorithm.
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
@@ -362,7 +362,7 @@ def qpe_with_prob_success(
         hamiltonian, initial_circ, evolution_time, "exact", global_phase
     )
 
-    if verbose:
+    if verbosity:
         for ind, x in enumerate(
             sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True)
         ):
