@@ -15,7 +15,6 @@ import quimb.tensor as qtn
 from qpe_toolbox.circuit import make_circMPS
 
 
-
 def build_hadamard_test_circuit(init_mps, U_gate, theta):
     r"""
     Construct the quantum circuit implementing the Hadamard test.

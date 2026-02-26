@@ -25,7 +25,11 @@ E0, psi0 = do_dmrg(hamiltonian)
 def test_L_mps():
     L_mps = qpe.build_lcu_prepare_state_mps(hamiltonian, cutoff=tol)
     assert L_mps.max_bond() == 2
-    assert abs(1 - L_mps.overlap(qpe.build_lcu_prepare_state_mps(hamiltonian, cutoff=0))) ** 2 < tol
+    assert (
+        abs(1 - L_mps.overlap(qpe.build_lcu_prepare_state_mps(hamiltonian, cutoff=0)))
+        ** 2
+        < tol
+    )
 
 
 def test_prepare_mpo():

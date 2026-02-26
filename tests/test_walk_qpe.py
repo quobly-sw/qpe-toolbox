@@ -16,7 +16,6 @@ def test_walk_qpe():
     energy = qpe.get_energy_from_lcu_walk_phase(theta, lmb)
     delta_e = qpe.estimate_lcu_error(m_ph, E0, lmb)
 
-
     assert abs(E0 - energy) < delta_e
 
 

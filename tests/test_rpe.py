@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from qpe_toolbox.estimation import rpe_distance, robust_phase_estimation
+from qpe_toolbox.estimation import robust_phase_estimation, rpe_distance
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 

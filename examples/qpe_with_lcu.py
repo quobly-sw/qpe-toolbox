@@ -108,7 +108,9 @@ L_mps = prepare_mpo.apply(zero_mps)
 # Alernatively, the $\ket{\mathcal{L}}$ state can be directly build calling the `build_lcu_prepare_state_mps` function
 
 # %%
-print(f"overlap (should be 1) = {L_mps.overlap(qpe.build_lcu_prepare_state_mps(H)):.3f}")
+print(
+    f"overlap (should be 1) = {L_mps.overlap(qpe.build_lcu_prepare_state_mps(H)):.3f}"
+)
 
 # %% [markdown]
 # ## SELECT oracle gate

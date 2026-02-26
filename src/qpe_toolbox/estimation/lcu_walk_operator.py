@@ -371,7 +371,9 @@ def build_lcu_reflection_mpo(hamiltonian, cutoff=1e-12):
 ###############################################################################
 
 
-def run_qpe_lcu_walk_operator(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbosity=0):
+def run_qpe_lcu_walk_operator(
+    H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbosity=0
+):
     """
     Perform LCU and quantum phase estimation (QPE) using the walk operator.
 
