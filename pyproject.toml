@@ -60,6 +60,7 @@ dependencies = [
   Issues = "https://github.com/quobly-sw/qpe-toolbox/issues"
 
 [dependency-groups]
+# add jupytext in dev to install it in CI without the heavy project dependencies
 dev = ["jupytext>=1.18.1"]
 docs = [
   "furo>=2024.6.29",
