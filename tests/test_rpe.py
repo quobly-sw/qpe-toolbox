@@ -12,7 +12,7 @@ def test_rpe():
     n_shots = 0
 
     theta_list = robust_phase_estimation(
-        H, psi0, epsilon, sign_E0=-1, n_steps=0, n_shots=n_shots, verbose=False
+        H, psi0, epsilon, sign_E0=-1, n_steps=0, n_shots=n_shots, verbosity=0
     )
     assert abs(distance(E0, theta_list[-1])) < epsilon
 

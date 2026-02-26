@@ -109,7 +109,7 @@ traces, energy = qpe.qpe_energy(
     E_target,
     size_interval,
     trotter_order=trotter_order0,
-    verbose=True,
+    verbosity=1,
 )
 
 print(f"\nBest guess = {energy:.4f} with proba {traces['prob']:.4f}")

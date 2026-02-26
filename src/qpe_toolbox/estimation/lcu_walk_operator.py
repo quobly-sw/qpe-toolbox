@@ -371,7 +371,7 @@ def build_RL_mpo(hamiltonian, cutoff=1e-12):
 ###############################################################################
 
 
-def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbose=False):
+def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbosity=0):
     """
     Perform LCU and quantum phase estimation (QPE) using the walk operator.
 
@@ -387,8 +387,9 @@ def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbose=False):
         Maximum MPS bond dimension.
     cutoff : float, default ``1e-10``
         Truncation cutoff for MPS compression.
-    verbose : bool, default ``False``
-        Print progress messages.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print result summary. If >= 2, print
+        detailed progress messages.
 
     Returns
     -------
@@ -404,20 +405,20 @@ def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbose=False):
     regs = _get_registers_qpe_lcu(H.n_qbits, m_L, m_ph)
 
     traces, circ = qpe_first_stage_walk(
-        H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbose=verbose
+        H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbosity=verbosity
     )
 
     circ.apply_gates(iqft_sw(regs["phase"]))
     ctimes.append(time.time() - st)
-    if verbose > 1:
+    if verbosity >= 2:
         msg = f"Start sampling, bond dim={circ.psi.max_bond()}, {ctimes[-1]:.1f}s"
         print(msg, end="\r")
         len_prev_msg = len(msg)
     probs = circ.compute_marginal(where=regs["phase"])
     ctimes.append(time.time() - st)
 
-    if verbose:
-        if verbose > 1:
+    if verbosity >= 1:
+        if verbosity >= 2:
             print(" " * len_prev_msg, end="\r")
             print(f"Done sampling {ctimes[-1]:.1f}s", end="\r")
         print("binary" + " " * 6 + "\t ket" + " " * 4 + "\t phase  \t prob")
@@ -442,7 +443,7 @@ def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbose=False):
 
 
 def qpe_first_stage_walk(
-    H, psi0_mps, m_ph, regs, *, max_bond=0, cutoff=1e-10, verbose=False
+    H, psi0_mps, m_ph, regs, *, max_bond=0, cutoff=1e-10, verbosity=0
 ):
     """
     LCU and first stage of QPE using walk operator: apply Hadamard wall
@@ -462,8 +463,8 @@ def qpe_first_stage_walk(
         Maximum MPS bond dimension.
     cutoff : float, default ``1e-10``
         MPO/MPS compression cutoff.
-    verbose : bool, default ``False``
-        Print progress messages.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 2, print progress messages.
 
     Returns
     -------
@@ -508,7 +509,7 @@ def qpe_first_stage_walk(
             ## controlled-RL
             circ = apply_gate_from_mpo(circ, cRLk_mpo, compress=True, max_bond=max_bond)
         traces["ctimes"].append(time.time() - st)
-        if verbose > 1:
+        if verbosity >= 2:
             print(
                 f"End k={k}, bond dim={circ.psi.max_bond()}, {time.time() - st:.1f}s",
                 end="\r",

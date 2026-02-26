@@ -32,7 +32,7 @@ def qpe_energy(
     trotter_order=1,
     write_gates=False,
     optimize="auto-hq",
-    verbose=False,
+    verbosity=0,
 ):
     """
     Perform quantum phase estimation (QPE) to estimate the energy of a Hamiltonian.
@@ -58,8 +58,9 @@ def qpe_energy(
         If True, writes the gate sequence to a text file.
     optimize : str, default ``"auto-hq"``
         Optimization strategy when computing marginals with tensor networks.
-    verbose : bool, default ``False``
-        Verbosity flag; higher values print additional debug information.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print result summary. If >= 2, print
+        additional debug information.
 
     Returns
     -------
@@ -90,7 +91,6 @@ def qpe_energy(
     n_phase_bits = initial_circ.N - hamiltonian.n_qbits
 
     dt = "exact" if n_steps == "exact" else evolution_time / n_steps
-    extra_verbose = verbose > 1
     traces, probs = qpe_sample(
         hamiltonian,
         initial_circ,
@@ -100,7 +100,7 @@ def qpe_energy(
         trotter_order=trotter_order,
         write_gates=write_gates,
         optimize=optimize,
-        verbose=extra_verbose,
+        verbosity=verbosity - 1,
     )
 
     traces["prob"] = float(np.max(probs))  # float here is for JSON
@@ -110,7 +110,7 @@ def qpe_energy(
     )
     traces["first_thetas"] = thetas_probs_list[:5]
 
-    if verbose:
+    if verbosity >= 1:
         for x in thetas_probs_list[:5]:
             print(
                 f"{x[0]:b}".zfill(n_phase_bits),
@@ -142,7 +142,7 @@ def qpe_sample(
     rehearse=False,
     run_simulation=True,
     optimize="auto-hq",
-    verbose=False,
+    verbosity=0,
 ):
     """
     Apply quantum phase estimation to a given initial circuit and sample the output.
@@ -169,8 +169,8 @@ def qpe_sample(
         Whether to perform full tensor network simulation or just track gates.
     optimize : str, default ``"auto-hq"``
         Optimization strategy for tensor network marginal computation.
-    verbose : bool, default ``False``
-        If True, prints timing and progress information.
+    verbosity : int, default ``0``
+        If ``> 0``, prints timing and progress information.
 
     Returns
     -------
@@ -199,7 +199,7 @@ def qpe_sample(
         global_phase,
         trotter_order=trotter_order,
         run_simulation=run_simulation,
-        verbose=verbose,
+        verbosity=verbosity,
     )
 
     for gate_id in iqft_sw(phase_reg):
@@ -229,7 +229,7 @@ def qpe_sample(
 
     if run_simulation:
         traces["circuit"] = circ.copy()
-        if verbose:
+        if verbosity > 0:
             print("Start computing marginal on the phase register...")
             print(
                 f"Elapsed {traces['ctimes'][-1]:.2f}s, bond dim {traces['bond_dims'][-1]}"
@@ -238,7 +238,7 @@ def qpe_sample(
             where=phase_reg, rehearse=rehearse, optimize=optimize
         )
         traces["ctimes"].append(time.time() - st)
-        if verbose:
+        if verbosity >= 1:
             print(f"Done. Total time {traces['ctimes'][-1]:.2f}s")
         return traces, res
     return traces, circ
@@ -253,7 +253,7 @@ def qpe_first_stage(
     *,
     trotter_order=1,
     run_simulation=True,
-    verbose=False,
+    verbosity=0,
 ):
     """
     Perform the first stage of the quantum phase estimation algorithm.
@@ -280,8 +280,8 @@ def qpe_first_stage(
         Trotter order for time evolution.
     run_simulation : bool, default ``True``
         Whether to perform full tensor network simulation or just track gates.
-    verbose : bool, default ``False``
-        If True, prints progress and bond dimension information.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print progress and bond dimension information.
 
     Returns
     -------
@@ -323,7 +323,7 @@ def qpe_first_stage(
     bd_list.append(circ.psi.max_bond())
     ctimes.append(time.time() - st)
 
-    if verbose:
+    if verbosity >= 1:
         print(f"Start C-Us, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}")
 
     # Controlled-U
@@ -371,7 +371,7 @@ def qpe_first_stage(
 
         bd_list.append(circ.psi.max_bond())
         ctimes.append(time.time() - st)
-        if verbose:
+        if verbosity >= 1:
             print(
                 f"Done w/ {k}-th C-U, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}"
             )

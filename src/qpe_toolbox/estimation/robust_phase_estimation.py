@@ -15,7 +15,7 @@ from .hadamard_test import Z_theta
 
 
 def robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, *, trotter_order=2, verbose=False
+    H, psi0, epsilon, sign_E0, n_steps, n_shots, *, trotter_order=2, verbosity=0
 ):
     r"""
     Perform the Robust Phase Estimation (RPE) algorithm.
@@ -45,8 +45,8 @@ def robust_phase_estimation(
         If zero, probabilities are computed exactly.
     trotter_order : int, default ``2``
         Order of the Trotter-Suzuki decomposition.
-    verbose : bool, default ``False``
-        If True, print intermediate phase estimates.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print intermediate phase estimates.
 
     Returns
     -------
@@ -62,7 +62,7 @@ def robust_phase_estimation(
     M = int(np.ceil(np.log2(1 / epsilon)))
 
     theta_list = [0]
-    if verbose:
+    if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(M + 1):
         if n_steps == "exact":
@@ -78,7 +78,7 @@ def robust_phase_estimation(
             S_m = [(phi_m + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
             theta_m, _d_min = find_theta_min(S_m, theta_list[m])
 
-        if verbose:
+        if verbosity >= 1:
             et = time.time() - st
             print(
                 f"{m} \t {np.round(phi_m, 4):<6} \t {np.round(theta_m, 4):<6} \t {et:<6.1f}"
