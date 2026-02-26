@@ -4,7 +4,11 @@ import autoray
 import numpy as np
 import quimb.tensor as qtn
 
-from qpe_toolbox.circuit import parametrized_circuits as pc
+from qpe_toolbox.circuit.parametrized_circuits import (
+    ansatz_circuit,
+    ansatz_circuit_su4,
+    ansatz_circuit_sym,
+)
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 opt = "auto-hq"
@@ -41,12 +45,12 @@ def _my_circ_optimizer(circ):
 
 
 def test_ansatz_circuit():
-    circ = pc.ansatz_circuit(n, depth)
+    circ = ansatz_circuit(n, depth)
     assert len(circ.gates) == depth * ((n - 1) + n)
 
 
 def test_ansatz_circuit_su4():
-    circ = pc.ansatz_circuit_su4(n, depth)
+    circ = ansatz_circuit_su4(n, depth)
     c = 0
     for g in circ.gates:
         if g.label == "SU4":
@@ -55,17 +59,17 @@ def test_ansatz_circuit_su4():
 
 
 def test_ansatz_circuit_sym():
-    circ = pc.ansatz_circuit_sym(n, depth, gate_round=0)
+    circ = ansatz_circuit_sym(n, depth, gate_round=0)
     assert circ.gates[0].label == "X"
     assert circ.gates[-1].label == "RZ"
 
 
 def test_ansatz_circuit_opt():
-    circ = pc.ansatz_circuit(n, 1)
+    circ = ansatz_circuit(n, 1)
     my_circ_optimizer_ = _my_circ_optimizer(circ)
     circ_opt = my_circ_optimizer_.optimize(10)
-    circ = pc.ansatz_circuit(n, 2, random_coeff=1e-4)
-    pc.update_params_from_partial(circ, circ_opt.psi)
+    circ = ansatz_circuit(n, 2, random_coeff=1e-4)
+    circ.set_params(circ_opt.get_params())
     my_circ_optimizer_ = _my_circ_optimizer(circ)
     circ_opt = my_circ_optimizer_.optimize(10)
 

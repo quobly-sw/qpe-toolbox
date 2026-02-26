@@ -19,9 +19,9 @@
 # %% [markdown]
 # ## Approximate ground states via tensor-network circuit optimization
 #
-# We show how to represent an approximate ground state of an Hamiltonian expressed as Matrix-Product-Operator (MPO) as (i) a Matrix-Product-State (MPS), as (ii) the wavefunction associated with a quantum circuit of finite depth. This reproduces (to some extent) https://link.aps.org/doi/10.1103/PhysRevX.12.011047. This can be used to prepare an initial state for Quantum Phase Estimation (https://arxiv.org/pdf/2409.11748.pdf).
+# We show how to represent an approximate ground state of an Hamiltonian expressed as Matrix-Product-Operator (MPO) as (i) a Matrix-Product-State (MPS), as (ii) the wavefunction associated with a quantum circuit of finite depth. This reproduces (to some extent) the work of R. Haghshenas et al., "Variational Power of Quantum Circuit Tensor Networks", [Phys. Rev. X 12, 011047](https://link.aps.org/doi/10.1103/PhysRevX.12.011047) (2022). This can be used to prepare an initial state for Quantum Phase Estimation ([arxiv:2409.11748](https://arxiv.org/abs/2409.11748)).
 #
-# We also used some syntax and advice from https://quimb.readthedocs.io/en/latest/examples/ex_tn_train_circuit.html
+# We also used some syntax and advice from the [Tensor Network Training of Quantum Circuits](https://quimb.readthedocs.io/en/latest/examples/ex_tn_train_circuit.html) example in [`quimb`](https://github.com/jcmgray/quimb)'s documentation.
 
 # %%
 import os
@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
 
-from qpe_toolbox.circuit import ansatz_circuit, update_params_from_partial
+from qpe_toolbox.circuit import ansatz_circuit
 from qpe_toolbox.estimation import qpe_sample, set_search_window
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
@@ -136,7 +136,7 @@ plt.ylabel("energy error");
 # %% [markdown]
 # ### Finding a quantum circuit directly
 #
-# MPS are good candidates for the initial state of the QPE algorithm because they can be prepared efficiently in a quantum computer. One possibility would be to find variationally the circuit that best approximates an MPS (see e.g. [this recent proposal](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.132.040404)). Here, we take a shortcut, and directly find the circuit whose associated wavefunction minimizes the energy. In the spirit of the paper https://link.aps.org/doi/10.1103/PhysRevX.12.011047. One practical advantage is that we may have less parameters to optimize using parametrized circuits compared to dense Tensors based MPS.
+# MPS are good candidates for the initial state of the QPE algorithm because they can be prepared efficiently in a quantum computer. One possibility would be to find variationally the circuit that best approximates an MPS (see e.g. [this recent proposal](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.132.040404)). Here, we take a shortcut, and directly find the circuit whose associated wavefunction minimizes the energy, in the spirit of R. Haghshenas et al.,  ["Variational Power of Quantum Circuit Tensor Networks"](https://link.aps.org/doi/10.1103/PhysRevX.12.011047). One practical advantage is that we may have less parameters to optimize using parametrized circuits compared to dense Tensors based MPS.
 #
 # We consider finite-depth quantum circuits made of parametrized $U_3$ single qubit rotations and $R_{ZZ}$ two qubit gates.
 
@@ -203,12 +203,14 @@ my_circ_optimizer_.plot();
 # It can be also interesting to optimize a circuit of large depth using the optimized parameters from a circuit of smaller depth. However as shown below, we don't observe an improvement. So we will not use that in the following.
 
 # %%
-depth = 4
+# optimize a shallow circuit
 circ = ansatz_circuit(n, 2)
 my_circ_optimizer_ = my_circ_optimizer(circ)
 circ_opt = my_circ_optimizer_.optimize(n=100)
+# initialize a deeper circuit with previously optimized parameters
 circ = ansatz_circuit(n, 4, random_coeff=1e-4)
-update_params_from_partial(circ, circ_opt.psi)
+circ.set_params(circ_opt.get_params())
+# optimize the deeper circuit
 my_circ_optimizer_ = my_circ_optimizer(circ)
 circ_opt = my_circ_optimizer_.optimize(n=100)
 print("Optimized energy ", my_circ_optimizer_.loss)
@@ -333,7 +335,7 @@ traces, res = qpe_sample(
 # NB: the energy minimum can be $< E_{exact}$
 #  when $E_{target} - \Delta/2 < E_{exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap (see e.g. Wikipedia for a derivation).
 #
-# NB: in practice one will not have access to the overlap. An approximation of the fidelity is sufficient. The following quantity can be used as a proxy, see https://arxiv.org/abs/2306.02620:
+# NB: in practice one will not have access to the overlap. An approximation of the fidelity is sufficient. The following quantity can be used as a proxy, see [arxiv:2306.02620](https://arxiv.org/abs/2306.02620):
 #
 # $$ F \approx \exp(- \frac{(E-E_0)^2}{2\sigma^2}),$$
 # where $\sigma = \langle H^2 \rangle - E^2$ is the energy variance on guess state $\psi$, and $E_0$ is an estimate of the exact ground state energy that doesn't need to be very accurate.
