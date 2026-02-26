@@ -198,7 +198,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # ### Introduction
 #
-# Quote from Günther et al. (https://arxiv.org/abs/2503.05647):
+# Quote from Günther et al. [arxiv:2503.05647](https://arxiv.org/abs/2503.05647):
 # > "If we think of g(t) as a time signal, then the phase estimation routine will constitute a signal processing transformation to compute the lowest frequency of $g(t)$ (corresponding to the energy $E_0$), provided that we have some guarantee on the overlap of $\ket{\psi}$ with the ground state; we assume a lower bound
 #   $c_0 \geq \eta$. With appropriate signal processing methods, one can find the value of $E_0$ with accuracy $\varepsilon$ using $M$ circuits with time evolution for
 #  times $t_1, . . . , t_M$. This can be done such that the maximal time evolution $t_{\rm max} = \mathrm{max}\{t_1, . . . , t_M\}$ and the total time over all circuit runs $t_{\rm tot} = t_1 + t_2 + · · · + t_M$  both scale as $\varepsilon^{-1}$. This Heisenberg scaling is known to be optimal."
