@@ -52,44 +52,57 @@ See https://jupytext.readthedocs.io/en/latest/ for more on how Jupytext works.
 # Basic workflow
 
 To perform Quantum Phase Estimation with the toolbox, take the following steps:
-1. Choose a system: spin model or molecule. The `Hamiltonian` class describes the qubit Hamiltonian.
-2. Prepare a guess state with DMRG (see the `dmrg` example) or circuit optimization (see `tn_circuit_optimization` example)
-3. Encode $\hat{H}$ into a unitary:
-  3.1. exact time evolution or Trotterization as methods in the `Hamiltonian` class
-  3.2. qubitization functions: `lcu_walk_operator`
-4. Initialize circuit: `make_circ` from `circuit.initialization`
-5. Run QPE: in `estimation` module
-  5.1. textbook QPE: `phase_estimation`
-  5.2. Robust Phase Estimation (single-ancilla): `robust_phase_estimation`
+
+1. The `Hamiltonian` class describes the qubit Hamiltonian. Choose a system:
+
+   1.1. Spin model with e.g. `heisenberg_hamiltonian` or a custom `Hamiltonian` instance.
+
+   1.2. Molecule with `chemistry_hamiltonian`; see the [`chemistry_to_qubit`](examples/chemistry_to_qubit.py) example.
+
+2. Prepare an initial state as a Matrix Product State. Two methods are available:
+
+   2.1. Density Matrix Renormalization Group (DMRG) - see the [`chemistry_to_qubit`](examples/chemistry_to_qubit.py)  tutorial.
+
+   2.2. Parametrized circuit optimization - see the tutorial on [`variational_circuit_preparation`](examples/variational_circuit_preparation.py).
+
+3. Encode $\hat{H}$ into a unitary via either:
+
+   3.1. Exact time evolution or Trotterization, available as methods of the `Hamiltonian` class - see the
+    tutorial on [`trotter_decomposition`](examples/trotter_decomposition.py).
+
+   3.2. Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries:  [`qpe_with_lcu`](examples/qpe_with_lcu.py).
+
+4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, chose between:
+
+   4.1. `make_circ` to create a Tensor Network representation of the circuit.
+
+   4.2. `make_circMPS` to store the state as an MPS and iteratively apply the gates.
+
+   See the tutorials on [`building_circuits`](examples/building_circuits.py), [`performance_mps`](examples/performance_mps.py)
+    and [`hyperoptimization`](examples/hyperoptimization.py) for an introduction on circuit simulation with `quimb`.
+
+5. Run QPE: in the `estimation` module, choose between
+
+   5.1. Textbook QPE: see the corresponding tutorial [`textbook_qpe`](examples/textbook_qpe.py).
+
+   5.2. Robust Phase Estimation, a version of QPE with a single ancilla and circuit repetitions - see the [`robust_phase_estimation`](examples/robust_phase_estimation.py) tutorial.
+
 
 # Contents
 
-The package is divided in four main modules:
+The package is divided in four modules:
 
-## circuit
-Initialize a circuit with a phase register and a physical register. Count gates.
-Manipulate control qubits e.g. shift them to account for an auxiliary register.
+## Circuit
+The `circuit` module provides a set of functions for creating and manipulating `quimb` circuits.
 
-## estimation
-Perform QPE. Three methods are currently available:
-- textbook
-- robust phase estimation
-- LCU "simplified": we only build explicitly the SELECT oracle and provide the
-PREPARE oracle-based reflection operator as an MPO.
+## Hamiltonian
+The `hamiltonian` module provides the class for defining Hamiltonians, and a interface with `pyscf` for chemistry.
 
-## hamiltonian
-Define the physical model. Available are the Heisenberg spin Hamiltonian, or
-any molecule loaded from pyscf.gto module using Jordan-Wigner from openfermion.
-Core component here is the Hamiltonian class.
-Main features:
-- conversion to MPO
-- Trotter time evolution as a list of gates
-- simple DMRG
+## Estimation
+The `estimation` module provides a set of functions for performing different flavors of Quantum Phase Estimation.
 
-## tensor
-MPO-MPS manipulation tools:
-- kronecker product (e.g. to add auxiliary qubits)
-- addition of control qubits
+## Tensor
+The `tensor` module provides a set of functions for the manipulation of Matrix Product Operators and Matrix Product States.
 
 
 # Examples
