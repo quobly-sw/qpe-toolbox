@@ -17,4 +17,4 @@ jobs:
       run: uv sync --locked --only-group=lint
 
     - name: ruff check
-      run: uv run --no-sync ruff check --target-version=py313
+      run: uv run --no-sync ruff check
