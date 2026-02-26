@@ -15,7 +15,7 @@
 # %% [markdown]
 # # Robust Phase Estimation
 #
-# This example introduces the Robust Phase Estimation algorithm. This is a flavor that requires only a single ancilla. The way the algorithm is implemented is inspired from **Phase estimation with partially randomized time evolution**, J.Gunther et al. https://arxiv.org/abs/2503.05647.
+# This example introduces the Robust Phase Estimation algorithm. This is a flavor that requires only a single ancilla. The way the algorithm is implemented is inspired from **Phase estimation with partially randomized time evolution**, J.Gunther et al. [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
 #
 # We explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
 #
