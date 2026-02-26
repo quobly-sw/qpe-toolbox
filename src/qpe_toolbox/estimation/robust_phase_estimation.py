@@ -66,9 +66,9 @@ def robust_phase_estimation(
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(M + 1):
         if n_steps == "exact":
-            phi_m = rpe_phi(H, psi0, m, n_steps, n_shots)
+            phi_m = rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots)
         else:
-            phi_m = rpe_phi(
+            phi_m = rpe_get_hadamard_output(
                 H, psi0, m, n_steps * 2**m, n_shots, trotter_order=trotter_order
             )
 
@@ -89,7 +89,7 @@ def robust_phase_estimation(
     return theta_list
 
 
-def rpe_phi(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
+def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     r"""
     Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
 

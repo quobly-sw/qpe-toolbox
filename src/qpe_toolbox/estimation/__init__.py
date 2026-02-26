@@ -29,6 +29,6 @@ from .quantum_phase_estimation import (
 from .robust_phase_estimation import (
     robust_phase_estimation,
     rpe_distance,
-    rpe_phi,
+    rpe_get_hadamard_output,
     rpe_update_theta,
 )
