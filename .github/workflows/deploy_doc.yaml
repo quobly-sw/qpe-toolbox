@@ -1,51 +1,72 @@
-name: Deploy documentation
+name: Deploy documentation daily
 
 on:
   schedule:
-    # run every Monday at 6am UTC
-    - cron: '0 6 * * 1'
+    - cron: '0 1 * * *'   # 01:00 UTC
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  check-if-main-changed:
+    runs-on: ubuntu-slim
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: check
+        run: |
+          if git rev-list -n 1 --since="24 hours ago" origin/main | grep -q .; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
 
-    - name: Update mirrors
-      run: sudo apt update
+  build:
+    needs: check-if-main-changed
+    if: needs.check-if-main-changed.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
 
-    - name: Install LaTeX
-      run: |
-        sudo apt install -y texlive-base texlive-latex-base texlive-latex-extra\
-          texlive-fonts-recommended cm-super dvipng
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        python-version: "3.13"
+      - name: Update mirrors
+        run: sudo apt update
 
-    - name: Install the project
-      run: uv sync --locked --group docs
+      - name: Install LaTeX
+        run: |
+          sudo apt install -y texlive-base texlive-latex-base texlive-latex-extra\
+            texlive-fonts-recommended cm-super dvipng
 
-    - name: Run examples
-      run: |
-        export TQDM_DISABLE=1
-        uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
 
-    - name: Copy figures
-      run: cp -r examples/figures docs/source/customapi/tutorials
+      - name: Install the project
+        run: uv sync --locked --group docs
 
-    - name: Build doc
-      run: uv run sphinx-build -b html -W docs/source docs/build
+      - name: Run examples
+        run: |
+          export TQDM_DISABLE=1
+          uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
 
-    - name: Upload doc
-      id: deployment
-      uses: actions/upload-pages-artifact@v4
-      with:
-        path: docs/build
+      - name: Copy figures
+        run: cp -r examples/figures docs/source/customapi/tutorials
+
+      - name: Build doc
+        run: uv run sphinx-build -b html -W docs/source docs/build
+
+      - name: Upload doc
+        id: deployment
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/build
 
   deploy:
     needs: build
+    if: needs.build.result == 'success'
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
