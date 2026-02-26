@@ -47,6 +47,7 @@ jobs:
       - name: Install the project
         run: uv sync --locked --group docs
 
+      # // is fine here, this is jupytext syntax
       - name: Run examples
         run: |
           export TQDM_DISABLE=1
