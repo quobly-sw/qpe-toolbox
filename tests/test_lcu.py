@@ -111,14 +111,13 @@ def test_controlled_walk():
     # SELECT
     select_gates = lcu.get_select_gates(hamiltonian)
     for g in select_gates:
-        gate = g.copy()
-        gate._qubits = tuple([k + 1 for k in gate.qubits])
-        gate._controls = (
+        qubits = tuple([k + 1 for k in g.qubits])
+        controls = (
             anc_reg
-            if gate.controls is None
-            else tuple([k + 1 for k in gate.controls]) + anc_reg
+            if g.controls is None
+            else tuple([k + 1 for k in g.controls]) + anc_reg
         )
-        circ.apply_gate(gate)
+        circ.apply_gate(g.copy_with(qubits=qubits, controls=controls))
 
     select_Lpsi = circ.psi
     phi = (select_Lpsi - E0 / lmb * psi_init) / np.sqrt(1 - (E0 / lmb) ** 2)
