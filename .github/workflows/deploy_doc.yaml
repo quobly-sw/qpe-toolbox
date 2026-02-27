@@ -18,8 +18,10 @@ jobs:
         run: |
           if git rev-list -n 1 --since="24 hours ago" origin/main | grep -q .; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "main changed: deploy documentation again"
           else
             echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "no change in main: keep current documentation"
           fi
 
   build:
