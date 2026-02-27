@@ -62,7 +62,7 @@ def get_weights(hamiltonian):
     return weights, lmb, L, m_L
 
 
-def build_L_mps(hamiltonian, cutoff=1e-12):
+def build_L_mps(hamiltonian, cutoff=1e-10):
     r"""
     Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
 
@@ -73,7 +73,7 @@ def build_L_mps(hamiltonian, cutoff=1e-12):
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
-    cutoff : float, default ``1e-12``
+    cutoff : float, default ``1e-10``
         Singular value cutoff for MPS compression.
 
     Returns
@@ -89,14 +89,13 @@ def build_L_mps(hamiltonian, cutoff=1e-12):
     for i in range(1, L):
         L_mps += np.sqrt(weights[i] / lmb) * qtn.MPS_computational_state(f"{i:0{m_L}b}")
     # Check normalization
-    if not np.isclose(L_mps.norm(), 1.0, atol=1e-12):
+    if not np.isclose(L_mps.norm(), 1.0, atol=cutoff):
         raise ValueError("Invalid MPS normalization")
-    if cutoff > 0:
-        L_mps.compress(cutoff=cutoff)
+    L_mps.compress(cutoff=cutoff)
     return L_mps
 
 
-def build_prepare_mpo(hamiltonian, cutoff=1e-18):
+def build_prepare_mpo(hamiltonian, cutoff=1e-10):
     r"""
     Construct the PREPARE oracle MPO :math:`\ket{0}\bra{\mathcal{L}}`.
 
@@ -104,7 +103,7 @@ def build_prepare_mpo(hamiltonian, cutoff=1e-18):
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
-    cutoff : float, default ``1e-18``
+    cutoff : float, default ``1e-10``
         Cutoff for MPO compression.
 
     Returns
@@ -301,7 +300,7 @@ def _build_llxHl_mpo(hamiltonian, l_term):
     return kron_mpos(l_mpo, Hl_mpo)
 
 
-def build_select_mpo(hamiltonian):
+def build_select_mpo(hamiltonian, cutoff=1e-10):
     r"""
     Construct the MPO implementing the SELECT oracle.
 
@@ -309,6 +308,8 @@ def build_select_mpo(hamiltonian):
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian describing the system.
+    cutoff : float, default ``1e-10``
+        MPO compression cutoff.
 
     Returns
     -------
@@ -323,7 +324,7 @@ def build_select_mpo(hamiltonian):
     for l_term in range(1, 2**m_L):
         aux = _build_llxHl_mpo(hamiltonian, l_term)
         select_mpo = aux + select_mpo
-        select_mpo.compress(cutoff=1e-18)
+        select_mpo.compress(cutoff=cutoff)
 
     return select_mpo
 
@@ -334,7 +335,7 @@ def build_select_mpo(hamiltonian):
 
 
 # Reflection operator R_L
-def build_RL_mpo(hamiltonian, cutoff=1e-12):
+def build_RL_mpo(hamiltonian, cutoff=1e-10):
     r"""
     Construct the reflection operator :math:`\mathcal{R}_L` for the L register.
 
@@ -345,7 +346,7 @@ def build_RL_mpo(hamiltonian, cutoff=1e-12):
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
-    cutoff : float, default ``1e-12``
+    cutoff : float, default ``1e-10``
         MPO compression cutoff.
 
     Returns

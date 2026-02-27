@@ -14,7 +14,6 @@ from .parametrized_circuits import (
     ansatz_circuit,
     generate_brickwall_quimb,
     generate_rand_quimb,
-    update_params_from_partial,
 )
 from .plot_circuits import draw_circuit, draw_expval
 from .qaoa import brute_force_MaxCut, study_optimization_time_costs
