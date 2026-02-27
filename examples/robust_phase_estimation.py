@@ -43,7 +43,7 @@ from qpe_toolbox.hamiltonian import (
     heisenberg_hamiltonian,
 )
 
-plt.rcParams["text.usetex"] = True
+# %%
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
