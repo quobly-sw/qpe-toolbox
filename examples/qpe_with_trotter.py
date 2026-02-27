@@ -336,12 +336,14 @@ ax.semilogy(nphase_list_resource, entangling_gates, "-o")
 ax.set_xlabel("number of phase qubits")
 ax.set_ylabel("number of entangling gates")
 fig.suptitle(
-    f"QPE Heisenberg {n_qbits} spins, Trotter order 2 with $dt=t/{n_trotter_steps}$"
+    f"QPE Heisenberg {n_qbits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
 );
 # %% [markdown]
-# In the resource analysis mode (when 'run_simulation=False') the output is a list of gates instructions in the format
-# '(label, params, qubits, controls)'
+# In the resource analysis mode (when 'run_simulation=False') the output is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.
 
 # %%
 print("(label, params, qubits, controls)")
 print(*res_resource[:5], sep="\n")
+
+# %% [markdown]
+# As a final remark, note that in the process of releasing `qpe-toolbox` we became aware of a recent related work on numerical simulations of textbook QPE on a $3$-qubits Heisenberg Hamiltonian using `qiskit`: [arxiv:2602.22349](https://arxiv.org/abs/2602.22349v1).
