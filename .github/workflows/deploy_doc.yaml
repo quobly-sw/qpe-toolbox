@@ -31,15 +31,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Update mirrors
-        run: sudo apt update
-
-      # robust_phase_estimation example requires latex in path
-      - name: Install LaTeX
-        run: |
-          sudo apt install -y texlive-base texlive-latex-base texlive-latex-extra\
-            texlive-fonts-recommended cm-super dvipng
-
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
