@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
 
-from qpe_toolbox.circuit import ansatz_circuit, update_params_from_partial
+from qpe_toolbox.circuit import ansatz_circuit
 from qpe_toolbox.estimation import qpe_sample, set_search_window
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
@@ -203,12 +203,14 @@ my_circ_optimizer_.plot();
 # It can be also interesting to optimize a circuit of large depth using the optimized parameters from a circuit of smaller depth. However as shown below, we don't observe an improvement. So we will not use that in the following.
 
 # %%
-depth = 4
+# optimize a shallow circuit
 circ = ansatz_circuit(n, 2)
 my_circ_optimizer_ = my_circ_optimizer(circ)
 circ_opt = my_circ_optimizer_.optimize(n=100)
+# initialize a deeper circuit with previously optimized parameters
 circ = ansatz_circuit(n, 4, random_coeff=1e-4)
-update_params_from_partial(circ, circ_opt.psi)
+circ.set_params(circ_opt.get_params())
+# optimize the deeper circuit
 my_circ_optimizer_ = my_circ_optimizer(circ)
 circ_opt = my_circ_optimizer_.optimize(n=100)
 print("Optimized energy ", my_circ_optimizer_.loss)
