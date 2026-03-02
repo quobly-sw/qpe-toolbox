@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import tempfile
 
 import numpy as np
 import quimb.tensor as qtn
@@ -25,9 +26,17 @@ def test_qpe():
 
 
 def test_resource_analysis():
-    n_phase_bits = 5
-    circ = make_circMPS(n_phase_bits, psi0)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        orig = os.getcwd()
+        os.chdir(tmp_dir)
+        try:
+            _run_resource_analysis()
+        finally:
+            os.chdir(orig)
 
+
+def _run_resource_analysis():
+    n_phase_bits = 5
     circ = make_circMPS(n_phase_bits, psi0)
 
     E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
@@ -59,7 +68,6 @@ def test_resource_analysis():
     assert os.path.exists(filename)
     with open(filename) as infile:
         gate_dict = json.load(infile)
-    os.remove(filename)
 
     circ2 = deserialize_to_quimb_CircuitMPS(
         gate_dict, max_bond=0, cutoff=1e-10, psi0=psi_init
