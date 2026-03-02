@@ -22,7 +22,7 @@
 #
 # Consider a unitary operator $U$ and an eigenstate $\ket{u}$ of $U$: $U \ket{u} = e^{i \theta} \ket{u}$. We want to measure $\theta$ with $m$-bits precision.
 #
-# The QPE circuit contains two registers: a physical register with $n$ qubits and a phase register with $m$ qubits, with $m \geq t$.
+# The QPE circuit contains two registers: a physical register with $n$ qubits and a phase register with $m$ qubits.
 #
 # <img src="./figures/qpe.png" align="center">
 #
@@ -60,9 +60,10 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 # - diagonalize exactly
 # - encode as a quantum circuit
 #
-# Consider Heisenberg 1D Hamiltonian
+# Consider the nearest-neighbour 1D Heisenberg Hamiltonian with open boundary conditions
 #
 # $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \vec{S}_{k+1} $$
+#
 # where $S_k = \sigma_k/2$ are the $S=1/2$ spin matrices, $\sigma_k$ the Pauli matrices.
 #
 # We take $J=1$ in the following. All energies are expressed in units of $J$.
@@ -70,7 +71,7 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 # #### 1. Hamiltonian definition, circuit initialization
 
 # %% [markdown]
-# Define the Hamiltonian, perform exact diagonalization
+# Let us define the Hamiltonian and perform exact diagonalization
 
 # %%
 n_qbits = 2
@@ -84,19 +85,19 @@ eigvals, eigvecs = np.linalg.eigh(hamilt_matrix)
 # Ground state
 E0 = eigvals[0]
 psi0 = eigvecs[:, 0]
-print(f"E_ED : {E0:.10f}")
+print(f"E_ED : {E0:.4f}")
 
 # %%
 # Ground state MPS
 E0_dmrg, psi0_mps = do_dmrg(h_spin)
-print(f"E_DMRG : {E0_dmrg:.10f}")
+print(f"E_DMRG : {E0_dmrg:.4f}")
 
 # %%
 F = abs(psi0_mps.H @ MatrixProductState.from_dense(psi0)) ** 2
 print(f"1 - |<psi_DMRG|psi_ED>|^2 = {abs(1 - F):.4g}")
 
 # %% [markdown]
-# Initialize the QPE circuit with a data register containing $|\psi_0\rangle$ and a phase register with $m=4$ phase qubits, measure the energy from the circuit
+# We now initialize the QPE circuit with a data register containing $|\psi_0\rangle$ and a phase register with $m=4$ phase qubits, then measure the Hamiltonian's expectation value
 
 # %%
 n_phase_bits = 4
@@ -106,15 +107,15 @@ initial_circ = make_circ(n_phase_bits, psi_target)
 
 data_reg = list(range(n_phase_bits, n_phase_bits + n_qbits))
 print(
-    f"measure H = {initial_circ.local_expectation(G=h_spin.to_dense(), where=data_reg):.10f}"
+    f"measure H = {initial_circ.local_expectation(hamilt_matrix, where=data_reg):.4f}"
 )
 
 # %% [markdown]
 # #### First stage of Quantum Phase Estimation Algorithm
 #
-# See e.g. Nielsen and Chuang.
+# See e.g., Nielsen and Chuang.
 # - First, initialize the phase register with a "Hadamard wall"
-# - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^k$ on the qubit-register conditioned on the $k$-th phase qubit. Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi \rangle = \exp(-i2\pi \theta) |\psi \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary by hermiticity of $H$). The final state of the phase register is then
+# - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^k$ on the qubit-register conditioned on the $k$-th phase qubit. Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary by hermiticity of $H$). The final state of the phase register is then
 #
 # $$ \frac{1}{\sqrt{2^m}} \sum_{q=0}^{2^m-1} e^{i2\pi \theta q} |q \rangle$$
 # (the data register stays in the state $|\psi_0\rangle$)
