@@ -9,7 +9,44 @@
 
 import quimb.tensor as qtn
 
-################### Initialize Circuit ########################################
+
+def _build_init_mps(n_phase_bits, psi_mps):
+    """
+    Build the initial MPS for a circuit with a phase register prepended.
+
+    Constructs a product MPS of ``n_phase_bits`` zero qubits followed by
+    the data register ``psi_mps``, with qubit indices shifted accordingly.
+
+    Parameters
+    ----------
+    n_phase_bits : int
+        Number of qubits in the phase (auxiliary) register.
+    psi_mps : quimb.tensor.MatrixProductState
+        Initial state of the data register.
+
+    Returns
+    -------
+    quimb.tensor.MatrixProductState
+        Combined MPS of total length ``n_phase_bits + psi_mps.L``.
+
+    """
+    n_qbits = psi_mps.L
+    psi_aux = psi_mps.copy()
+
+    phase_reg_mps = qtn.MPS_computational_state("0" * n_phase_bits)
+
+    psi_aux.reindex_({f"k{i}": f"k{i + n_phase_bits}" for i in range(n_qbits)})
+    psi_aux.retag_({f"I{i}": f"I{i + n_phase_bits}" for i in range(n_qbits)})
+
+    init_mps = qtn.MatrixProductState.new(
+        L=n_qbits + n_phase_bits, cyclic=False, site_ind_id="k{}", site_tag_id="I{}"
+    )
+    for t in phase_reg_mps.tensors:
+        init_mps &= t
+    for t in psi_aux.tensors:
+        init_mps &= t
+
+    return init_mps
 
 
 def make_circ(n_phase_bits, psi_mps):
@@ -45,27 +82,7 @@ def make_circ(n_phase_bits, psi_mps):
     - The resulting circuit has ``n_phase_bits + psi_mps.L`` qubits in total.
 
     """
-
-    n_qbits = psi_mps.L
-    psi_aux = psi_mps.copy()
-
-    phase_reg_mps = qtn.MPS_computational_state("0" * n_phase_bits)
-
-    psi_aux.reindex_({f"k{i}": f"k{i + n_phase_bits}" for i in range(n_qbits)})
-    psi_aux.retag_({f"I{i}": f"I{i + n_phase_bits}" for i in range(n_qbits)})
-
-    init_mps = qtn.MatrixProductState.new(
-        L=n_qbits + n_phase_bits, cyclic=False, site_ind_id="k{}", site_tag_id="I{}"
-    )
-    for t in phase_reg_mps.tensors:
-        init_mps &= t
-    for t in psi_aux.tensors:
-        init_mps &= t
-
-    return qtn.Circuit(psi0=init_mps)
-
-
-################### Initialize CircuitMPS #####################################
+    return qtn.Circuit(psi0=_build_init_mps(n_phase_bits, psi_mps))
 
 
 def make_circMPS(n_phase_bits, psi_mps, *, cutoff=1e-10, max_bond=None):
@@ -101,21 +118,6 @@ def make_circMPS(n_phase_bits, psi_mps, *, cutoff=1e-10, max_bond=None):
     - The phase register qubits precede the data register in qubit ordering.
 
     """
-
-    n_qbits = psi_mps.L
-    psi_aux = psi_mps.copy()
-
-    phase_reg_mps = qtn.MPS_computational_state("0" * n_phase_bits)
-
-    psi_aux.reindex_({f"k{i}": f"k{i + n_phase_bits}" for i in range(n_qbits)})
-    psi_aux.retag_({f"I{i}": f"I{i + n_phase_bits}" for i in range(n_qbits)})
-
-    init_mps = qtn.MatrixProductState.new(
-        L=n_qbits + n_phase_bits, cyclic=False, site_ind_id="k{}", site_tag_id="I{}"
+    return qtn.CircuitMPS(
+        psi0=_build_init_mps(n_phase_bits, psi_mps), cutoff=cutoff, max_bond=max_bond
     )
-    for t in phase_reg_mps.tensors:
-        init_mps &= t
-    for t in psi_aux.tensors:
-        init_mps &= t
-
-    return qtn.CircuitMPS(psi0=init_mps, cutoff=cutoff, max_bond=max_bond)
