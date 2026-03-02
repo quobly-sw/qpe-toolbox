@@ -248,7 +248,7 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 #
 # $$ \theta = \frac{k}{2^{m_{\rm prec}}} + \frac{1}{2^{m_{\rm prec}+1}} $$
 #
-# For $m_{\rm prec}=4$ bits, we chose:
+# For $m_{\rm prec}=4$ bits, we choose:
 #
 # $$ \theta = 0.5 + \frac{1}{2^5} = 0.53125 $$
 #
