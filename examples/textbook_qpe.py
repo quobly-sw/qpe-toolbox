@@ -596,9 +596,9 @@ axs[2].legend()
 axs[1].legend();
 
 # %% [markdown]
-# ### Influence of $E_{target}$ and $\Delta$
+# ### Influence of interval size and target energy
 #
-# Vary $\Delta$ and $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to get errors because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
+# Vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to get errors because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
 
 # %%
 n_qbits = 4
@@ -609,24 +609,29 @@ n_phase_bits = 10
 initial_circ = make_circ(n_phase_bits, psi0_mps)
 
 interval_sizes = np.arange(0.2 * abs(E0), 4 * abs(E0), 0.9 * abs(E0))
-for size_interval in tqdm.tqdm(interval_sizes):
-    assert size_interval > 0
-    Etgt_list = np.linspace(E0 - 0.5 * size_interval, E0 + 0.4 * size_interval, 11)
-    energies = []
-    probs = []
-    for E_target in tqdm.tqdm(Etgt_list, leave=False):
-        traces, energy = qpe.qpe_energy(
-            h_spin, initial_circ, "exact", E_target, size_interval
+interval_energies = []
+num_points = 11
+for Δ in tqdm.tqdm(interval_sizes):
+    assert Δ > 0
+    energy_targets = np.linspace(E0 - 0.5 * Δ, E0 + 0.4 * Δ, num_points)
+    energies_Δ = np.empty((num_points,))
+    for i in tqdm.tqdm(range(num_points), leave=False):
+        _, energies_Δ[i] = qpe.qpe_energy(
+            h_spin, initial_circ, "exact", energy_targets[i], Δ
         )
-        energies.append(energy)
-        probs.append(traces["prob"])
-    label = rf"$\Delta={size_interval / abs(E0):.2f}E_0$"
-    plt.plot(Etgt_list - E0, [x - E0 for x in energies], "-o", label=label)
+    interval_energies.append(energies_Δ)
 
-plt.xlabel("$E_{target} - E_0$")
-plt.ylabel("$E - E_0$")
-plt.title(f"{n_phase_bits} phase qubits")
-plt.legend();
+# %%
+fig, ax = plt.subplots()
+for Δ, energies_Δ in zip(interval_sizes, interval_energies, strict=True):
+    energy_targets = np.linspace(E0 - 0.5 * Δ, E0 + 0.4 * Δ, 11)
+    label = rf"$\Delta={Δ / abs(E0):.2f}E_0$"
+    ax.plot(energy_targets - E0, energies_Δ - E0, "-o", label=label)
+
+ax.set_xlabel("$E_{target} - E_0$")
+ax.set_ylabel("$E - E_0$")
+fig.suptitle(f"{n_phase_bits} phase qubits")
+ax.legend();
 
 # %% [markdown]
 # The smallest the size $\Delta$ of the search window, the smallest the error, provided $E_0 \in [E_{target}-\Delta/2, E_{target}+\Delta/2]$.
