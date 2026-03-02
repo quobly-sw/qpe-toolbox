@@ -63,10 +63,10 @@ plt.rcParams.update({"font.size": 12})
 # - diagonalize exactly
 # - encode as a quantum circuit
 #
-# Consider Heisenberg 1D Hamiltonian
+# Consider the Heisenberg Hamiltonian on a 1D chain wih open boundary conditions
 #
-# $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \vec{S}_{k+1} $$
-# where $S_k = \sigma_k/2$ are the $S=1/2$ spin matrices, $\sigma_k$ the Pauli matrices.
+# $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \cdot \vec{S}_{k+1} $$
+# where $\vec{S}_k  = \vec{\sigma}_k /2 \;$ are the $S=1/2$ generators of SU(2) acting on site $k$, with $\vec{\sigma} = (\sigma^x, \sigma^y, \sigma^z)$ the Pauli matrices.
 #
 # We take $J=1$ in the following. All energies are expressed in units of $J$.
 #
