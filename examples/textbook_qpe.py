@@ -52,6 +52,9 @@ import qpe_toolbox.estimation as qpe
 from qpe_toolbox.circuit import make_circ
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
+# %%
+plt.rcParams.update({"font.size": 12})
+
 # %% [markdown]
 # ## Quantum phase estimation
 # ### Example : 1D Heisenberg Hamiltonian
@@ -424,13 +427,13 @@ for n_phase_bits in tqdm.tqdm(ms):
 
 
 # %%
-# formula for minimal number of phase bits required to reach given precision
-def m_func(p, epsilon):
+def minimal_number_phase_bits(p, epsilon):
+    """Minimal number of phase bits required to reach precision epsilon with probability p"""
     return p + np.ceil(np.log2(2 + 1 / (2 * epsilon)))
 
 
 # %%
-fig, axs = plt.subplots(2, 1)
+fig, axs = plt.subplots(nrows=2, sharex=True, figsize=(7, 7))
 axs[0].plot(ms, energies, "-o")
 axs[0].axhline(y=E0, color="k", linestyle="dotted")
 tol = size_interval / 2**p
@@ -440,12 +443,12 @@ axs[0].set_ylabel("Energy")
 
 
 eps = 0.1
-print(m_func(p, eps))
+print(f"minimal number for eps = {eps}: {minimal_number_phase_bits(p, eps)}")
 
 axs[1].plot(ms, probs, "-o", label="best guess prob")
 axs[1].plot(ms[p + ms[0] :], probs_success[p + ms[0] :], "-s", label="sucess prob")
 axs[1].axvline(x=p, color="k", linestyle="dotted")
-axs[1].axvline(x=m_func(p, eps), color="k", linestyle="dotted")
+axs[1].axvline(x=minimal_number_phase_bits(p, eps), color="k", linestyle="dotted")
 axs[1].fill_between(ms, [1 - eps], [1], alpha=0.1, facecolor="g")
 axs[1].axhline(y=4 / np.pi**2, color="r", linestyle="dotted", label=r"$4/\pi^2$")
 axs[1].set_ylabel("prob")
@@ -484,7 +487,7 @@ for n_phase_bits in tqdm.tqdm(ms):
     durations.append(traces["ctimes"][-1])
 
 # %%
-fig, axs = plt.subplots(3, 1)
+fig, axs = plt.subplots(nrows=3, sharex=True, figsize=(6, 6), layout="tight")
 
 fig.suptitle(f"1D Heisenberg with {n_qbits} spins")
 axs[0].semilogy(ms, [abs(E - E0) for E in energies], "-o")
@@ -497,8 +500,7 @@ axs[1].set_ylabel("best guess prob")
 
 axs[2].plot(ms, durations, "-o")
 axs[2].set_xlabel("phase qubits number")
-axs[2].set_ylabel("duration (sec)")
-plt.tight_layout()
+axs[2].set_ylabel("duration (sec)");
 
 # %% [markdown]
 # ### Influence of system size (number of spins / physical qubits in the data register)
@@ -553,17 +555,18 @@ for n_qbits in tqdm.tqdm(nqb_list):
     res["durations"].append(durations)
 
 # %%
+fig, ax = plt.subplots()
 for ind, n_qbits in enumerate(nqb_list):
-    plt.plot(ms, res["energies"][ind], "-o", label=f"$n_{{qb}}=${n_qbits}")
-plt.ylabel("Energy")
-plt.xlabel("phase qubits number")
-plt.legend();
+    ax.plot(ms, res["energies"][ind], "-o", label=f"$n_{{qb}}=${n_qbits}")
+ax.set_ylabel("Energy")
+ax.set_xlabel("phase qubits number")
+ax.legend();
 
 # %% [markdown]
 # The energy error and success probability is independent of the number of physical qubits:
 
 # %%
-fig, axs = plt.subplots(3, 1, figsize=(6, 6), sharex=True)
+fig, axs = plt.subplots(nrows=3, figsize=(6, 6), sharex=True, layout="tight")
 
 for ind, n_qbits in enumerate(nqb_list):
     axs[0].semilogy(
@@ -572,9 +575,7 @@ for ind, n_qbits in enumerate(nqb_list):
         "-o",
         label=f"$n_{{qb}}=${n_qbits}",
     )
-
     axs[1].plot(ms, res["probs"][ind], "-o")
-
     axs[2].semilogy(ms, res["durations"][ind], "-o")
 
 
@@ -592,8 +593,7 @@ axs[2].semilogy(
 axs[2].set_xlabel("phase qubits number")
 axs[2].set_ylabel("duration (sec)")
 axs[2].legend()
-axs[1].legend()
-plt.tight_layout()
+axs[1].legend();
 
 # %% [markdown]
 # ### Influence of $E_{target}$ and $\Delta$
@@ -603,17 +603,13 @@ plt.tight_layout()
 # %%
 n_qbits = 4
 h_spin = heisenberg_hamiltonian(n_qbits)
-
-
 E0, psi0_mps = do_dmrg(h_spin)
 
 n_phase_bits = 10
 initial_circ = make_circ(n_phase_bits, psi0_mps)
 
-siz_list = np.arange(0.2 * abs(E0), 4 * abs(E0), 0.9 * abs(E0))
-
-
-for size_interval in tqdm.tqdm(siz_list):
+interval_sizes = np.arange(0.2 * abs(E0), 4 * abs(E0), 0.9 * abs(E0))
+for size_interval in tqdm.tqdm(interval_sizes):
     assert size_interval > 0
     Etgt_list = np.linspace(E0 - 0.5 * size_interval, E0 + 0.4 * size_interval, 11)
     energies = []
@@ -624,12 +620,9 @@ for size_interval in tqdm.tqdm(siz_list):
         )
         energies.append(energy)
         probs.append(traces["prob"])
-    plt.plot(
-        [x - E0 for x in Etgt_list],
-        [x - E0 for x in energies],
-        "-o",
-        label=rf"$\Delta={size_interval / abs(E0):.2f}E_0$",
-    )
+    label = rf"$\Delta={size_interval / abs(E0):.2f}E_0$"
+    plt.plot(Etgt_list - E0, [x - E0 for x in energies], "-o", label=label)
+
 plt.xlabel("$E_{target} - E_0$")
 plt.ylabel("$E - E_0$")
 plt.title(f"{n_phase_bits} phase qubits")
@@ -687,7 +680,7 @@ for alpha in alphas:
 # We plot the energy and probability outputs as a function of $\alpha$:
 
 # %%
-fig, (ax_e, ax_p) = plt.subplots(2, 1, sharex=True)
+fig, (ax_e, ax_p) = plt.subplots(nrows=2, sharex=True)
 ax_e.plot(alphas, E_a, "-o")
 ax_e.axhline(y=E0, color="k", linestyle=":", alpha=0.5)
 ax_e.axhline(y=E1, color="k", linestyle=":", alpha=0.5)
