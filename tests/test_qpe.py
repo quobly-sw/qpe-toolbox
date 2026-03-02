@@ -28,8 +28,6 @@ def test_resource_analysis():
     n_phase_bits = 5
     circ = make_circMPS(n_phase_bits, psi0)
 
-    circ = make_circMPS(n_phase_bits, psi0)
-
     E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
         ham, E_target, size_interval
     )
