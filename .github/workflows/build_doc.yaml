@@ -20,6 +20,7 @@ jobs:
     # it just checks the doc can be constructed
     # docs/Makefile contains the same steps. We do not use make here to get
     # well separated steps and cleaner logs.
+    # // is fine here, this is jupytext syntax
     - name: Convert examples
       run: uv run --no-sync jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb
 
@@ -28,3 +29,13 @@ jobs:
 
     - name: Build doc
       run: uv run --no-sync sphinx-build -b html -W docs/source docs/build
+
+      # upload doc as artifact to be able to check result.
+      # doc is not deployed: working document available for 2 days from job link
+    - name: Upload doc
+      uses: actions/upload-artifact@v6
+      with:
+        name: built_doc_artifact
+        path: docs/build
+        if-no-files-found: error
+        retention-days: 2

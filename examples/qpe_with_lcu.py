@@ -30,10 +30,7 @@ from IPython.display import display
 from pyscf import gto
 from tqdm import notebook as tqdm
 
-from qpe_toolbox.estimation import (
-    lcu_walk_operator as lcu,
-    quantum_phase_estimation as qpe,
-)
+import qpe_toolbox.estimation as qpe
 from qpe_toolbox.hamiltonian import (
     chemistry_hamiltonian,
     do_dmrg,
@@ -75,7 +72,7 @@ plt.rcParams.update({"font.size": 12})
 n_qbits = 4
 H = heisenberg_hamiltonian(n_qbits)
 
-weights, λ, L, m_L = lcu.get_weights(H)
+weights, λ, L, m_L = qpe.get_lcu_weights(H)
 print(f"LCU decomposition with {L} terms")
 print(f"Auxiliary register with {m_L} qubits")
 print(f"1-norm of LCU coefficients: lambda = {λ:.3f}")
@@ -96,7 +93,7 @@ print(f"DMRG energy: E0 = {E0_dmrg:.3f}")
 # The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as a MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
 
 # %%
-prepare_mpo = lcu.build_prepare_mpo(H)
+prepare_mpo = qpe.build_lcu_prepare_mpo(H)
 
 # %% [markdown]
 # The state prepared by the action of the PREPARE oracle is called the $\ket{\mathcal{L}}$ state:
@@ -108,10 +105,12 @@ zero_mps = qtn.MPS_computational_state("0" * m_L)
 L_mps = prepare_mpo.apply(zero_mps)
 
 # %% [markdown]
-# Alernatively, the $\ket{\mathcal{L}}$ state can be directly build calling the `build_L_mps` function
+# Alernatively, the $\ket{\mathcal{L}}$ state can be directly build calling the `build_lcu_prepare_state_mps` function
 
 # %%
-print(f"overlap (should be 1) = {L_mps.overlap(lcu.build_L_mps(H)):.3f}")
+print(
+    f"overlap (should be 1) = {L_mps.overlap(qpe.build_lcu_prepare_state_mps(H)):.3f}"
+)
 
 # %% [markdown]
 # ## SELECT oracle gate
@@ -128,7 +127,7 @@ print(f"overlap (should be 1) = {L_mps.overlap(lcu.build_L_mps(H)):.3f}")
 # i.e. the combination of SELECT and PREPARE gives an encoding of the Hamiltonian. This property allows to construct a unitary operator: $\mathcal{W}$, the walk operator,  that gives an exact encoding of the spectrum of $H$ via a technique called qubitization.
 
 # %%
-select_gates = lcu.get_select_gates(H)
+select_gates = qpe.lcu_select_gates(H)
 
 
 # %% [markdown]
@@ -184,7 +183,7 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 # Here, we build this reflection as a MPO.
 
 # %%
-R_L = lcu.build_RL_mpo(H)
+R_L = qpe.build_lcu_reflection_mpo(H)
 display(R_L)
 
 
@@ -197,7 +196,7 @@ display(R_L)
 # %%
 circ = qtn.CircuitMPS(psi0=Lpsi_mps)
 
-select_gates = lcu.get_select_gates(H)
+select_gates = qpe.lcu_select_gates(H)
 for gate in select_gates:
     circ.apply_gate(gate)
 
@@ -269,11 +268,12 @@ assert np.isclose(
 # ## QPE on Walk operator
 
 # %% [markdown]
-# The `qpe_walk` function from `lcu_walk_operator` builds the Walk operator using the different functions we have previously introduced and runs the "textbook" QPE circuit on $\mathcal{W}$.
+# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the Walk operator using the different functions we have previously introduced and runs the "textbook" QPE circuit on $\mathcal{W}$.
 
 # %%
 n_phase_qubits = 4
-traces, theta = lcu.qpe_walk(H, psi0_mps, n_phase_qubits, verbosity=1)
+traces, theta = qpe.run_qpe_lcu_walk_operator(H, psi0_mps, n_phase_qubits, verbosity=1)
+
 
 # %% [markdown]
 # Now we compute the energy from the eigenphase of $\mathcal{W}$:
@@ -281,7 +281,7 @@ traces, theta = lcu.qpe_walk(H, psi0_mps, n_phase_qubits, verbosity=1)
 # $$ 2 \pi \theta = \pm \arccos(E_0/\lambda) \implies E_0 = \cos(2 \pi \theta) * \lambda $$
 
 # %%
-energy = lcu.energy_from_theta(theta, λ)
+energy = qpe.get_energy_from_lcu_walk_phase(theta, λ)
 print(f"energy = {energy:.4f}")
 
 # %% [markdown]
@@ -292,7 +292,7 @@ print(f"energy = {energy:.4f}")
 
 # %%
 print(f"error = {abs(E0_dmrg - energy):.4f}")
-delta_e = lcu.energy_error_bound(n_phase_qubits, E0_dmrg, λ)
+delta_e = qpe.estimate_lcu_error(n_phase_qubits, E0_dmrg, λ)
 print(f"error bound = {delta_e:.4f}")
 
 # %% [markdown]
@@ -305,16 +305,16 @@ durations = []
 energies = []
 for m_ph in tqdm.tqdm(n_phase_bits_list):
     st = time.time()
-    traces, theta = lcu.qpe_walk(H, psi0_mps, m_ph)
+    traces, theta = qpe.run_qpe_lcu_walk_operator(H, psi0_mps, m_ph)
     thetas.append(theta)
     durations.append(time.time() - st)
-    energies.append(lcu.energy_from_theta(theta, λ))
+    energies.append(qpe.get_energy_from_lcu_walk_phase(theta, λ))
 
 # %% [markdown]
 # We plot the energy as a function of the number of phase qubits to see how the precision evolves
 
 # %%
-delta_es = [lcu.energy_error_bound(m_ph, E0_dmrg, λ) for m_ph in n_phase_bits_list]
+delta_es = [qpe.estimate_lcu_error(m_ph, E0_dmrg, λ) for m_ph in n_phase_bits_list]
 
 plt.plot(n_phase_bits_list, energies, "-o", label="QPE")
 plt.axhline(y=E0_dmrg, color="k", linestyle=":", label="DMRG")
@@ -401,7 +401,7 @@ H_H2 = chemistry_hamiltonian(
 
 # %%
 # LCU weights and related figures
-weights_H2, λ_H2, L_H2, mL_H2 = lcu.get_weights(H_H2)
+weights_H2, λ_H2, L_H2, mL_H2 = qpe.get_lcu_weights(H_H2)
 # DMRG energy and state
 E0_H2, psi0_H2 = do_dmrg(H_H2)
 
@@ -412,12 +412,12 @@ print(f"L={L_H2} terms in the LCU decomposition \nLCU 1-norm λ = {λ_H2:.4f}")
 m_ph = 4  # number of phase qubits
 
 # QPE on Walk operator
-traces, theta = lcu.qpe_walk(H_H2, psi0_H2, m_ph, verbosity=1)
+traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph, verbosity=1)
 # Get the energy
-energy = lcu.energy_from_theta(theta, λ_H2)
+energy = qpe.get_energy_from_lcu_walk_phase(theta, λ_H2)
 print(f"\nenergy = {energy:.4f}, error={abs(E0_H2 - energy):.4f}")
 # Check error bound
-delta_e = lcu.energy_error_bound(m_ph, E0_H2, λ_H2)
+delta_e = qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2)
 print(f"error bound = {delta_e:.4f}")
 
 # %% [markdown]
@@ -430,13 +430,13 @@ durations = []
 energies = []
 for m_ph in tqdm.tqdm(n_phase_bits_list):
     st = time.time()
-    traces, theta = lcu.qpe_walk(H_H2, psi0_H2, m_ph)
+    traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph)
     thetas.append(theta)
     durations.append(time.time() - st)
-    energies.append(lcu.energy_from_theta(theta, λ_H2))
+    energies.append(qpe.get_energy_from_lcu_walk_phase(theta, λ_H2))
 
 # %%
-delta_es = [lcu.energy_error_bound(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_list]
+delta_es = [qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_list]
 
 plt.plot(n_phase_bits_list, energies, "-o", label="QPE")
 plt.axhline(y=E0_H2, color="k", linestyle=":", label="DMRG")

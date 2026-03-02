@@ -24,7 +24,7 @@
 #
 # The QPE circuit contains two registers: a physical register with $n$ qubits and a phase register with $m$ qubits, with $m \geq t$.
 #
-# <img src='./figures/qpe.png'>
+# <img src="./figures/qpe.png" align="center">
 #
 # 1. The physical register in initially in state $\ket{\psi}$, where $\ket{\psi}$ is an estimate of $\ket{u}$ with fidelity $\Omega = \vert \langle \psi \vert u \rangle \vert^2$.
 # 2. The phase register is initially in state $\ket{0}$.
@@ -48,8 +48,8 @@ from IPython.display import display
 from quimb.tensor import MatrixProductState
 from tqdm import notebook as tqdm
 
+import qpe_toolbox.estimation as qpe
 from qpe_toolbox.circuit import make_circ
-from qpe_toolbox.estimation import quantum_phase_estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 # %% [markdown]

@@ -15,7 +15,7 @@ import quimb.tensor as qtn
 from qpe_toolbox.circuit import make_circMPS
 
 
-def circ_hadamard_test(init_mps, U_gate, theta):
+def build_hadamard_test_circuit(init_mps, U_gate, theta):
     r"""
     Construct the quantum circuit implementing the Hadamard test.
 
@@ -71,7 +71,7 @@ def circ_hadamard_test(init_mps, U_gate, theta):
     return circ
 
 
-def Z_theta(init_mps, U_gate, theta, n_shots, *, seed=42):
+def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
     r"""
     Run the Hadamard test circuit and estimate the expectation value
     :math:`Z(\theta)`.
@@ -92,13 +92,13 @@ def Z_theta(init_mps, U_gate, theta, n_shots, *, seed=42):
         Initial state :math:`\ket{\psi}` of the data register.
     U_gate : quimb.tensor.circuit.Gate or list
         Unitary operator used in the Hadamard test.
-        See ``circ_hadamard_test`` for accepted formats.
+        See ``build_circuit`` method for accepted formats.
     theta : float
         Phase angle applied to the ancilla qubit.
-    n_shots : int, default ``0``
+    n_shots : int
         Number of measurement shots.
-        - If ``0``, probabilities are computed exactly.
-        - If ``> 0``, probabilities are estimated by sampling.
+        - If ``0`` or ``inf``, probabilities are computed exactly.
+        - If finite, probabilities are estimated by sampling.
 
     Returns
     -------
@@ -106,12 +106,13 @@ def Z_theta(init_mps, U_gate, theta, n_shots, *, seed=42):
         Estimated value of :math:`Z(\theta) = P(0) - P(1)`.
 
     """
-    circ = circ_hadamard_test(init_mps, U_gate, theta)
+    circ = build_hadamard_test_circuit(init_mps, U_gate, theta)
+    aux_ind = 0
     if (n_shots == 0) or np.isposinf(n_shots):
-        probs = circ.compute_marginal(where=[0])
+        probs = circ.compute_marginal(where=[aux_ind])
     else:
         count = Counter(circ.sample(C=n_shots, seed=seed))
         probs = [0.0, 0.0]
         for b, c in count.items():
-            probs[int(b[0])] += c / n_shots
+            probs[int(b[aux_ind])] += c / n_shots
     return probs[0] - probs[1]

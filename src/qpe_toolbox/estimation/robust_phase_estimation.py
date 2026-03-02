@@ -11,7 +11,7 @@ import time
 
 import numpy as np
 
-from .hadamard_test import Z_theta
+from .hadamard_test import run_hadamard_test
 
 
 def robust_phase_estimation(
@@ -66,9 +66,9 @@ def robust_phase_estimation(
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(M + 1):
         if n_steps == "exact":
-            phi_m = get_phi_m(H, psi0, m, n_steps, n_shots)
+            phi_m = rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots)
         else:
-            phi_m = get_phi_m(
+            phi_m = rpe_get_hadamard_output(
                 H, psi0, m, n_steps * 2**m, n_shots, trotter_order=trotter_order
             )
 
@@ -76,7 +76,7 @@ def robust_phase_estimation(
             theta_m = phi_m
         else:
             S_m = [(phi_m + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
-            theta_m, _d_min = find_theta_min(S_m, theta_list[m])
+            theta_m, _d_min = rpe_update_theta(S_m, theta_list[m])
 
         if verbosity >= 1:
             et = time.time() - st
@@ -89,7 +89,7 @@ def robust_phase_estimation(
     return theta_list
 
 
-def get_phi_m(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
+def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     r"""
     Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
 
@@ -130,13 +130,13 @@ def get_phi_m(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
             raise ValueError("Can only evolve for positive n_steps")
         dt = t / n_steps
         U_m = [H.get_trotter_step(dt, phys_reg, trotter_order)] * n_steps
-    X_m = Z_theta(psi0, U_m, 0, n_shots)
-    Y_m = Z_theta(psi0, U_m, -np.pi / 2, n_shots)
+    X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
+    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)
 
 
-def distance(phi, theta):
+def rpe_distance(phi, theta):
     """
     Compute the angular distance between two angles.
 
@@ -160,7 +160,7 @@ def distance(phi, theta):
     return abs(phi - theta - K * sign * 2 * np.pi)
 
 
-def find_theta_min(S, theta_ref):
+def rpe_update_theta(S, theta_ref):
     """
     Find the angle in a set closest to a reference angle.
 
@@ -182,10 +182,10 @@ def find_theta_min(S, theta_ref):
         Corresponding minimal angular distance.
 
     """
-    d_min = distance(S[0], theta_ref)
+    d_min = rpe_distance(S[0], theta_ref)
     theta_min = S[0]
     for theta in S[1:]:
-        if (distance(theta, theta_ref) <= d_min) and (-np.pi <= theta < np.pi):
-            d_min = distance(theta, theta_ref)
+        if (rpe_distance(theta, theta_ref) <= d_min) and (-np.pi <= theta < np.pi):
+            d_min = rpe_distance(theta, theta_ref)
             theta_min = theta
     return theta_min, d_min
