@@ -156,7 +156,7 @@ psi.draw(
 # #### Second stage: Inverse Fourier Transform
 #
 # If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
-# Therefore, applying the IQFT and measuring in the computational basis gives $\theta$ exactly.
+# Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
 #
 # When $\theta$ does not exactly expressed in $m$ bits, the measurement gives with "large" (see e.g. Wikipedia or Nielsen & Chuang) probability the closest $m$-bits approximation to $\theta$.
 #
