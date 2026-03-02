@@ -19,7 +19,7 @@ from qpe_toolbox.circuit.serialize_circuits import (
     serialize_from_quimb_gates,
 )
 
-from .qft import iqft_sw
+from .qft import iqft_swapped
 
 
 def qpe_energy(
@@ -202,7 +202,7 @@ def qpe_sample(
         verbosity=verbosity,
     )
 
-    for gate_id in iqft_sw(phase_reg):
+    for gate_id in iqft_swapped(phase_reg):
         if run_simulation:
             circ.apply_gate(*gate_id, gate_round=traces["gate_round"])
         else:

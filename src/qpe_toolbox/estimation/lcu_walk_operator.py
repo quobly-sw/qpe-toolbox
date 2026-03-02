@@ -17,14 +17,14 @@ import quimb.tensor as qtn
 from qpe_toolbox.circuit import shift_control_gates
 from qpe_toolbox.tensor import apply_gate_from_mpo, controlled_mpo, kron_mpos, kron_mps
 
-from .qft import iqft_sw
+from .qft import iqft_swapped
 
 #####################################
 ### L register and PREPARE oracle ###
 #####################################
 
 
-def get_weights(hamiltonian):
+def get_lcu_weights(hamiltonian):
     """
     Compute the weights for the linear combination of unitaries (LCU) representation
     of a Hamiltonian, including normalization factor and ancilla register size.
@@ -62,7 +62,7 @@ def get_weights(hamiltonian):
     return weights, lmb, L, m_L
 
 
-def build_L_mps(hamiltonian, cutoff=1e-10):
+def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
     r"""
     Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
 
@@ -82,7 +82,7 @@ def build_L_mps(hamiltonian, cutoff=1e-10):
         MPS representing the state :math:`\ket{\mathcal{L}}`.
 
     """
-    weights, lmb, L, m_L = get_weights(hamiltonian)
+    weights, lmb, L, m_L = get_lcu_weights(hamiltonian)
 
     # Initialize |L> state MPS
     L_mps = np.sqrt(weights[0] / lmb) * qtn.MPS_computational_state("0" * m_L)
@@ -95,7 +95,7 @@ def build_L_mps(hamiltonian, cutoff=1e-10):
     return L_mps
 
 
-def build_prepare_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_prepare_mpo(hamiltonian, cutoff=1e-10):
     r"""
     Construct the PREPARE oracle MPO :math:`\ket{0}\bra{\mathcal{L}}`.
 
@@ -112,7 +112,7 @@ def build_prepare_mpo(hamiltonian, cutoff=1e-10):
         MPO implementing the PREPARE oracle.
 
     """
-    weights, lmb, _, m_L = get_weights(hamiltonian)
+    weights, lmb, _, m_L = get_lcu_weights(hamiltonian)
 
     zero_mps = qtn.MPS_computational_state("0" * m_L)
     zero_mpo = zero_mps.partial_trace_to_mpo(keep=list(range(m_L)))
@@ -155,7 +155,7 @@ def _prepare_computational_state(k, n):
 
 
 # gates instruction implementation of SELECT
-def get_select_gates(hamiltonian):
+def lcu_select_gates(hamiltonian):
     """
     Construct the full list of gate instructions for the SELECT oracle.
 
@@ -300,7 +300,7 @@ def _build_llxHl_mpo(hamiltonian, l_term):
     return kron_mpos(l_mpo, Hl_mpo)
 
 
-def build_select_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_select_mpo(hamiltonian, cutoff=1e-10):
     r"""
     Construct the MPO implementing the SELECT oracle.
 
@@ -334,8 +334,7 @@ def build_select_mpo(hamiltonian, cutoff=1e-10):
 ###############################################################################
 
 
-# Reflection operator R_L
-def build_RL_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_reflection_mpo(hamiltonian, cutoff=1e-10):
     r"""
     Construct the reflection operator :math:`\mathcal{R}_L` for the L register.
 
@@ -355,7 +354,7 @@ def build_RL_mpo(hamiltonian, cutoff=1e-10):
         MPO representing the reflection
 
     """
-    L_mps = build_L_mps(hamiltonian)
+    L_mps = build_lcu_prepare_state_mps(hamiltonian)
     m_L = L_mps.L
     L_mpo = L_mps.partial_trace_to_mpo(keep=list(range(m_L)))
     L_mpo.compress(cutoff=cutoff)
@@ -372,7 +371,9 @@ def build_RL_mpo(hamiltonian, cutoff=1e-10):
 ###############################################################################
 
 
-def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbosity=0):
+def run_qpe_lcu_walk_operator(
+    H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbosity=0
+):
     """
     Perform LCU and quantum phase estimation (QPE) using the walk operator.
 
@@ -409,7 +410,7 @@ def qpe_walk(H, psi0_mps, m_ph, *, max_bond=0, cutoff=1e-10, verbosity=0):
         H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbosity=verbosity
     )
 
-    circ.apply_gates(iqft_sw(regs["phase"]))
+    circ.apply_gates(iqft_swapped(regs["phase"]))
     ctimes.append(time.time() - st)
     if verbosity >= 2:
         msg = f"Start sampling, bond dim={circ.psi.max_bond()}, {ctimes[-1]:.1f}s"
@@ -482,10 +483,10 @@ def qpe_first_stage_walk(
     Id_ph = (
         qtn.MatrixProductOperator([np.eye(2)]) if m_ph == 1 else qtn.MPO_identity(m_ph)
     )
-    RL_mpo = kron_mpos(Id_ph, build_RL_mpo(H))
-    select_gates = get_select_gates(H)
+    RL_mpo = kron_mpos(Id_ph, build_lcu_reflection_mpo(H))
+    select_gates = lcu_select_gates(H)
 
-    L_mps = build_L_mps(H)
+    L_mps = build_lcu_prepare_state_mps(H)
     phase_zeros = qtn.MPS_computational_state("0" * m_ph)
     psi_init = kron_mps(phase_zeros, kron_mps(L_mps, psi0_mps))
     circ = qtn.CircuitMPS(
@@ -546,9 +547,9 @@ def _get_registers_qpe_lcu(n_qbits, m_L, m_ph):
     return regs
 
 
-def energy_from_theta(theta, lmb):
+def get_energy_from_lcu_walk_phase(theta, lmb):
     r"""
-    Get the energy from the eigenphase of the Walk operator.
+    Get the energy from the eigenphase of the LCU Walk operator.
 
     ..math:
         E = \lambda \cos(2 \pi \theta)
@@ -569,7 +570,7 @@ def energy_from_theta(theta, lmb):
     return lmb * np.cos(2 * np.pi * theta)
 
 
-def energy_error_bound(m_ph, E0, lmb):
+def estimate_lcu_error(m_ph, E0, lmb):
     """
     Estimate the error bound in energy in LCU QPE from finite number of phase qubits.
 

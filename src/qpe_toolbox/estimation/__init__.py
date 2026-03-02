@@ -7,12 +7,28 @@
 #
 # --------------------------------------------------------------------------------------
 
-from .hadamard_test import Z_theta, circ_hadamard_test
-from .qft import iqft, iqft_sw
-from .quantum_phase_estimation import qpe_sample, set_search_window
+from .hadamard_test import build_hadamard_test_circuit, run_hadamard_test
+from .lcu_walk_operator import (
+    build_lcu_prepare_mpo,
+    build_lcu_prepare_state_mps,
+    build_lcu_reflection_mpo,
+    build_lcu_select_mpo,
+    estimate_lcu_error,
+    get_energy_from_lcu_walk_phase,
+    get_lcu_weights,
+    lcu_select_gates,
+    run_qpe_lcu_walk_operator,
+)
+from .qft import iqft, iqft_swapped
+from .quantum_phase_estimation import (
+    qpe_energy,
+    qpe_first_stage,
+    qpe_sample,
+    set_search_window,
+)
 from .robust_phase_estimation import (
-    distance,
-    find_theta_min,
-    get_phi_m,
     robust_phase_estimation,
+    rpe_distance,
+    rpe_get_hadamard_output,
+    rpe_update_theta,
 )

@@ -3,7 +3,7 @@
 from pyscf import gto
 from quimb.tensor import CircuitMPS
 
-from qpe_toolbox.estimation import lcu_walk_operator as lcu
+import qpe_toolbox.estimation as qpe
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian, do_dmrg
 from qpe_toolbox.tensor import kron_mps
 
@@ -19,16 +19,16 @@ def test_select():
         mol, hf_mode="rhf", encoding="original", do_fci=False, do_ccsd=False
     )
 
-    _weights, lmb, _L, _m_L = lcu.get_weights(H)
+    _weights, lmb, _L, _m_L = qpe.get_lcu_weights(H)
 
     # DMRG E0 and psi0
     E0_dmrg, psi0_mps = do_dmrg(H)
 
-    L_mps = lcu.build_L_mps(H)
+    L_mps = qpe.build_lcu_prepare_state_mps(H)
 
     Lpsi_mps = kron_mps(L_mps, psi0_mps)
 
-    select_gates = lcu.get_select_gates(H)
+    select_gates = qpe.lcu_select_gates(H)
 
     circ = CircuitMPS(psi0=Lpsi_mps)
     for gate in select_gates:

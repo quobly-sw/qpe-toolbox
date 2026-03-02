@@ -15,7 +15,7 @@
 # %% [markdown]
 # # Robust Phase Estimation
 #
-# This example introduces the Robust Phase Estimation algorithm. This is a flavor that requires only a single ancilla. The way the algorithm is implemented is inspired from **Phase estimation with partially randomized time evolution**, J.Gunther et al. https://arxiv.org/abs/2503.05647.
+# This example introduces the Robust Phase Estimation algorithm. This is a flavor that requires only a single ancilla. The way the algorithm is implemented is inspired from **Phase estimation with partially randomized time evolution**, J.Gunther et al. [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
 #
 # We explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
 #
@@ -30,13 +30,7 @@ import quimb.tensor as qtn
 from pyscf import gto
 from tqdm import notebook as tqdm
 
-from qpe_toolbox.estimation import (
-    Z_theta,
-    distance,
-    find_theta_min,
-    get_phi_m,
-    robust_phase_estimation,
-)
+import qpe_toolbox.estimation as qpe
 from qpe_toolbox.hamiltonian import (
     chemistry_hamiltonian,
     do_dmrg,
@@ -117,7 +111,7 @@ E0, psi0 = do_dmrg(H)
 #
 # $$ \mathbb{E}\textbf{Z} = e^{-i E_0 t}. $$
 #
-# The function `Z_theta` runs the Hadamard test and returns $\mathrm{Re}~e^{i\theta} \bra{\psi}U\ket{\psi}$.
+# The function `run_hadamard_test` runs the Hadamard test and returns $\mathrm{Re}~e^{i\theta} \bra{\psi}U\ket{\psi}$.
 #
 # Below we estimate $E_0$ by running the Hadamard test for a time evolution during a random time $t$.
 #
@@ -131,8 +125,8 @@ U = H.get_U_exact(t, data_reg, controls=(0,))
 
 n_shots = np.inf  # infinite number of shots (perfect measure)
 
-X = Z_theta(psi0, U, 0, n_shots)
-Y = Z_theta(psi0, U, -np.pi / 2, n_shots)
+X = qpe.run_hadamard_test(psi0, U, 0, n_shots)
+Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots)
 Z = X + 1j * Y
 
 print(f"error = {abs(np.angle(Z) / t + E0):.2g}")
@@ -168,8 +162,8 @@ durations = []
 
 for n_shots in tqdm.tqdm(shots_list):
     st = time.time()
-    X = Z_theta(psi0, U, 0, n_shots=n_shots)
-    Y = Z_theta(psi0, U, -np.pi / 2, n_shots=n_shots)
+    X = qpe.run_hadamard_test(psi0, U, 0, n_shots=n_shots)
+    Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots=n_shots)
     et = time.time() - st
 
     Z = X + 1j * Y
@@ -204,7 +198,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # ### Introduction
 #
-# Quote from Günther et al. (https://arxiv.org/abs/2503.05647):
+# Quote from Günther et al. [arxiv:2503.05647](https://arxiv.org/abs/2503.05647):
 # > "If we think of g(t) as a time signal, then the phase estimation routine will constitute a signal processing transformation to compute the lowest frequency of $g(t)$ (corresponding to the energy $E_0$), provided that we have some guarantee on the overlap of $\ket{\psi}$ with the ground state; we assume a lower bound
 #   $c_0 \geq \eta$. With appropriate signal processing methods, one can find the value of $E_0$ with accuracy $\varepsilon$ using $M$ circuits with time evolution for
 #  times $t_1, . . . , t_M$. This can be done such that the maximal time evolution $t_{\rm max} = \mathrm{max}\{t_1, . . . , t_M\}$ and the total time over all circuit runs $t_{\rm tot} = t_1 + t_2 + · · · + t_M$  both scale as $\varepsilon^{-1}$. This Heisenberg scaling is known to be optimal."
@@ -262,12 +256,12 @@ plt.xlabel(r"$\theta$")
 
 plt.plot(
     thetas,
-    [distance(t, 3 * np.pi / 2) for t in thetas],
+    [qpe.rpe_distance(t, 3 * np.pi / 2) for t in thetas],
     label=r"$d(3\pi/2, \theta)$",
 )
 plt.plot(
     thetas,
-    [distance(3 * np.pi / 2, t) for t in thetas],
+    [qpe.rpe_distance(3 * np.pi / 2, t) for t in thetas],
     "--",
     label=r"$d(\theta, 3\pi/2)$",
 )
@@ -285,11 +279,11 @@ M = int(np.ceil(np.log2(1 / epsilon)))
 n_shots = 2
 
 # m = 0
-phi_0 = get_phi_m(H, psi0, 0, "exact", n_shots)
+phi_0 = qpe.rpe_get_hadamard_output(H, psi0, 0, "exact", n_shots)
 theta_0 = phi_0
 
 m = 1
-phi_1 = get_phi_m(H, psi0, m, "exact", n_shots)
+phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, "exact", n_shots)
 S_1 = [(phi_1 + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
 
 # %% [markdown]
@@ -313,7 +307,7 @@ plt.legend();
 # We compute $\theta_1$ as the element from $S_1$ closest to $\theta_0$ and check that the error decreases between the first and second iteration:
 
 # %%
-theta_1, d_min = find_theta_min(S_1, theta_0)
+theta_1, d_min = qpe.rpe_update_theta(S_1, theta_0)
 print(f"Exact energy E = {E0:.4f}")
 print(f"theta_0 = {theta_0:.4f}")
 print(f"theta_1 = {theta_1:.4f}")
@@ -332,13 +326,13 @@ print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
 
 n_shots = 1
 
-theta_list = robust_phase_estimation(
+theta_list = qpe.robust_phase_estimation(
     H, psi0, epsilon, sign_E0, "exact", n_shots, verbosity=1
 )
 
 # %%
 plt.semilogy(
-    [distance(theta, E0) for theta in theta_list[1:]],
+    [qpe.rpe_distance(theta, E0) for theta in theta_list[1:]],
     "-o",
     label=f"$N_{{\\rm shots}}={n_shots}$",
 )
@@ -354,9 +348,11 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shot_list = [1, 2, 3, 4]
 
 for n_shots in n_shot_list:
-    theta_list = robust_phase_estimation(H, psi0, epsilon, sign_E0, "exact", n_shots)
+    theta_list = qpe.robust_phase_estimation(
+        H, psi0, epsilon, sign_E0, "exact", n_shots
+    )
     plt.semilogy(
-        [distance(theta, E0) for theta in theta_list[1:]],
+        [qpe.rpe_distance(theta, E0) for theta in theta_list[1:]],
         "-o",
         label=f"$N_{{\\rm shots}}={n_shots}$",
     )
@@ -384,7 +380,7 @@ n_steps = 1
 n_shots = 4
 thetas_ttr_list = []
 
-thetas_ttr = robust_phase_estimation(
+thetas_ttr = qpe.robust_phase_estimation(
     H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
 
@@ -392,7 +388,7 @@ thetas_ttr_list.append(thetas_ttr)
 
 # %%
 plt.semilogy(
-    [distance(theta, E0) for theta in thetas_ttr_list[0][1:]],
+    [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[0][1:]],
     "-o",
     label=f"$n_{{\\rm steps}}={n_steps}$",
 )
@@ -409,7 +405,7 @@ plt.ylabel("error");
 # %%time
 
 n_steps = 2
-thetas_ttr = robust_phase_estimation(
+thetas_ttr = qpe.robust_phase_estimation(
     H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
 thetas_ttr_list.append(thetas_ttr)
@@ -417,7 +413,7 @@ thetas_ttr_list.append(thetas_ttr)
 # %%
 for i, n_steps in enumerate([1, 2]):
     plt.semilogy(
-        [distance(theta, E0) for theta in thetas_ttr_list[i][1:]],
+        [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[i][1:]],
         "-o",
         label=f"$n_{{\\rm steps}}={n_steps}$",
     )
@@ -445,7 +441,9 @@ res_list = []
 for epsilon in epsilon_list:
     M = int(np.ceil(np.log2(1 / epsilon)))
     cost_list.append(sum([n_shots * 2**m for m in range(M + 1)]))
-    theta_list = robust_phase_estimation(H, psi0, epsilon, sign_E0, "exact", n_shots)
+    theta_list = qpe.robust_phase_estimation(
+        H, psi0, epsilon, sign_E0, "exact", n_shots
+    )
     res_list.append(theta_list[-1])
 
 # %%
@@ -499,11 +497,11 @@ sign_E0 = np.sign(E0_H2)
 n_shot_list = [2, 3, 4]
 
 for n_shots in n_shot_list:
-    theta_list = robust_phase_estimation(
+    theta_list = qpe.robust_phase_estimation(
         H_H2, psi0_H2, epsilon, sign_E0, "exact", n_shots
     )
     plt.semilogy(
-        [distance(theta, E0_H2) for theta in theta_list[1:]],
+        [qpe.rpe_distance(theta, E0_H2) for theta in theta_list[1:]],
         "-o",
         label=f"$N_{{\\rm shots}}={n_shots}$",
     )
@@ -524,7 +522,7 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shots = 2
 n_steps = 1
 
-thetas_ttr = robust_phase_estimation(
+thetas_ttr = qpe.robust_phase_estimation(
     H_H2, psi0_H2, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
 
@@ -533,7 +531,7 @@ thetas_ttr = robust_phase_estimation(
 
 # %%
 plt.semilogy(
-    [distance(theta, E0_H2) for theta in thetas_ttr_list[i][1:]],
+    [qpe.rpe_distance(theta, E0_H2) for theta in thetas_ttr_list[i][1:]],
     "-o",
     label=f"$n_{{\\rm steps}}={n_steps}$",
 )
