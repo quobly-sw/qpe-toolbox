@@ -406,7 +406,7 @@ def run_qpe_lcu_walk_operator(
     m_L = int(np.ceil(np.log2(len(H.terms))))
     regs = _get_registers_qpe_lcu(H.n_qbits, m_L, m_ph)
 
-    traces, circ = qpe_first_stage_walk(
+    _, circ = qpe_first_stage_walk(
         H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbosity=verbosity
     )
 
