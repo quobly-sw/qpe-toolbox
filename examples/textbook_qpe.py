@@ -345,7 +345,7 @@ print(f"error = {E0 - energy}")
 #
 # - Note that they assume $m > m_{\rm prec}+1$
 #
-# - Let's chose $E_{target} - E_0$ randomly in $[0,1[$ and see how the best guess error and best guess probability evolves with $m \geq p$.
+# - Let us choose $E_{target} - E_0$ randomly in $[0,1[$ and see how the best guess error and best guess probability evolves with $m \geq p$.
 #
 # - First we slightly modify the way we perform qpe in order to compute this probability
 #
