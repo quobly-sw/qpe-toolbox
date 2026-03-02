@@ -336,7 +336,9 @@ print(f"error = {E0 - energy}")
 # Then, they deduce that the probability for QPE to measure $\theta$ with $m_{\rm prec}$ bits precision is
 #
 # $$ 1 - p(| r - b | >  2^{m - m_{\rm prec}} - 1) > 1 - \frac{1}{2(2^{m - m_{\rm prec}} - 2)}. $$
+# Thus, setting $\alpha = 1/2(2^{m - m_{\rm prec}} - 2)$, one finds that to measure $\theta$ accurate to $m_{\rm prec}$ bits with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
 #
+# $$ m = m_{\rm prec} + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
 # Thus, setting $\alpha = 1/2(2^{m - m_{\rm prec}} - 2)$, one finds that to measure $\theta$ accurate to $m_{\rm prec}$ bits with a probability of success at least $1 - \alpha$, one needs
 #
 # $$ m = m_{\rm prec} + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
