@@ -26,7 +26,7 @@ Create a virtual environment with either `pip` or `uv`
 python3 -m venv --system-site-packages .venv
 
 # with uv
-uv venv
+uv sync --locked
 ```
 Activate it
 ```bash
@@ -57,20 +57,20 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
    1.1. Spin model with e.g. `heisenberg_hamiltonian` or a custom `Hamiltonian` instance.
 
-   1.2. Molecule with `chemistry_hamiltonian`; see the [`chemistry_to_qubit`](examples/chemistry_to_qubit.py) example.
+   1.2. Molecule with `chemistry_hamiltonian`; see the [`chemistry_to_qubit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/chemistry_to_qubit.html) example.
 
 2. Prepare an initial state as a Matrix Product State. Two methods are available:
 
-   2.1. Density Matrix Renormalization Group (DMRG) - see the [`chemistry_to_qubit`](examples/chemistry_to_qubit.py)  tutorial.
+   2.1. Density Matrix Renormalization Group (DMRG) - see the [`chemistry_to_qubit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/chemistry_to_qubit.html)  tutorial.
 
-   2.2. Parametrized circuit optimization - see the tutorial on [`variational_circuit_preparation`](examples/variational_circuit_preparation.py).
+   2.2. Parametrized circuit optimization - see the tutorial on [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html).
 
 3. Encode $\hat{H}$ into a unitary via either:
 
    3.1. Exact time evolution or Trotterization, available as methods of the `Hamiltonian` class - see the
-    tutorial on [`trotter_decomposition`](examples/trotter_decomposition.py).
+    tutorial on [`trotter_decomposition`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/trotter_decomposition.html).
 
-   3.2. Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries:  [`qpe_with_lcu`](examples/qpe_with_lcu.py).
+   3.2. Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries:  [`qpe_with_lcu`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_lcu.html).
 
 4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, chose between:
 
@@ -78,14 +78,14 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
    4.2. `make_circMPS` to store the state as an MPS and iteratively apply the gates.
 
-   See the tutorials on [`building_circuits`](examples/building_circuits.py), [`performance_mps`](examples/performance_mps.py)
-    and [`hyperoptimization`](examples/hyperoptimization.py) for an introduction on circuit simulation with `quimb`.
+   See the tutorials on [`building_circuits`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/building_circuits.html), [`performance_mps`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/performance_mps.html)
+    and [`hyperoptimization`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/hyperoptimization.html) for an introduction on circuit simulation with `quimb`.
 
 5. Run QPE: in the `estimation` module, choose between
 
-   5.1. Textbook QPE: see the corresponding tutorial [`textbook_qpe`](examples/textbook_qpe.py).
+   5.1. Textbook QPE: see the corresponding tutorial [`textbook_qpe`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/textbook_qpe.html).
 
-   5.2. Robust Phase Estimation, a version of QPE with a single ancilla and circuit repetitions - see the [`robust_phase_estimation`](examples/robust_phase_estimation.py) tutorial.
+   5.2. Robust Phase Estimation, a version of QPE with a single ancilla and circuit repetitions - see the [`robust_phase_estimation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/robust_phase_estimation.html) tutorial.
 
 
 # Contents

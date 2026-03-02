@@ -399,11 +399,6 @@ print(f"Fidelity after QPE = {fidelity_qpe:.5f}")
 # %% [markdown]
 # We observe that even with a moderate overlap, Quantum Phase Estimation projects on the ground state. As an exercice, you can try to reproduce the following figure:
 #
-# <center><img src='figures/fig_overlaps_circ_opt.svg'/></center>
+# <img src="./figures/fig_overlaps_circ_opt.svg" align="center">
 #
 # it shows the infidelity as a function of circuit depth (orange curve) or bond dimension (blue curve) for a guess state prepared with either circuit optimization or DMRG. The colored stars then show how the fidelity quickly improves (error drops to $\sim 10^{-5}$) when running QPE with even a few phase qubits upon the trial state from circuit optimization.
-#
-
-# %%
-
-# %%

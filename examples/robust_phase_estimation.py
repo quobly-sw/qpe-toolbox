@@ -37,7 +37,7 @@ from qpe_toolbox.hamiltonian import (
     heisenberg_hamiltonian,
 )
 
-plt.rcParams["text.usetex"] = True
+# %%
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
@@ -49,7 +49,7 @@ plt.rcParams.update({"font.size": 12})
 # The idea is to build a random variable whose expectation value gives the real (resp. imaginary) part of $\bra{\psi} U \ket{\psi}$.
 # Consider the following circuit:
 #
-# <img src='./figures/gunther2025_fig3.png'>
+# <img src="./figures/gunther2025_fig3.png" align="center">
 #
 # *Taken from Günther et al. arXiv:2503.05647*.
 #
