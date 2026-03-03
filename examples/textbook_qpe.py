@@ -176,18 +176,18 @@ psi.draw(
 #
 # If we know some approximation $E_{target}$ of the exact energy $E_0$ up to an error $\Delta$, then by setting
 #
-# $$t =2\pi/\Delta \qquad \text{and} \qquad \phi = E_{max} t,$$
+# $$t =2\pi/\Delta \qquad \text{and} \qquad \phi = E_{\rm max} t,$$
 # then
 #
-# $$ E_{min} \leq E_0 \leq E_{max} \implies 0 \leq -E_0 t + 2\phi \leq 2\pi.$$
+# $$ E_{\rm min} \leq E_0 \leq E_{\rm max} \implies 0 \leq -E_0 t + 2\phi \leq 2\pi.$$
 #
-# where $E_{max/min} = E_{target} \pm \Delta/2$.
+# where $E_{\rm max/min} = E_{\rm target} \pm \Delta/2$.
 #
 # **Useful expression**
 #
-# Correspondence between the QPE output $\theta$ and energy $E$ for a given set of parameters $E_{target}$ and $\Delta$:
+# Correspondence between the QPE output $\theta$ and energy $E$ for a given set of parameters $E_{\rm target}$ and $\Delta$:
 #
-# $$\theta=\frac{E_{target} + \Delta/2 - E}{\Delta}$$
+# $$\theta=\frac{E_{\rm target} + \Delta/2 - E}{\Delta}$$
 
 # %% [markdown]
 # ## Precision of exact QPE
@@ -244,7 +244,7 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 #
 # $$ \theta = 0.5 + \frac{1}{2^5} = 0.53125 $$
 #
-# One possible choice of parameters is $E_{target} = E_0 + 1/2^p$ and $\Delta = 2$.
+# One possible choice of parameters is $E_{\rm target} = E_0 + 1/2^p$ and $\Delta = 2$.
 #
 # **Let us first perform QPE with $m=p=4$ phase qubits.**
 
@@ -314,7 +314,7 @@ print(f"size_interval / 2**(p+1) = {size_interval / 2 ** (n_phase_bits)}")
 # %% [markdown]
 # ### Random choice of $\delta$
 #
-# Let us now consider a more general case where the initial approximation $E_{target}$ is off by a random $\delta$.
+# Let us now consider a more general case where the initial approximation $E_{\rm target}$ is off by a random $\delta$.
 #
 # Nielsen and Chuang state that to measure $\theta$ with a $p$-bit precison and success probability greater than $ 1 - \epsilon $, one requires
 #
@@ -328,7 +328,7 @@ print(f"size_interval / 2**(p+1) = {size_interval / 2 ** (n_phase_bits)}")
 #
 # Note that Nielsen and Chuang assume $m > p+1$!
 #
-# **In the following, let us chose $E_{target} - E_0$ randomly in $[0,1[$, and see how the best guess error and best guess probability evolves with $m \geq p$**. First we slightly modify the way we perform QPE in order to compute this probability.
+# **In the following, let us chose $E_{\rm target} - E_0$ randomly in $[0,1[$, and see how the best guess error and best guess probability evolves with $m \geq p$**. First we slightly modify the way we perform QPE in order to compute this probability.
 
 
 # %%
@@ -454,7 +454,7 @@ axs[1].legend(loc="lower left");
 # %% [markdown]
 # ### Performance and accuracy
 #
-# $E_0$ is of the order of 1 Hartree (bare in mind that chemical accuracy is defined at 1mHa = 27meV = 300K). Therefore we aim at an error on energy $\simeq 10^{-3} E_0$. In this example we have fixed the energy unit to $J=1$, hence we shall aim for an error right on this order $10^{-3}$.
+# $E_0$ is of the order of 1 Hartree (bare in mind that chemical accuracy is defined at 1 mHa = 27 meV = 315 K). Therefore we aim at an error on energy $\simeq 10^{-3} E_0$. In this example we have fixed the energy unit to $J=1$, hence we shall aim for an error right on this order $10^{-3}$.
 #
 # Assuming that we start with a first estimation of $E_0$ with error $0.1$, **which would the cost in the number of phase qubits to lower the error down to $10^{-3}$?**
 #

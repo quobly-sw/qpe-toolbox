@@ -106,7 +106,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 # %% [markdown]
 # ## Trotter error: full unitary distance as metric
 #
-# Let us first use the distance of the full time evolution as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - {\rm Id}||$
+# Let us first use the distance of the full time evolution as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - \mathbb{1}~||$
 #
 # We define a function that collects the errors defined for given times $t$ in `t_list`, number of timesteps $n_{steps}$ in `ns_list` and Trotterization order `order`.
 #
