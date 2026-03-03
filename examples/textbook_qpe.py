@@ -494,7 +494,6 @@ rng = np.random.default_rng(seed=42)
 delta = rng.random() - 1 / 2
 size_interval = 2
 E_target = E0 + size_interval * delta
-# theta_0 in the above text
 theta_exact = (E_target + size_interval / 2 - E0) / size_interval
 print(f"exact theta = {theta_exact:.6g}")
 
