@@ -115,7 +115,7 @@ print(
 #
 # See e.g., Nielsen and Chuang.
 # - First, initialize the phase register with a "Hadamard wall"
-# - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^k$ on the qubit-register conditioned on the $k$-th phase qubit. Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary by hermiticity of $H$). The final state of the phase register is then
+# - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^k$ on the qubit-register conditioned on the $k$-th phase qubit. Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary by hermiticity of $H$). The state of the phase register is then
 #
 # $$ \frac{1}{\sqrt{2^m}} \sum_{q=0}^{2^m-1} e^{i2\pi \theta q} |q \rangle$$
 # (the data register stays in the state $|\psi_0\rangle$)
@@ -152,15 +152,84 @@ psi.draw(
     edge_color=True,
 )
 
+
+# %% [markdown]
+# If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
+# Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
+# When it is not the case, the most probable output gives the closest $m$-bits approximation to $\theta$.
+
 # %% [markdown]
 # #### Second stage: Inverse Fourier Transform
 #
-# If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
-# Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
+# The state of the phase register after the inverse QFT reads:
 #
-# When $\theta$ does not exactly expressed in $m$ bits, the measurement gives with "large" (see e.g. Wikipedia or Nielsen & Chuang) probability the closest $m$-bits approximation to $\theta$.
+# $$ \frac{1}{2^m} \sum_{q,k=0}^{2^m-1} e^{-\frac{i2\pi}{2^m} q k}e^{i2\pi \theta q} |k \rangle $$
+# Now let us introduce the following expression for $\theta$:
 #
-# With $m$ phase qubits, we get a measure of $\theta$ with error $\varepsilon_\theta = 1/2^m$. Note that the error and depth of the circuit is independent of $n$ the number of "physical" qubits in the data register, i.e. independent of the size of the system.
+# $$ \theta = \frac{a}{2^m} + \delta, $$
+# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit estimate of $\theta$.
+#
+# The state in the phase register then reads
+#
+# $$ \frac{1}{2^m} \sum_{q,k=0}^{2^m-1} e^{-\frac{i2\pi q}{2^m} (k - a)} e^{i2\pi \delta q} |k \rangle. $$
+#
+#
+#
+# #### Measure and outcome
+#
+# At the last step of the QPE algorithm, we sample from the phase register. We measure $\ket{a} = \ket{[2^m \theta]}$ with probability
+#
+# $$ P(a) = \left| \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \right|^2. $$
+#
+# We then see that when $\delta=0$, i.e. when $\theta = a / 2^m$, then $P(a) = 1$: the outcome $\ket{a}$ is deterministic in this case.
+#
+# In the general case, $\ket{a}$ is the most probable output with probability $P(a) < 1$.
+#
+# Let us plot this probability $P(a)$ as a function of $\delta$, for a given $m$.
+
+# %%
+def prob_measure_a(delta, m):
+    return (
+        abs(1 / 2**m * sum([np.exp(2 * 1j * np.pi * delta * q) for q in range(2**m)]))
+        ** 2
+    )
+
+
+m = 4
+delta = np.linspace(-1 / 2 ** (m + 1), 1 / 2 ** (m + 1), 100)
+plt.plot(delta, prob_measure_a(delta, m))
+plt.title(r"$\theta = a / 2^m + \delta$ - QPE probability of measuring $|a\rangle$")
+plt.xlabel(r"$\delta$")
+plt.ylabel(r"$P(a)$");
+
+# %% [markdown]
+# We observe that $P(a)$ is minimal when the distance between $\theta$ and $a$ is maximal, i.e. for $\delta = \pm 1/2^{m+1}$.
+#
+# As shown [here](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm), there is a lower bound for the outcome probability $P(a)$ when $\delta \neq 0$:
+#
+# $$ P(a) \geq \frac{4}{\pi^2} \simeq 0.405 $$
+#
+# Below, we visualize the minimal probability $P(a)$ for $\delta = 1/2^{m+1}$ as a function of $m$.
+
+# %%
+ms = np.array(list(range(1, 12)))
+
+
+def min_prob_a(m):
+    return prob_measure_a(1 / 2 ** (m + 1), m)
+
+
+plt.plot(ms, [min_prob_a(m) for m in ms])
+plt.axhline(4 / np.pi**2, color="k", linestyle=":")
+plt.title(r"$\theta = a / 2^m + 1/2^{m+1}$ - QPE probability of measuring $|a\rangle$")
+plt.xlabel(r"$m$ phase qubits")
+plt.yticks([4 / np.pi**2, 0.45, 0.5], [r"$4/\pi^2$", "$0.45$", "$0.5$"])
+plt.ylabel(r"$P(a)$");
+
+# %% [markdown]
+# Thus with $m$ phase qubits, we get a measure of $\theta$ with error $\varepsilon_\theta = 1/2^m$ with more than $40 \%$ probability. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
+#
+# Note that the error and depth of the circuit is independent of $n$ the number of "physical" qubits in the data register, i.e. independent of the size of the physical system.
 
 # %% [markdown]
 # #### A note on the evolution time and global phase
@@ -191,13 +260,15 @@ psi.draw(
 #
 # From the previous equation, we also get an upper bound on the energy error: if we measure $\theta$ with $m$ bits of precision, the precision on the energy is at most $\Delta / 2^m$.
 #
-# This bound is a lower bound. If $\theta$ thus defined has an exact $m_{\theta}$ bits expression, the QPE algorithm will return $E$ exactly for any number of phase qubits $m \geq m_{\theta}$.
+# This bound is a lower bound. If $\theta$ thus defined has an exact $m$ bits expression, the QPE algorithm will return $E$ exactly for any number of phase qubits $m' \geq m$.
 #
 # When the initial guess is exact $E = E_{target}$, the QPE output is $\theta = 1/2$. This case is pathological, since we precisely want to know $E$.
 #
 
 # %% [markdown]
 # ## Precision of exact QPE
+#
+# Throughout this section, we assume that the physical register is initialized in the ground state $\ket{\psi_0}$ and study the precision of the QPE estimate for $E_0$.
 #
 # ### An example
 # In this example we start with a target energy off by 0.2 : $E_{target} = E_0 + 0.2$. Let us recall that our energy scale has been fixed by defining our Hamiltonian (using $J = 1$ in this example). We search within an interval $\Delta=2$. Measuring $E_0$ thus means measuring
@@ -241,20 +312,37 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 # %% [markdown]
 # ### Error and success probability
 #
-# Now let us say we want to see what is the success probability of measuring $\theta$ with say $m_{\rm prec}=4$ bits of precision,
-# depending on the number of phase qubits $m$. Obviously we need $m \geq m_{\rm prec}$.
+# We have seen that when running QPE with $m$ phase qubits, the most probable output gives an estimate of $\theta$ with $m$-bits accuracy. A lower bound for this probability is $4/\pi^2$ (recall that the physical register is initialized in the ground state $\psi_0$.)
 #
-# - Take a 'worst case scenario' for $m_{\rm prec}=4$ bits precision, namely, if $k$ is the integer giving the closest $m_{\rm prec}$ bits approximation closest to $\theta$ and smaller than $\theta$ we take the case:
+# In the following we investigate the probability of reaching a desired accuracy as a function of the number of phase qubits. We thus take the number of targeted bits of accuracy and the number of phase qubits to be different. Let us note $b$ the desired number of precision bits, and $m$ the number of phase qubits. We assume $m \geq b$.
 #
-# $$ \theta = \frac{k}{2^{m_{\rm prec}}} + \frac{1}{2^{m_{\rm prec}+1}} $$
+# As stated previously, if $\theta$ has an exact $b$-bits expression, then for any $m \geq b$ the QPE algorithm will return $\theta$ exactly with probability $1$.
 #
-# For $m_{\rm prec}=4$ bits, we choose:
 #
-# $$ \theta = 0.5 + \frac{1}{2^5} = 0.53125 $$
+# Recall that in general, for a given number $m$ of phase qubits, $\theta$ reads
 #
-# One possible choice of parameters is $E_{target} = E_0 + 1/2^{m_{\rm prec}}$ and $\Delta = 2$.
+# $$ \theta = \frac{a}{2^m} + \delta, $$
 #
-# - Let us first perform QPE with $m=m_{\rm prec}=4$ phase qubits
+#  where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit estimate of $\theta$, while $\delta$ measures the distance (or error) to this $m$-bit estimate.
+# We want to estimate the probability of QPE to measure theta with error $\leq 1/2^b$. This is of course the case if we measure $a$ (since $m \geq b$), but other outputs $a' \in \{0, 1, ...,2^m-1\}$ may provide an estimate within $1/2^b$ error.
+#
+# We have seen that the "worst case scenario" for a given number of phase qubits $m$ corresponds to a maximal $\delta$, e.g.,
+#
+# $$ \theta = \frac{a}{2^m} + \frac{1}{2^{m+1}}. $$
+#
+# Note that this "worst-case scenario" for $m$ phase qubits corresponds to a $\theta$ with an exact $m+1$-bits expression.
+#
+# Suppose we want to measure $\theta$ with $b=4$ bits precision.
+#
+# Let us take the "worst-case" scenario for $m=b=4$, i.e.
+#
+# $$ \theta = 0.5 + \frac{1}{2^5} = 0.53125. $$
+#
+# One possible choice of parameters is $E_{target} = E_0 + 1/2^{m}$ and $\Delta = 2$.
+#
+# From our previous considerations, we expect that for $m=4$ the probability of measuring $0.5$ will be minimal and close to $4/\pi^2$, while for $m=5$ we expect to always measure $\theta$ exactly. Let us verify.
+#
+# - First we perform QPE with $m=4$ phase qubits
 
 # %%
 E_target = E0 + 1 / 2**4
@@ -290,12 +378,10 @@ print(f"Best guess = {energy_2} with proba {prob_2:.4f}")
 print(f"error = {E0 - energy_2:.4f}")
 
 # %% [markdown]
-# We find as expected two outputs with same probability
-#
-# NB: lower bound for success probability is: $4/\pi^2 = 0.4052$ (proof [here](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm).)
+# We find as expected two outputs with same probability. We check that the success probability in this worst case scenario is close to but still above the $4/\pi^2 = 0.4052$ lower bound.
 
 # %% [markdown]
-# - Now let's add one more phase qubit
+# - We now add one more phase qubit
 
 # %%
 n_phase_bits = 5
@@ -313,43 +399,35 @@ print(f"\nBest guess = {energy} with proba {traces['prob']}")
 print(f"error = {E0 - energy}")
 
 # %% [markdown]
-# The output is an exact measure of $\theta$ with probability $m_{target}=1$, since $\theta$ has an exact $m_{target}+1=5$ bits expression.
+# The output is an exact measure of $\theta$ with probability $1$, since $\theta$ has an exact $b+1=5$ bits expression.
 
 # %% [markdown]
 # ### General case
 #
-# The goal is to measure $\theta$ with $m_{\rm prec}$ bits of precision. We are looking for the minimal number of phase qubits $m$ so that we measure $\theta$ accurate to $m_{\rm prec}$ bits with a probability of success at least $1 - \alpha$.
+# The goal is to measure $\theta$ with $b$ bits of precision. For a given "confidence level" $1-\alpha$ ($\alpha \in ]0,1[$) we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang, section 5.2.1., find that
 #
-# $$ m = m_{\rm prec} + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
+# $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
 #
-# In their derivation, they consider a given $m > m_{\rm prec}$ and introduce the integer $b$ that gives the best $m$ bits approximation to $\theta$, i.e. $\theta = b / 2^m + \delta$ with $0 < \delta < 1/2^{m+1}$.
+# In their derivation, they take $m > b + 1$ and introduce the best $m$-bits approximation to $\theta$: $\theta = a / 2^m + \delta,$ with $0 < \delta < 1/2^{m+1}$.
 #
-# Let the QPE output be $r/2^m$, with $r$ in the range between $0$ and $2^{m-1}$. If $r$ is such that
+# Let the QPE output be $r/2^m$, with $r$ an integer in the range between $0$ and $2^{m-1}$. Since $m>b$, $r$ might be $1/2^b$-close to $\theta$ even if $r \neq a, a+1$. Indeed, one can verify that if
 #
-# $$ |r - b| < 2^{m - m_{\rm prec}} - 1, $$
-#
+# $$ |r - a| < 2^{m - b} - 1, $$
 # then
 #
-# $$ \left| \frac{r}{2^m} - \theta \right| \leq \frac{1}{2^{m_{\rm prec}}}. $$
+# $$ \left| \frac{r}{2^m} - \theta \right| \leq \frac{1}{2^{b}}. $$
+# Finally, they show that the probability for QPE to measure $\theta$ with $b$ bits precision is
 #
-# Then, they deduce that the probability for QPE to measure $\theta$ with $m_{\rm prec}$ bits precision is
+# $$ 1 - P(| r - b | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
 #
-# $$ 1 - p(| r - b | >  2^{m - m_{\rm prec}} - 1) > 1 - \frac{1}{2(2^{m - m_{\rm prec}} - 2)}. $$
-# Thus, setting $\alpha = 1/2(2^{m - m_{\rm prec}} - 2)$, one finds that to measure $\theta$ accurate to $m_{\rm prec}$ bits with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
+# Thus, setting $\alpha = 1/2(2^{m - b} - 2)$, one finds that to measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$ one needs a number of phase qubits
 #
-# $$ m = m_{\rm prec} + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
-# Thus, setting $\alpha = 1/2(2^{m - m_{\rm prec}} - 2)$, one finds that to measure $\theta$ accurate to $m_{\rm prec}$ bits with a probability of success at least $1 - \alpha$, one needs
+# $$ m(b,\alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
 #
-# $$ m = m_{\rm prec} + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
+# - Let us now choose $E_{target} - E_0$ randomly in $[-\Delta/2,\Delta/2[$ and see how the best guess error and best guess probability evolves with $m \geq b$.
 #
-# phase qubits.
-#
-# - Note that they assume $m > m_{\rm prec}+1$
-#
-# - Let us choose $E_{target} - E_0$ randomly in $[0,1[$ and see how the best guess error and best guess probability evolves with $m \geq p$.
-#
-# - First we slightly modify the way we perform qpe in order to compute this probability
+# - First we slightly modify the way we perform QPE in order to compute this probability
 #
 
 
@@ -369,13 +447,11 @@ def qpe_with_prob_success(
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
     """
 
-    assert size_interval > 0
-    Emax = E_target + size_interval / 2
-    evolution_time = 2 * np.pi / size_interval
-    global_phase = Emax * evolution_time
-    E_const = 0
+    E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
+        hamiltonian, E_target, size_interval
+    )
 
-    b = np.floor(theta_exact * 2**n_phase_bits)
+    a = np.floor(theta_exact * 2**n_phase_bits)
 
     # probs = qpe_get_full_probs(hamiltonian, psi0, n_phase_bits, evolution_time, global_phase)
     initial_circ = make_circ(n_phase_bits, psi0)
@@ -384,24 +460,22 @@ def qpe_with_prob_success(
     )
 
     if verbosity:
-        for ind, x in enumerate(
-            sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True)
-        ):
-            if ind < 5:
-                print(
-                    f"{x[0]:b}".zfill(n_phase_bits),
-                    f"|{x[0]}>",
-                    x[0] / 2**n_phase_bits,
-                    x[1],
-                    flush=True,
-                )
-            else:
-                break
+        for state_int, prob in sorted(
+            enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True
+        )[:5]:
+            print(
+                f"{state_int:b}".zfill(n_phase_bits),
+                f"|{state_int}>",
+                state_int / 2**n_phase_bits,
+                prob,
+                flush=True,
+            )
 
     prob_success = 0
     if n_precision_bits + 1 < n_phase_bits:
+        print("hello")
         for x in sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True):
-            if abs(x[0] - b) < 2 ** (n_phase_bits - n_precision_bits):
+            if abs(x[0] - a) < 2 ** (n_phase_bits - n_precision_bits) - 1:
                 prob_success += x[1]
 
     max_prob_state_int = np.argmax(probs)
@@ -415,11 +489,12 @@ def qpe_with_prob_success(
 
 # %%
 # number of target precision bits
-p = 5
-# random choice for delta
+b = 5
+# random choice for delta in [-0.5, 0.5[
 rng = np.random.default_rng(seed=42)
+delta = rng.random() - 1 / 2
 size_interval = 2
-E_target = E0 + size_interval * rng.random()
+E_target = E0 + size_interval * delta
 # theta_0 in the above text
 theta_exact = (E_target + size_interval / 2 - E0) / size_interval
 print(f"exact theta = {theta_exact:.6g}")
@@ -427,7 +502,7 @@ print(f"exact theta = {theta_exact:.6g}")
 probs_success = []
 probs = []
 energies = []
-ms = list(range(1, p + 7))
+ms = list(range(1, b + 7))
 
 for n_phase_bits in tqdm.tqdm(ms):
     energy, prob, prob_success = qpe_with_prob_success(
@@ -437,7 +512,7 @@ for n_phase_bits in tqdm.tqdm(ms):
         n_phase_bits,
         E_target,
         size_interval,
-        n_precision_bits=p,
+        n_precision_bits=b,
     )
     probs_success.append(prob_success)
     probs.append(prob)
@@ -445,38 +520,49 @@ for n_phase_bits in tqdm.tqdm(ms):
 
 
 # %%
-# formula for minimal number of phase bits required to reach given precision
-def m_func(p, epsilon):
-    return p + np.ceil(np.log2(2 + 1 / (2 * epsilon)))
+def minimal_number_phase_qubits(b, α):
+    """Compute the minimal number of phase qubits required
+    to reach b-bits precision with probability 1-α
+    """
+    return b + np.ceil(np.log2(2 + 1 / (2 * α)))
 
 
 # %%
 fig, axs = plt.subplots(2, 1)
 axs[0].plot(ms, energies, "-o")
 axs[0].axhline(y=E0, color="k", linestyle="dotted")
-tol = size_interval / 2**p
-axs[0].fill_between(ms, [E0 - tol], [E0 + tol], alpha=0.1, facecolor="g")
-axs[0].axvline(x=p, color="k", linestyle="dotted")
+tol = size_interval / 2**b
+axs[0].fill_between(ms, [E0 - tol], [E0 + tol], alpha=0.2, facecolor="tab:red")
+axs[0].axvline(x=b, color="k", linestyle="dotted")
 axs[0].set_ylabel("Energy")
+axs[0].set_ylim(-0.9, -0.5)
 
 
-eps = 0.1
-print(m_func(p, eps))
+α = 0.1
+print(minimal_number_phase_qubits(b, α))
 
-axs[1].plot(ms, probs, "-o", label="best guess prob")
-axs[1].plot(ms[p + ms[0] :], probs_success[p + ms[0] :], "-s", label="sucess prob")
-axs[1].axvline(x=p, color="k", linestyle="dotted")
-axs[1].axvline(x=m_func(p, eps), color="k", linestyle="dotted")
-axs[1].fill_between(ms, [1 - eps], [1], alpha=0.1, facecolor="g")
-axs[1].axhline(y=4 / np.pi**2, color="r", linestyle="dotted", label=r"$4/\pi^2$")
-axs[1].set_ylabel("prob")
+axs[1].plot(ms, probs, "-o", label="Best guess probability")
+axs[1].plot(
+    ms[b + ms[0] :],
+    probs_success[b + ms[0] :],
+    "-s",
+    label="Probability of reaching $b$-bits precision",
+)
+axs[1].axvline(x=b, color="k", linestyle="dotted")
+axs[1].axvline(x=minimal_number_phase_qubits(b, α), color="k", linestyle="dotted")
+axs[1].fill_between(ms, [1 - α], [1], alpha=0.1, facecolor="g")
+axs[1].set_ylabel("Probability")
+axs[1].set_yticks([4 / np.pi**2, 0.6, 0.8, 1], [r"$4/\pi^2$", "0.6", "0.8", "1.0"])
+axs[1].set_xticks([2, 4, 5, 8, 10], ["2", "4", "$b$", r"$m(b,\alpha)=8$", "10"])
+axs[1].set_xlabel("Number of phase qubits $m$")
 axs[1].legend(loc="lower left");
-
 
 # %% [markdown]
 # ### Performance and accuracy
 #
-# $E_0$ is of the order of 1 Hartree. Chemical accuracy is defined at 1mHa = 27meV = 300K. Therefore we aim for an error on energy $\simeq 10^{-3} E_0$. In this example we have fixed the energy unit $J=1$, hence we shall aim for an error $10^{-3}$.
+# In computational chemistry, the standard level for accuracy is the so-called chemical accuracy, set to $1$ mHa. In general, matrix elements of chemistry Hamiltonians are of the order of $1$ Ha.
+# In general, we will therefore aim for an error below $\simeq 10^{-3} E_{\rm target}$.
+# In this example we have fixed the energy unit $J=1$, hence we shall aim for an error at least below $10^{-3}$.
 #
 # Assume we start with a first estimation of $E_0$ with error $0.1$. What is the cost in phase qubits number to lower the error to $10^{-3}$?
 #
@@ -486,6 +572,9 @@ axs[1].legend(loc="lower left");
 E_target = E0 + 0.1
 size_interval = 2
 print("number of phase bits for chem accuracy =", int(np.log2(10**3 * size_interval)))
+
+# %% [markdown]
+# Let us see how the error decreases when increasing the number of phase qubits.
 
 # %%
 ms = list(range(1, 15))
