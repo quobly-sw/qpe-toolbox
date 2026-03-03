@@ -15,9 +15,9 @@
 # %% [markdown]
 # # Robust Phase Estimation
 #
-# This example introduces the Robust Phase Estimation algorithm. This is a flavor that requires only a single ancilla. The way the algorithm is implemented is inspired from **Phase estimation with partially randomized time evolution**, J.Gunther et al. [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
+# This example introduces the Robust Phase Estimation algorithm; this QPE version requires only a single ancilla/phase qubit. The way the algorithm is implemented is inspired from J.Gunther et al., *Phase estimation with partially randomized time evolution* [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
 #
-# We explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
+# In this notebook we explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
 #
 # We study the Trotter and statistical errors, and check that the RPE algorithm verifies Heisenberg scaling, i.e. the possibility to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
 
