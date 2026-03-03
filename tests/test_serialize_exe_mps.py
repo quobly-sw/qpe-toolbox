@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import tempfile
 from collections import Counter
 
 import numpy as np
@@ -22,6 +23,16 @@ tol = 1e-2
 
 
 def test_build_save_load_quimb():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        orig = os.getcwd()
+        os.chdir(tmp_dir)
+        try:
+            _run_build_save_load_quimb()
+        finally:
+            os.chdir(orig)
+
+
+def _run_build_save_load_quimb():
     n_qubits = 4
     depth = 2
     rng = np.random.default_rng(666)
@@ -32,12 +43,8 @@ def test_build_save_load_quimb():
 
     savefile_rad = "quimb_circuit"
     dump_quimb_Circuit_to_qasm(circ_quimb, savefile_rad, save_rounds=True)
-    quasm_file = savefile_rad + ".qasm"
-    rounds_file = savefile_rad + "_rounds.txt"
-    assert os.path.exists(quasm_file)
-    assert os.path.exists(rounds_file)
-    os.remove(quasm_file)
-    os.remove(rounds_file)
+    assert os.path.exists(savefile_rad + ".qasm")
+    assert os.path.exists(savefile_rad + "_rounds.txt")
 
     inferred_depth = max([gate["round"] for gate in circ_dict["gates"]]) + 1
     assert inferred_depth <= depth
