@@ -179,7 +179,7 @@ psi.draw(
 #
 # At the last step of the QPE algorithm, we sample from the phase register. We measure $\ket{a} = \ket{[2^m \theta]}$ with probability
 #
-# $$ P(a) = \left\vert \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \right\vert^2. $$
+# $$ P(a) = \lvert \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \rvert^2. $$
 #
 # We then see that when $\delta=0$, i.e. when $\theta = a / 2^m$, then $P(a) = 1$: the outcome $\ket{a}$ is deterministic in this case.
 #
@@ -440,8 +440,6 @@ def qpe_with_prob_success(
     E_target,
     size_interval,
     n_precision_bits,
-    *,
-    verbosity=0,
 ):
     """Build the circuit and perform the quantum phase estimation algorithm.
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
@@ -458,18 +456,6 @@ def qpe_with_prob_success(
     _, probs = qpe.qpe_sample(
         hamiltonian, initial_circ, evolution_time, "exact", global_phase
     )
-
-    if verbosity:
-        for state_int, prob in sorted(
-            enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True
-        )[:5]:
-            print(
-                f"{state_int:b}".zfill(n_phase_bits),
-                f"|{state_int}>",
-                state_int / 2**n_phase_bits,
-                prob,
-                flush=True,
-            )
 
     prob_success = 0
     if n_precision_bits + 1 < n_phase_bits:
