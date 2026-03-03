@@ -538,7 +538,7 @@ axs[0].set_ylim(-0.9, -0.5)
 
 
 α = 0.1
-print(minimal_number_phase_qubits(b, α))
+print("minimal_number_phase_qubits:", minimal_number_phase_qubits(b, α))
 
 axs[1].plot(ms, probs, "-o", label="Best guess probability")
 axs[1].plot(
