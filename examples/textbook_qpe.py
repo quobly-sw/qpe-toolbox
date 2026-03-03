@@ -792,7 +792,7 @@ for Omega in Omegas:
     p_o.append(traces_o["prob"])
 
 # %% [markdown]
-# We plot the energy and probability outputs as a function of $\alpha$:
+# We plot the energy and probability outputs as a function of $\Omega$:
 
 # %%
 fig, (ax_e, ax_p) = plt.subplots(2, 1, sharex=True)
