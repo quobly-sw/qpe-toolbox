@@ -179,7 +179,7 @@ psi.draw(
 #
 # At the last step of the QPE algorithm, we sample from the phase register. We measure $\ket{a} = \ket{[2^m \theta]}$ with probability
 #
-# $$ P(a) = \left| \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \right|^2. $$
+# $$ P(a) = \left\vert \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \right\vert^2. $$
 #
 # We then see that when $\delta=0$, i.e. when $\theta = a / 2^m$, then $P(a) = 1$: the outcome $\ket{a}$ is deterministic in this case.
 #
@@ -416,7 +416,7 @@ print(f"error = {E0 - energy}")
 # $$ |r - a| < 2^{m - b} - 1, $$
 # then
 #
-# $$ \left| \frac{r}{2^m} - \theta \right| \leq \frac{1}{2^{b}}. $$
+# $$ \left\vert \frac{r}{2^m} - \theta \right\vert \leq \frac{1}{2^{b}}. $$
 # Finally, they show that the probability for QPE to measure $\theta$ with $b$ bits precision is
 #
 # $$ 1 - P(| r - b | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
