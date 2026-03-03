@@ -473,7 +473,6 @@ def qpe_with_prob_success(
 
     prob_success = 0
     if n_precision_bits + 1 < n_phase_bits:
-        print("hello")
         for x in sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True):
             if abs(x[0] - a) < 2 ** (n_phase_bits - n_precision_bits) - 1:
                 prob_success += x[1]
