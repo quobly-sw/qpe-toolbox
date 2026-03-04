@@ -179,7 +179,7 @@ psi.draw(
 #
 # At the last step of the QPE algorithm, we sample from the phase register. We measure $\ket{a} = \ket{[2^m \theta]}$ with probability
 #
-# $$ P(a) = \lvert \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \rvert^2. $$
+# $$ P(a) = \left\lvert \frac{1}{2^m} \sum_{q=0}^{2^m-1} e^{i2\pi \delta q} \right\rvert^2. $$
 #
 # We then see that when $\delta=0$, i.e. when $\theta = a / 2^m$, then $P(a) = 1$: the outcome $\ket{a}$ is deterministic in this case.
 #
