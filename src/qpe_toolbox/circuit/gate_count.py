@@ -86,32 +86,6 @@ def count_gates(circ):
     return gates_count
 
 
-def count_this_gate(gates_count, label, qubits, controls):
-    """
-    Increment gate counts for a single gate instruction.
-
-    Parameters
-    ----------
-    gates_count : dict
-        Dictionary storing accumulated gate counts.
-    label : str
-        Gate label (e.g. ``'X'``, ``'RZ'``).
-    qubits : iterable of int
-        Target qubit indices.
-    controls : iterable of int
-        Control qubit indices.
-
-    Notes
-    -----
-    - Controlled gates are prefixed with one ``'C'`` per control qubit.
-    - SWAP gates required for connectivity are added automatically.
-
-    """
-    label = "C" * len(controls) + label
-    gates_count[label] = gates_count.get(label, 0) + 1
-    gates_count["SWAP"] += count_swaps(qubits, controls)
-
-
 def count_swaps(qubits, controls):
     """
     Estimate the number of SWAP gates required for a gate.

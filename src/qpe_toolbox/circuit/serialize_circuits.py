@@ -283,21 +283,7 @@ def serialize_from_quimb_Circuit(qc, *, float_precision=4):
         Reconstruct a ``qiskit`` :class:`qiskit.QuantumCircuit` from the serialized dictionary.
 
     """
-    return {
-        "n_qubits": qc.N,
-        "gates": [
-            {
-                "name": gate.label,
-                "qubits": [int(q) for q in gate.qubits],
-                "params": np.round(gate.params, float_precision).tolist(),
-                "controls": [int(q) for q in gate.controls]
-                if gate.controls is not None
-                else [],
-                "round": int(gate.round),
-            }
-            for gate in qc.gates
-        ],
-    }
+    return serialize_from_quimb_gates(qc.N, qc.gates, float_precision=float_precision)
 
 
 def serialize_from_quimb_gates(n_qubits, gates_list, *, float_precision=4):

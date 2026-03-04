@@ -157,14 +157,14 @@ fig = draw_circuit(
 # Since the information on the rounds is not recorded usually
 # on `.qasm`, we added the option of saving that information on a different .txt
 dump_quimb_Circuit_to_qasm(
-    circ=circ_rand, savefile_base="my_quimb_circuit", save_rounds=True
+    circ=circ_rand, savefile_base="example_output_quimb_circuit", save_rounds=True
 )
 
 ## Saving as `.json`
 # The circuit needs to be properly serialized,
 # so return a dictionary with valid `.json` dtypes
 dict_circ = serialize_from_quimb_Circuit(qc=circ_rand)
-with open("my_quimb_circuit.json", "w") as f:
+with open("example_output_quimb_circuit.json", "w") as f:
     json.dump(dict_circ, f, indent=4)
 
 # %% [markdown]
@@ -193,10 +193,12 @@ with open("my_quimb_circuit.json", "w") as f:
 
 # %%
 # Loading from `.qasm`
-loaded_quimb_circ = load_qasm_to_quimb_Circuit("my_quimb_circuit", with_rounds=True)
+loaded_quimb_circ = load_qasm_to_quimb_Circuit(
+    "example_output_quimb_circuit", with_rounds=True
+)
 
 # Loading from `.json`
-with open("my_quimb_circuit.json") as f:
+with open("example_output_quimb_circuit.json") as f:
     dict_loaded_circ = json.load(f)
 loaded_quimb_circ = deserialize_to_quimb_Circuit(dict_loaded_circ)
 
@@ -300,20 +302,20 @@ qc_with_values.draw(initial_state=True, fold=-1)
 # Save as `.qasm`
 # IMPORTANT: only circuits with bounded parameter values can be dumped in `.qasm`
 qasm_code = dumps(qc_with_values)
-with open("my_qiskit_circuit.qasm", "w") as f:
+with open("example_output_qiskit_circuit.qasm", "w") as f:
     f.write(qasm_code)
 
 # %% [markdown]
 # In $\texttt{qiskit}$ the `.qasm` files are loaded as:
 
 # %%
-qc = QuantumCircuit.from_qasm_file("my_quimb_circuit.qasm")
+qc = QuantumCircuit.from_qasm_file("example_output_quimb_circuit.qasm")
 
 # %% [markdown]
 # For the sake of completeness, we also introduce a deserialization from `.json` allowing for loading the circuit until a given depth saved in the key `"round"` of each `"gate"`:
 
 # %%
-with open("my_quimb_circuit.json") as f:
+with open("example_output_quimb_circuit.json") as f:
     dict_loaded_circ = json.load(f)
 qc = deserialize_to_qiskit_QuantumCircuit(dict_loaded_circ)
 

@@ -406,7 +406,7 @@ def run_qpe_lcu_walk_operator(
     m_L = int(np.ceil(np.log2(len(H.terms))))
     regs = _get_registers_qpe_lcu(H.n_qbits, m_L, m_ph)
 
-    traces, circ = qpe_first_stage_walk(
+    _, circ = qpe_first_stage_walk(
         H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbosity=verbosity
     )
 
@@ -424,17 +424,16 @@ def run_qpe_lcu_walk_operator(
             print(" " * len_prev_msg, end="\r")
             print(f"Done sampling {ctimes[-1]:.1f}s", end="\r")
         print("binary" + " " * 6 + "\t ket" + " " * 4 + "\t phase  \t prob")
-        for ind, x in enumerate(
-            sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True)
-        ):
-            if ind < 3:
-                print(
-                    f"{format(x[0], f'0{m_ph}b'):<12}",
-                    f"{'|' + str(x[0]) + '>':<8}",
-                    f"{x[0] / 2**m_ph:<6.4f}",
-                    f"{x[1]:<6.4f}",
-                    sep=" \t ",
-                )
+        for state_int, prob in sorted(
+            enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True
+        )[:3]:
+            print(
+                f"{format(state_int, f'0{m_ph}b'):<12}",
+                f"{'|' + str(state_int) + '>':<8}",
+                f"{state_int / 2**m_ph:<6.4f}",
+                f"{prob:<6.4f}",
+                sep=" \t ",
+            )
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**m_ph
