@@ -23,7 +23,7 @@ from qpe_toolbox.circuit.qaoa import (
 
 def test_qaoa():
     num_qubits = 6
-    G = generate_community_graph(num_qubits)
+    G = generate_community_graph(num_qubits, rng=np.random.default_rng(42))
     terms = dict.fromkeys(G.edges, 1)
     p = 3
 
@@ -45,6 +45,7 @@ def test_qaoa():
         batch_size=2,
         num_iter=20,
         verbosity=0,
+        seed=42,
     )
 
     fevals = [float(trial.value) for trial in study.trials]
