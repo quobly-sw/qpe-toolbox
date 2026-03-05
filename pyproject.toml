@@ -56,7 +56,8 @@ dependencies = [
 ]
 
   [project.urls]
-  Homepage = "https://github.com/quobly-sw/qpe-toolbox"
+  Documentation = "https://quobly-sw.github.io/qpe-toolbox"
+  Repository = "https://github.com/quobly-sw/qpe-toolbox"
   Issues = "https://github.com/quobly-sw/qpe-toolbox/issues"
 
 [dependency-groups]

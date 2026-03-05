@@ -11,6 +11,7 @@ import copy
 import itertools as it
 import json
 import time
+import warnings
 
 import networkx as nx
 import numpy as np
@@ -127,7 +128,15 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
     for i in range(len(size_comm)):
         p[i, i] = 0.5
 
-    return nx.stochastic_block_model(size_comm, p)
+    G = nx.stochastic_block_model(size_comm, p, seed=rng)
+    if G.number_of_edges() == 0:
+        warnings.warn(
+            "Generated community graph has no edges. "
+            "Consider passing a different rng or increasing N.",
+            UserWarning,
+            stacklevel=2,
+        )
+    return G
 
 
 def qaoa_energy(x, terms, opt):
@@ -183,7 +192,7 @@ def qaoa_energy(x, terms, opt):
 
 
 def study_optimization_time_costs(
-    hamilt_terms, hyperopt, bounds, *, batch_size=5, num_iter=20, verbosity=0
+    hamilt_terms, hyperopt, bounds, *, batch_size=5, num_iter=20, verbosity=0, seed=None
 ):
     """Measure time costs for batched parameter suggestions and evaluations
     in an ``optuna`` optimization loop.
@@ -244,7 +253,7 @@ def study_optimization_time_costs(
 
     """
     ask_time, cost_time, tell_time = [], [], []
-    study = optuna.create_study(sampler=optuna.samplers.CmaEsSampler())
+    study = optuna.create_study(sampler=optuna.samplers.CmaEsSampler(seed=seed))
 
     for _ in range(num_iter):
         t_0 = time.time()

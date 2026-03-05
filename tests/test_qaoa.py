@@ -2,6 +2,7 @@
 
 import json
 import os
+import tempfile
 
 os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -22,7 +23,7 @@ from qpe_toolbox.circuit.qaoa import (
 
 def test_qaoa():
     num_qubits = 6
-    G = generate_community_graph(num_qubits)
+    G = generate_community_graph(num_qubits, rng=np.random.default_rng(42))
     terms = dict.fromkeys(G.edges, 1)
     p = 3
 
@@ -44,6 +45,7 @@ def test_qaoa():
         batch_size=2,
         num_iter=20,
         verbosity=0,
+        seed=42,
     )
 
     fevals = [float(trial.value) for trial in study.trials]
@@ -53,6 +55,16 @@ def test_qaoa():
 
 
 def test_W_and_C():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        orig = os.getcwd()
+        os.chdir(tmp_dir)
+        try:
+            _run_W_and_C()
+        finally:
+            os.chdir(orig)
+
+
+def _run_W_and_C():
     list_N = [3, 4]
     n_realizations = 2
     rng = np.random.default_rng(42)
@@ -100,8 +112,6 @@ def test_W_and_C():
 
     assert os.path.exists(filename1 + ".json")
     assert os.path.exists(filename2 + ".json")
-    os.remove(filename1 + ".json")
-    os.remove(filename2 + ".json")
 
 
 if __name__ == "__main__":
