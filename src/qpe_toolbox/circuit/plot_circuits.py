@@ -493,8 +493,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     if any(x is None for x in gate_rounds):
         # without this information, no packing of gates within a layer
         raise ValueError("Gate round information required.")
-    else:
-        true_max_depth = max(gate_rounds) + 1
+    true_max_depth = max(gate_rounds) + 1
     depth = min(max_depth, true_max_depth)
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
@@ -702,13 +701,12 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
     if len(selected_edge) != 2:
         raise ValueError("Invalid selected_edge")
     circ_revlc = build_circ_revlc(selected_edge, circ)
-    
+
     gate_rounds = [gate.round for gate in circ_revlc.gates]
     if any(x is None for x in gate_rounds):
         # without this information, no packing of gates within a layer
         raise ValueError("Gate round information required.")
-    else:
-        depth = max(gate_rounds) + 1
+    depth = max(gate_rounds) + 1
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
     width = 2 * determine_layout_depth(circ_revlc) - 5
