@@ -457,7 +457,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     """
     Draw a layered quantum circuit using Matplotlib.
 
-    This function visualizes a quantum circuit composed of alternating
+    This function visualizes a quantum circuit, ASSUMING it is composed of alternating
     single-qubit and two-qubit layers. The circuit is drawn left-to-right,
     and gates placed according to their layer (round) structure.
 
@@ -669,8 +669,8 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
 
     `\\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle`.
 
-    This function visualizes the light-cone structure of a quantum circuit
-    that is layered around a two-site observable.
+    This function visualizes the light-cone structure of a quantum circuit,
+    ASSUMING that it consists on layers of single- and two-spin rotations, around a two-site observable.
     The circuit is split symmetrically around the observable and drawn from the inside out,
     showing how the light cone grows layer by layer.
 
