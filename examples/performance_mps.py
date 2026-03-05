@@ -38,8 +38,8 @@ from qpe_toolbox.circuit import (
     deserialize_to_qiskit_QuantumCircuit,
     deserialize_to_quimb_Circuit,
     deserialize_to_quimb_CircuitMPS,
-    draw_circuit,
-    draw_expval,
+    draw_layered_circuit,
+    draw_layered_expval,
     generate_rand_quimb,
     serialize_from_quimb_Circuit,
 )
@@ -82,7 +82,7 @@ for ctype in circuit_types:
         circuit_data[ctype][ctype + "_16"], gate_contract=False
     )
     depth = max([gate.round for gate in circ.gates]) + 1
-    fig = draw_circuit(
+    fig = draw_layered_circuit(
         circ,
         list_names=[
             r"$0$",
@@ -388,7 +388,7 @@ for ctype in circuit_types:
         circuit_data[ctype][ctype + "_16"], gate_contract=False
     )
     depth = max([gate.round for gate in circ.gates]) + 1
-    fig = draw_expval(
+    fig = draw_layered_expval(
         (5, 6),
         circ,
         list_names=[
