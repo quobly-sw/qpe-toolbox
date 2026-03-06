@@ -5,6 +5,8 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import importlib
+import inspect
 
 project = "qpe-toolbox"
 project_copyright = "2026, Quobly and Foxconn"
@@ -17,14 +19,13 @@ release = "2026, Quobly"
 extensions = [
     "sphinx.ext.napoleon",  # NumPy / Google style docstrings
     "sphinx.ext.autosummary",  # auto-generate API stub pages
-    "sphinx.ext.viewcode",  # link to highlighted source code
+    "sphinx.ext.linkcode",  # [source] buttons linking to GitHub
     "autoapi.extension",  # AutoAPI for automatic API documentation
     "myst_nb",  # For notebooks integration
     "sphinx_design",  # For better design blocks
     "sphinx_copybutton",  # For copy buttons in code blocks
     "sphinx.ext.intersphinx",  # Link to other projects documentation
     "sphinx.ext.extlinks",
-    # "sphinx.ext.linkcode",  # to be added when github repo is done
 ]
 
 templates_path = ["_templates"]
@@ -39,6 +40,27 @@ napoleon_numpy_docstring = True
 napoleon_include_special_with_doc = True
 napoleon_use_param = True
 napoleon_attr_annotations = False
+
+# -- Linkcode (GitHub source links) ------------------------------------------
+
+
+def linkcode_resolve(domain, info):
+    if domain != "py" or not info["module"]:
+        return None
+    try:
+        mod = importlib.import_module(info["module"])
+        obj = mod
+        for part in info["fullname"].split("."):
+            obj = getattr(obj, part)
+        lines, start = inspect.getsourcelines(obj)
+        lineno = f"#L{start}-L{start + len(lines) - 1}"
+    except Exception:
+        lineno = ""
+    filename = info["module"].replace(".", "/")
+    return (
+        f"https://github.com/quobly-sw/qpe-toolbox/blob/main/src/{filename}.py{lineno}"
+    )
+
 
 # -- External links -------------------------------------------------------
 extlinks = {
