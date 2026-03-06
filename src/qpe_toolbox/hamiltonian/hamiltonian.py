@@ -255,9 +255,9 @@ def rotation_gates(term, delta, qbit_reg):
 
     # Rotations: H for X gates and RX(pi/2) for Y gates
     for op, qbit in zip(pauli_string, qbits, strict=True):
-        if op in ("x", "X"):
+        if op.upper() == "X":
             routine.append(("H", qbit_reg[qbit]))
-        if op in ("y", "Y"):
+        if op.upper() == "Y":
             routine.append(("RX", np.pi / 2, qbit_reg[qbit]))
 
     # CNOTs
@@ -275,10 +275,10 @@ def rotation_gates(term, delta, qbit_reg):
 
     # Rotations back
     for op, qbit in zip(pauli_string, qbits, strict=True):
-        if op in ("x", "X"):
+        if op.upper() == "X":
             routine.append(("H", qbit_reg[qbit]))
 
-        if op in ("y", "Y"):
+        if op.upper() == "Y":
             routine.append(("RX", -np.pi / 2, qbit_reg[qbit]))
 
     return routine
