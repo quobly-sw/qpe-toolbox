@@ -453,11 +453,11 @@ def determine_layout_depth(circ):
     return X_end - X_init
 
 
-def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
+def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     """
-    Draw a quantum circuit using Matplotlib.
+    Draw a layered quantum circuit using Matplotlib.
 
-    This function visualizes a quantum circuit composed of alternating
+    This function visualizes a quantum circuit, ASSUMING it is composed of alternating
     single-qubit and two-qubit layers. The circuit is drawn left-to-right,
     and gates placed according to their layer (round) structure.
 
@@ -467,7 +467,7 @@ def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
         Quantum circuit.
 
     max_depth : int or inf, optional
-        Maximum number of circuit layers to draw. Defauilt is inf, the full circuit
+        Maximum number of circuit layers to draw. Default is inf, the full circuit
         is drawn.
 
     list_names : list, optional
@@ -489,7 +489,11 @@ def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
 
     """
     num_qubits = circ.N
-    true_max_depth = max(gate.round for gate in circ.gates) + 1
+    gate_rounds = [gate.round for gate in circ.gates]
+    if any(x is None for x in gate_rounds):
+        # without this information, no packing of gates within a layer
+        raise ValueError("Gate round information required.")
+    true_max_depth = max(gate_rounds) + 1
     depth = min(max_depth, true_max_depth)
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
@@ -659,16 +663,16 @@ def build_circ_revlc(selected_edge, circ):
     return circ_revlc
 
 
-def draw_expval(selected_edge, circ, *, list_names=None):
+def draw_layered_expval(selected_edge, circ, *, list_names=None):
     """Draw the tensor-network representation of an expectation value
     ..math:
 
     `\\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle`.
 
-    This function visualizes the light-cone structure of a quantum circuit
-    around a two-site observable. The circuit is split symmetrically around
-    the observable and drawn from the inside out, showing how the light cone
-    grows layer by layer.
+    This function visualizes the light-cone structure of a quantum circuit,
+    ASSUMING that it consists on layers of single- and two-spin rotations, around a two-site observable.
+    The circuit is split symmetrically around the observable and drawn from the inside out,
+    showing how the light cone grows layer by layer.
 
     Parameters
     ----------
@@ -697,7 +701,12 @@ def draw_expval(selected_edge, circ, *, list_names=None):
     if len(selected_edge) != 2:
         raise ValueError("Invalid selected_edge")
     circ_revlc = build_circ_revlc(selected_edge, circ)
-    depth = max(gate.round for gate in circ_revlc.gates) + 1
+
+    gate_rounds = [gate.round for gate in circ_revlc.gates]
+    if any(x is None for x in gate_rounds):
+        # without this information, no packing of gates within a layer
+        raise ValueError("Gate round information required.")
+    depth = max(gate_rounds) + 1
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
     width = 2 * determine_layout_depth(circ_revlc) - 5
