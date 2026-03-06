@@ -72,7 +72,7 @@ def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
     Parameters
     ----------
     hamiltonian : Hamiltonian
-        Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
+        Hamiltonian to encode with LCU.
     cutoff : float, default ``1e-10``
         Singular value cutoff for MPS compression.
 
@@ -102,7 +102,7 @@ def build_lcu_prepare_mpo(hamiltonian, cutoff=1e-10):
     Parameters
     ----------
     hamiltonian : Hamiltonian
-        Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
+        Hamiltonian to encode with LCU.
     cutoff : float, default ``1e-10``
         Cutoff for MPO compression.
 
