@@ -60,6 +60,7 @@ def test_molecule_h2():
 
 def test_U():
     n_qbits = 4
+    tol = 1e-6
 
     H = heisenberg_hamiltonian(n_qbits)
     H_dense = H.to_dense()
@@ -71,8 +72,8 @@ def test_U():
 
     H_mpo = H.to_mpo()
     dmrg = qtn.DMRG2(H_mpo, bond_dims=[10, 20, 40, 100, 100, 200], cutoffs=1e-10)
-    dmrg.solve(tol=1e-6)
-    E0_dmrg = dmrg.energy
+    dmrg.solve(tol=tol)
+    assert np.isclose(dmrg.energy, eigvals[0], atol=tol)
     psi0_mps = dmrg.state
 
     data_reg = list(range(1, n_qbits + 1))
@@ -83,7 +84,7 @@ def test_U():
         probs = circ.compute_marginal(where=[0])
         Z.append(probs[0] - probs[1])
     phi_ref = -np.angle(Z[0] + 1j * Z[1])
-    assert abs(phi_ref - E0_dmrg) < 1e-6
+    assert np.isclose(phi_ref, t * dmrg.energy, atol=tol)
 
     r = 1
     dt = t / r
