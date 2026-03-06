@@ -81,8 +81,8 @@ html_theme_options = {
         "color-brand-primary": "hsl(210, 50%, 60%)",
         "color-brand-content": "hsl(210, 50%, 60%)",
     },
-    "light_logo": "qpe-toolbox.png",
-    "dark_logo": "qpe-toolbox.png",
+    "light_logo": "qpe-toolbox_logo.png",
+    "dark_logo": "qpe-toolbox_logo.png",
 }
 
 pygments_style = "default"  # enable syntax highlighting
