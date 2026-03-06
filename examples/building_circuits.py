@@ -79,13 +79,13 @@ circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 # one layer is a single-body rotation, and the other is
 # an entangling two-body gate
 circ_brick = generate_brickwall_quimb(
-    num_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
+    n_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
 )
 
 # Same as before, but the entangling layer randomly picks pairs
 # of qubits at a maximum distance `ent_range`
 circ_rand = generate_rand_quimb(
-    num_qubits=10,
+    n_qubits=10,
     depth=4,
     sb_gate_label="rx",
     ent_gate_label="cnot",
@@ -236,21 +236,9 @@ for ci in qc.data:
 # This function allows us to feed any entanglement pattern
 # with nearest-neighbour, long-range, all-to-all or custom pairing
 
-qc_nn = n_local(
-    num_qubits=5,
-    rotation_blocks="ry",
-    entanglement_blocks="cx",
-    entanglement="linear",
-    reps=2,
-)
+qc_nn = n_local(5, "ry", "cx", entanglement="linear", reps=2)
 
-qc_lr = n_local(
-    num_qubits=4,
-    rotation_blocks="ry",
-    entanglement_blocks="cx",
-    entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)],
-    reps=2,
-)
+qc_lr = n_local(4, "ry", "cx", entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)], reps=2)
 
 # %% [markdown]
 # In order to feed the parameters, we only need to pass a list of values and assign them:
@@ -331,13 +319,7 @@ qc.draw(output="mpl", initial_state=True, fold=-1)
 
 # %%
 ent_pattern = [(0, 1), (1, 3), (3, 0), (2, 3), (1, 5), (4, 2), (4, 5), (5, 3)]
-qiskit_circ = n_local(
-    num_qubits=6,
-    rotation_blocks="h",
-    entanglement_blocks="cz",
-    entanglement=ent_pattern,
-    reps=2,
-)
+qiskit_circ = n_local(6, "h", "cz", entanglement=ent_pattern, reps=2)
 quimb_circ = quimb_circuit(qiskit_circ)
 quimb_circ.psi.draw(color=[f"I{i}" for i in range(quimb_circ.N)])
 

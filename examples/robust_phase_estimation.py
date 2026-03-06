@@ -102,8 +102,8 @@ print(f"Im(<psi|U|psi>) = {probs[0] - probs[1]:.4g}")
 # Now take the Heisenberg Hamiltonian with $4$ spins
 
 # %%
-n_qbits = 4
-H = heisenberg_hamiltonian(n_qbits)
+n_qubits = 4
+H = heisenberg_hamiltonian(n_qubits)
 E0, psi0 = do_dmrg(H)
 
 # %% [markdown]
@@ -120,7 +120,7 @@ E0, psi0 = do_dmrg(H)
 # %%
 rng = np.random.default_rng(seed=42)
 t = rng.random()
-data_reg = list(range(1, n_qbits + 1))
+data_reg = list(range(1, n_qubits + 1))
 U = H.get_U_exact(t, data_reg, controls=(0,))
 
 n_shots = np.inf  # infinite number of shots (perfect measure)

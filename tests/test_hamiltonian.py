@@ -10,8 +10,8 @@ from qpe_toolbox.hamiltonian import chemistry_hamiltonian, heisenberg_hamiltonia
 
 
 def test_heisenberg():
-    for n_qbits in [2, 4]:
-        heis_ham = heisenberg_hamiltonian(n_qbits)
+    for n_qubits in [2, 4]:
+        heis_ham = heisenberg_hamiltonian(n_qubits)
         heis_mpo = heis_ham.to_mpo()
         heis_dense = heis_ham.to_dense()
         assert np.max(abs(heis_dense - heis_mpo.to_dense())) < 1e-12
@@ -27,7 +27,7 @@ def test_molecule_h2():
 
     _ = chemistry_hamiltonian(mol, hf_mode="uhf", do_fci=True, do_ccsd=True)
     h2_ham = chemistry_hamiltonian(mol, hf_mode="rhf", do_fci=True, do_ccsd=True)
-    assert h2_ham.n_qbits == 4
+    assert h2_ham.n_qubits == 4
     assert abs(h2_ham.e_ccsd - h2_ham.e_fci) < abs(e_hf - h2_ham.e_fci)
 
     # DMRG
@@ -59,10 +59,10 @@ def test_molecule_h2():
 
 
 def test_U():
-    n_qbits = 4
+    n_qubits = 4
     tol = 1e-6
 
-    H = heisenberg_hamiltonian(n_qbits)
+    H = heisenberg_hamiltonian(n_qubits)
     H_dense = H.to_dense()
     t = 1.0
     U_dense = qu.expm(-1j * H_dense * t)
@@ -76,7 +76,7 @@ def test_U():
     assert np.isclose(dmrg.energy, eigvals[0], atol=tol)
     psi0_mps = dmrg.state
 
-    data_reg = list(range(1, n_qbits + 1))
+    data_reg = list(range(1, n_qubits + 1))
     U_gate = H.get_U_exact(t, data_reg, controls=[0])
     Z = []
     for theta in [0, -np.pi / 2]:
