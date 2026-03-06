@@ -53,7 +53,7 @@ def test_slct_reflection():
     select_mpo = qpe.build_lcu_select_mpo(hamiltonian)
     Id_mpo = select_mpo.apply(select_mpo)
     Id_mpo.compress(cutoff=1e-18)
-    err_mpo = Id_mpo - qtn.MPO_identity(m_L + hamiltonian.n_qbits)
+    err_mpo = Id_mpo - qtn.MPO_identity(m_L + hamiltonian.n_qubits)
     assert abs(err_mpo.norm()) ** 2 < 1e-12
 
 

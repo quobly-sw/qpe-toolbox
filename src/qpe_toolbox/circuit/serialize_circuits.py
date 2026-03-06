@@ -125,15 +125,15 @@ def apply_gate_qiskit(qc, label, qubits, params):
         label = "cx"
 
     # Check the number of qubits
-    num_qubits = len(qubits)
-    if num_qubits == 1:
+    n_qubits = len(qubits)
+    if n_qubits == 1:
         if len(params) == 0:
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, qubits[0])
         else:
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, *params, qubits[0])
-    elif num_qubits == 2:
+    elif n_qubits == 2:
         if len(params) == 0:
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, qubits[0], qubits[1])
@@ -141,7 +141,7 @@ def apply_gate_qiskit(qc, label, qubits, params):
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, *params, qubits[0], qubits[1])
     else:
-        raise ValueError(f"Unsupported number of qubits: {num_qubits}")
+        raise ValueError(f"Unsupported number of qubits: {n_qubits}")
 
 
 def deserialize_to_qiskit_QuantumCircuit(

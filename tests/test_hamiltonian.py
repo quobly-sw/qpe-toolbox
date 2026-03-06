@@ -27,7 +27,7 @@ def test_molecule_h2():
 
     _ = chemistry_hamiltonian(mol, hf_mode="uhf", do_fci=True, do_ccsd=True)
     h2_ham = chemistry_hamiltonian(mol, hf_mode="rhf", do_fci=True, do_ccsd=True)
-    assert h2_ham.n_qbits == 4
+    assert h2_ham.n_qubits == 4
     assert abs(h2_ham.e_ccsd - h2_ham.e_fci) < abs(e_hf - h2_ham.e_fci)
 
     # DMRG

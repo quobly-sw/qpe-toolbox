@@ -79,13 +79,13 @@ circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 # one layer is a single-body rotation, and the other is
 # an entangling two-body gate
 circ_brick = generate_brickwall_quimb(
-    num_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
+    n_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
 )
 
 # Same as before, but the entangling layer randomly picks pairs
 # of qubits at a maximum distance `ent_range`
 circ_rand = generate_rand_quimb(
-    num_qubits=10,
+    n_qubits=10,
     depth=4,
     sb_gate_label="rx",
     ent_gate_label="cnot",

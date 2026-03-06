@@ -107,7 +107,7 @@ for ctype in circuit_types:
 # Create small circuit
 depth = 3
 circ_quimb = generate_rand_quimb(
-    num_qubits=5,
+    n_qubits=5,
     depth=depth,
     sb_gate_label="rx",
     ent_gate_label="cx",
