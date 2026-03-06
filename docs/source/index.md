@@ -46,7 +46,7 @@ Check {download}`here <_static/2512_toolbox_deepdive.pdf>` for a presentation in
 
 ## Source
 
-The code is hosted on [GitHub](https://github.com/quobly-sw/qpe-toolbox), and docs are hosted on [GitHub pages](https://quantuminformation.pages.quobly.io/qpe-toolbox/index.html#).
+The code is hosted on [GitHub](https://github.com/quobly-sw/qpe-toolbox), and docs are hosted on [GitHub pages](https://quobly-sw.github.io/qpe-toolbox).
 
 ```{toctree}
 :maxdepth: 1
