@@ -180,7 +180,7 @@ def add_square(ax, x, y, col_face):
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object to which the square patch is added.
 
     x : float
@@ -217,7 +217,7 @@ def add_circle(ax, x, y, col_face):
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object to which the circle patch is added.
 
     x : float
@@ -265,7 +265,7 @@ def draw_2_qubit_layer(
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object on which the layer is drawn.
 
     num_qubits : int
@@ -338,7 +338,7 @@ def draw_1_qubit_layer(
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object on which the layer is drawn.
 
     num_qubits : int
@@ -389,7 +389,7 @@ def draw_init_product_state(
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object on which the initial state is drawn.
 
     num_qubits : int
@@ -485,7 +485,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
+    fig : :matplotlib-api:`figure.Figure`
 
     """
     num_qubits = circ.N
@@ -694,7 +694,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
+    fig : :matplotlib-api:`figure.Figure`
 
     """
     num_qubits = circ.N

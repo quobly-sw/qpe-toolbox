@@ -56,6 +56,10 @@ extlinks = {
         "https://numpy.org/doc/stable/reference/random/generated/numpy.random.%s.html",
         "numpy.random.%s",
     ),
+    "matplotlib-api": (
+        "https://matplotlib.org/stable/api/_as_gen/matplotlib.%s.html",
+        "matplotlib.%s",
+    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------
