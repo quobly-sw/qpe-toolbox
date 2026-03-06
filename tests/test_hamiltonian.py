@@ -63,11 +63,11 @@ def test_U():
 
     H = heisenberg_hamiltonian(n_qbits)
     H_dense = H.to_dense()
-    t = 1
+    t = 1.0
     U_dense = qu.expm(-1j * H_dense * t)
     eigvals, eigvecs = np.linalg.eigh(H_dense)
     psi0 = eigvecs[:, 0]
-    assert abs(np.angle(psi0.H @ U_dense @ psi0) + eigvals[0]) < 1e-11
+    assert np.isclose(psi0.H @ U_dense @ psi0, np.exp(-1j * t * eigvals[0]), atol=1e-11)
 
     H_mpo = H.to_mpo()
     dmrg = qtn.DMRG2(H_mpo, bond_dims=[10, 20, 40, 100, 100, 200], cutoffs=1e-10)
@@ -82,8 +82,8 @@ def test_U():
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)
         probs = circ.compute_marginal(where=[0])
         Z.append(probs[0] - probs[1])
-    phi_ref = np.angle(Z[0] + 1j * Z[1])
-    assert abs(phi_ref + E0_dmrg) < 1e-6
+    phi_ref = -np.angle(Z[0] + 1j * Z[1])
+    assert abs(phi_ref - E0_dmrg) < 1e-6
 
     r = 1
     dt = t / r

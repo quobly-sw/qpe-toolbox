@@ -13,9 +13,10 @@ import quimb.tensor as qtn
 from quimb.operator import SparseOperatorBuilder
 
 
-def heisenberg_hamiltonian(n_qbits, *, coupling_strength=1, spin=1 / 2):
+def heisenberg_hamiltonian(n_qbits, *, coupling_strength=1.0):
     """
-    Construct a 1D nearest-neighbor Heisenberg Hamiltonian with open boundaries.
+    Construct a 1D nearest-neighbor spin 1/2 Heisenberg Hamiltonian with open
+    boundaries.
 
     The Hamiltonian is given by
 
@@ -30,27 +31,20 @@ def heisenberg_hamiltonian(n_qbits, *, coupling_strength=1, spin=1 / 2):
     n_qbits : int
         Number of spins (qubits) in the chain.
     coupling_strength : float, optional
-        Exchange coupling constant :math:`J`. Default is 1.
-    spin : float, optional
-        Spin quantum number :math:`s`. Only ``spin=1/2`` is implemented.
+        Exchange coupling constant :math:`J`. Default is 1.0.
 
     Returns
     -------
     Hamiltonian
         Heisenberg Hamiltonian represented as a qubit operator.
 
-    Raises
-    ------
-    ValueError
-        If ``spin`` is not equal to 1/2.
-
     """
     terms = []
-    if spin != 1 / 2:
-        raise ValueError(f"spin {spin} not implemented. Defined only for spin 1/2")
     for i in range(n_qbits - 1):
         for op in ["xx", "yy", "zz"]:
-            terms.append((1 / 2.0 * coupling_strength * spin, op, [i, i + 1]))
+            # convention: S^α = σ^α / 2
+            # use Pauli matrices as terms and set coefficient to J/4
+            terms.append((coupling_strength / 4, op, [i, i + 1]))
     return Hamiltonian(terms, n_qbits)
 
 
