@@ -200,7 +200,7 @@ def _gates_llxHl(hamiltonian, l_term):
 
     m_L = int(np.ceil(np.log2(L)))
 
-    phys_reg = list(range(m_L, m_L + hamiltonian.n_qbits))
+    phys_reg = list(range(m_L, m_L + hamiltonian.n_qubits))
     l_reg = list(range(m_L))
 
     gates = []
@@ -246,9 +246,9 @@ def _build_Hl_mpo(hamiltonian, l_term):
 
     """
     if l_term >= len(hamiltonian.terms):
-        return qtn.MPO_identity(hamiltonian.n_qbits)
+        return qtn.MPO_identity(hamiltonian.n_qubits)
     if hamiltonian.terms[l_term][0] == 0:
-        return qtn.MPO_identity(hamiltonian.n_qbits)
+        return qtn.MPO_identity(hamiltonian.n_qubits)
 
     P = hamiltonian.terms[l_term]
     prefactor = P[0]
@@ -256,13 +256,13 @@ def _build_Hl_mpo(hamiltonian, l_term):
     qubits = P[2]
 
     arrays = []
-    for i in range(hamiltonian.n_qbits):
+    for i in range(hamiltonian.n_qubits):
         if i in qubits:
             ind_i = qubits.index(i)
             mat = np.sign(prefactor) * qu.pauli(paulis[ind_i])
         else:
             mat = qu.identity(2)
-        if (i == 0) or (i == (hamiltonian.n_qbits - 1)):
+        if (i == 0) or (i == (hamiltonian.n_qubits - 1)):
             aux = np.zeros([1, 2, 2], dtype=complex)
             aux[0, :, :] = mat
         else:
@@ -359,7 +359,7 @@ def build_lcu_reflection_mpo(hamiltonian, cutoff=1e-10):
     L_mpo = L_mps.partial_trace_to_mpo(keep=list(range(m_L)))
     L_mpo.compress(cutoff=cutoff)
 
-    n_qb = hamiltonian.n_qbits
+    n_qb = hamiltonian.n_qubits
     R_L = 2 * kron_mpos(L_mpo, qtn.MPO_identity(n_qb)) - qtn.MPO_identity(m_L + n_qb)
     R_L.compress(cutoff=cutoff)
 
@@ -404,7 +404,7 @@ def run_qpe_lcu_walk_operator(
     st = time.time()
     ctimes = []
     m_L = int(np.ceil(np.log2(len(H.terms))))
-    regs = _get_registers_qpe_lcu(H.n_qbits, m_L, m_ph)
+    regs = _get_registers_qpe_lcu(H.n_qubits, m_L, m_ph)
 
     _, circ = qpe_first_stage_walk(
         H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbosity=verbosity
@@ -489,7 +489,7 @@ def qpe_first_stage_walk(
     phase_zeros = qtn.MPS_computational_state("0" * m_ph)
     psi_init = kron_mps(phase_zeros, kron_mps(L_mps, psi0_mps))
     circ = qtn.CircuitMPS(
-        m_ph + m_L + H.n_qbits, psi0=psi_init, max_bond=max_bond, cutoff=cutoff
+        m_ph + m_L + H.n_qubits, psi0=psi_init, max_bond=max_bond, cutoff=cutoff
     )
 
     # Hadamard wall
@@ -519,14 +519,14 @@ def qpe_first_stage_walk(
     return traces, circ
 
 
-def _get_registers_qpe_lcu(n_qbits, m_L, m_ph):
+def _get_registers_qpe_lcu(n_qubits, m_L, m_ph):
     """
     Return dictionary of qubit registers for the phase, L,
     and physical registers in LCU QPE.
 
     Parameters
     ----------
-    n_qbits : int
+    n_qubits : int
         Number of physical qubits.
     m_L : int
         Number of L register qubits.
@@ -542,7 +542,7 @@ def _get_registers_qpe_lcu(n_qbits, m_L, m_ph):
     regs = {}
     regs["phase"] = tuple(range(m_ph))
     regs["L"] = tuple(range(m_ph, m_ph + m_L))
-    regs["phys"] = tuple(range(m_ph + m_L, m_ph + m_L + n_qbits))
+    regs["phys"] = tuple(range(m_ph + m_L, m_ph + m_L + n_qubits))
     return regs
 
 

@@ -120,8 +120,8 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
         Estimated phase angle in radians.
 
     """
-    n_qbits = H.n_qbits
-    phys_reg = list(range(1, n_qbits + 1))
+    n_qubits = H.n_qubits
+    phys_reg = list(range(1, n_qubits + 1))
     t = 2**m
     if (n_steps == "exact") or (n_steps == 0):
         U_m = H.get_U_exact(t, phys_reg, controls=(0,))

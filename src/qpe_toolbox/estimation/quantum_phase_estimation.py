@@ -72,7 +72,7 @@ def qpe_energy(
 
     Notes
     -----
-    - The phase register is automatically determined as ``initial_circ.N - hamiltonian.n_qbits``.
+    - The phase register is automatically determined as ``initial_circ.N - hamiltonian.n_qubits``.
     - The estimated energy is computed as
 
       .. math::
@@ -88,7 +88,7 @@ def qpe_energy(
     )
 
     # First stage: phase encoding
-    n_phase_bits = initial_circ.N - hamiltonian.n_qbits
+    n_phase_bits = initial_circ.N - hamiltonian.n_qubits
 
     dt = "exact" if n_steps == "exact" else evolution_time / n_steps
     traces, probs = qpe_sample(
@@ -186,7 +186,7 @@ def qpe_sample(
     - When ``run_simulation=False``, the function produces a gate list instead of simulating the circuit.
 
     """
-    n_phase_bits = initial_circ.N - hamiltonian.n_qbits
+    n_phase_bits = initial_circ.N - hamiltonian.n_qubits
     st = time.time()
 
     phase_reg = list(range(n_phase_bits))
@@ -215,7 +215,7 @@ def qpe_sample(
         if dt == "exact":
             raise ValueError("Cannot write gates for exact time evolution")
         n_steps = int(evolution_time / dt)
-        filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qbits}qbits_{n_phase_bits}phbits"
+        filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qubits_{n_phase_bits}phbits"
         if run_simulation:
             gate_dict = serialize_from_quimb_Circuit(
                 circ, float_precision=float_precision
@@ -292,7 +292,7 @@ def qpe_first_stage(
 
     Notes
     -----
-    - The phase register size is inferred from ``initial_circ.N - hamiltonian.n_qbits``.
+    - The phase register size is inferred from ``initial_circ.N - hamiltonian.n_qubits``.
     - Warnings are raised if the Trotter step size exceeds the required evolution time.
 
     """
@@ -302,14 +302,14 @@ def qpe_first_stage(
     if not ((dt == "exact") or (np.isscalar(dt) and np.isreal(dt) and dt > 0)):
         raise ValueError("Can only evolve for positive dt")
 
-    n_phase_bits = initial_circ.N - hamiltonian.n_qbits
+    n_phase_bits = initial_circ.N - hamiltonian.n_qubits
     st = time.time()
     ctimes = []
     circ = initial_circ.copy()
     bd_list = [circ.psi.max_bond()]
     gates_list = []
 
-    data_reg = [n_phase_bits + i for i in range(hamiltonian.n_qbits)]
+    data_reg = [n_phase_bits + i for i in range(hamiltonian.n_qubits)]
     phase_reg = list(range(n_phase_bits))
 
     c_round = 0

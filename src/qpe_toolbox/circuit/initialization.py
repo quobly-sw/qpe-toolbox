@@ -30,16 +30,16 @@ def _build_init_mps(n_phase_bits, psi_mps):
         Combined MPS of total length ``n_phase_bits + psi_mps.L``.
 
     """
-    n_qbits = psi_mps.L
+    n_qubits = psi_mps.L
     psi_aux = psi_mps.copy()
 
     phase_reg_mps = qtn.MPS_computational_state("0" * n_phase_bits)
 
-    psi_aux.reindex_({f"k{i}": f"k{i + n_phase_bits}" for i in range(n_qbits)})
-    psi_aux.retag_({f"I{i}": f"I{i + n_phase_bits}" for i in range(n_qbits)})
+    psi_aux.reindex_({f"k{i}": f"k{i + n_phase_bits}" for i in range(n_qubits)})
+    psi_aux.retag_({f"I{i}": f"I{i + n_phase_bits}" for i in range(n_qubits)})
 
     init_mps = qtn.MatrixProductState.new(
-        L=n_qbits + n_phase_bits, cyclic=False, site_ind_id="k{}", site_tag_id="I{}"
+        L=n_qubits + n_phase_bits, cyclic=False, site_ind_id="k{}", site_tag_id="I{}"
     )
     for t in phase_reg_mps.tensors:
         init_mps &= t
