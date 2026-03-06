@@ -64,6 +64,10 @@ extlinks = {
         "https://pyscf.org/pyscf_api_docs/pyscf.%s.html",
         "pyscf.%s",
     ),
+    "openfermion-ops": (
+        "https://quantumai.google/reference/python/openfermion/ops/%s",
+        "openfermion.ops.%s",
+    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------

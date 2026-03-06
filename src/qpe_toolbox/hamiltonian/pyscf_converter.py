@@ -168,7 +168,7 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
 
 
 def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
-    """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
+    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
     using the results of get_integrals_rhf/get_integrals_rhf_cas
 
     Parameters
@@ -187,7 +187,7 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
 
     Returns
     -------
-    openfermion.ops.InteractionOperator
+    :openfermion-ops:`InteractionOperator`
 
     """
     norb = hpq.shape[0]
@@ -222,7 +222,7 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
 
 
 def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
-    """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
+    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
     using the results of get_integrals_uhf/get_integrals_uhf_cas
 
     Parameters
@@ -241,7 +241,7 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
 
     Returns
     -------
-    openfermion.ops.InteractionOperator
+    :openfermion-ops:`InteractionOperator`
 
     """
     hpq_u, hpq_d = hpq
@@ -280,7 +280,7 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
 # can select the get_integrals_rhf/get_integrals_uhf function manually
 # or automatically
 def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
-    """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
+    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
     from an :pyscf-api:`pyscf.scf.RHF <scf>`/:pyscf-api:`pyscf.scf.ROHF <scf>`/:pyscf-api:`pyscf.scf.UHF <scf>` object
 
     Parameters
@@ -296,7 +296,7 @@ def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
 
     Returns
     -------
-    openfermion.ops.InteractionOperator
+    :openfermion-ops:`InteractionOperator`
 
     """
     if isinstance(mf, (scf.hf.RHF, scf.rohf.ROHF)):

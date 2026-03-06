@@ -196,7 +196,7 @@ def make_fermionic_hamiltonian(
 
     Returns
     -------
-    openfermion.FermionOperator
+    :openfermion-ops:`FermionOperator`
         Fermionic Hamiltonian operator.
 
     """
@@ -256,7 +256,7 @@ def terms_from_openfermion(qubit_operator):
 
     Parameters
     ----------
-    qubit_operator : openfermion.QubitOperator
+    qubit_operator : :openfermion-ops:`QubitOperator`
         Qubit Hamiltonian expressed as a sum of Pauli strings.
 
     Returns
