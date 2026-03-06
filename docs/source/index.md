@@ -41,7 +41,7 @@ The {doc}`tensor <autoapi/qpe_toolbox/tensor/index>` module provides a set of fu
 
 ## In-depth presentation of the QPE Toolbox
 
-Check {download}`here <customapi/documents/2512_toolbox_deepdive.pdf>` for a presentation introducing our motivation and philosophy about the toolbox.
+Check {download}`here <_static/2512_toolbox_deepdive.pdf>` for a presentation introducing our motivation and philosophy about the toolbox.
 
 
 ## Source
