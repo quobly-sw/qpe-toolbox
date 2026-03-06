@@ -559,3 +559,7 @@ print(f"Chemical accuracy eps={epsilon} requires M={M} iterations")
 # Reaching chemical accuracy requires at least ten iterations, and a sufficient number of shots and Trotter steps.
 # If you want to go further, you can first make an estimation of the runtime for $M=10$ and a given number of shots and Trotter steps,
 # then with some patience try to run the simulation.
+
+# %%
+
+# %%
