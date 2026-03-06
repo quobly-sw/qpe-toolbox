@@ -23,7 +23,7 @@ extensions = [
     "sphinx_design",  # For better design blocks
     "sphinx_copybutton",  # For copy buttons in code blocks
     "sphinx.ext.intersphinx",  # Link to other projects documentation
-    # "sphinx.ext.extlinks",  # to be added when github repo is done
+    "sphinx.ext.extlinks",
     # "sphinx.ext.linkcode",  # to be added when github repo is done
 ]
 
@@ -39,6 +39,16 @@ napoleon_numpy_docstring = True
 napoleon_include_special_with_doc = True
 napoleon_use_param = True
 napoleon_attr_annotations = False
+
+# -- External links -------------------------------------------------------
+extlinks = {
+    "quimb": ("https://quimb.readthedocs.io/en/latest/%s", "quimb %s"),
+    "quimb-api": (
+        "https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/index.html"
+        "#quimb.tensor.%s",
+        "%s",
+    ),
+}
 
 # -- AutoAPI configuration ------------------------------------------------
 

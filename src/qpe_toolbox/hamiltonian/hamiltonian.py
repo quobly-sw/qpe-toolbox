@@ -69,7 +69,7 @@ def do_dmrg(hamiltonian):
     -------
     E0 : float
         Ground-state energy.
-    psi0 : quimb.tensor.MatrixProductState
+    psi0 : :quimb-api:`MatrixProductState`
         Ground-state wavefunction as a Matrix Product State.
 
     """
@@ -150,7 +150,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.tensor.MatrixProductOperator
+        :quimb-api:`MatrixProductOperator`
             MPO representation of the Hamiltonian.
 
         """
@@ -178,7 +178,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.tensor.Gate
+        :quimb-api:`Gate`
             Exact multi-qubit unitary gate.
 
         """

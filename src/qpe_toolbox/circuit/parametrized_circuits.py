@@ -52,7 +52,7 @@ dict_quimb_all_param_two_body_numbers = {
 def one_qubit_layer(
     circ, gate_label, *, random_coeff=1.0, gate_round=None, parametrize=False
 ):
-    """Apply a single-body gate layer to all qubits of a ``quimb`` :class:`quimb.tensor.circuit.Circuit`.
+    """Apply a single-body gate layer to all qubits of a ``quimb`` :quimb-api:`Circuit`.
 
     This function applies the same single-qubit gate to every qubit in the
     circuit at a specified circuit round. If the gate is parametrized,
@@ -61,12 +61,12 @@ def one_qubit_layer(
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The quimb circuit to which the layer is applied.
 
     gate_label : str
         Label identifying the single-body gate to apply (e.g. ``"RX"``).
-        The label must be compatible with :meth:`quimb.tensor.circuit.Circuit.apply_gate`.
+        The label must be compatible with :quimb-api:`Circuit.apply_gate`.
 
     random_coeff : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
@@ -125,7 +125,7 @@ def two_qubit_nn_layer(
     parametrize=False,
     reverse=False,
 ):
-    """Apply a nearest-neighbor two-body entangling layer to a ``quimb`` :class:`quimb.tensor.circuit.Circuit`.
+    """Apply a nearest-neighbor two-body entangling layer to a ``quimb`` :quimb-api:`Circuit`.
 
     This function applies a two-qubit entangling gate between nearest
     neighbors in a brickwork pattern. The starting qubit index determines
@@ -133,7 +133,7 @@ def two_qubit_nn_layer(
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The ``quimb`` circuit to which the layer is applied.
 
     start : int
@@ -159,7 +159,7 @@ def two_qubit_nn_layer(
 
     Returns
     -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The circuit with the entangling layer applied.
 
     Notes
@@ -213,14 +213,14 @@ def two_qubit_rand_layer(
     parametrize=True,
     reverse=False,
 ):
-    """Apply a random two-body entangling layer to a ``quimb`` :class:`quimb.tensor.circuit.Circuit`.
+    """Apply a random two-body entangling layer to a ``quimb`` :quimb-api:`Circuit`.
     This function applies two-qubit entangling gates between randomly chosen
     qubit pairs. For each qubit, a partner qubit is selected within a given
     range, and the entangling gate is applied with a specified probability.
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The quimb circuit to which the layer is applied.
 
     gate_label : str
@@ -253,7 +253,7 @@ def two_qubit_rand_layer(
 
     Returns
     -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The circuit with the random entangling layer applied.
 
     Notes
@@ -310,7 +310,7 @@ def generate_brickwall_quimb(
     random_coeff=1.0,
     rng=None,
 ):
-    """Generate a brickwall-structured ``quimb`` :class:`quimb.tensor.circuit.Circuit`.
+    """Generate a brickwall-structured ``quimb`` :quimb-api:`Circuit`.
 
     This function constructs a quantum circuit composed of alternating
     single-body layers and nearest-neighbor two-body entangling layers
@@ -366,7 +366,7 @@ def generate_brickwall_quimb(
 
     Returns
     -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The generated brickwall quantum circuit.
 
     Raises
@@ -427,7 +427,7 @@ def generate_rand_quimb(
     random_coeff=1.0,
     rng=None,
 ):
-    """Generate a random entangling ``quimb`` :class:`quimb.tensor.circuit.Circuit`.
+    """Generate a random entangling ``quimb`` :quimb-api:`Circuit`.
 
     This function constructs a quantum circuit consisting of alternating
     single-body layers and randomly generated two-body entangling layers.
@@ -491,7 +491,7 @@ def generate_rand_quimb(
 
     Returns
     -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         The generated random entangling quantum circuit.
 
     Raises
@@ -566,7 +566,7 @@ def ansatz_circuit(n, depth, gate_round=0, random_coeff=1.0):
 
     Returns
     -------
-    quimb.tensor.Circuit
+    :quimb-api:`Circuit`
         Parametrized ansatz circuit.
 
     """
@@ -610,7 +610,7 @@ def ansatz_circuit_su4(n, depth, *, gate_round=0, random_coeff=1.0):
 
     Returns
     -------
-    quimb.tensor.Circuit
+    :quimb-api:`Circuit`
         Parametrized SU(4) ansatz circuit.
 
     """
@@ -668,7 +668,7 @@ def ansatz_circuit_sym(n, depth, gate_round=0, random_coeff=1.0):
 
     Returns
     -------
-    quimb.tensor.Circuit
+    :quimb-api:`Circuit`
         Parametrized symmetric ansatz circuit.
 
     """

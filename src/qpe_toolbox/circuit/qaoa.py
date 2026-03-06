@@ -364,7 +364,7 @@ def find_W_and_C_QAOA(
     Notes
     -----
     - For each graph, a random QAOA parameter initialization is used (``gammas`` and ``betas``).
-    - Contraction rehearsal is performed using :meth:`quimb.tensor.circuit.Circuit.local_expectation_rehearse` for each
+    - Contraction rehearsal is performed using :quimb-api:`Circuit.local_expectation_rehearse` for each
       term in the Hamiltonian.
     - The average width ``W`` is computed over all local contraction trees for the graph.
     - The total contraction cost ``C`` is computed using a numerically stable log-sum-exp

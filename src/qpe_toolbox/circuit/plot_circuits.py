@@ -61,7 +61,7 @@ def assign_sublayers_per_round(circ, gate_round):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     gate_round : int
@@ -135,7 +135,7 @@ def assign_sublayers(circ):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     Returns
@@ -426,7 +426,7 @@ def determine_layout_depth(circ):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit whose layout depth is to be determined.
 
     Returns
@@ -463,7 +463,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     max_depth : int or inf, optional
@@ -573,7 +573,7 @@ def build_circ_revlc(selected_edge, circ):
 
     This function extracts the light cone of a selected two-qubit
     interaction term (Pauli string with weight 2) from a full circuit and
-    reconstructs it as an explicit :class:`quimb.tensor.circuit.Circuit` instance.
+    reconstructs it as an explicit :quimb-api:`Circuit` instance.
     The resulting circuit contains only the gates that
     causally influence the selected edge, ordered by their round.
 
@@ -586,12 +586,12 @@ def build_circ_revlc(selected_edge, circ):
     selected_edge : tuple[int, int]
         The edge (pair of qubit indices) for which the light cone is constructed.
 
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     Returns
     -------
-    circ_revlc : :class:`quimb.tensor.circuit.Circuit`
+    circ_revlc : :quimb-api:`Circuit`
         A new circuit containing only the gates in the reverse light cone of
         ``selected_edge``, acting on the same number of qubits as ``circ_qaoa``.
 
@@ -679,7 +679,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
     selected_edge : iterable of int with length 2
         Pair of qubit indices on which the observable acts.
 
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     list_names : list, optional

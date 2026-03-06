@@ -23,7 +23,7 @@ def shift_control_gates(gates, m_aux, k_ctrl):
 
     Parameters
     ----------
-    gates : iterable of `quimb.tensor.circuit.Gate`
+    gates : iterable of :quimb-api:`Gate`
         List of gates to shift.
     m_aux : int
         Number of auxiliary qubits occupying the lowest indices ``[0, m_aux - 1]``.
