@@ -121,10 +121,10 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
         N_av = N_av - n
         n = int((1 / (N_comm - i)) * N_av * rng.random())
         size_comm.append(n)
-    size_comm.append(int(N - np.sum(np.array(size_comm))))
-    size_comm = [i for i in size_comm if i > 1]
+    size_comm.append(N - sum(size_comm))
+    size_comm = [int(i) for i in size_comm if i > 1]
 
-    p = np.ones((len(size_comm), len(size_comm))) * (0.5 / (N_comm - 1))
+    p = (0.5 / (N_comm - 1)) * np.ones((len(size_comm), len(size_comm)))
     for i in range(len(size_comm)):
         p[i, i] = 0.5
 
@@ -272,7 +272,7 @@ def study_optimization_time_costs(
         t_0 = time.time()
         energies = [
             float(qaoa_energy(x=x, terms=hamilt_terms, opt=hyperopt)) for x in x_batch
-        ]  # list of energies
+        ]
         if verbosity >= 1:
             print(f"Lowest energy in the batch: {min(energies):.2f}")
         t_e = time.time()
