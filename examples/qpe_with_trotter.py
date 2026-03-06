@@ -49,8 +49,8 @@ mystyles = [
 # - We consider the 1D nearest-neighbour Heisenberg Hamiltonian with open boundary conditions and take the DMRG ground state as the "exact" reference state.
 
 # %%
-n_qubits = 4
-h_spin = heisenberg_hamiltonian(n_qubits)
+num_qubits = 4
+h_spin = heisenberg_hamiltonian(num_qubits)
 exact_energy, psi0_mps = do_dmrg(h_spin)
 
 # %% [markdown]
@@ -91,7 +91,7 @@ circ.apply_gates(qpe.iqft_swapped(phase_reg))
 circ.psi.draw(
     figsize=(12, 12),
     show_tags=False,
-    color={f"I{i}" for i in range(n_qubits + n_phase_bits0)},
+    color={f"I{i}" for i in range(num_qubits + n_phase_bits0)},
     edge_scale=1,
     layout="kamada_kawai",
     edge_color=True,
@@ -336,7 +336,7 @@ ax.semilogy(nphase_list_resource, entangling_gates, "-o")
 ax.set_xlabel("number of phase qubits")
 ax.set_ylabel("number of entangling gates")
 fig.suptitle(
-    f"QPE Heisenberg {n_qubits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
+    f"QPE Heisenberg {num_qubits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
 );
 # %% [markdown]
 # In the resource analysis mode (when 'run_simulation=False') the output is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.

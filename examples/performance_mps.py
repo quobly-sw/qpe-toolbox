@@ -107,7 +107,7 @@ for ctype in circuit_types:
 # Create small circuit
 depth = 3
 circ_quimb = generate_rand_quimb(
-    n_qubits=5,
+    num_qubits=5,
     depth=depth,
     sb_gate_label="rx",
     ent_gate_label="cx",
@@ -182,7 +182,7 @@ for idx, ax in np.ndenumerate(axes):
         for i, c in enumerate(cases):
             values = instance[f"depth{2 * idx[0] + 1}"][c]
             plot_errorbar(
-                ax, instance["n_qubits"], np.mean(values), np.std(values), mycolors[i]
+                ax, instance["num_qubits"], np.mean(values), np.std(values), mycolors[i]
             )
     ax.set_xlim(circuit_sizes[0] / 2, circuit_sizes[-1] * 2)
     ax.set_xscale("log", base=2)
@@ -198,7 +198,7 @@ for instance in circuit_data[circuit_types[1]].values():
         values = instance["depth1"][c]
         plot_errorbar(
             axes[0, 1],
-            instance["n_qubits"] * 1.15,
+            instance["num_qubits"] * 1.15,
             np.mean(values),
             np.std(values),
             mycolors[i + 3],
@@ -347,7 +347,7 @@ for idx, ax in np.ndenumerate(axes):
         sampl_quimb = np.asarray(instance[f"depth{depth}"]["quimb MPS sampl 10"])
         total_quimb = contr_quimb + sampl_quimb
         total_qiskit = np.asarray(instance[f"depth{depth}"]["qiskit total"])
-        x = instance["n_qubits"]
+        x = instance["num_qubits"]
         plot_errorbar(ax, x, np.mean(total_quimb), np.std(total_quimb), "tab:orange")
         plot_errorbar(ax, x, np.mean(total_qiskit), np.std(total_qiskit), "tab:cyan")
 
