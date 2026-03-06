@@ -96,8 +96,16 @@ class Hamiltonian:
     """
 
     def __init__(self, terms, n_qubits):
-        self.terms = terms
-        self.n_qubits = n_qubits
+        self._terms = terms
+        self._n_qubits = n_qubits
+
+    @property
+    def terms(self):
+        return self._terms
+
+    @property
+    def n_qubits(self):
+        return self._n_qubits
 
     def to_dense(self):
         """
