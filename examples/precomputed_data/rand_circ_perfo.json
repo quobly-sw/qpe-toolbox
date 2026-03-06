@@ -1,6 +1,6 @@
 {
   "rand_16": {
-    "n_qubits": 16,
+    "num_qubits": 16,
     "gates": [
       {
         "name": "RY",
@@ -2121,7 +2121,7 @@
     }
   },
   "rand_32": {
-    "n_qubits": 32,
+    "num_qubits": 32,
     "gates": [
       {
         "name": "RY",
@@ -6109,7 +6109,7 @@
     }
   },
   "rand_64": {
-    "n_qubits": 64,
+    "num_qubits": 64,
     "gates": [
       {
         "name": "RY",
@@ -13660,7 +13660,7 @@
     }
   },
   "rand_128": {
-    "n_qubits": 128,
+    "num_qubits": 128,
     "gates": [
       {
         "name": "RY",
@@ -28310,7 +28310,7 @@
     }
   },
   "rand_256": {
-    "n_qubits": 256,
+    "num_qubits": 256,
     "gates": [
       {
         "name": "RY",
