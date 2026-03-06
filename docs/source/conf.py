@@ -15,7 +15,6 @@ release = "2026, Quobly"
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    # "sphinx.ext.autodoc",  # core: import modules, read docstrings
     "sphinx.ext.napoleon",  # NumPy / Google style docstrings
     "sphinx.ext.autosummary",  # auto-generate API stub pages
     "sphinx.ext.viewcode",  # link to highlighted source code
@@ -43,7 +42,6 @@ napoleon_attr_annotations = False
 
 # -- AutoAPI configuration ------------------------------------------------
 
-autodoc_typehints = "both"  # or "description"
 autoapi_typehints = "description"  # or "signature"
 
 autoapi_dirs = ["../../src/qpe_toolbox"]
