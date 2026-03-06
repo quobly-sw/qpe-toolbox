@@ -13,7 +13,7 @@ import quimb.tensor as qtn
 from quimb.operator import SparseOperatorBuilder
 
 
-def heisenberg_hamiltonian(num_qubits, *, coupling_strength=1, spin=1 / 2):
+def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1, spin=1 / 2):
     """
     Construct a 1D nearest-neighbor Heisenberg Hamiltonian with open boundaries.
 
@@ -27,7 +27,7 @@ def heisenberg_hamiltonian(num_qubits, *, coupling_strength=1, spin=1 / 2):
 
     Parameters
     ----------
-    num_qubits : int
+    n_qubits : int
         Number of spins (qubits) in the chain.
     coupling_strength : float, optional
         Exchange coupling constant :math:`J`. Default is 1.
@@ -48,10 +48,10 @@ def heisenberg_hamiltonian(num_qubits, *, coupling_strength=1, spin=1 / 2):
     terms = []
     if spin != 1 / 2:
         raise ValueError(f"spin {spin} not implemented. Defined only for spin 1/2")
-    for i in range(num_qubits - 1):
+    for i in range(n_qubits - 1):
         for op in ["xx", "yy", "zz"]:
             terms.append((1 / 2.0 * coupling_strength * spin, op, [i, i + 1]))
-    return Hamiltonian(terms, num_qubits)
+    return Hamiltonian(terms, n_qubits)
 
 
 def do_dmrg(hamiltonian):
@@ -96,14 +96,14 @@ class Hamiltonian:
     terms : list of tuple
         Hamiltonian terms in the form
         ``(coefficient, pauli_string, qubits)``, e.g. ``(0.5, "xy", [0, 1])``.
-    num_qubits : int
+    n_qubits : int
         Total number of qubits.
 
     """
 
-    def __init__(self, terms, num_qubits):
+    def __init__(self, terms, n_qubits):
         self.terms = terms
-        self.num_qubits = num_qubits
+        self.n_qubits = n_qubits
 
     def to_dense(self):
         """
@@ -112,12 +112,12 @@ class Hamiltonian:
         Returns
         -------
         quimb.qarray
-            Dense Hermitian matrix of shape ``(2**num_qubits, 2**num_qubits)``.
+            Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
 
         """
-        h_dense = np.zeros([2**self.num_qubits, 2**self.num_qubits], dtype="complex")
+        h_dense = np.zeros([2**self.n_qubits, 2**self.n_qubits], dtype="complex")
         for coeff, paulis, qubits in self.terms:
-            ops = [qu.identity(2)] * self.num_qubits
+            ops = [qu.identity(2)] * self.n_qubits
             for sigma, k in zip(paulis, qubits, strict=True):
                 ops[k] = qu.pauli(sigma)
             h_dense += coeff * qu.kron(*ops)
@@ -182,7 +182,7 @@ class Hamiltonian:
             Exact multi-qubit unitary gate.
 
         """
-        if len(data_reg) != self.num_qubits:
+        if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
         h_dense = self.to_dense()
         U = qu.expm(-1j * h_dense * t)
@@ -212,7 +212,7 @@ class Hamiltonian:
             If the Trotter order is not implemented.
 
         """
-        if len(data_reg) != self.num_qubits:
+        if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
         if trotter_order == 1:
             program = []

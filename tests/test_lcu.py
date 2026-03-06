@@ -9,8 +9,8 @@ from qpe_toolbox.tensor import add_cqubit_mpo, apply_gate_from_mpo, kron_mps
 
 tol = 1e-10
 
-num_qubits = 4
-hamiltonian = heisenberg_hamiltonian(num_qubits)
+n_qubits = 4
+hamiltonian = heisenberg_hamiltonian(n_qubits)
 weights, lmb, L, m_L = qpe.get_lcu_weights(hamiltonian)
 
 E0, psi0 = do_dmrg(hamiltonian)
@@ -53,7 +53,7 @@ def test_slct_reflection():
     select_mpo = qpe.build_lcu_select_mpo(hamiltonian)
     Id_mpo = select_mpo.apply(select_mpo)
     Id_mpo.compress(cutoff=1e-18)
-    err_mpo = Id_mpo - qtn.MPO_identity(m_L + hamiltonian.num_qubits)
+    err_mpo = Id_mpo - qtn.MPO_identity(m_L + hamiltonian.n_qubits)
     assert abs(err_mpo.norm()) ** 2 < 1e-12
 
 
@@ -61,7 +61,7 @@ def test_slct_gates_comp_basis():
     select_gates = qpe.lcu_select_gates(hamiltonian)
     select_mpo = qpe.build_lcu_select_mpo(hamiltonian)
     for k in range(2 ** (m_L)):
-        psi = qtn.MPS_computational_state(f"{{0:0{m_L}b}}".format(k) + "0" * num_qubits)
+        psi = qtn.MPS_computational_state(f"{{0:0{m_L}b}}".format(k) + "0" * n_qubits)
 
         circ = qtn.CircuitMPS(psi0=psi)
         for gate in select_gates:
@@ -93,7 +93,7 @@ def test_RL():
     R_L = qpe.build_lcu_reflection_mpo(hamiltonian)
 
     Id_test = R_L.apply(R_L)
-    error_mpo = Id_test - qtn.MPO_identity(m_L + num_qubits)
+    error_mpo = Id_test - qtn.MPO_identity(m_L + n_qubits)
     assert abs(error_mpo.norm()) ** 2 < tol
 
     L_mps = qpe.build_lcu_prepare_state_mps(hamiltonian)
@@ -109,7 +109,7 @@ def test_controlled_walk():
     psi_init = kron_mps(qtn.MPS_computational_state("1"), kron_mps(L_mps, psi0))
 
     # Create circuit, define registers
-    circ = qtn.CircuitMPS(m_L + num_qubits + 1, psi0=psi_init)
+    circ = qtn.CircuitMPS(m_L + n_qubits + 1, psi0=psi_init)
     anc_reg = (0,)
 
     # SELECT

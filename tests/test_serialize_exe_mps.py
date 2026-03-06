@@ -33,11 +33,11 @@ def test_build_save_load_quimb():
 
 
 def _run_build_save_load_quimb():
-    num_qubits = 4
+    n_qubits = 4
     depth = 2
     rng = np.random.default_rng(666)
     circ_quimb = generate_rand_quimb(
-        num_qubits, depth, "rx", "cu3", 4, 0.75, start_ent=True, rng=rng
+        n_qubits, depth, "rx", "cu3", 4, 0.75, start_ent=True, rng=rng
     )
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
 
@@ -64,9 +64,9 @@ def _run_build_save_load_quimb():
 
 
 def test_sample_quimb_qiskit():
-    num_qubits = 5
+    n_qubits = 5
     depth = 2
-    circ_quimb = generate_brickwall_quimb(num_qubits, depth, "rx", "cnot")
+    circ_quimb = generate_brickwall_quimb(n_qubits, depth, "rx", "cnot")
 
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
     circ_quimb = deserialize_to_quimb_CircuitMPS(

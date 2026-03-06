@@ -125,15 +125,15 @@ def apply_gate_qiskit(qc, label, qubits, params):
         label = "cx"
 
     # Check the number of qubits
-    num_qubits = len(qubits)
-    if num_qubits == 1:
+    n_qubits = len(qubits)
+    if n_qubits == 1:
         if len(params) == 0:
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, qubits[0])
         else:
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, *params, qubits[0])
-    elif num_qubits == 2:
+    elif n_qubits == 2:
         if len(params) == 0:
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, qubits[0], qubits[1])
@@ -141,7 +141,7 @@ def apply_gate_qiskit(qc, label, qubits, params):
             gate_func = dict_qiskit_gate_map[label]
             gate_func(qc, *params, qubits[0], qubits[1])
     else:
-        raise ValueError(f"Unsupported number of qubits: {num_qubits}")
+        raise ValueError(f"Unsupported number of qubits: {n_qubits}")
 
 
 def deserialize_to_qiskit_QuantumCircuit(
@@ -161,7 +161,7 @@ def deserialize_to_qiskit_QuantumCircuit(
     full_gate_dict : dict
         Dictionary encoding the quantum circuit. It must contain:
 
-        - ``"num_qubits"`` : int
+        - ``"n_qubits"`` : int
             Total number of qubits in the circuit.
 
         - ``"gates"`` : list[dict]
@@ -185,7 +185,7 @@ def deserialize_to_qiskit_QuantumCircuit(
         circuit is reconstructed.
 
     measure : bool, optional
-        If ``True``, a classical register of size ``num_qubits`` is added and
+        If ``True``, a classical register of size ``n_qubits`` is added and
         all qubits are measured at the end of the circuit. Default is ``False``.
 
     Returns
@@ -210,7 +210,7 @@ def deserialize_to_qiskit_QuantumCircuit(
     - Parameter consistency is delegated to :func:`apply_gate_qiskit` and ``qiskit``.
 
     """
-    N = int(full_gate_dict["num_qubits"])
+    N = int(full_gate_dict["n_qubits"])
     qc = QuantumCircuit(N)
     for gate in full_gate_dict["gates"]:
         if gate["round"] < max_depth:
@@ -243,7 +243,7 @@ def serialize_from_quimb_Circuit(qc, *, float_precision=4):
     dict
         Dictionary representation of the circuit with the following keys:
 
-        - ``"num_qubits"`` : int
+        - ``"n_qubits"`` : int
           Number of qubits in the circuit.
 
         - ``"gates"`` : list of dict
@@ -286,7 +286,7 @@ def serialize_from_quimb_Circuit(qc, *, float_precision=4):
     return serialize_from_quimb_gates(qc.N, qc.gates, float_precision=float_precision)
 
 
-def serialize_from_quimb_gates(num_qubits, gates_list, *, float_precision=4):
+def serialize_from_quimb_gates(n_qubits, gates_list, *, float_precision=4):
     """Serialize a list of ``quimb`` gates into a ``JSON``-compatible dictionary.
 
     This function converts a list of :class:`quimb.tensor.circuit.Gate` objects into
@@ -296,7 +296,7 @@ def serialize_from_quimb_gates(num_qubits, gates_list, *, float_precision=4):
 
     Parameters
     ----------
-    num_qubits : int
+    n_qubits : int
         Total number of qubits in the circuit.
     gates_list : list
         The list of ``quimb`` gates to be serialized.
@@ -308,7 +308,7 @@ def serialize_from_quimb_gates(num_qubits, gates_list, *, float_precision=4):
     dict
         Dictionary representation of the circuit with the following keys:
 
-        - ``"num_qubits"`` : int
+        - ``"n_qubits"`` : int
           Number of qubits in the circuit.
 
         - ``"gates"`` : list of dict
@@ -349,7 +349,7 @@ def serialize_from_quimb_gates(num_qubits, gates_list, *, float_precision=4):
 
     """
     return {
-        "num_qubits": num_qubits,
+        "n_qubits": n_qubits,
         "gates": [
             {
                 "name": gate.label,
@@ -380,7 +380,7 @@ def deserialize_to_quimb_Circuit(
     full_gate_dict : dict
         Serialized circuit description. Must contain the following keys:
 
-        - ``"num_qubits"`` : int or str
+        - ``"n_qubits"`` : int or str
             Total number of qubits in the circuit.
 
         - ``"gates"`` : list of dict
@@ -421,7 +421,7 @@ def deserialize_to_quimb_Circuit(
       contraction layer-by-layer.
 
     """
-    qc = qtn.Circuit(N=int(full_gate_dict["num_qubits"]))
+    qc = qtn.Circuit(N=int(full_gate_dict["n_qubits"]))
 
     for gate in full_gate_dict["gates"]:
         if gate["round"] < max_depth:
@@ -457,7 +457,7 @@ def deserialize_to_quimb_CircuitMPS(
     full_gate_dict : dict
         Serialized circuit description. Must contain the following keys:
 
-        - ``"num_qubits"`` : int or str
+        - ``"n_qubits"`` : int or str
             Total number of qubits in the circuit.
         - ``"gates"`` : list
             List of gate specifications. Each gate dictionary must contain:
@@ -496,7 +496,7 @@ def deserialize_to_quimb_CircuitMPS(
         all gates contracted up to the specified depth.
 
     """
-    N = int(full_gate_dict["num_qubits"])
+    N = int(full_gate_dict["n_qubits"])
     if perm:
         cmps = qtn.CircuitPermMPS(
             N=N,
