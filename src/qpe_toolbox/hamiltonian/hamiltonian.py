@@ -13,7 +13,7 @@ import quimb.tensor as qtn
 from quimb.operator import SparseOperatorBuilder
 
 
-def heisenberg_hamiltonian(n_qbits, coupling_strength=1, spin=1 / 2):
+def heisenberg_hamiltonian(n_qbits, *, coupling_strength=1, spin=1 / 2):
     """
     Construct a 1D nearest-neighbor Heisenberg Hamiltonian with open boundaries.
 
