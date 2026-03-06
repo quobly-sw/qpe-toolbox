@@ -68,6 +68,11 @@ extlinks = {
         "https://quantumai.google/reference/python/openfermion/ops/%s",
         "openfermion.ops.%s",
     ),
+    "cotengra-api": (
+        "https://cotengra.readthedocs.io/en/latest/autoapi/cotengra/index.html"
+        "#cotengra.%s",
+        "cotengra.%s",
+    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------
