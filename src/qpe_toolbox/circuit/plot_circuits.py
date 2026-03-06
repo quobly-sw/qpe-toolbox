@@ -26,7 +26,7 @@ def rand_high_sat_color(*, rng=None):
 
     Parameters
     ----------
-    rng : class:`numpy.random.Generator`, optional
+    rng : :numpy-random:`Generator`, optional
         Random number generator. If ``None``, a default generator is created.
 
     Returns

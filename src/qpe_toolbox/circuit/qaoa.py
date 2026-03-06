@@ -96,7 +96,7 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
         communities may be smaller if some generated sizes are <= 1.
         Default is 4.
 
-    rng : :class:`numpy.random.Generator`, optional
+    rng : :numpy-random:`Generator`, optional
         Random number generator used to sample community sizes.
         If ``None``, a default generator is created.
 

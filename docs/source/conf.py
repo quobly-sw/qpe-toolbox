@@ -48,6 +48,14 @@ extlinks = {
         "#quimb.tensor.%s",
         "%s",
     ),
+    "numpy-api": (
+        "https://numpy.org/doc/stable/reference/generated/numpy.%s.html",
+        "numpy.%s",
+    ),
+    "numpy-random": (
+        "https://numpy.org/doc/stable/reference/random/generated/numpy.random.%s.html",
+        "numpy.random.%s",
+    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------

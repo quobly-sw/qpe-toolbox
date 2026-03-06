@@ -234,7 +234,7 @@ def two_qubit_rand_layer(
         Probability threshold controlling whether an entangling gate is
         applied. A gate is applied if ``rng_prob.random() <= gate_prob``.
 
-    rng : :class:`numpy.random.Generator`, default ``None``
+    rng : :numpy-random:`Generator`, default ``None``
         Random number generator for ``gate_range`` and ``gate_prob``.
 
     random_coeff : float, default ``1.0``
@@ -360,7 +360,7 @@ def generate_brickwall_quimb(
     random_coeff : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
-    rng : :class:`numpy.random.Generator`, optional
+    rng : :numpy-random:`Generator`, optional
         Random number generator used to generate gate parameters.
         If ``None``, a default generator is created.
 
@@ -485,7 +485,7 @@ def generate_rand_quimb(
     random_coeff : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
-    rng : :class:`numpy.random.Generator`, optional
+    rng : :numpy-random:`Generator`, optional
         Random number generator used to sample community sizes.
         If ``None``, a default generator is created.
 

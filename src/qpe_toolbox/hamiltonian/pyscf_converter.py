@@ -36,9 +36,9 @@ def get_integrals_rhf(rhf):
         number of electrons
     constant : float
         the zero-body (constant) term
-    hpq : numpy.ndarray
+    hpq : :numpy-api:`ndarray`
         the one-body term
-    hpqrs : numpy.ndarray
+    hpqrs : :numpy-api:`ndarray`
         the two-body term in chemist notation
 
     """
@@ -66,9 +66,9 @@ def get_integrals_uhf(uhf):
         number of electrons
     constant : float
         the zero-body (constant) term
-    hpq : tuple of numpy.ndarray
+    hpq : tuple of :numpy-api:`ndarray`
         the one-body terms (u and d)
-    hpqrs : tuple of numpy.ndarray
+    hpqrs : tuple of :numpy-api:`ndarray`
         the two-body terms in chemist notation (uu, ud, and dd)
 
     """
@@ -120,9 +120,9 @@ def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
         number of active electrons
     constant : float
         the zero-body (constant) term
-    hpq : numpy.ndarray
+    hpq : :numpy-api:`ndarray`
         the one-body term
-    hpqrs : numpy.ndarray
+    hpqrs : :numpy-api:`ndarray`
         the two-body term in chemist notation
 
     """
@@ -154,9 +154,9 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
         number of active electrons
     constant : float
         the zero-body (constant) term
-    hpq : tuple of numpy.ndarray
+    hpq : tuple of :numpy-api:`ndarray`
         the one-body terms (u and d)
-    hpqrs : tuple of numpy.ndarray
+    hpqrs : tuple of :numpy-api:`ndarray`
         the two-body terms in chemist notation (uu, ud, and dd)
 
     """
@@ -174,8 +174,8 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
     Parameters
     ----------
     constant : float
-    hpq : numpy.ndarray
-    hpqrs : numpy.ndarray
+    hpq : :numpy-api:`ndarray`
+    hpqrs : :numpy-api:`ndarray`
         results from get_integrals_rhf/get_integrals_rhf_cas
     orbital_major: bool, default : True
         if True
@@ -228,8 +228,8 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
     Parameters
     ----------
     constant : float
-    hpq : tuple of numpy.ndarray
-    hpqrs : tuple of numpy.ndarray
+    hpq : tuple of :numpy-api:`ndarray`
+    hpqrs : tuple of :numpy-api:`ndarray`
         results from get_integrals_uhf/get_integrals_uhf_cas
     orbital_major: bool, default : True
         if True
