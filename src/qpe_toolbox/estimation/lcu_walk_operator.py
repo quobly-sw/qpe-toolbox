@@ -67,7 +67,7 @@ def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
     Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
 
     .. math::
-        \ket{\mathcal{L}} = sum_\ell sqrt(w_\ell / lambda) \ket{\ell}
+        \ket{\mathcal{L}} = \sum_\ell \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}
 
     Parameters
     ----------
