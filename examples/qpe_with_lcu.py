@@ -69,8 +69,8 @@ plt.rcParams.update({"font.size": 12})
 # We consider the 1D Heisenberg model with 4 spins
 
 # %%
-n_qbits = 4
-H = heisenberg_hamiltonian(n_qbits)
+n_qubits = 4
+H = heisenberg_hamiltonian(n_qubits)
 
 weights, λ, L, m_L = qpe.get_lcu_weights(H)
 print(f"LCU decomposition with {L} terms")

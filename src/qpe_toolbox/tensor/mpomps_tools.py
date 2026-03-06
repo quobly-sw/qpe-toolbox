@@ -212,7 +212,7 @@ def add_creg_mpo(mpo, mpo_reg, creg, cket):
     if len(creg) == 1:
         if cket in ["1", 1]:
             location = "after" if (mpo_reg[-1] < creg[0]) else "before"
-            return add_cqbit_mpo(mpo, location)
+            return add_cqubit_mpo(mpo, location)
         raise ValueError(f"{cket} on one control bit not implemented")
 
     m_c = len(creg)
@@ -233,7 +233,7 @@ def add_creg_mpo(mpo, mpo_reg, creg, cket):
 ### add a single control qubit
 
 
-def add_cqbit_mpo(mpo, location):
+def add_cqubit_mpo(mpo, location):
     """
     Add a single control qubit to an MPO.
 

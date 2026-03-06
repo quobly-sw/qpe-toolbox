@@ -5,10 +5,10 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 
 def test_walk_qpe():
-    n_qbits = 2
+    n_qubits = 2
     m_ph = 2
 
-    H = heisenberg_hamiltonian(n_qbits)
+    H = heisenberg_hamiltonian(n_qubits)
     E0, psi0_mps = do_dmrg(H)
     lmb = sum([abs(P[0]) for P in H.terms])
 

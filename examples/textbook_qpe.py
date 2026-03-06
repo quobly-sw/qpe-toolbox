@@ -74,8 +74,8 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 # Let us define the Hamiltonian and perform exact diagonalization
 
 # %%
-n_qbits = 2
-h_spin = heisenberg_hamiltonian(n_qbits)
+n_qubits = 2
+h_spin = heisenberg_hamiltonian(n_qubits)
 
 # Get matrix
 hamilt_matrix = h_spin.to_dense()
@@ -105,7 +105,7 @@ n_phase_bits = 4
 psi_target = psi0_mps
 initial_circ = make_circ(n_phase_bits, psi_target)
 
-data_reg = list(range(n_phase_bits, n_phase_bits + n_qbits))
+data_reg = list(range(n_phase_bits, n_phase_bits + n_qubits))
 print(
     f"measure H = {initial_circ.local_expectation(hamilt_matrix, where=data_reg):.4f}"
 )
@@ -580,7 +580,7 @@ for n_phase_bits in tqdm.tqdm(ms):
 # %%
 fig, axs = plt.subplots(3, 1)
 
-fig.suptitle(f"1D Heisenberg with {n_qbits} spins")
+fig.suptitle(f"1D Heisenberg with {n_qubits} spins")
 axs[0].semilogy(ms, [abs(E - E0) for E in energies], "-o")
 axs[0].axhline(y=1e-3, color="k", linestyle="dotted")
 axs[0].set_ylabel("error (units of J)")
@@ -608,8 +608,8 @@ res = {"E0": [], "energies": [], "probs": [], "durations": [], "durations_ed": [
 
 st0 = time.time()
 
-for n_qbits in tqdm.tqdm(nqb_list):
-    h_spin = heisenberg_hamiltonian(n_qbits)
+for n_qubits in tqdm.tqdm(nqb_list):
+    h_spin = heisenberg_hamiltonian(n_qubits)
 
     # Get matrix
     hamilt_qarray = h_spin.to_dense()
@@ -647,8 +647,8 @@ for n_qbits in tqdm.tqdm(nqb_list):
     res["durations"].append(durations)
 
 # %%
-for ind, n_qbits in enumerate(nqb_list):
-    plt.plot(ms, res["energies"][ind], "-o", label=f"$n_{{qb}}=${n_qbits}")
+for ind, n_qubits in enumerate(nqb_list):
+    plt.plot(ms, res["energies"][ind], "-o", label=f"$n_{{qb}}=${n_qubits}")
 plt.ylabel("Energy")
 plt.xlabel("phase qubits number")
 plt.legend();
@@ -659,12 +659,12 @@ plt.legend();
 # %%
 fig, axs = plt.subplots(3, 1, figsize=(6, 6), sharex=True)
 
-for ind, n_qbits in enumerate(nqb_list):
+for ind, n_qubits in enumerate(nqb_list):
     axs[0].semilogy(
         ms,
         [abs(E - res["E0"][ind]) for E in res["energies"][ind]],
         "-o",
-        label=f"$n_{{qb}}=${n_qbits}",
+        label=f"$n_{{qb}}=${n_qubits}",
     )
 
     axs[1].plot(ms, res["probs"][ind], "-o")
@@ -681,7 +681,7 @@ axs[2].semilogy(
     ms,
     [res["durations_ed"][ind] for _ in ms],
     linestyle="dotted",
-    label=f"ED, $n_{{qb}}=${n_qbits}",
+    label=f"ED, $n_{{qb}}=${n_qubits}",
 )
 axs[2].set_xlabel("phase qubits number")
 axs[2].set_ylabel("duration (sec)")
@@ -695,8 +695,8 @@ plt.tight_layout()
 # Vary $\Delta$ and $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to get errors because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
 
 # %%
-n_qbits = 4
-h_spin = heisenberg_hamiltonian(n_qbits)
+n_qubits = 4
+h_spin = heisenberg_hamiltonian(n_qubits)
 
 
 E0, psi0_mps = do_dmrg(h_spin)

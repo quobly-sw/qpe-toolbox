@@ -215,7 +215,7 @@ def qpe_sample(
         if dt == "exact":
             raise ValueError("Cannot write gates for exact time evolution")
         n_steps = int(evolution_time / dt)
-        filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qbits_{n_phase_bits}phbits"
+        filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qubits_{n_phase_bits}phbits"
         if run_simulation:
             gate_dict = serialize_from_quimb_Circuit(
                 circ, float_precision=float_precision

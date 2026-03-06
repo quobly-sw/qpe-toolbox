@@ -217,19 +217,19 @@ class Hamiltonian:
         if trotter_order == 1:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, delta=dt, qbit_reg=data_reg)
+                program += rotation_gates(term, delta=dt, qubit_reg=data_reg)
             return program
         if trotter_order == 2:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, delta=dt / 2, qbit_reg=data_reg)
+                program += rotation_gates(term, delta=dt / 2, qubit_reg=data_reg)
             for term in reversed(self.terms):
-                program += rotation_gates(term, delta=dt / 2, qbit_reg=data_reg)
+                program += rotation_gates(term, delta=dt / 2, qubit_reg=data_reg)
             return program
         raise ValueError(f"order {trotter_order} not implemented")
 
 
-def rotation_gates(term, delta, qbit_reg):
+def rotation_gates(term, delta, qubit_reg):
     """
     Generate a gate sequence for exponentiating a Pauli-string term.
 
@@ -247,7 +247,7 @@ def rotation_gates(term, delta, qbit_reg):
         Hamiltonian term ``(theta, pauli_string, qubits)``.
     delta : float
         Time step or Trotter slice.
-    qbit_reg : sequence of int
+    qubit_reg : sequence of int
         Mapping from logical qubit indices to circuit qubits.
 
     Returns
@@ -256,35 +256,35 @@ def rotation_gates(term, delta, qbit_reg):
         Abstract quantum gate instructions suitable for circuit construction.
 
     """
-    (theta, pauli_string, qbits) = term
+    (theta, pauli_string, qubits) = term
     routine = []
 
     # Rotations: H for X gates and RX(pi/2) for Y gates
-    for op, qbit in zip(pauli_string, qbits, strict=True):
+    for op, qubit in zip(pauli_string, qubits, strict=True):
         if op in ("x", "X"):
-            routine.append(("H", qbit_reg[qbit]))
+            routine.append(("H", qubit_reg[qubit]))
         if op in ("y", "Y"):
-            routine.append(("RX", np.pi / 2, qbit_reg[qbit]))
+            routine.append(("RX", np.pi / 2, qubit_reg[qubit]))
 
     # CNOTs
     for j in range(len(pauli_string) - 1):
-        routine.append(("CNOT", qbit_reg[qbits[j]], qbit_reg[qbits[j + 1]]))
+        routine.append(("CNOT", qubit_reg[qubits[j]], qubit_reg[qubits[j + 1]]))
 
     # RZ gate
     routine.append(
-        ("RZ", 2 * theta * delta, qbit_reg[qbits[-1]])
+        ("RZ", 2 * theta * delta, qubit_reg[qubits[-1]])
     )  ## RZ(alpha) = exp(-1j * alpha/2 * sigma_z)
 
     # CNOTs back
     for j in range(len(pauli_string) - 1, 0, -1):
-        routine.append(("CNOT", qbit_reg[qbits[j - 1]], qbit_reg[qbits[j]]))
+        routine.append(("CNOT", qubit_reg[qubits[j - 1]], qubit_reg[qubits[j]]))
 
     # Rotations back
-    for op, qbit in zip(pauli_string, qbits, strict=True):
+    for op, qubit in zip(pauli_string, qubits, strict=True):
         if op in ("x", "X"):
-            routine.append(("H", qbit_reg[qbit]))
+            routine.append(("H", qubit_reg[qubit]))
 
         if op in ("y", "Y"):
-            routine.append(("RX", -np.pi / 2, qbit_reg[qbit]))
+            routine.append(("RX", -np.pi / 2, qubit_reg[qubit]))
 
     return routine
