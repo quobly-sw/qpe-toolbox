@@ -15,7 +15,7 @@ import quimb as qu
 
 from qpe_toolbox.circuit.qaoa import (
     brute_force_MaxCut,
-    find_W_and_C_QAOA,
+    compute_qaoa_contraction_costs_from_file,
     generate_community_graph,
     study_optimization_time_costs,
 )
@@ -101,12 +101,11 @@ def _run_W_and_C():
     )
 
     filename2 = "test_W_and_C"
-    find_W_and_C_QAOA(
+    compute_qaoa_contraction_costs_from_file(
         graph_dict_name="my_new_graphs_QAOA",
         results_name=filename2,
         hyperopt=hopt,
         circuit_depths=(2, 3),
-        verbosity=1,
         description="Economic hyperopt.",
     )
 
