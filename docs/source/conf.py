@@ -60,6 +60,10 @@ extlinks = {
         "https://matplotlib.org/stable/api/_as_gen/matplotlib.%s.html",
         "matplotlib.%s",
     ),
+    "pyscf-api": (
+        "https://pyscf.org/pyscf_api_docs/pyscf.%s.html",
+        "pyscf.%s",
+    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------

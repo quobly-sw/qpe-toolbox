@@ -26,7 +26,7 @@ def get_integrals_rhf(rhf):
 
     Parameters
     ----------
-    rhf : pyscf.scf.RHF
+    rhf : :pyscf-api:`pyscf.scf.RHF <scf>`
 
     Returns
     -------
@@ -56,7 +56,7 @@ def get_integrals_uhf(uhf):
 
     Parameters
     ----------
-    uhf : pyscf.scf.UHF
+    uhf : :pyscf-api:`pyscf.scf.UHF <scf>`
 
     Returns
     -------
@@ -104,7 +104,7 @@ def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
 
     Parameters
     ----------
-    rhf : pyscf.scf.RHF
+    rhf : :pyscf-api:`pyscf.scf.RHF <scf>`
     ncas : int
         number of active orbitals
     nelecas : int or tuple of int
@@ -138,7 +138,7 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
 
     Parameters
     ----------
-    uhf : pyscf.scf.UHF
+    uhf : :pyscf-api:`pyscf.scf.UHF <scf>`
     ncas : int
         number of active orbitals
     nelecas : int or tuple of int
@@ -281,11 +281,11 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
 # or automatically
 def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
     """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
-    from an pyscf.scf.RHF/pyscf.scf.ROHF/pyscf.scf.UHF object
+    from an :pyscf-api:`pyscf.scf.RHF <scf>`/:pyscf-api:`pyscf.scf.ROHF <scf>`/:pyscf-api:`pyscf.scf.UHF <scf>` object
 
     Parameters
     ----------
-    mf : pyscf.scf.RHF or pyscf.scf.ROHF or pyscf.scf.UHF
+    mf : :pyscf-api:`pyscf.scf.RHF <scf>` or :pyscf-api:`pyscf.scf.ROHF <scf>` or :pyscf-api:`pyscf.scf.UHF <scf>`
     orbital_major: bool, default : True
         if True
           * qubit [0, norb) will be for spin up
