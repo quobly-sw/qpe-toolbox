@@ -255,6 +255,7 @@ def draw_2_qubit_layer(
     gate_label,
     fontsize,
     col_face,
+    active_qubits,
     *,
     reverse=False,
 ):
@@ -292,6 +293,10 @@ def draw_2_qubit_layer(
 
     col_face : color
         Face color of the square gate markers (Matplotlib-compatible).
+        
+    active_qubits : iterable of int
+        Indices of qubits on which the gate is applied.
+        Useful when drawing expectation values with unitary cancellation.
 
     reverse : bool, optional
         If ``True``, reverse the horizontal ordering of the sublayers. This is
@@ -311,10 +316,11 @@ def draw_2_qubit_layer(
 
     for sublayer in sublayers:
         for g0, g1 in sublayer[1]:
-            x = X + mod_dict_sublayer[g0, g1]
-            add_square(ax, x=x, y=g0, col_face=col_face)
-            add_square(ax, x=x, y=g1, col_face=col_face)
-            ax.vlines(x, g0, g1, lw=4, color="k", zorder=1)
+            if g0 in active_qubits or g1 in active_qubits:
+                x = X + mod_dict_sublayer[g0, g1]
+                add_square(ax, x=x, y=g0, col_face=col_face)
+                add_square(ax, x=x, y=g1, col_face=col_face)
+                ax.vlines(x, g0, g1, lw=4, color="k", zorder=1)
 
     ax.text(
         X + (len(sublayers) - 1) / 2,
@@ -549,6 +555,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
+                    active_qubits=list(range(num_qubits)),
                 )
                 X += len(sublayers) + 1
 
@@ -790,16 +797,20 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
+                    active_qubits=active_qubits,
                     reverse=reverse,
                 )
 
             X_r += len(list_sublayers[rev_layer]) - 1
 
             # List of qubits featuring in the light cone;
-            # `draw_1_qubit_layer` requires it to "blind" the rotations on unactive qubits
+            # `draw_1_qubit_layer` and `draw_2_qubit_layer` require
+            # to "blind" the rotations on unactive qubits
+            new_active_qubits = active_qubits.copy()
             for i, j in list_dict_gates_to_sublayers[rev_layer]:
-                active_qubits.update((i, j))
-
+                if i in active_qubits or j in active_qubits:
+                    new_active_qubits.update((i, j))
+            active_qubits.update(new_active_qubits)
     else:  # outtermost layer is single spin rotations
         X_l -= 2
         # Loop over layers
@@ -807,8 +818,11 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
         for layer in range(depth):
             # start from the last layer (the one coupling to the observable)
             rev_layer = depth - layer - 1
+            new_active_qubits = active_qubits.copy()
             for i, j in list_dict_gates_to_sublayers[rev_layer]:
-                active_qubits.update((i, j))
+                if i in active_qubits or j in active_qubits:
+                    new_active_qubits.update((i, j))
+            active_qubits.update(new_active_qubits)
 
             X_l -= len(list_sublayers[rev_layer]) - 1
             X_r += 2
@@ -824,6 +838,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
+                    active_qubits=active_qubits,
                     reverse=reverse,
                 )
 

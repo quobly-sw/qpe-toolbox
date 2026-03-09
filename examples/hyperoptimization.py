@@ -155,7 +155,7 @@ p = 3
 gammas = rng.standard_normal(p)
 betas = rng.standard_normal(p)
 
-# $\texttt{quimb}$ already includes constructor functions for generating the `Circuit`` instance for QAOA
+# quimb already includes constructor functions for generating the `Circuit` instance for QAOA
 circ_reg = qtn.circ_qaoa(terms_reg, p, gammas, betas)
 circ_wER = qtn.circ_qaoa(terms_wER, p, gammas, betas)
 
@@ -193,7 +193,7 @@ list_names = [
     [f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, p + 1)],
     ["$\\mathrm{{R_{{zz}} }}$"] * p,
 ]
-fig = draw_layered_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_names);
+fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_names);
 
 
 # %% [markdown]
