@@ -55,9 +55,9 @@ plt.rcParams.update({"font.size": 12})
 
 
 # %%
-n_qbits = 4
-h_spin = heisenberg_hamiltonian(n_qbits)
-qbit_reg = list(range(n_qbits))
+n_qubits = 4
+h_spin = heisenberg_hamiltonian(n_qubits)
+qubit_reg = list(range(n_qubits))
 
 # %% [markdown]
 # ### First-order Trotter-Suzuki formula
@@ -86,18 +86,18 @@ qbit_reg = list(range(n_qbits))
 # %%
 # First-order Trotter
 dt = 1
-trotter_routine = h_spin.get_trotter_step(dt, qbit_reg, trotter_order=1)
+trotter_routine = h_spin.get_trotter_step(dt, qubit_reg, trotter_order=1)
 
-circ = qtn.Circuit(n_qbits)
+circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
 circ.draw(figsize=(14, 14))
 circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 
 # %%
 # Second-order Trotter
-trotter_routine = h_spin.get_trotter_step(dt, qbit_reg, trotter_order=2)
+trotter_routine = h_spin.get_trotter_step(dt, qubit_reg, trotter_order=2)
 
-circ = qtn.Circuit(n_qbits)
+circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
 circ.draw(figsize=(14, 14))
 circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
@@ -118,7 +118,7 @@ def errors_trotter_slice(t_list, ns_list, trotter_order, ntype="fro"):
     res = {"t": t_list, "n_s": ns_list, "errors_lists": [], "durations_lists": []}
 
     hamilt_matrix = h_spin.to_dense()
-    id2n = qu.eye(2**n_qbits)
+    id2n = qu.eye(2**n_qubits)
 
     for t in tqdm.tqdm(t_list):
         U_matrix = qu.expm(-1j * hamilt_matrix * t)
@@ -127,9 +127,9 @@ def errors_trotter_slice(t_list, ns_list, trotter_order, ntype="fro"):
         durations = []
         for n_steps in tqdm.tqdm(ns_list, leave=False):
             st = time.time()
-            circ = qtn.Circuit(n_qbits)
+            circ = qtn.Circuit(n_qubits)
             dt = t / n_steps
-            trotter_slice = h_spin.get_trotter_step(dt, qbit_reg, trotter_order)
+            trotter_slice = h_spin.get_trotter_step(dt, qubit_reg, trotter_order)
             for _ in range(n_steps):
                 circ.apply_gates(trotter_slice)
             U_trotter = circ.get_uni().to_dense()
@@ -312,13 +312,13 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 fig, ax = plt.subplots()
 ax.loglog(
     t_list,
-    6 * (n_qbits - 1) * t_list**2 / epsilon,
+    6 * (n_qubits - 1) * t_list**2 / epsilon,
     "-o",
     label=r"first order $6(n-1)t_f^2/\epsilon$",
 )
 ax.loglog(
     t_list,
-    np.sqrt(12 * (n_qbits - 1) * t_list**3 / epsilon),
+    np.sqrt(12 * (n_qubits - 1) * t_list**3 / epsilon),
     "-.s",
     label=r"second order $12(n-1)\sqrt{t_f^{3}/\epsilon}$",
 )
@@ -337,11 +337,11 @@ fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$")
 
 
 # %%
-def fidelities_trotter_slice(n_qbits, t_list, ns_list, trotter_order):
+def fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order):
     res = {"t": t_list, "n_s": ns_list, "errors_lists": [], "durations_lists": []}
 
-    reg = list(range(n_qbits))
-    h_spin = heisenberg_hamiltonian(n_qbits)
+    reg = list(range(n_qubits))
+    h_spin = heisenberg_hamiltonian(n_qubits)
     hamilt_matrix = h_spin.to_dense()
     _eigvals, eigvecs = np.linalg.eigh(hamilt_matrix)
 
@@ -356,7 +356,7 @@ def fidelities_trotter_slice(n_qbits, t_list, ns_list, trotter_order):
         durations = []
         for n_steps in tqdm.tqdm(ns_list, leave=False):
             st = time.time()
-            circ = qtn.Circuit(n_qbits, psi0=psi0_mps)
+            circ = qtn.Circuit(n_qubits, psi0=psi0_mps)
             dt = t / n_steps
             trotter_slice = h_spin.get_trotter_step(dt, reg, trotter_order)
             for _ in range(n_steps):
@@ -373,7 +373,7 @@ def fidelities_trotter_slice(n_qbits, t_list, ns_list, trotter_order):
 
 
 # %%
-res2f = fidelities_trotter_slice(n_qbits, t_list, ns_list, trotter_order=2)
+res2f = fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order=2)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4), sharey=True)

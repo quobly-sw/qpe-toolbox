@@ -58,16 +58,16 @@ def brute_force_MaxCut(G, terms):
       practical for small graphs.
 
     """
-    num_qubits = np.shape(G)[0]
+    n_qubits = np.shape(G)[0]
     possible_bipartitions = []
-    for r in range(1, num_qubits):
-        possible_bipartitions += list(it.combinations(range(num_qubits), r))
+    for r in range(1, n_qubits):
+        possible_bipartitions += list(it.combinations(range(n_qubits), r))
 
     # Calculate for each bipartition the number of cuts
     cuts = np.zeros(len(possible_bipartitions))
     for s, x in enumerate(possible_bipartitions):
         for j in x:
-            for k in range(num_qubits):
+            for k in range(n_qubits):
                 if k not in x and (G[j, k] == 1 or G[k, j] == 1):
                     if j < k:
                         cuts[s] += terms[j, k]

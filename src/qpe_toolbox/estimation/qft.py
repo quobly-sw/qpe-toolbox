@@ -41,7 +41,7 @@ def qft_swapped(wires):
     routine = [("H", wires[0])]
     n = len(wires)
 
-    # If there is only one qbit, then the QFT is a simple H gate
+    # If there is only one qubit, then the QFT is a simple H gate
     if n == 1:
         return routine
 

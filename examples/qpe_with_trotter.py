@@ -49,8 +49,8 @@ mystyles = [
 # - We consider the 1D nearest-neighbour Heisenberg Hamiltonian with open boundary conditions and take the DMRG ground state as the "exact" reference state.
 
 # %%
-n_qbits = 4
-h_spin = heisenberg_hamiltonian(n_qbits)
+n_qubits = 4
+h_spin = heisenberg_hamiltonian(n_qubits)
 exact_energy, psi0_mps = do_dmrg(h_spin)
 
 # %% [markdown]
@@ -91,7 +91,7 @@ circ.apply_gates(qpe.iqft_swapped(phase_reg))
 circ.psi.draw(
     figsize=(12, 12),
     show_tags=False,
-    color={f"I{i}" for i in range(n_qbits + n_phase_bits0)},
+    color={f"I{i}" for i in range(n_qubits + n_phase_bits0)},
     edge_scale=1,
     layout="kamada_kawai",
     edge_color=True,
@@ -242,7 +242,7 @@ ax.axhline(
 ax.plot(
     ns_list[:-1],
     np.abs(energies - exact_energy),
-    label=f"{nphase_list[-1]} phase qbits",
+    label=f"{nphase_list[-1]} phase qubits",
     **mystyles[1],
 )
 ax.legend(loc="upper right", framealpha=1)
@@ -252,7 +252,7 @@ ax.set_ylim(0, 0.14)
 ax.set_xlabel("number of Trotter steps")
 ax.set_ylabel("energy error");
 # %% [markdown]
-# The red dashed line shows the second order Trotter error bound $t^3 / n_{steps}^2$. The black dashed line shows the theoretical QPE error bound $\Delta / 2^{n_{\rm phase qbits}}$. Here $2$ Trotter steps are sufficient to reach the QPE precision for this number of phase qubits.
+# The red dashed line shows the second order Trotter error bound $t^3 / n_{steps}^2$. The black dashed line shows the theoretical QPE error bound $\Delta / 2^{n_{\rm phase qubits}}$. Here $2$ Trotter steps are sufficient to reach the QPE precision for this number of phase qubits.
 
 # %% [markdown]
 # ### Gate count and computation time
@@ -336,7 +336,7 @@ ax.semilogy(nphase_list_resource, entangling_gates, "-o")
 ax.set_xlabel("number of phase qubits")
 ax.set_ylabel("number of entangling gates")
 fig.suptitle(
-    f"QPE Heisenberg {n_qbits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
+    f"QPE Heisenberg {n_qubits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
 );
 # %% [markdown]
 # In the resource analysis mode (when 'run_simulation=False') the output is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.
