@@ -52,6 +52,8 @@ def linkcode_resolve(domain, info):
         obj = mod
         for part in info["fullname"].split("."):
             obj = getattr(obj, part)
+        if isinstance(obj, property):
+            obj = obj.fget
         lines, start = inspect.getsourcelines(obj)
         lineno = f"#L{start}-L{start + len(lines) - 1}"
     except Exception:
