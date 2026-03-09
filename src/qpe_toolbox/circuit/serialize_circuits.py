@@ -361,9 +361,7 @@ def serialize_from_quimb_gates(n_qubits, gates_list):
     }
 
 
-def deserialize_to_quimb_Circuit(
-    full_gate_dict, *, max_depth=np.inf, gate_contract="auto-split-gate"
-):
+def deserialize_to_quimb_Circuit(full_gate_dict, *, max_depth=np.inf, **gate_opts):
     """Deserialize a gate dictionary into a :class:`quimb.tensor.circuit.Circuit` up to a given depth.
 
     This function reconstructs a circuit from a serialized
@@ -401,7 +399,7 @@ def deserialize_to_quimb_Circuit(
         Maximum circuit depth to deserialize, i.e. if ``round >= depth`` the gate is
         ignored. Default is inf, the full circuit is deserialized.
 
-    gate_contract : TODO
+    gate_opts : Supplied to the gate function, options here will override the default gate_opts
 
     Returns
     -------
@@ -427,7 +425,7 @@ def deserialize_to_quimb_Circuit(
                 qubits=[int(q) for q in gate["qubits"]],
                 controls=[int(q) for q in gate.get("controls", [])],
                 gate_round=int(gate["round"]),
-                contract=gate_contract,  # other options in quimb.tensor.tensor_1d.gate_TN_1D
+                **gate_opts,
             )
 
     return qc
