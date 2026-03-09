@@ -17,7 +17,7 @@
 
 # %% [markdown]
 #  We aim at providing more advanced circuit simulations for the toolbox; this tutorial complements the MPS contraction from a boundary of the network presented in the tutorial `performance.py`, and focuses on how to use [hyperoptimization](https://arxiv.org/abs/2002.01935) without intermediate [compression](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.14.011009). It is used for the exact contraction of relatively large networks representing expectation values of local observables, which can contribute for example in the computation of global energy expectation values.
-#  
+#
 # The particular example we chose is the optimization of the Ansatz circuit for the [Quantum Approximate Optimization Algorithm](https://arxiv.org/abs/1411.4028) in order to solve a MaxCut problem. **This notebook is based on the several examples from [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/) and [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) for optimized contractions. In particular, we revisit the example on [Bayesian Optimizing QAOA Circuit Energy](https://quimb.readthedocs.io/en/main/examples/ex_tn_qaoa_energy_bayesopt.html).**
 
 # %%
@@ -201,10 +201,6 @@ fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_n
 #
 #
 #
-#  **Note that `draw_layered_expval` internally makes use of `get_psi_reverse_lightcone` from $\texttt{quimb}$; at this stage, cancellation due to commutativity of the gates is not taken into account. Therefore, the reader may appreaciate that some gates that should cancel out do not, since in the original circuit they were placed in such an order that causality would not leave them out of the simplification.**
-#
-#
-#
 #  The cost function for solving MaxCut with the QAOA Ansatz implies contracting these reduced networks for each edge observable featuring in the Hamiltonian.
 #
 #
@@ -215,7 +211,7 @@ fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_n
 # ## Understanding the cost of contractions: the contraction tree, W and C
 
 # %% [markdown]
-#  Luckily, [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/index.html) automatizes the optimization process for finding the best series of pairwise contractions in a network. The whole machinery is wrapped up into a [$\texttt{HyperOptimizer}$ class](https://github.com/jcmgray/cotengra/blob/5e22dcdb60bca4a30e34248b93b00bc736f214d5/cotengra/hyperoptimizers/hyper.py#L353), and in this notebook we will try to understand the different options it offers.
+#  Luckily, [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/index.html) automatizes the optimization process for finding the best series of pairwise contractions in a network. The whole machinery is wrapped up into a [`HyperOptimizer class`](https://github.com/jcmgray/cotengra/blob/5e22dcdb60bca4a30e34248b93b00bc736f214d5/cotengra/hyperoptimizers/hyper.py#L353).
 #
 #
 #
@@ -223,10 +219,10 @@ fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_n
 #
 #
 #
-#  Before explaining the details, we need to introduce the concept of contraction tree. For the sake of clearness, the reader may execute the following two cells (where we define generic simple hyperoptimizers and rehearse the energy computation) and jump to the next explanation.
+#  Before understanding the inner workings of hyperoptimization, we need to introduce the concept of contraction tree, which is intrinsically tied to the cost functions the hyperoptimizer will try to minimize. For the sake of clearness, the reader may execute the following two cells (where we define generic simple hyperoptimizers and rehearse the energy computation) and jump to the next explanation.
 
 # %%
-# generic minimal options for hyperoptimization (more about it later)
+# generic minimal options for hyperoptimization
 opt_eco_reg = ctg.ReusableHyperOptimizer(
     max_repeats=128,
     methods=["greedy"],
