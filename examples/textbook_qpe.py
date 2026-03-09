@@ -53,7 +53,7 @@ from qpe_toolbox.circuit import make_circ
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 # %%
-optimize = "auto"
+optimize = "greedy"
 
 # %% [markdown]
 # ## Quantum phase estimation
@@ -700,7 +700,7 @@ plt.tight_layout()
 # %% [markdown]
 # ### Influence of $E_{target}$ and $\Delta$
 #
-# Vary $\Delta$ and $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to get errors because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
+# Vary $\Delta$ and $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to get errors because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta).$
 
 # %%
 n_qubits = 4
