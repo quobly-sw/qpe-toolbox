@@ -9,7 +9,6 @@
 
 import copy
 import itertools as it
-import json
 import time
 import warnings
 
@@ -305,9 +304,7 @@ def compute_qaoa_contraction_costs(
     ----------
     graph_dict : dict
         Dictionary mapping graph identifiers to entries. Each entry must have at
-        least a key ``"terms"`` listing the edges as pairs of vertices. The same
-        structure produced by loading the ``JSON`` files used in
-        :func:`compute_qaoa_contraction_costs_from_file`.
+        least a key ``"terms"`` listing the edges as pairs of vertices.
 
     hyperopt : :class:`cotengra.ReusableHyperOptimizer`
         Optimizer object used for tensor network contraction rehearsal. Reusing this
@@ -381,84 +378,21 @@ def compute_qaoa_contraction_costs(
                 for edge, weight in terms.items()
             ]
 
-            avg_W = np.mean([rehs["W"] for rehs in local_exp_rehs])
-            arr_Cs = np.array([rehs["C"] for rehs in local_exp_rehs])
-            Cmax = np.max(arr_Cs)
-            total_C = Cmax + np.log10(np.sum(10 ** (arr_Cs - Cmax)))
+            average_weights = np.mean([rehs["W"] for rehs in local_exp_rehs])
+            all_costs = np.array([rehs["C"] for rehs in local_exp_rehs])
+            max_cost = np.max(all_costs)
+            total_cost = max_cost + np.log10(np.sum(10 ** (all_costs - max_cost)))
 
             result[key_entry]["hyperoptimizers"][next_key][f"p={depth}"] = {
-                "W": np.round(avg_W, 4),
-                "C": np.round(total_C, 4),
+                "W": np.round(average_weights, 4),
+                "C": np.round(total_cost, 4),
             }
 
             if verbosity >= 1:
                 print(
-                    f"Depth {depth}: W_avg={np.round(avg_W, 4)}, C_tot={np.round(total_C, 4)}"
+                    f"Depth {depth}: W_avg={np.round(average_weights, 4)}, C_tot={np.round(total_cost, 4)}"
                 )
         if verbosity >= 1:
             print("\n")
 
     return result
-
-
-def compute_qaoa_contraction_costs_from_file(
-    graph_dict_name,
-    results_name,
-    hyperopt,
-    *,
-    circuit_depths=(2, 3, 4),
-    verbosity=0,
-    description="None",
-):
-    """Load graphs from a JSON file, compute QAOA contraction costs, and save results.
-
-    Reads a graph dictionary from a ``JSON`` file, delegates to
-    :func:`compute_qaoa_contraction_costs`, and writes the updated dictionary
-    to a new ``JSON`` file.
-
-    Parameters
-    ----------
-    graph_dict_name : str
-        Filename (without ``".json"``) of the ``JSON`` file containing graphs. The
-        ``JSON`` should map graph identifiers to a dictionary with at least a key
-        ``"terms"`` listing the edges as pairs of vertices.
-
-    results_name : str
-        Filename (without ``".json"``) of the ``JSON`` file where the updated graph
-        dictionary with QAOA contraction information will be saved.
-
-    hyperopt : :class:`cotengra.ReusableHyperOptimizer`
-        Optimizer object used for tensor network contraction rehearsal. Reusing this
-        object across multiple graphs improves performance.
-
-    circuit_depths : enum of int, optional
-        List of QAOA circuit depths (number of layers) to analyze. Default is (2, 3, 4).
-
-    verbosity : int, optional
-        Level of output. If >= 1, prints progress for each graph and each depth.
-        Default is 1.
-
-    description : str, optional
-        Text description of this hyperoptimizer run (e.g., "greedy", "random").
-        Default is "None".
-
-    Returns
-    -------
-    None
-        Results are saved to ``results_name + ".json"``. See
-        :func:`compute_qaoa_contraction_costs` for the output structure.
-
-    """
-    with open(graph_dict_name + ".json") as f:
-        graph_dict = json.load(f)
-
-    result = compute_qaoa_contraction_costs(
-        graph_dict,
-        hyperopt,
-        circuit_depths=circuit_depths,
-        verbosity=verbosity,
-        description=description,
-    )
-
-    with open(results_name + ".json", "w") as f:
-        json.dump(result, f, indent=4)
