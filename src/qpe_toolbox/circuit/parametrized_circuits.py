@@ -550,7 +550,7 @@ def generate_rand_quimb(
     return circ
 
 
-def ansatz_circuit(n, depth, gate_round=0, random_coeff=1.0):
+def ansatz_circuit(n, depth, *, gate_round=0, random_coeff=1.0):
     """Construct an ansatz circuit of single qubit and entangling layers.
 
     Parameters
@@ -648,7 +648,7 @@ def recursive_stack(x):
     return autoray.do("stack", tuple(map(recursive_stack, x)))
 
 
-def ansatz_circuit_sym(n, depth, gate_round=0, random_coeff=1.0):
+def ansatz_circuit_sym(n, depth, *, gate_round=0, random_coeff=1.0):
     """
     Construct a symmetry-preserving ansatz circuit.
 

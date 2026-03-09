@@ -62,7 +62,7 @@ def get_lcu_weights(hamiltonian):
     return weights, lmb, L, m_L
 
 
-def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
+def build_lcu_prepare_state_mps(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
 
@@ -95,7 +95,7 @@ def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
     return L_mps
 
 
-def build_lcu_prepare_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_prepare_mpo(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the PREPARE oracle MPO :math:`\ket{0}\bra{\mathcal{L}}`.
 
@@ -300,7 +300,7 @@ def _build_llxHl_mpo(hamiltonian, l_term):
     return kron_mpos(l_mpo, Hl_mpo)
 
 
-def build_lcu_select_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_select_mpo(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the MPO implementing the SELECT oracle.
 
@@ -334,7 +334,7 @@ def build_lcu_select_mpo(hamiltonian, cutoff=1e-10):
 ###############################################################################
 
 
-def build_lcu_reflection_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_reflection_mpo(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the reflection operator :math:`\mathcal{R}_L` for the L register.
 

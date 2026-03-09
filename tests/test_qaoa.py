@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import json
 import os
-import tempfile
 
 os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -14,17 +12,17 @@ import numpy as np
 import quimb as qu
 
 from qpe_toolbox.circuit.qaoa import (
-    brute_force_MaxCut,
-    find_W_and_C_QAOA,
+    brute_force_maxcut,
+    compute_qaoa_contraction_costs,
     generate_community_graph,
     study_optimization_time_costs,
 )
 
 
-def test_qaoa():
+def test_study_optimisation():
     n_qubits = 6
-    G = generate_community_graph(n_qubits, rng=np.random.default_rng(42))
-    terms = dict.fromkeys(G.edges, 1)
+    graph = generate_community_graph(n_qubits, rng=np.random.default_rng(42))
+    terms = dict.fromkeys(graph.edges, 1)
     p = 3
 
     hopt = ctg.ReusableHyperOptimizer(
@@ -49,71 +47,43 @@ def test_qaoa():
     )
 
     fevals = [float(trial.value) for trial in study.trials]
-    max_energy, _ = brute_force_MaxCut(nx.to_numpy_array(G), terms)
+    max_energy, _ = brute_force_maxcut(nx.to_numpy_array(graph), terms)
 
     assert np.abs(min(fevals) / max_energy) > 0.25
 
 
-def test_W_and_C():
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        orig = os.getcwd()
-        os.chdir(tmp_dir)
-        try:
-            _run_W_and_C()
-        finally:
-            os.chdir(orig)
-
-
-def _run_W_and_C():
-    list_N = [3, 4]
-    n_realizations = 2
+def test_contraction_costs():
+    node_numbers = [3, 4]
     rng = np.random.default_rng(42)
 
-    dict_Gs = {}
+    graph_dicts = {}
     indx = 0
-    for i in range(len(list_N)):
-        for _ in range(n_realizations):
-            prob = rng.uniform(0.25, 0.75)
-            G = nx.fast_gnp_random_graph(
-                n=list_N[i], p=prob
-            )  # sample an Erdos-Renyi graph
-            if len(G.edges) > 0:
-                terms = [[int(i), int(j)] for i, j in G.edges]
-                dict_Gs[str(indx)] = {
-                    "terms": terms,  # attach homogeneous couplings
-                    "N": int(list_N[i]),
-                    "E": len(terms),
-                }
-                dict_Gs[str(indx)]["type"] = "ER"
-                dict_Gs[str(indx)]["param"] = float(prob)
+    seeds = [42, 43]
+    for n in node_numbers:
+        for seed in seeds:
+            edge_creation_prob = rng.uniform(0.25, 0.75)
+            # sample an Erdos-Renyi graph
+            graph = nx.fast_gnp_random_graph(n, edge_creation_prob, seed=seed)
+            assert len(graph.edges) > 0
 
-                indx += 1
+            # attach homogeneous couplings
+            terms = [[int(i), int(j)] for i, j in graph.edges]
+            graph_dicts[str(indx)] = {"terms": terms, "N": n, "E": len(terms)}
+            graph_dicts[str(indx)]["type"] = "ER"
+            graph_dicts[str(indx)]["param"] = float(edge_creation_prob)
 
-    filename1 = "my_new_graphs_QAOA"
-    with open(filename1 + ".json", "w") as f:
-        json.dump(dict_Gs, f, indent=4)
+            indx += 1
 
     hopt = ctg.ReusableHyperOptimizer(
-        max_repeats=128,
-        methods=["greedy"],
-        optlib="random",
-        minimize="write",
+        max_repeats=128, methods=["greedy"], optlib="random", minimize="write"
     )
 
-    filename2 = "test_W_and_C"
-    find_W_and_C_QAOA(
-        graph_dict_name="my_new_graphs_QAOA",
-        results_name=filename2,
-        hyperopt=hopt,
-        circuit_depths=(2, 3),
-        verbosity=1,
-        description="Economic hyperopt.",
+    res = compute_qaoa_contraction_costs(
+        graph_dicts, hopt, circuit_depths=(2, 3), description="Economic hyperopt."
     )
-
-    assert os.path.exists(filename1 + ".json")
-    assert os.path.exists(filename2 + ".json")
+    assert isinstance(res, dict)
 
 
 if __name__ == "__main__":
-    test_qaoa()
-    test_W_and_C()
+    test_study_optimisation()
+    test_contraction_costs()
