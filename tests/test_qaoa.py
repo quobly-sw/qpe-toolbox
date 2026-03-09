@@ -22,8 +22,8 @@ from qpe_toolbox.circuit.qaoa import (
 
 
 def test_qaoa():
-    num_qubits = 6
-    G = generate_community_graph(num_qubits, rng=np.random.default_rng(42))
+    n_qubits = 6
+    G = generate_community_graph(n_qubits, rng=np.random.default_rng(42))
     terms = dict.fromkeys(G.edges, 1)
     p = 3
 
