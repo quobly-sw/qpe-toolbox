@@ -131,7 +131,7 @@ print(
 res = {"durations_tn": [], "durations_mps": [], "energies": [], "entangling_gates": []}
 trotter_order = 2
 nphase_list = np.array([1, 2, 3, 4, 5])
-ns_list = [1, 2, 3, 4, "exact"]
+ns_list = [1, 2, 3, 4, qpe.EXACT]
 max_tn_nphase = 4
 max_tn_nsteps = 3
 
@@ -144,7 +144,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
         initial_circMPS = make_circMPS(n_phase_bits, psi0_mps)
 
         if (n_phase_bits < max_tn_nphase) and (
-            n_trotter_steps != "exact" and n_trotter_steps < max_tn_nsteps
+            n_trotter_steps is not qpe.EXACT and n_trotter_steps < max_tn_nsteps
         ):
             # using generic tensor network contraction to simulate a quantum circuit
             # is usually very expensive. Only try for small number of qubits.

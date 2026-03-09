@@ -19,6 +19,7 @@ from qpe_toolbox.circuit.serialize_circuits import (
     serialize_from_quimb_gates,
 )
 
+from ._types import EXACT
 from .qft import iqft_swapped
 
 
@@ -46,8 +47,9 @@ def qpe_energy(
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     initial_circ : quimb.tensor.Circuit or CircuitMPS
         Initial circuit preparing the trial state in the data register.
-    n_steps : int or str
-        Number of time steps for Trotterized evolution, or "exact" for exact evolution.
+    n_steps : int or EXACT
+        Number of time steps for Trotterized evolution, or ``EXACT`` for exact
+        evolution.
     E_target : float
         Central target energy for the search window.
     size_interval : float
@@ -90,7 +92,7 @@ def qpe_energy(
     # First stage: phase encoding
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
 
-    dt = "exact" if n_steps == "exact" else evolution_time / n_steps
+    dt = EXACT if n_steps is EXACT else evolution_time / n_steps
     traces, probs = qpe_sample(
         hamiltonian,
         initial_circ,
@@ -155,8 +157,8 @@ def qpe_sample(
         Circuit preparing the trial state.
     evolution_time : float
         Total evolution time for the controlled-U operations.
-    dt : float or str
-        Trotter step size; if "exact", evolution is exact.
+    dt : float or EXACT
+        Trotter step size; if ``EXACT``, evolution is exact.
     global_phase : float
         Global phase added to the controlled-U operations.
     trotter_order : int, default ``1``
@@ -212,7 +214,7 @@ def qpe_sample(
     traces["gates_count"] = count_gates(circ)
 
     if write_gates:
-        if dt == "exact":
+        if dt is EXACT:
             raise ValueError("Cannot write gates for exact time evolution")
         n_steps = int(evolution_time / dt)
         filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qubits_{n_phase_bits}phbits"
@@ -272,8 +274,8 @@ def qpe_first_stage(
         Initial state of the system.
     evolution_time : float
         Total evolution time.
-    dt : float or str
-        Time step for Trotter decomposition; "exact" for exact evolution.
+    dt : float or EXACT
+        Time step for Trotter decomposition; ``EXACT`` for exact evolution.
     global_phase : float
         Global phase applied to controlled-U operations.
     trotter_order : int, default ``1``
@@ -298,8 +300,8 @@ def qpe_first_stage(
     """
     # input validation
     if dt == 0:
-        dt = "exact"
-    if not ((dt == "exact") or (np.isscalar(dt) and np.isreal(dt) and dt > 0)):
+        dt = EXACT
+    if not ((dt is EXACT) or (np.isscalar(dt) and np.isreal(dt) and dt > 0)):
         raise ValueError("Can only evolve for positive dt")
 
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
@@ -342,7 +344,7 @@ def qpe_first_stage(
             )
         c_round += 1
 
-        if dt == "exact":
+        if dt is EXACT:
             U_gate = hamiltonian.get_U_exact(
                 evolution_time * 2**k, data_reg, controls=(phase_reg[k],)
             )
@@ -408,7 +410,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
 
     Notes
     -----
-    - Evolution time is chosen as ``2 * pi / size_interval`` to map the interval to [0, 2π].
+    - EXACT time is chosen as ``2 * pi / size_interval`` to map the interval to [0, 2π].
     - ``global_phase`` is added to ensure the phase encoding is centered around the target energy.
 
     """
