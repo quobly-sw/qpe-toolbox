@@ -670,7 +670,7 @@ def build_circ_revlc(selected_edge, circ):
     return circ_revlc
 
 
-def draw_layered_expval(selected_edge, circ, *, list_names=None):
+def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=True):
     """Draw the tensor-network representation of an expectation value
     ..math:
 
@@ -698,6 +698,11 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
             Labels for single-qubit layers (indexed by layer).
         - ``list_names[2]`` : list of str
             Labels for two-qubit layers (indexed by layer).
+    
+    commutation : bool, optional
+        If the entangling gates commute with themselves when overlapping
+        on one qubit (e.g. the RZZ gate), then further simplification
+        is carried out at the level of the active qubits of each layer.
 
     Returns
     -------
@@ -806,11 +811,15 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
             # List of qubits featuring in the light cone;
             # `draw_1_qubit_layer` and `draw_2_qubit_layer` require
             # to "blind" the rotations on unactive qubits
-            new_active_qubits = active_qubits.copy()
-            for i, j in list_dict_gates_to_sublayers[rev_layer]:
-                if i in active_qubits or j in active_qubits:
-                    new_active_qubits.update((i, j))
-            active_qubits.update(new_active_qubits)
+            if commutation:
+                new_active_qubits = active_qubits.copy()
+                for i, j in list_dict_gates_to_sublayers[rev_layer]:
+                    if i in active_qubits or j in active_qubits:
+                        new_active_qubits.update((i, j))
+                active_qubits.update(new_active_qubits)
+            else:
+                for i, j in list_dict_gates_to_sublayers[rev_layer]:
+                    active_qubits.update((i, j))
     else:  # outtermost layer is single spin rotations
         X_l -= 2
         # Loop over layers
@@ -818,11 +827,15 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
         for layer in range(depth):
             # start from the last layer (the one coupling to the observable)
             rev_layer = depth - layer - 1
-            new_active_qubits = active_qubits.copy()
-            for i, j in list_dict_gates_to_sublayers[rev_layer]:
-                if i in active_qubits or j in active_qubits:
-                    new_active_qubits.update((i, j))
-            active_qubits.update(new_active_qubits)
+            if commutation:
+                new_active_qubits = active_qubits.copy()
+                for i, j in list_dict_gates_to_sublayers[rev_layer]:
+                    if i in active_qubits or j in active_qubits:
+                        new_active_qubits.update((i, j))
+                active_qubits.update(new_active_qubits)
+            else:
+                for i, j in list_dict_gates_to_sublayers[rev_layer]:
+                    active_qubits.update((i, j))
 
             X_l -= len(list_sublayers[rev_layer]) - 1
             X_r += 2
