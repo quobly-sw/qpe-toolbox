@@ -32,7 +32,7 @@
 # 4. Then we *encode* the phase into the phase register via a sequence of controlled powers of $U$:
 #
 #    $U^{2^k}, k=0,1,...,m-1$ is applied to the physical register, conditioned on the $k$-th phase qubit.
-# 6. Finally to *decode* the phase, we apply the Inverse Quantum Fourier Transform (IQFT) on the phase register.
+# 6. Finally to *decode* the phase, we apply the inverse Quantum Fourier Transform (QFT) on the phase register.
 # 7. We measure the phase register and find a $m$-bits approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
 # 8. After the measure, the physical register has been projected onto $\ket{u}$.
 #
@@ -161,13 +161,13 @@ psi.draw(
 
 # %% [markdown]
 # If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
-# Therefore, applying the IQFT and measuring in the computational basis gives $\theta$ exactly.
+# Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
 # When it is not the case, the most probable output gives the closest $m$-bits approximation to $\theta$.
 
 # %% [markdown]
 # #### Second stage: Inverse Quantum Fourier Transform
 #
-# The state of the phase register after the IQFT reads:
+# The state of the phase register after the inverse QFT reads:
 #
 # $$ \frac{1}{2^m} \sum_{q,k=0}^{2^m-1} e^{-\frac{i2\pi}{2^m} q k}e^{i2\pi \theta q} |k \rangle .$$
 # Now let us introduce the following expression for $\theta$:
@@ -412,7 +412,7 @@ print(f"error = {E0 - energy}")
 # %% [markdown]
 # ### General case
 #
-# The goal is to measure $\theta$ with $b$-bits precision. For a given "confidence level" $1-\alpha$ ($\alpha \in ]0,1[$) we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
+# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ ($\alpha \in ]0,1[$) we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang (section 5.2.1.) find that
 #
 # $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
