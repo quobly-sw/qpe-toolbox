@@ -132,8 +132,8 @@ res = {"durations_tn": [], "durations_mps": [], "energies": [], "entangling_gate
 trotter_order = 2
 nphase_list = np.array([1, 2, 3, 4, 5])
 ns_list = [1, 2, 3, 4, "exact"]
-max_tn_nphase = 4
-max_tn_nsteps = 3
+max_tn_nphase = 6
+max_tn_nsteps = 5
 
 for n_trotter_steps in tqdm.tqdm(ns_list):
     duration_tn = []
@@ -156,6 +156,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
                 E_target,
                 size_interval,
                 trotter_order=trotter_order,
+                optimize="greedy",
             )
             duration_tn.append(traces["ctimes"][-1])
 
