@@ -160,7 +160,7 @@ psi.draw(
 
 # %% [markdown]
 # If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
-# Therefore, applying the IQFT and measuring in the computational basis gives $\theta$ exactly.
+# Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
 # When it is not the case, the most probable output gives the closest $m$-bits approximation to $\theta$.
 
 # %% [markdown]
