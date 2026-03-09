@@ -108,7 +108,6 @@ autoapi_root = "autoapi"
 autoapi_add_toctree_entry = True
 autoapi_options = [
     "members",
-    "private-members",  # optional, but useful in dev
     "special-members",
     "show-inheritance",
     "show-module-summary",
