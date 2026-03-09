@@ -17,7 +17,7 @@
 #
 # In this example we perform Quantum Phase Estimation with a second-order Trotter decomposition of the time evolution operator $U(t) = \exp(-i H t)$.
 #
-# Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we had introduced and run QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
+# Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we introduced and ran QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
 #
 # We study the precision obtained on the energy as a function of the number of phase qubits in the QPE circuits and the number of Trotter steps in the time evolution. We also perform some simple resource analysis: we quantify the number of entangling gates and the time required to simulate the circuits with $\texttt{quimb}$.
 
