@@ -9,7 +9,6 @@
 
 import copy
 import itertools as it
-import json
 import time
 import warnings
 
@@ -22,7 +21,7 @@ import quimb.tensor as qtn
 ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
 
 
-def brute_force_MaxCut(G, terms):
+def brute_force_maxcut(graph_matrix, terms):
     """Compute the Max-Cut value of a graph by brute-force enumeration.
 
     This function enumerates all possible non-trivial bipartitions of the
@@ -31,7 +30,7 @@ def brute_force_MaxCut(G, terms):
 
     Parameters
     ----------
-    G : array_like, shape (N, N)
+    graph_matrix : array_like, shape (N, N)
         Adjacency matrix of the graph. An edge between vertices ``i`` and
         ``j`` is assumed to exist if ``G[i, j] == 1`` or ``G[j, i] == 1``.
 
@@ -42,10 +41,10 @@ def brute_force_MaxCut(G, terms):
 
     Returns
     -------
-    Maxcut : float
+    maxcut : float
         Maximum cut value over all bipartitions.
 
-    Winners : list of tuple
+    winners : list of tuple
         List of bipartitions (each given as a tuple of vertex indices)
         achieving the maximum cut value. Each tuple represents one side
         of the bipartition.
@@ -58,7 +57,7 @@ def brute_force_MaxCut(G, terms):
       practical for small graphs.
 
     """
-    n_qubits = np.shape(G)[0]
+    n_qubits = np.shape(graph_matrix)[0]
     possible_bipartitions = []
     for r in range(1, n_qubits):
         possible_bipartitions += list(it.combinations(range(n_qubits), r))
@@ -68,12 +67,12 @@ def brute_force_MaxCut(G, terms):
     for s, x in enumerate(possible_bipartitions):
         for j in x:
             for k in range(n_qubits):
-                if k not in x and (G[j, k] == 1 or G[k, j] == 1):
+                if k not in x and (graph_matrix[j, k] == 1 or graph_matrix[k, j] == 1):
                     if j < k:
                         cuts[s] += terms[j, k]
                     else:
                         cuts[s] += terms[k, j]
-    # Evalutate Maxcut and search for the corresponding bipartitions
+    # Evalutate maxcut and search for the corresponding bipartitions
     maxcut = cuts.max()
     winners = [possible_bipartitions[s] for s in (cuts == maxcut).nonzero()[0]]
     return maxcut, winners
@@ -121,10 +120,10 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
         N_av = N_av - n
         n = int((1 / (N_comm - i)) * N_av * rng.random())
         size_comm.append(n)
-    size_comm.append(int(N - np.sum(np.array(size_comm))))
-    size_comm = [i for i in size_comm if i > 1]
+    size_comm.append(N - sum(size_comm))
+    size_comm = [int(i) for i in size_comm if i > 1]
 
-    p = np.ones((len(size_comm), len(size_comm))) * (0.5 / (N_comm - 1))
+    p = (0.5 / (N_comm - 1)) * np.ones((len(size_comm), len(size_comm)))
     for i in range(len(size_comm)):
         p[i, i] = 0.5
 
@@ -272,7 +271,7 @@ def study_optimization_time_costs(
         t_0 = time.time()
         energies = [
             float(qaoa_energy(x=x, terms=hamilt_terms, opt=hyperopt)) for x in x_batch
-        ]  # list of energies
+        ]
         if verbosity >= 1:
             print(f"Lowest energy in the batch: {min(energies):.2f}")
         t_e = time.time()
@@ -287,34 +286,25 @@ def study_optimization_time_costs(
     return ask_time, tell_time, cost_time, study
 
 
-def find_W_and_C_QAOA(
-    graph_dict_name,
-    results_name,
+def compute_qaoa_contraction_costs(
+    graph_dict,
     hyperopt,
     *,
     circuit_depths=(2, 3, 4),
-    verbosity=1,
+    verbosity=0,
     description="None",
 ):
-    """Compute and store contraction widths and costs for QAOA circuits on multiple graphs.
+    """Compute contraction widths and costs for QAOA circuits on multiple graphs.
 
-    This function reads a dictionary of graphs from a ``JSON`` file, generates QAOA circuits
-    of varying depth for each graph, and estimates the tensor network contraction
-    width (W) and log-scaled contraction cost (C) using rehearsal contractions.
-    The results are saved in a new ``JSON`` file with the same structure as the original but with
-    a new key "hyperoptimizers" with numbered entries that includes results for each depth and
-    a description of the chosen hyperoptimizer.
+    Generates QAOA circuits of varying depth for each graph and estimates the
+    tensor network contraction width (W) and log-scaled contraction cost (C)
+    using rehearsal contractions.
 
     Parameters
     ----------
-    graph_dict_name : str
-        Filename (without ".json") of the ``JSON`` file containing graphs. The ``JSON`` should
-        map graph identifiers to a dictionary with at least a key ``"terms"`` listing
-        the edges as pairs of vertices.
-
-    results_name : str
-        Filename (without ``".json"``) of the ``JSON`` file where the updated graph dictionary
-        with QAOA contraction information will be saved.
+    graph_dict : dict
+        Dictionary mapping graph identifiers to entries. Each entry must have at
+        least a key ``"terms"`` listing the edges as pairs of vertices.
 
     hyperopt : :class:`cotengra.ReusableHyperOptimizer`
         Optimizer object used for tensor network contraction rehearsal. Reusing this
@@ -324,38 +314,29 @@ def find_W_and_C_QAOA(
         List of QAOA circuit depths (number of layers) to analyze. Default is (2, 3, 4).
 
     verbosity : int, optional
-        Level of output. If >= 1, prints progress for each graph and each depth. Default is 1.
+        Level of output. If >= 1, prints progress for each graph and each depth.
+        Default is 0.
 
     description : str, optional
-        Text description of this hyperoptimizer run (e.g., "greedy", "random"). Default is "None".
+        Text description of this hyperoptimizer run (e.g., "greedy", "random").
+        Default is "None".
 
     Returns
     -------
-    None
-        The function saves the updated graph dictionary with QAOA contraction metrics
-        to ``results_name + ".json"``. For each graph, a new numbered entry is added
-        under `"hyperoptimizers"`, containing contraction width ``W``, cost ``C`` for each
-        depth `p`, and the given description. For example::
+    dict
+        Updated copy of ``graph_dict`` with QAOA contraction metrics. For each
+        graph, a new numbered entry is added under ``"hyperoptimizers"``,
+        containing contraction width ``W``, cost ``C`` for each depth ``p``,
+        and the given description. For example::
 
             "0": {
-                "terms": [
-                    [0, 1],
-                    [0, 2]
-                ],
+                "terms": [[0, 1], [0, 2]],
                 "N": 3,
                 "E": 2,
-                "type": "ER",
-                "param": 0.15778499390507864,
                 "hyperoptimizers": {
                     "1": {
-                        "p=2": {
-                            "W": 2.3509,
-                            "C": 2.5964
-                        },
-                        "p=3": {
-                            "W": 2.3772,
-                            "C": 2.9702
-                        },
+                        "p=2": {"W": 2.3509, "C": 2.5964},
+                        "p=3": {"W": 2.3772, "C": 2.9702},
                         "description": "greedy"
                     }
                 }
@@ -364,37 +345,27 @@ def find_W_and_C_QAOA(
     Notes
     -----
     - For each graph, a random QAOA parameter initialization is used (``gammas`` and ``betas``).
-    - Contraction rehearsal is performed using :meth:`quimb.tensor.circuit.Circuit.local_expectation_rehearse` for each
-      term in the Hamiltonian.
-    - The average width ``W`` is computed over all local contraction trees for the graph.
+    - Contraction rehearsal is performed using
+      :meth:`quimb.tensor.circuit.Circuit.local_expectation_rehearse` for each term.
+    - The average width ``W`` is computed over all local contraction trees.
     - The total contraction cost ``C`` is computed using a numerically stable log-sum-exp
       over all local contraction costs.
-    - This function does not return any value; results are stored in the specified ``JSON`` file.
 
     """
-    with open(graph_dict_name + ".json") as f:
-        loaded_dict_Gs = json.load(f)
+    result = copy.deepcopy(graph_dict)
 
-    dict_Gs_HOPT = copy.deepcopy(loaded_dict_Gs)  # to update safely
-
-    for key_entry, entry in loaded_dict_Gs.items():
+    for key_entry, entry in graph_dict.items():
         if verbosity >= 1:
             print(f"Graph {int(key_entry) + 1}")
 
-        # Ensure 'hyperoptimizers' key exists
-        if "hyperoptimizers" not in dict_Gs_HOPT[key_entry]:
-            dict_Gs_HOPT[key_entry]["hyperoptimizers"] = {}
+        if "hyperoptimizers" not in result[key_entry]:
+            result[key_entry]["hyperoptimizers"] = {}
 
-        # Determine next numbered entry
-        existing_keys = [int(k) for k in dict_Gs_HOPT[key_entry]["hyperoptimizers"]]
+        existing_keys = [int(k) for k in result[key_entry]["hyperoptimizers"]]
         next_key = str(max(existing_keys) + 1 if existing_keys else 1)
 
-        # Create new dictionary for this hyperoptimizer
-        dict_Gs_HOPT[key_entry]["hyperoptimizers"][next_key] = {
-            "description": description
-        }
+        result[key_entry]["hyperoptimizers"][next_key] = {"description": description}
 
-        # Generate QAOA circuits and evaluate W and C for each depth
         for depth in circuit_depths:
             terms = {(edge[0], edge[1]): 1.0 for edge in entry["terms"]}
 
@@ -402,29 +373,26 @@ def find_W_and_C_QAOA(
             betas = qu.randn(depth)
             circ = qtn.circ_qaoa(terms, depth, gammas, betas)
 
-            # Rehearse contractions
             local_exp_rehs = [
                 circ.local_expectation_rehearse(weight * ZZ, edge, optimize=hyperopt)
                 for edge, weight in terms.items()
             ]
 
-            avg_W = np.mean([rehs["W"] for rehs in local_exp_rehs])
-            arr_Cs = np.array([rehs["C"] for rehs in local_exp_rehs])
-            Cmax = np.max(arr_Cs)
-            total_C = Cmax + np.log10(np.sum(10 ** (arr_Cs - Cmax)))
+            average_weights = np.mean([rehs["W"] for rehs in local_exp_rehs])
+            all_costs = np.array([rehs["C"] for rehs in local_exp_rehs])
+            max_cost = np.max(all_costs)
+            total_cost = max_cost + np.log10(np.sum(10 ** (all_costs - max_cost)))
 
-            dict_Gs_HOPT[key_entry]["hyperoptimizers"][next_key][f"p={depth}"] = {
-                "W": np.round(avg_W, 4),
-                "C": np.round(total_C, 4),
+            result[key_entry]["hyperoptimizers"][next_key][f"p={depth}"] = {
+                "W": average_weights,
+                "C": total_cost,
             }
 
             if verbosity >= 1:
                 print(
-                    f"Depth {depth}: W_avg={np.round(avg_W, 4)}, C_tot={np.round(total_C, 4)}"
+                    f"Depth {depth}: W_avg={np.round(average_weights, 4)}, C_tot={np.round(total_cost, 4)}"
                 )
         if verbosity >= 1:
             print("\n")
 
-    # Save results
-    with open(results_name + ".json", "w") as f:
-        json.dump(dict_Gs_HOPT, f, indent=4)
+    return result

@@ -34,7 +34,7 @@ import quimb.tensor as qtn
 from tqdm import tqdm
 
 from qpe_toolbox.circuit import (
-    brute_force_MaxCut,
+    brute_force_maxcut,
     draw_layered_circuit,
     draw_layered_expval,
     study_optimization_time_costs,
@@ -391,7 +391,7 @@ ax[1].plot(fevals, lw=1);
 #  Since the example graphs above are small, we can solve the problem exactly, and directly evaluate the approximation ratio to the true answer:
 
 # %%
-max_energy, _ = brute_force_MaxCut(nx.to_numpy_array(G_reg), terms_reg)
+max_energy, _ = brute_force_maxcut(nx.to_numpy_array(G_reg), terms_reg)
 print(f"Approximation ratio: {100 * np.abs(min(fevals) / max_energy):.2f}%")
 
 
