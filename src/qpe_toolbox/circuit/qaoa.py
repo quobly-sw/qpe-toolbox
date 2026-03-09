@@ -384,8 +384,8 @@ def compute_qaoa_contraction_costs(
             total_cost = max_cost + np.log10(np.sum(10 ** (all_costs - max_cost)))
 
             result[key_entry]["hyperoptimizers"][next_key][f"p={depth}"] = {
-                "W": np.round(average_weights, 4),
-                "C": np.round(total_cost, 4),
+                "W": average_weights,
+                "C": total_cost,
             }
 
             if verbosity >= 1:
