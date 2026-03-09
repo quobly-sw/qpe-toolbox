@@ -19,6 +19,7 @@ jobs:
       - name: Build package
         run: uv build
 
+        # twine is already configured, better to keep it than switch to uv publish
       - name: Install twine
         run: uvx pip install twine
 
