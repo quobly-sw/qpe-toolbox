@@ -32,7 +32,7 @@ from qiskit_quimb import quimb_circuit
 from qpe_toolbox.circuit import (
     deserialize_to_qiskit_QuantumCircuit,
     deserialize_to_quimb_Circuit,
-    draw_circuit,
+    draw_layered_circuit,
     dump_quimb_Circuit_to_qasm,
     generate_brickwall_quimb,
     generate_rand_quimb,
@@ -79,13 +79,13 @@ circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 # one layer is a single-body rotation, and the other is
 # an entangling two-body gate
 circ_brick = generate_brickwall_quimb(
-    num_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
+    n_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
 )
 
 # Same as before, but the entangling layer randomly picks pairs
 # of qubits at a maximum distance `ent_range`
 circ_rand = generate_rand_quimb(
-    num_qubits=10,
+    n_qubits=10,
     depth=4,
     sb_gate_label="rx",
     ent_gate_label="cnot",
@@ -111,11 +111,11 @@ circ.psi.draw(color=["PSI0"] + [f"ROUND_{i}" for i in range(depth)])
 circ_rand.psi.draw(color=["PSI0", "RX", "CX"], layout="kamada_kawai")
 
 # %% [markdown]
-# Nevertheless, to understand the details of large circuits with long-range gates, it is preferable to switch to `matplotlib`, as crossings of tensor legs in the network can be clarified using a fixed layout. To this end, we introduce draw_circuit, which targets circuits composed of layers of single- and two-qubit rotations:
+# Nevertheless, to understand the details of large circuits with long-range gates, it is preferable to switch to `matplotlib`, as crossings of tensor legs in the network can be clarified using a fixed layout. To this end, we introduce `draw_layered_circuit`, which targets circuits composed of layers of single- and two-qubit rotations:
 
 # %%
 depth = max([gate.round for gate in circ_rand.gates]) + 1
-fig = draw_circuit(
+fig = draw_layered_circuit(
     circ_rand,
     list_names=[
         r"$0$",
@@ -126,7 +126,7 @@ fig = draw_circuit(
 )
 
 # %% [markdown]
-# The rationale behind `draw_circuit` is the very same as the `schematic` module of $\texttt{quimb}$, but we chose to build it ourselves for better picture scaling.
+# The rationale behind `draw_layered_circuit` is the very same as the `schematic` module of $\texttt{quimb}$, but we chose to build it ourselves for better picture scaling.
 
 # %% [markdown]
 # ### Recording and loading circuits
@@ -236,21 +236,9 @@ for ci in qc.data:
 # This function allows us to feed any entanglement pattern
 # with nearest-neighbour, long-range, all-to-all or custom pairing
 
-qc_nn = n_local(
-    num_qubits=5,
-    rotation_blocks="ry",
-    entanglement_blocks="cx",
-    entanglement="linear",
-    reps=2,
-)
+qc_nn = n_local(5, "ry", "cx", entanglement="linear", reps=2)
 
-qc_lr = n_local(
-    num_qubits=4,
-    rotation_blocks="ry",
-    entanglement_blocks="cx",
-    entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)],
-    reps=2,
-)
+qc_lr = n_local(4, "ry", "cx", entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)], reps=2)
 
 # %% [markdown]
 # In order to feed the parameters, we only need to pass a list of values and assign them:
@@ -263,7 +251,7 @@ qc_with_values = qc_lr.assign_parameters(param_values)
 # %% [markdown]
 # ### Plotting circuits
 #
-# The plotting utility for $\texttt{qiskit}$ is similar to our `draw_circuit` function or to the `schematic` functionality from $\texttt{quimb}$:
+# The plotting utility for $\texttt{qiskit}$ is similar to our `draw_layered_circuit` function or to the `schematic` functionality from $\texttt{quimb}$:
 
 # %%
 # Drawing the circuit with `mpl` output allows for coloring the gates,
@@ -327,17 +315,11 @@ qc = deserialize_to_qiskit_QuantumCircuit(dict_loaded_circ, measure=True)
 qc.draw(output="mpl", initial_state=True, fold=-1)
 
 # %% [markdown]
-# The package $\texttt{qiskit-quimb}$ is a good option for fast transformation from $\texttt{qiskit}$ `QuantumCircuit` into $\texttt{quimb}$ `Circuit` classes. Note that the transformation does not include gate round information, so the output $\texttt{quimb}$ circuit cannot be plotted with `draw_circuit`:
+# The package $\texttt{qiskit-quimb}$ is a good option for fast transformation from $\texttt{qiskit}$ `QuantumCircuit` into $\texttt{quimb}$ `Circuit` classes. Note that the transformation does not include gate round information, so the output $\texttt{quimb}$ circuit cannot be plotted with `draw_layered_circuit`:
 
 # %%
 ent_pattern = [(0, 1), (1, 3), (3, 0), (2, 3), (1, 5), (4, 2), (4, 5), (5, 3)]
-qiskit_circ = n_local(
-    num_qubits=6,
-    rotation_blocks="h",
-    entanglement_blocks="cz",
-    entanglement=ent_pattern,
-    reps=2,
-)
+qiskit_circ = n_local(6, "h", "cz", entanglement=ent_pattern, reps=2)
 quimb_circ = quimb_circuit(qiskit_circ)
 quimb_circ.psi.draw(color=[f"I{i}" for i in range(quimb_circ.N)])
 

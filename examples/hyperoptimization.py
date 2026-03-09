@@ -35,8 +35,8 @@ from tqdm import tqdm
 
 from qpe_toolbox.circuit import (
     brute_force_MaxCut,
-    draw_circuit,
-    draw_expval,
+    draw_layered_circuit,
+    draw_layered_expval,
     study_optimization_time_costs,
 )
 
@@ -162,7 +162,7 @@ circ_wER = qtn.circ_qaoa(terms_wER, p, gammas, betas)
 #  The constructed circuit associated to the ansatz is the following:
 
 # %%
-fig = draw_circuit(
+fig = draw_layered_circuit(
     circ=circ_reg,
     list_names=[
         r"$0$",
@@ -191,7 +191,7 @@ list_names = [
     [f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, p + 1)],
     ["$\\mathrm{{R_{{zz}} }}$"] * p,
 ]
-fig = draw_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_names);
+fig = draw_layered_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_names);
 
 
 # %% [markdown]
@@ -199,7 +199,7 @@ fig = draw_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_names);
 #
 #
 #
-#  **Note that `draw_expval` internally makes use of `get_psi_reverse_lightcone` from $\texttt{quimb}$; at this stage, cancellation due to commutativity of the gates is not taken into account. Therefore, the reader may appreaciate that some gates that should cancel out do not, since in the original circuit they were placed in such an order that causality would not leave them out of the simplification.**
+#  **Note that `draw_layered_expval` internally makes use of `get_psi_reverse_lightcone` from $\texttt{quimb}$; at this stage, cancellation due to commutativity of the gates is not taken into account. Therefore, the reader may appreaciate that some gates that should cancel out do not, since in the original circuit they were placed in such an order that causality would not leave them out of the simplification.**
 #
 #
 #

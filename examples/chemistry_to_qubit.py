@@ -49,7 +49,7 @@ mol = gto.M(
 )
 
 h2_ham_sto3g = chemistry_hamiltonian(mol, "rhf", do_fci=True, do_ccsd=True)
-print(f"n_qbits = {h2_ham_sto3g.n_qbits}")
+print(f"n_qubits = {h2_ham_sto3g.n_qubits}")
 
 # %% [markdown]
 # With this choice of atomic orbital basis set, the molecule is described with $2$ molecular orbitals (a single orbital per atom), giving $4$ qubits when spin is taken into account.
@@ -71,7 +71,7 @@ mol = gto.M(
 )
 
 h2_ham = chemistry_hamiltonian(mol, "rhf", do_fci=True, do_ccsd=True)
-print(f"n_qbits = {h2_ham.n_qbits}")
+print(f"n_qubits = {h2_ham.n_qubits}")
 
 # %% [markdown]
 # The FCI energy is now $-1.1632 \text{Ha}$, within chemical accuracy compared to the reported value of $-1.1640 \text{Ha}$.
@@ -115,7 +115,7 @@ mol = gto.M(
 )
 
 o2_ham = chemistry_hamiltonian(mol, "uhf", do_fci=True, do_ccsd=True)
-print(f"n_qbits = {o2_ham.n_qbits}")
+print(f"n_qubits = {o2_ham.n_qubits}")
 
 # %% [markdown]
 # Let us build the Hamiltonian MPO representation and compress it to reduce its bond dimension (hence reducing the cost of running DMRG).
@@ -187,7 +187,7 @@ mol = gto.M(
 )
 
 h2o_ham = chemistry_hamiltonian(mol, "rhf", do_fci=True, do_ccsd=True)
-print(f"n_qbits = {h2o_ham.n_qbits}")
+print(f"n_qubits = {h2o_ham.n_qubits}")
 
 # %%
 h2o_mpo = h2o_ham.to_mpo()

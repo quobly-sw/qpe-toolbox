@@ -64,7 +64,7 @@ def _run_resource_analysis():
 
     psi_init = kron_mps(qtn.MPS_computational_state("0" * n_phase_bits), psi0)
 
-    filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qbits}qbits_{n_phase_bits}phbits.json"
+    filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
     assert os.path.exists(filename)
     with open(filename) as infile:
         gate_dict = json.load(infile)

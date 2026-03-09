@@ -69,8 +69,8 @@ plt.rcParams.update({"font.size": 12})
 # We consider the 1D Heisenberg model with 4 spins
 
 # %%
-n_qbits = 4
-H = heisenberg_hamiltonian(n_qbits)
+n_qubits = 4
+H = heisenberg_hamiltonian(n_qubits)
 
 weights, λ, L, m_L = qpe.get_lcu_weights(H)
 print(f"LCU decomposition with {L} terms")
@@ -326,7 +326,7 @@ plt.fill_between(
     label="error bound",
 )
 plt.legend()
-plt.title(f"Heisenberg {H.n_qbits} spins - LCU")
+plt.title(f"Heisenberg {H.n_qubits} spins - LCU")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 
@@ -370,7 +370,7 @@ plt.fill_between(
     label="error bound",
 )
 plt.legend()
-plt.title(f"Heisenberg {H.n_qbits} spins - 2nd order Trotter {n_steps} steps")
+plt.title(f"Heisenberg {H.n_qubits} spins - 2nd order Trotter {n_steps} steps")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 
@@ -448,7 +448,7 @@ plt.fill_between(
     label="error bound",
 )
 plt.legend()
-plt.title(f"H2 STO-3 basis ({H_H2.n_qbits} qubits) - LCU")
+plt.title(f"H2 STO-3 basis ({H_H2.n_qubits} qubits) - LCU")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 
