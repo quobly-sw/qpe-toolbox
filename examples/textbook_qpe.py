@@ -123,7 +123,8 @@ print(
 #
 #   The state of the phase register is then
 #
-# $$ \frac{1}{\sqrt{2^m}} \sum_{q=0}^{2^m-1} e^{i2\pi \theta q} |q \rangle .$$
+# $$ \frac{1}{\sqrt{2^m}} \sum_{q=0}^{2^m-1} e^{i2\pi \theta q} |q \rangle ,$$
+# (the data register stays in the state $|\psi_0\rangle$)
 
 # %%
 E_target = E0 + 0.2
