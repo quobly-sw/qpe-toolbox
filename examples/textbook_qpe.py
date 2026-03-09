@@ -166,7 +166,7 @@ psi.draw(
 # %% [markdown]
 # #### Second stage: Inverse Quantum Fourier Transform
 #
-# The state of the phase register after the IQFT reads:
+# The state of the phase register after the inverse QFT reads:
 #
 # $$ \frac{1}{2^m} \sum_{q,k=0}^{2^m-1} e^{-\frac{i2\pi}{2^m} q k}e^{i2\pi \theta q} |k \rangle .$$
 # Now let us introduce the following expression for $\theta$:
