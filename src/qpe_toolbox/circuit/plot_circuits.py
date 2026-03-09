@@ -555,7 +555,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
-                    active_qubits=list(range(num_qubits)),
+                    active_qubits=list(range(num_qubits))
                 )
                 X += len(sublayers) + 1
 
