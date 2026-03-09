@@ -275,6 +275,9 @@ for i, n_trotter_steps in enumerate(ns_list[:-1]):
         label=f"{n_trotter_steps} steps MPS",
         **mystyles[i + 2],
     )
+
+# Plot TN timings on top
+for i, n_trotter_steps in enumerate(ns_list[:-1]):
     if n_trotter_steps < max_tn_nsteps:
         ax_t.plot(
             nphase_list[nphase_list < max_tn_nphase],
