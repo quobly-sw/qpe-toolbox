@@ -21,7 +21,7 @@ import quimb.tensor as qtn
 ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
 
 
-def brute_force_MaxCut(G, terms):
+def brute_force_maxcut(graph_matrix, terms):
     """Compute the Max-Cut value of a graph by brute-force enumeration.
 
     This function enumerates all possible non-trivial bipartitions of the
@@ -30,7 +30,7 @@ def brute_force_MaxCut(G, terms):
 
     Parameters
     ----------
-    G : array_like, shape (N, N)
+    graph_matrix : array_like, shape (N, N)
         Adjacency matrix of the graph. An edge between vertices ``i`` and
         ``j`` is assumed to exist if ``G[i, j] == 1`` or ``G[j, i] == 1``.
 
@@ -41,10 +41,10 @@ def brute_force_MaxCut(G, terms):
 
     Returns
     -------
-    Maxcut : float
+    maxcut : float
         Maximum cut value over all bipartitions.
 
-    Winners : list of tuple
+    winners : list of tuple
         List of bipartitions (each given as a tuple of vertex indices)
         achieving the maximum cut value. Each tuple represents one side
         of the bipartition.
@@ -57,7 +57,7 @@ def brute_force_MaxCut(G, terms):
       practical for small graphs.
 
     """
-    n_qubits = np.shape(G)[0]
+    n_qubits = np.shape(graph_matrix)[0]
     possible_bipartitions = []
     for r in range(1, n_qubits):
         possible_bipartitions += list(it.combinations(range(n_qubits), r))
@@ -67,12 +67,12 @@ def brute_force_MaxCut(G, terms):
     for s, x in enumerate(possible_bipartitions):
         for j in x:
             for k in range(n_qubits):
-                if k not in x and (G[j, k] == 1 or G[k, j] == 1):
+                if k not in x and (graph_matrix[j, k] == 1 or graph_matrix[k, j] == 1):
                     if j < k:
                         cuts[s] += terms[j, k]
                     else:
                         cuts[s] += terms[k, j]
-    # Evalutate Maxcut and search for the corresponding bipartitions
+    # Evalutate maxcut and search for the corresponding bipartitions
     maxcut = cuts.max()
     winners = [possible_bipartitions[s] for s in (cuts == maxcut).nonzero()[0]]
     return maxcut, winners
