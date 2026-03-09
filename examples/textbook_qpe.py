@@ -411,7 +411,7 @@ print(f"error = {E0 - energy}")
 # %% [markdown]
 # ### General case
 #
-# The goal is to measure $\theta$ with $b$-bits precision. For a given "confidence level" $1-\alpha$ ($\alpha \in ]0,1[$) we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
+# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ ($\alpha \in ]0,1[$) we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang (section 5.2.1.) find that
 #
 # $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
