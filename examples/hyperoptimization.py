@@ -219,7 +219,7 @@ fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_n
 #
 #
 #
-#  Before understanding the inner workings of hyperoptimization, we need to introduce the concept of contraction tree, which is intrinsically tied to the cost functions the hyperoptimizer will try to minimize. For the sake of clearness, the reader may execute the following two cells (where we define generic simple hyperoptimizers and rehearse the energy computation) and jump to the next explanation.
+#  Before examining the inner workings of hyperoptimization, we first introduce the concept of a contraction tree, which is closely tied to the cost functions the hyperoptimizer seeks to minimize. For the sake of clearness, the reader may execute the following two cells (where we define generic simple hyperoptimizers and rehearse the energy computation) and jump to the next explanation.
 
 # %%
 # generic minimal options for hyperoptimization
