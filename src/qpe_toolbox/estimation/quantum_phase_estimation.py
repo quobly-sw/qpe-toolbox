@@ -299,8 +299,6 @@ def qpe_first_stage(
 
     """
     # input validation
-    if dt == 0:
-        dt = EXACT
     if not ((dt is EXACT) or (np.isscalar(dt) and np.isreal(dt) and dt > 0)):
         raise ValueError("Can only evolve for positive dt")
 
