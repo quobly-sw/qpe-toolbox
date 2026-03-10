@@ -120,7 +120,7 @@ class Hamiltonian:
 
     def __str__(self):
         lines = [
-            f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={len(self._terms)}) with terms:"
+            f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms}) with terms:"
         ]
         for coeff, paulis, qubits in self._terms:
             lines.append(f"  {coeff:+6g} {paulis.upper()} @ {qubits}")
