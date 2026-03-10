@@ -131,7 +131,7 @@ ax_wER.set_title(r"Weighted Erdos-Renyi graph")
 #
 #
 #
-#  In order to find the partition(s) with the lowest energy, the [QAOA Ansatz](https://arxiv.org/abs/1411.4028) of depth $p$ takes inspiration from the quantum annealing approach and uses a parametrized circuit constituted by 'Trotterized' layers of real time evolution (see our example `trotter_decomposition`). It alternates the action of a mixer Hamiltonian with an easy ground state, the transverse magnetization $\mathbb{M}_x=\sum_i \sigma^x_i$ with phase $\beta$, and the target Hmiltonian AFIM with phase $\gamma$:
+#  In order to find the partition(s) with the lowest energy, the [QAOA Ansatz](https://arxiv.org/abs/1411.4028) of depth $p$ takes inspiration from the quantum annealing approach and uses a parametrized circuit constituted by 'Trotterized' layers of real time evolution (see our example `trotter_decomposition`). It alternates the action of a mixer Hamiltonian with an easy ground state, the transverse magnetization $\mathbb{M}_x=\sum_i \sigma^x_i$ with phase $\beta$, and the target Hamiltonian AFIM with phase $\gamma$:
 #
 #
 #
