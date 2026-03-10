@@ -31,7 +31,7 @@ def robust_phase_estimation(
     ----------
     H : Hamiltonian
         Hamiltonian object from the ``Hamiltonian`` class.
-    psi0 : quimb.tensor.MatrixProductState
+    psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}` of the system.
     epsilon : float
         Target precision for the phase estimate.
@@ -101,7 +101,7 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     ----------
     H : Hamiltonian
         Hamiltonian object defining the system.
-    psi0 : quimb.tensor.MatrixProductState
+    psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}`.
     m : int
         Iteration index corresponding to evolution time ``2**m``.
