@@ -54,7 +54,7 @@ def do_dmrg(hamiltonian):
     """
     Perform a DMRG ground-state calculation using quimb.
 
-    Based on quimb.tensor.DMRG2
+    Based on quimb :quimb-api:`DMRG2`
 
     Parameters
     ----------
