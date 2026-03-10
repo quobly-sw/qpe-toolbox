@@ -241,7 +241,7 @@ def study_optimization_time_costs(
         List of times (in seconds per Hamiltonian term per parameter set) spent
         computing the energies in each iteration.
 
-    study : :class:`optuna.study.Study`
+    study : :optuna-api:`study.Study`
         The ``optuna`` study object after all iterations. Can be used to query
         best parameters, best value, or continue optimization.
 
