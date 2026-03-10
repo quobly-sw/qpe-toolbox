@@ -658,7 +658,8 @@ def build_circ_revlc(selected_edge, circ):
             )
 
         else:
-            raise ValueError("Invalid gate shape")
+            msg = f"Invalid gate shape: {tensor.shape}"
+            raise ValueError(msg)
 
     return circ_revlc
 

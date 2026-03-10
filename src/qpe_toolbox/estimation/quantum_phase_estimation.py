@@ -138,7 +138,6 @@ def qpe_sample(
     *,
     trotter_order=1,
     write_gates=False,
-    float_precision=12,
     rehearse=False,
     run_simulation=True,
     optimize="auto-hq",
@@ -217,13 +216,9 @@ def qpe_sample(
         n_steps = int(evolution_time / dt)
         filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qubits_{n_phase_bits}phbits"
         if run_simulation:
-            gate_dict = serialize_from_quimb_Circuit(
-                circ, float_precision=float_precision
-            )
+            gate_dict = serialize_from_quimb_Circuit(circ)
         else:
-            gate_dict = serialize_from_quimb_gates(
-                initial_circ.N, circ, float_precision=float_precision
-            )
+            gate_dict = serialize_from_quimb_gates(initial_circ.N, circ)
         with open(filename + ".json", "w") as outfile:
             json.dump(gate_dict, outfile)
 
