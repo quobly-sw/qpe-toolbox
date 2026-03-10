@@ -52,9 +52,6 @@ import qpe_toolbox.estimation as qpe
 from qpe_toolbox.circuit import make_circ
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
-# %%
-optimize = "greedy"
-
 # %% [markdown]
 # ## Quantum phase estimation
 # ### Example : 1D Heisenberg Hamiltonian
@@ -562,6 +559,11 @@ print("number of phase bits for 1e-3 accuracy =", int(np.log2(10**3 * size_inter
 
 # %% [markdown]
 # Let us see how the error decreases when increasing the number of phase qubits.
+#
+# We measure the runtime of the simulation, choosing a `greedy` hyperoptimizer from $\texttt{quimb}$, see our [Hyperoptimization](./hyperoptimization.ipynb) notebook for details.
+
+# %%
+optimize = "greedy"
 
 # %%
 ms = list(range(1, 15))
