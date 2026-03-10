@@ -77,7 +77,7 @@ extlinks = {
         "numpy.%s",
     ),
     "numpy-random": (
-        "https://numpy.org/doc/stable/reference/random/generated/numpy.random.%s.html",
+        "https://numpy.org/doc/stable/reference/random/%s.html",
         "numpy.random.%s",
     ),
     "matplotlib-api": (
