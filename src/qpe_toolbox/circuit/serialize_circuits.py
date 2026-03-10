@@ -44,6 +44,9 @@ dict_qiskit_gate_map = {
     "swap": QuantumCircuit.swap,
     "cswap": QuantumCircuit.cswap,
 }
+"""
+Mapping between quimb and qiskit gates
+"""
 
 
 def apply_gate_qiskit(qc, label, qubits, params):
