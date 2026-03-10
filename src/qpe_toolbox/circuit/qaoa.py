@@ -18,7 +18,7 @@ import optuna
 import quimb as qu
 import quimb.tensor as qtn
 
-ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
+_ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
 
 
 def brute_force_maxcut(graph_matrix, terms):
@@ -183,7 +183,7 @@ def qaoa_energy(x, terms, opt):
     circ = qtn.circ_qaoa(terms, p, gammas, betas)
 
     ens = [
-        circ.local_expectation(weight * ZZ, edge, optimize=opt, backend="jax")
+        circ.local_expectation(weight * _ZZ, edge, optimize=opt, backend="jax")
         for edge, weight in terms.items()
     ]
 
@@ -374,7 +374,7 @@ def compute_qaoa_contraction_costs(
             circ = qtn.circ_qaoa(terms, depth, gammas, betas)
 
             local_exp_rehs = [
-                circ.local_expectation_rehearse(weight * ZZ, edge, optimize=hyperopt)
+                circ.local_expectation_rehearse(weight * _ZZ, edge, optimize=hyperopt)
                 for edge, weight in terms.items()
             ]
 
