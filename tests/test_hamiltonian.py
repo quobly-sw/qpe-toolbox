@@ -21,6 +21,11 @@ def test_heisenberg():
     assert h.shape == (4, 4)
     assert repr(h) == "Hamiltonian(n_qubits=2, n_terms=3)"
     assert str(h) == h_str
+    m = h.to_dense()
+    assert m.shape == (4, 4)
+    assert np.linalg.norm(m.imag) < 1e-12
+    assert np.linalg.norm(m - m.T) < 1e-12
+    assert np.allclose(np.linalg.eigvalsh(m), np.array([-3, 1, 1, 1]) / 4, atol=1e-12)
 
     for n_qubits in [2, 4]:
         heis_ham = heisenberg_hamiltonian(n_qubits)
