@@ -300,7 +300,7 @@ def qpe_first_stage(
     """
     # input validation
     if not ((dt is EXACT) or (np.isscalar(dt) and np.isreal(dt) and dt > 0)):
-        raise ValueError("Can only evolve for positive dt")
+        raise ValueError(f"dt must be EXACT or real > 0, got {dt}")
 
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
     st = time.time()
@@ -413,7 +413,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
 
     """
     if not (size_interval > 0):
-        raise ValueError("Invalid size_interval")
+        raise ValueError(f"Invalid size_interval: {size_interval}")
     E_const = getattr(hamiltonian, "e_const", 0.0)
     Emax = E_target - E_const + size_interval / 2
     evolution_time = 2 * np.pi / size_interval
