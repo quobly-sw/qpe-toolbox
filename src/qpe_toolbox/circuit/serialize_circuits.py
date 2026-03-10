@@ -50,7 +50,7 @@ Mapping between quimb and qiskit gates
 
 
 def apply_gate_qiskit(qc, label, qubits, params):
-    """Apply a quantum gate to a ``qiskit`` :class:`qiskit.QuantumCircuit` using a string label.
+    """Apply a quantum gate to a ``qiskit`` :qiskit-api:`QuantumCircuit` using a string label.
 
     This function dispatches gate application based on:
 
@@ -63,13 +63,13 @@ def apply_gate_qiskit(qc, label, qubits, params):
     It is inspired in the :quimb-api:`Circuit.apply_gate` method from `quimb`'s :quimb-api:`Circuit`.
 
     The gate implementation is retrieved from ``dict_qiskit_gate_map``, which
-    maps lowercase gate labels to the corresponding :class:`qiskit.QuantumCircuit`
-    methods (e.g. ``"rx" -> `` :meth:`qiskit.QuantumCircuit.rx`).
+    maps lowercase gate labels to the corresponding :qiskit-api:`QuantumCircuit`
+    methods (e.g. ``"rx" -> `` :qiskit-api:`qiskit.QuantumCircuit.rx <QuantumCircuit>`).
     The alias ``"cnot"`` is automatically mapped to ``"cx"``.
 
     Parameters
     ----------
-    qc : :class:`qiskit.QuantumCircuit`
+    qc : :qiskit-api:`QuantumCircuit`
         The quantum circuit to which the gate is applied.
 
     label : str
@@ -150,9 +150,9 @@ def apply_gate_qiskit(qc, label, qubits, params):
 def deserialize_to_qiskit_QuantumCircuit(
     full_gate_dict, *, max_depth=np.inf, measure=False
 ):
-    """Deserialize a gate dictionary into a ``qiskit`` :class:`qiskit.QuantumCircuit`.
+    """Deserialize a gate dictionary into a ``qiskit`` :qiskit-api:`QuantumCircuit`.
 
-    This function reconstructs a :class:`qiskit.QuantumCircuit` from a serialized gate
+    This function reconstructs a :qiskit-api:`QuantumCircuit` from a serialized gate
     representation, where gates are annotated with qubit indices, parameters,
     and a discrete circuit ``round`` (layer index).
 
@@ -193,7 +193,7 @@ def deserialize_to_qiskit_QuantumCircuit(
 
     Returns
     -------
-    qc : :class:`qiskit.QuantumCircuit`
+    qc : :qiskit-api:`QuantumCircuit`
         The reconstructed ``qiskit`` quantum circuit.
 
     Raises
@@ -281,7 +281,7 @@ def serialize_from_quimb_Circuit(qc):
         Reconstruct a ``quimb`` :quimb-api:`Circuit` from the serialized dictionary.
 
     deserialize_to_qiskit_QuantumCircuit :
-        Reconstruct a ``qiskit`` :class:`qiskit.QuantumCircuit` from the serialized dictionary.
+        Reconstruct a ``qiskit`` :qiskit-api:`QuantumCircuit` from the serialized dictionary.
 
     """
     return serialize_from_quimb_gates(qc.N, qc.gates)
@@ -344,7 +344,7 @@ def serialize_from_quimb_gates(n_qubits, gates_list):
         Reconstruct a ``quimb`` :quimb-api:`Circuit` from the serialized dictionary.
 
     deserialize_to_qiskit_QuantumCircuit :
-        Reconstruct a ``qiskit`` :class:`qiskit.QuantumCircuit` from the serialized dictionary.
+        Reconstruct a ``qiskit`` :qiskit-api:`QuantumCircuit` from the serialized dictionary.
 
     """
     return {

@@ -97,6 +97,10 @@ extlinks = {
         "#cotengra.%s",
         "cotengra.%s",
     ),
+    "qiskit-api": (
+        "https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.%s",
+        "qiskit.%s",
+    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------
