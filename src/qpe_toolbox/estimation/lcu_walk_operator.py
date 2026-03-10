@@ -550,7 +550,7 @@ def get_energy_from_lcu_walk_phase(theta, lmb):
     r"""
     Get the energy from the eigenphase of the LCU Walk operator.
 
-    ..math:
+    .. math::
         E = \lambda \cos(2 \pi \theta)
 
     Parameters

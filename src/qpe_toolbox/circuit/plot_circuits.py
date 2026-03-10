@@ -666,9 +666,10 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
 
 def draw_layered_expval(selected_edge, circ, *, list_names=None):
     """Draw the tensor-network representation of an expectation value
-    ..math:
 
-    `\\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle`.
+    .. math::
+
+        \\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle
 
     This function visualizes the light-cone structure of a quantum circuit,
     ASSUMING that it consists on layers of single- and two-spin rotations, around a two-site observable.
