@@ -21,10 +21,12 @@ def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     The Hamiltonian is given by
 
     .. math::
-        H = \\sum_{i=0}^{N-2} \\frac{J s}{2}
+        H = \\sum_{i=0}^{N-2} \\frac{J}{4}
         (X_i X_{i+1} + Y_i Y_{i+1} + Z_i Z_{i+1})
 
-    where only spin-1/2 systems are supported.
+    where only spin-1/2 systems are supported. The normalization is chosen such that
+    ``heisenberg_hamiltonian(2)`` is the standard :math:`\\mathbf{S}\\cdot\\mathbf{S}` operator
+    with eigenvalues ``(-3/4, 1/4, 1/4, 1/4)``.
 
     Parameters
     ----------
