@@ -104,8 +104,27 @@ class Hamiltonian:
         return self._terms
 
     @property
+    def n_terms(self):
+        return len(self._terms)
+
+    @property
     def n_qubits(self):
         return self._n_qubits
+
+    @property
+    def shape(self):
+        return (2**self._n_qubits, 2**self._n_qubits)
+
+    def __repr__(self):
+        return f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms})"
+
+    def __str__(self):
+        lines = [
+            f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms}) with terms:"
+        ]
+        for coeff, paulis, qubits in self._terms:
+            lines.append(f"  {coeff:+6g} {paulis.upper()} @ {qubits}")
+        return "\n".join(lines)
 
     def to_dense(self):
         """
