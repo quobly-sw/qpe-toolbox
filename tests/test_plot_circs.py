@@ -28,7 +28,7 @@ def test_drawings():
         5, depth, "rz", "cx", rng=np.random.default_rng(37)
     )
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
-    circ = deserialize_to_quimb_Circuit(circ_dict, gate_contract=False)
+    circ = deserialize_to_quimb_Circuit(circ_dict)
     depth = max(gate.round for gate in circ.gates) + 1
     assert isinstance(draw_layered_circuit(circ, max_depth=depth), plt.Figure)
     assert isinstance(draw_layered_expval((1, 2), circ), plt.Figure)
@@ -37,7 +37,7 @@ def test_drawings():
         5, depth, "rz", "cx", start_ent=True, rng=np.random.default_rng(37)
     )
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
-    circ = deserialize_to_quimb_Circuit(circ_dict, gate_contract=False)
+    circ = deserialize_to_quimb_Circuit(circ_dict)
     depth = max(gate.round for gate in circ.gates) + 1
     assert isinstance(draw_layered_circuit(circ, max_depth=depth // 2), plt.Figure)
     assert isinstance(draw_layered_expval((1, 2), circ), plt.Figure)
