@@ -85,7 +85,7 @@ extlinks = {
         "matplotlib.%s",
     ),
     "pyscf-api": (
-        "https://pyscf.org/pyscf_api_docs/pyscf.%s.html",
+        "https://pyscf.org/pyscf_api_docs/pyscf.%s",
         "pyscf.%s",
     ),
     "openfermion-ops": (
