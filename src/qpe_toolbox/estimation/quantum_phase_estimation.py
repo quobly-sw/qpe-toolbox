@@ -19,7 +19,7 @@ from qpe_toolbox.circuit.serialize_circuits import (
     serialize_from_quimb_gates,
 )
 
-from ._types import EXACT
+from .misc import EXACT
 from .qft import iqft_swapped
 
 

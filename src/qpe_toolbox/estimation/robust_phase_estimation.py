@@ -11,8 +11,8 @@ import time
 
 import numpy as np
 
-from ._types import EXACT
 from .hadamard_test import run_hadamard_test
+from .misc import EXACT
 
 
 def robust_phase_estimation(

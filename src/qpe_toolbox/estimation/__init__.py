@@ -7,7 +7,6 @@
 #
 # --------------------------------------------------------------------------------------
 
-from ._types import EXACT
 from .hadamard_test import build_hadamard_test_circuit, run_hadamard_test
 from .lcu_walk_operator import (
     build_lcu_prepare_mpo,
@@ -20,6 +19,7 @@ from .lcu_walk_operator import (
     lcu_select_gates,
     run_qpe_lcu_walk_operator,
 )
+from .misc import EXACT
 from .qft import iqft, iqft_swapped
 from .quantum_phase_estimation import (
     qpe_energy,
