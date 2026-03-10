@@ -560,7 +560,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     return fig
 
 
-def build_circ_revlc(selected_edge, circ):
+def build_reverse_light_cone_circuit(selected_edge, circ):
     """Construct the reverse light-cone circuit skelleton for a given interaction edge
     on a circuit constituted by single-qubit rotations and entangling layers
     for visualization purposes:
@@ -593,7 +593,7 @@ def build_circ_revlc(selected_edge, circ):
     -------
     circ_revlc : :quimb-api:`Circuit`
         A new circuit containing only the gates in the reverse light cone of
-        ``selected_edge``, acting on the same number of qubits as ``circ_qaoa``.
+        ``selected_edge``, acting on the same number of qubits as ``circ``.
 
     Notes
     -----
@@ -701,7 +701,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None):
     n_qubits = circ.N
     if len(selected_edge) != 2:
         raise ValueError("Invalid selected_edge")
-    circ_revlc = build_circ_revlc(selected_edge, circ)
+    circ_revlc = build_reverse_light_cone_circuit(selected_edge, circ)
 
     gate_rounds = [gate.round for gate in circ_revlc.gates]
     if any(x is None for x in gate_rounds):
