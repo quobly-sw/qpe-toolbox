@@ -33,7 +33,7 @@ def shift_control_gates(gates, m_aux, k_ctrl):
 
     Returns
     -------
-    controlled_gates : list
+    controlled_gates : list of :quimb-api:`Gate`
         New list of gate objects with shifted qubit indices and added control.
 
     Raises
