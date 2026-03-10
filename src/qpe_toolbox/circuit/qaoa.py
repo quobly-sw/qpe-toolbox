@@ -208,7 +208,7 @@ def study_optimization_time_costs(
         Dictionary representing the Hamiltonian to optimize, typically mapping
         edges or terms to weights, compatible with the ``energy`` function.
 
-    hyperopt : :class:`:cotengra-api:`ReusableHyperOptimizer``
+    hyperopt : :cotengra-api:`ReusableHyperOptimizer`
         Optimizer object used in the ``energy`` function to control tensor network
         contraction ordering. Reusing this object across multiple calls improves
         performance.
@@ -306,7 +306,7 @@ def compute_qaoa_contraction_costs(
         Dictionary mapping graph identifiers to entries. Each entry must have at
         least a key ``"terms"`` listing the edges as pairs of vertices.
 
-    hyperopt : :class:`:cotengra-api:`ReusableHyperOptimizer``
+    hyperopt : :cotengra-api:`ReusableHyperOptimizer`
         Optimizer object used for tensor network contraction rehearsal. Reusing this
         object across multiple graphs improves performance.
 
