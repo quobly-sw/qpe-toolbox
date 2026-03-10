@@ -13,9 +13,10 @@ import quimb.tensor as qtn
 from quimb.operator import SparseOperatorBuilder
 
 
-def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1, spin=1 / 2):
+def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     """
-    Construct a 1D nearest-neighbor Heisenberg Hamiltonian with open boundaries.
+    Construct a 1D nearest-neighbor spin 1/2 Heisenberg Hamiltonian with open
+    boundaries.
 
     The Hamiltonian is given by
 
@@ -30,27 +31,20 @@ def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1, spin=1 / 2):
     n_qubits : int
         Number of spins (qubits) in the chain.
     coupling_strength : float, optional
-        Exchange coupling constant :math:`J`. Default is 1.
-    spin : float, optional
-        Spin quantum number :math:`s`. Only ``spin=1/2`` is implemented.
+        Exchange coupling constant :math:`J`. Default is 1.0.
 
     Returns
     -------
     Hamiltonian
         Heisenberg Hamiltonian represented as a qubit operator.
 
-    Raises
-    ------
-    ValueError
-        If ``spin`` is not equal to 1/2.
-
     """
     terms = []
-    if spin != 1 / 2:
-        raise ValueError(f"spin {spin} not implemented. Defined only for spin 1/2")
     for i in range(n_qubits - 1):
         for op in ["xx", "yy", "zz"]:
-            terms.append((1 / 2.0 * coupling_strength * spin, op, [i, i + 1]))
+            # convention: S^α = σ^α / 2
+            # use Pauli matrices as terms and set coefficient to J/4
+            terms.append((coupling_strength / 4, op, [i, i + 1]))
     return Hamiltonian(terms, n_qubits)
 
 
@@ -102,8 +96,16 @@ class Hamiltonian:
     """
 
     def __init__(self, terms, n_qubits):
-        self.terms = terms
-        self.n_qubits = n_qubits
+        self._terms = terms
+        self._n_qubits = n_qubits
+
+    @property
+    def terms(self):
+        return self._terms
+
+    @property
+    def n_qubits(self):
+        return self._n_qubits
 
     def to_dense(self):
         """
@@ -261,9 +263,9 @@ def rotation_gates(term, delta, qubit_reg):
 
     # Rotations: H for X gates and RX(pi/2) for Y gates
     for op, qubit in zip(pauli_string, qubits, strict=True):
-        if op in ("x", "X"):
+        if op.upper() == "X":
             routine.append(("H", qubit_reg[qubit]))
-        if op in ("y", "Y"):
+        if op.upper() == "Y":
             routine.append(("RX", np.pi / 2, qubit_reg[qubit]))
 
     # CNOTs
@@ -281,10 +283,10 @@ def rotation_gates(term, delta, qubit_reg):
 
     # Rotations back
     for op, qubit in zip(pauli_string, qubits, strict=True):
-        if op in ("x", "X"):
+        if op.upper() == "X":
             routine.append(("H", qubit_reg[qubit]))
 
-        if op in ("y", "Y"):
+        if op.upper() == "Y":
             routine.append(("RX", -np.pi / 2, qubit_reg[qubit]))
 
     return routine
