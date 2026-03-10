@@ -310,7 +310,7 @@ def compute_qaoa_contraction_costs(
         Optimizer object used for tensor network contraction rehearsal. Reusing this
         object across multiple graphs improves performance.
 
-    circuit_depths : enum of int, optional
+    circuit_depths : sequence of int, optional
         List of QAOA circuit depths (number of layers) to analyze. Default is (2, 3, 4).
 
     verbosity : int, optional
