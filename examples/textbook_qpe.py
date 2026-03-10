@@ -32,9 +32,9 @@
 # 4. Then we *encode* the phase into the phase register via a sequence of controlled powers of $U$:
 #
 #    $U^{2^k}, k=0,1,...,m-1$ is applied to the physical register, conditioned on the $k$-th phase qubit.
-# 6. Finally to *decode* the phase, we apply the inverse Quantum Fourier Transform (QFT) on the phase register.
-# 7. We measure the phase register and find a $m$-bits approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
-# 8. After the measure, the physical register has been projected onto $\ket{u}$.
+# 5. Finally to *decode* the phase, we apply the inverse Quantum Fourier Transform (QFT) on the phase register.
+# 6. We measure the phase register and find a $m$-bits approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
+# 7. After the measure, the physical register has been projected onto $\ket{u}$.
 #
 # The notebook is organised as follows:
 # In the first section, we illustrate and detail the different parts of the algorithm on a small 1D Heisenberg Hamiltonian.
