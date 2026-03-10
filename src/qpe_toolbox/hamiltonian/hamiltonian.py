@@ -87,7 +87,7 @@ class Hamiltonian:
 
     Parameters
     ----------
-    terms : list of tuple
+    terms : sequence of tuple
         Hamiltonian terms in the form
         ``(coefficient, pauli_string, qubits)``, e.g. ``(0.5, "xy", [0, 1])``.
     n_qubits : int
@@ -96,8 +96,8 @@ class Hamiltonian:
     """
 
     def __init__(self, terms, n_qubits):
-        self._terms = terms
-        self._n_qubits = n_qubits
+        self._terms = list(terms)
+        self._n_qubits = int(n_qubits)
 
     @property
     def terms(self):
