@@ -78,9 +78,7 @@ for ctype in circuit_types:
 
 # %%
 for ctype in circuit_types:
-    circ = deserialize_to_quimb_Circuit(
-        circuit_data[ctype][ctype + "_16"], gate_contract=False
-    )
+    circ = deserialize_to_quimb_Circuit(circuit_data[ctype][ctype + "_16"])
     depth = max([gate.round for gate in circ.gates]) + 1
     fig = draw_layered_circuit(
         circ,
@@ -384,9 +382,7 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %%
 for ctype in circuit_types:
-    circ = deserialize_to_quimb_Circuit(
-        circuit_data[ctype][ctype + "_16"], gate_contract=False
-    )
+    circ = deserialize_to_quimb_Circuit(circuit_data[ctype][ctype + "_16"])
     depth = max([gate.round for gate in circ.gates]) + 1
     fig = draw_layered_expval(
         (5, 6),

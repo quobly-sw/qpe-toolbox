@@ -223,7 +223,7 @@ def deserialize_to_qiskit_QuantumCircuit(
     return qc
 
 
-def serialize_from_quimb_Circuit(qc, *, float_precision=4):
+def serialize_from_quimb_Circuit(qc):
     """Serialize a ``quimb`` circuit into a ``JSON``-compatible dictionary.
 
     This function converts a :class:`quimb.tensor.circuit.Circuit` object into
@@ -235,8 +235,6 @@ def serialize_from_quimb_Circuit(qc, *, float_precision=4):
     ----------
     qc : :class:`quimb.tensor.circuit.Circuit`
         The ``quimb`` circuit to be serialized.
-    float_precision : int, optional
-        Gate parameters are rounded to float_precision decimal places to reduce file size.
 
     Returns
     -------
@@ -283,10 +281,10 @@ def serialize_from_quimb_Circuit(qc, *, float_precision=4):
         Reconstruct a ``qiskit`` :class:`qiskit.QuantumCircuit` from the serialized dictionary.
 
     """
-    return serialize_from_quimb_gates(qc.N, qc.gates, float_precision=float_precision)
+    return serialize_from_quimb_gates(qc.N, qc.gates)
 
 
-def serialize_from_quimb_gates(n_qubits, gates_list, *, float_precision=4):
+def serialize_from_quimb_gates(n_qubits, gates_list):
     """Serialize a list of ``quimb`` gates into a ``JSON``-compatible dictionary.
 
     This function converts a list of :class:`quimb.tensor.circuit.Gate` objects into
@@ -300,8 +298,6 @@ def serialize_from_quimb_gates(n_qubits, gates_list, *, float_precision=4):
         Total number of qubits in the circuit.
     gates_list : list
         The list of ``quimb`` gates to be serialized.
-    float_precision : int, optional
-        Gate parameters are rounded to float_precision decimal places to reduce file size.
 
     Returns
     -------
@@ -354,7 +350,7 @@ def serialize_from_quimb_gates(n_qubits, gates_list, *, float_precision=4):
             {
                 "name": gate.label,
                 "qubits": [int(q) for q in gate.qubits],
-                "params": np.round(gate.params, float_precision).tolist(),
+                "params": [float(p) for p in gate.params],
                 "controls": [int(q) for q in gate.controls]
                 if gate.controls is not None
                 else [],
@@ -366,7 +362,7 @@ def serialize_from_quimb_gates(n_qubits, gates_list, *, float_precision=4):
 
 
 def deserialize_to_quimb_Circuit(
-    full_gate_dict, *, max_depth=np.inf, gate_contract="auto-split-gate"
+    full_gate_dict, *, max_depth=np.inf, contract=False, **gate_opts
 ):
     """Deserialize a gate dictionary into a :class:`quimb.tensor.circuit.Circuit` up to a given depth.
 
@@ -405,7 +401,10 @@ def deserialize_to_quimb_Circuit(
         Maximum circuit depth to deserialize, i.e. if ``round >= depth`` the gate is
         ignored. Default is inf, the full circuit is deserialized.
 
-    gate_contract : TODO
+    contract : bool, optional
+        Whether to contract the quimb Circuit. Default is False.
+
+    gate_opts : Supplied to the gate function, options here will override the default gate_opts
 
     Returns
     -------
@@ -431,7 +430,8 @@ def deserialize_to_quimb_Circuit(
                 qubits=[int(q) for q in gate["qubits"]],
                 controls=[int(q) for q in gate.get("controls", [])],
                 gate_round=int(gate["round"]),
-                contract=gate_contract,  # other options in quimb.tensor.tensor_1d.gate_TN_1D
+                contract=contract,
+                **gate_opts,
             )
 
     return qc
