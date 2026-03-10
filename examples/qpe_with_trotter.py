@@ -123,7 +123,7 @@ print(
 # %% [markdown]
 # ## Precision: influence of the number of phase qubits and number of Trotter steps
 #
-# We run and measure the energy for several QPE circuits varying the number of phase qubits and Trotter steps. We also record the gate count and simulation time, and compare two modes of circuit simulation available with Quimb: the `Circuit` mode and the `CircuitMPS` mode.
+# We run and measure the energy for several QPE circuits varying the number of phase qubits and Trotter steps. We also record the gate count and simulation time, and compare two modes of circuit simulation available with Quimb: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` hyperoptimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
 #
 # Let us first run the circuits (this may take a couple of minutes):
 
@@ -132,7 +132,7 @@ res = {"durations_tn": [], "durations_mps": [], "energies": [], "entangling_gate
 trotter_order = 2
 nphase_list = np.array([1, 2, 3, 4, 5])
 ns_list = [1, 2, 3, 4, "exact"]
-max_tn_nphase = 4
+max_tn_nphase = 5
 max_tn_nsteps = 3
 
 for n_trotter_steps in tqdm.tqdm(ns_list):
@@ -143,8 +143,8 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
     for n_phase_bits in tqdm.tqdm(nphase_list, leave=False):
         initial_circMPS = make_circMPS(n_phase_bits, psi0_mps)
 
-        if (n_phase_bits < max_tn_nphase) and (
-            n_trotter_steps != "exact" and n_trotter_steps < max_tn_nsteps
+        if (n_trotter_steps != "exact") and (
+            n_phase_bits < max_tn_nphase or n_trotter_steps < max_tn_nsteps
         ):
             # using generic tensor network contraction to simulate a quantum circuit
             # is usually very expensive. Only try for small number of qubits.
@@ -156,6 +156,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
                 E_target,
                 size_interval,
                 trotter_order=trotter_order,
+                optimize="greedy",
             )
             duration_tn.append(traces["ctimes"][-1])
 
@@ -275,17 +276,21 @@ for i, n_trotter_steps in enumerate(ns_list[:-1]):
         label=f"{n_trotter_steps} steps MPS",
         **mystyles[i + 2],
     )
-    if n_trotter_steps < max_tn_nsteps:
-        ax_t.plot(
-            nphase_list[nphase_list < max_tn_nphase],
-            res["durations_tn"][i],
-            label=f"{n_trotter_steps} steps TN",
-            marker="P",
-            markersize=8,
-            linestyle="--",
-            markeredgecolor="k",
-            color=mystyles[i + 2]["color"],
-        )
+
+# Plot TN timings on top
+for i, n_trotter_steps in enumerate(ns_list[:-1]):
+    ax_t.plot(
+        nphase_list[nphase_list < max_tn_nphase]
+        if n_trotter_steps >= max_tn_nsteps
+        else nphase_list,
+        res["durations_tn"][i],
+        label=f"{n_trotter_steps} steps TN",
+        marker="P",
+        markersize=8,
+        linestyle="--",
+        markeredgecolor="k",
+        color=mystyles[i + 2]["color"],
+    )
 
 ax_n.legend(fontsize=12)
 ax_t.legend()
@@ -293,6 +298,9 @@ ax_n.set_xlabel("number of phase qubits")
 ax_n.set_ylabel("number of entangling gates")
 ax_t.set_xlabel("number of phase qubits")
 ax_t.set_ylabel("computation time (seconds)");
+# %% [markdown]
+#
+
 # %% [markdown]
 # * The `CircuitMPS` mode is much more efficient than the `Circuit` mode (actual timing depends on the contraction order found by the optimizer, see [our notebook on Hyperoptimization](./hyperoptimization.ipynb)). The computation time is directly correlated with the number of entangling gates, which grows exponentially with the number of phase qubits.
 #
