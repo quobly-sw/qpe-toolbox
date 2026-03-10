@@ -549,7 +549,7 @@ axs[1].set_xlabel("Number of phase qubits $m$")
 axs[1].legend(loc="lower left");
 
 # %% [markdown]
-# ### Performance and accuracy
+# ### Precision versus number of phase qubits
 #
 # In computational chemistry, the standard level for accuracy is the so-called chemical accuracy, set to $1$ mHa. In general, matrix elements of chemistry Hamiltonians are of the order of $1$ Ha.
 # In general, we will therefore aim for an error below $\simeq 10^{-3} E_{\rm target}$.
@@ -562,10 +562,15 @@ axs[1].legend(loc="lower left");
 # %%
 E_target = E0 + 0.1
 size_interval = 2
-print("number of phase bits for chem accuracy =", int(np.log2(10**3 * size_interval)))
+print("number of phase bits for 1e-3 accuracy =", int(np.log2(10**3 * size_interval)))
 
 # %% [markdown]
 # Let us see how the error decreases when increasing the number of phase qubits.
+#
+# We measure the runtime of the simulation, choosing a `greedy` hyperoptimizer from $\texttt{quimb}$, see our [Hyperoptimization](./hyperoptimization.ipynb) notebook for details.
+
+# %%
+optimize = "greedy"
 
 # %%
 ms = list(range(1, 15))
@@ -577,7 +582,12 @@ for n_phase_bits in tqdm.tqdm(ms):
     st = time.time()
     initial_circ = make_circ(n_phase_bits, psi0_mps)
     traces, energy = qpe.qpe_energy(
-        h_spin, initial_circ, "exact", E_target, size_interval
+        h_spin,
+        initial_circ,
+        "exact",
+        E_target,
+        size_interval,
+        optimize=optimize,
     )
     et = time.time() - st
     energies.append(energy)
@@ -642,7 +652,7 @@ for n_qubits in tqdm.tqdm(nqb_list):
         st = time.time()
         initial_circ = make_circ(n_phase_bits, psi0_mps)
         traces, energy = qpe.qpe_energy(
-            h_spin, initial_circ, "exact", E_target, size_interval
+            h_spin, initial_circ, "exact", E_target, size_interval, optimize=optimize
         )
         et = time.time() - st
         energies.append(energy)
@@ -792,17 +802,17 @@ fig, (ax_e, ax_p) = plt.subplots(2, 1, sharex=True)
 ax_e.plot(Omegas, E_o, "-o")
 ax_e.axhline(y=E0, color="k", linestyle=":", alpha=0.5)
 ax_e.axhline(y=E1, color="k", linestyle=":", alpha=0.5)
-ax_e.axvline(x=p_o[0] / (p_o[0] + p_o[-1]), color="k", linestyle=":", alpha=0.5)
+ax_e.axvline(x=p_o[-1] / (p_o[0] + p_o[-1]), color="k", linestyle=":", alpha=0.5)
 ax_e.set_ylabel("Energy E")
 ax_e.set_yticks([E0, E1], ["$E_0$", "$E_1$"])
 ax_e.xaxis.set_inverted(True)
 
 ax_p.plot(Omegas, p_o, "-o", color="tab:orange")
-ax_p.plot(Omegas, p_o[-1] * Omegas, color="k", linestyle=":", alpha=0.5)
-ax_p.plot(Omegas, p_o[0] * (1 - Omegas), color="k", linestyle=":", alpha=0.5)
-ax_p.axvline(x=p_o[0] / (p_o[0] + p_o[-1]), color="k", linestyle=":", alpha=0.5)
+ax_p.plot(Omegas, p_o[0] * Omegas, color="k", linestyle=":", alpha=0.5)
+ax_p.plot(Omegas, p_o[-1] * (1 - Omegas), color="k", linestyle=":", alpha=0.5)
+ax_p.axvline(x=p_o[-1] / (p_o[0] + p_o[-1]), color="k", linestyle=":", alpha=0.5)
 ax_p.set_xticks(
-    [0, p_o[0] / (p_o[0] + p_o[-1]), 1], ["0", "$\\frac{p(0)}{p(0) + p(1)}$", "1"]
+    [0, p_o[-1] / (p_o[0] + p_o[-1]), 1], ["0", "$\\frac{p(0)}{p(0) + p(1)}$", "1"]
 )
 ax_p.set_ylabel("Probability p")
 ax_p.set_xlabel(r"$\Omega$")
