@@ -8,7 +8,7 @@
 # --------------------------------------------------------------------------------------
 
 from .mpomps_tools import (
-    add_cqbit_mpo,
+    add_cqubit_mpo,
     apply_gate_from_mpo,
     controlled_mpo,
     kron_mpos,

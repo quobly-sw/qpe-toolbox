@@ -15,8 +15,12 @@ from .parametrized_circuits import (
     generate_brickwall_quimb,
     generate_rand_quimb,
 )
-from .plot_circuits import draw_circuit, draw_expval
-from .qaoa import brute_force_MaxCut, study_optimization_time_costs
+from .plot_circuits import draw_layered_circuit, draw_layered_expval
+from .qaoa import (
+    brute_force_maxcut,
+    compute_qaoa_contraction_costs,
+    study_optimization_time_costs,
+)
 from .serialize_circuits import (
     deserialize_to_qiskit_QuantumCircuit,
     deserialize_to_quimb_Circuit,

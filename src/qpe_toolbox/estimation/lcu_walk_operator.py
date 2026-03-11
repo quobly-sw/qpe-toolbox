@@ -62,7 +62,7 @@ def get_lcu_weights(hamiltonian):
     return weights, lmb, L, m_L
 
 
-def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
+def build_lcu_prepare_state_mps(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
 
@@ -95,7 +95,7 @@ def build_lcu_prepare_state_mps(hamiltonian, cutoff=1e-10):
     return L_mps
 
 
-def build_lcu_prepare_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_prepare_mpo(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the PREPARE oracle MPO :math:`\ket{0}\bra{\mathcal{L}}`.
 
@@ -200,7 +200,7 @@ def _gates_llxHl(hamiltonian, l_term):
 
     m_L = int(np.ceil(np.log2(L)))
 
-    phys_reg = list(range(m_L, m_L + hamiltonian.n_qbits))
+    phys_reg = list(range(m_L, m_L + hamiltonian.n_qubits))
     l_reg = list(range(m_L))
 
     gates = []
@@ -246,9 +246,9 @@ def _build_Hl_mpo(hamiltonian, l_term):
 
     """
     if l_term >= len(hamiltonian.terms):
-        return qtn.MPO_identity(hamiltonian.n_qbits)
+        return qtn.MPO_identity(hamiltonian.n_qubits)
     if hamiltonian.terms[l_term][0] == 0:
-        return qtn.MPO_identity(hamiltonian.n_qbits)
+        return qtn.MPO_identity(hamiltonian.n_qubits)
 
     P = hamiltonian.terms[l_term]
     prefactor = P[0]
@@ -256,13 +256,13 @@ def _build_Hl_mpo(hamiltonian, l_term):
     qubits = P[2]
 
     arrays = []
-    for i in range(hamiltonian.n_qbits):
+    for i in range(hamiltonian.n_qubits):
         if i in qubits:
             ind_i = qubits.index(i)
             mat = np.sign(prefactor) * qu.pauli(paulis[ind_i])
         else:
             mat = qu.identity(2)
-        if (i == 0) or (i == (hamiltonian.n_qbits - 1)):
+        if (i == 0) or (i == (hamiltonian.n_qubits - 1)):
             aux = np.zeros([1, 2, 2], dtype=complex)
             aux[0, :, :] = mat
         else:
@@ -300,7 +300,7 @@ def _build_llxHl_mpo(hamiltonian, l_term):
     return kron_mpos(l_mpo, Hl_mpo)
 
 
-def build_lcu_select_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_select_mpo(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the MPO implementing the SELECT oracle.
 
@@ -334,7 +334,7 @@ def build_lcu_select_mpo(hamiltonian, cutoff=1e-10):
 ###############################################################################
 
 
-def build_lcu_reflection_mpo(hamiltonian, cutoff=1e-10):
+def build_lcu_reflection_mpo(hamiltonian, *, cutoff=1e-10):
     r"""
     Construct the reflection operator :math:`\mathcal{R}_L` for the L register.
 
@@ -359,7 +359,7 @@ def build_lcu_reflection_mpo(hamiltonian, cutoff=1e-10):
     L_mpo = L_mps.partial_trace_to_mpo(keep=list(range(m_L)))
     L_mpo.compress(cutoff=cutoff)
 
-    n_qb = hamiltonian.n_qbits
+    n_qb = hamiltonian.n_qubits
     R_L = 2 * kron_mpos(L_mpo, qtn.MPO_identity(n_qb)) - qtn.MPO_identity(m_L + n_qb)
     R_L.compress(cutoff=cutoff)
 
@@ -404,9 +404,9 @@ def run_qpe_lcu_walk_operator(
     st = time.time()
     ctimes = []
     m_L = int(np.ceil(np.log2(len(H.terms))))
-    regs = _get_registers_qpe_lcu(H.n_qbits, m_L, m_ph)
+    regs = _get_registers_qpe_lcu(H.n_qubits, m_L, m_ph)
 
-    traces, circ = qpe_first_stage_walk(
+    _, circ = qpe_first_stage_walk(
         H, psi0_mps, m_ph, regs, max_bond=max_bond, cutoff=cutoff, verbosity=verbosity
     )
 
@@ -424,17 +424,16 @@ def run_qpe_lcu_walk_operator(
             print(" " * len_prev_msg, end="\r")
             print(f"Done sampling {ctimes[-1]:.1f}s", end="\r")
         print("binary" + " " * 6 + "\t ket" + " " * 4 + "\t phase  \t prob")
-        for ind, x in enumerate(
-            sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True)
-        ):
-            if ind < 3:
-                print(
-                    f"{format(x[0], f'0{m_ph}b'):<12}",
-                    f"{'|' + str(x[0]) + '>':<8}",
-                    f"{x[0] / 2**m_ph:<6.4f}",
-                    f"{x[1]:<6.4f}",
-                    sep=" \t ",
-                )
+        for state_int, prob in sorted(
+            enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True
+        )[:3]:
+            print(
+                f"{format(state_int, f'0{m_ph}b'):<12}",
+                f"{'|' + str(state_int) + '>':<8}",
+                f"{state_int / 2**m_ph:<6.4f}",
+                f"{prob:<6.4f}",
+                sep=" \t ",
+            )
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**m_ph
@@ -490,7 +489,7 @@ def qpe_first_stage_walk(
     phase_zeros = qtn.MPS_computational_state("0" * m_ph)
     psi_init = kron_mps(phase_zeros, kron_mps(L_mps, psi0_mps))
     circ = qtn.CircuitMPS(
-        m_ph + m_L + H.n_qbits, psi0=psi_init, max_bond=max_bond, cutoff=cutoff
+        m_ph + m_L + H.n_qubits, psi0=psi_init, max_bond=max_bond, cutoff=cutoff
     )
 
     # Hadamard wall
@@ -520,14 +519,14 @@ def qpe_first_stage_walk(
     return traces, circ
 
 
-def _get_registers_qpe_lcu(n_qbits, m_L, m_ph):
+def _get_registers_qpe_lcu(n_qubits, m_L, m_ph):
     """
     Return dictionary of qubit registers for the phase, L,
     and physical registers in LCU QPE.
 
     Parameters
     ----------
-    n_qbits : int
+    n_qubits : int
         Number of physical qubits.
     m_L : int
         Number of L register qubits.
@@ -543,7 +542,7 @@ def _get_registers_qpe_lcu(n_qbits, m_L, m_ph):
     regs = {}
     regs["phase"] = tuple(range(m_ph))
     regs["L"] = tuple(range(m_ph, m_ph + m_L))
-    regs["phys"] = tuple(range(m_ph + m_L, m_ph + m_L + n_qbits))
+    regs["phys"] = tuple(range(m_ph + m_L, m_ph + m_L + n_qubits))
     return regs
 
 

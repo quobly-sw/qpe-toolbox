@@ -49,9 +49,9 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
         Circuit implementing the Hadamard test.
 
     """
-    n_qbits = init_mps.L
+    n_qubits = init_mps.L
     circ = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
-    data_reg = list(range(1, n_qbits + 1))
+    data_reg = list(range(1, n_qubits + 1))
 
     circ.apply_gate("H", 0)
 

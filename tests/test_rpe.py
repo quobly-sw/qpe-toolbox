@@ -5,8 +5,8 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 
 def test_rpe():
-    n_qbits = 4
-    H = heisenberg_hamiltonian(n_qbits)
+    n_qubits = 4
+    H = heisenberg_hamiltonian(n_qubits)
     E0, psi0 = do_dmrg(H)
     epsilon = 0.01
     n_shots = 0

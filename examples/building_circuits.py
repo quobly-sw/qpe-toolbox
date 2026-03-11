@@ -32,7 +32,7 @@ from qiskit_quimb import quimb_circuit
 from qpe_toolbox.circuit import (
     deserialize_to_qiskit_QuantumCircuit,
     deserialize_to_quimb_Circuit,
-    draw_circuit,
+    draw_layered_circuit,
     dump_quimb_Circuit_to_qasm,
     generate_brickwall_quimb,
     generate_rand_quimb,
@@ -72,20 +72,20 @@ circ.apply_gate(gate_id="cx", qubits=[2, 3], gate_round=3)
 circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 
 # %% [markdown]
-# When applying each one of the gates, we added further information on the `gate_round`; this information can be used for multiple purposes, like visualization. `quimb` includes 'pre-cooked' recipes for well-known circuits like the QAOA Ansatz, such that they do not need to be rebuilt from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa) ). We also provide some functions with simple brick-wall and random circuits, which are the main focus of our `performance.py` example:
+# When applying each one of the gates, we added further information on the `gate_round`; this information can be used for multiple purposes, like visualization. $\texttt{quimb}$ includes 'pre-cooked' recipes for well-known circuits like the QAOA Ansatz, such that they do not need to be rebuilt from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa) ). We also provide some functions with simple brick-wall and random circuits, which are the main focus of our `performance.py` example:
 
 # %%
 # Build a circuit with random parameters and two-layer structure;
 # one layer is a single-body rotation, and the other is
 # an entangling two-body gate
 circ_brick = generate_brickwall_quimb(
-    num_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
+    n_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
 )
 
 # Same as before, but the entangling layer randomly picks pairs
 # of qubits at a maximum distance `ent_range`
 circ_rand = generate_rand_quimb(
-    num_qubits=10,
+    n_qubits=10,
     depth=4,
     sb_gate_label="rx",
     ent_gate_label="cnot",
@@ -111,11 +111,11 @@ circ.psi.draw(color=["PSI0"] + [f"ROUND_{i}" for i in range(depth)])
 circ_rand.psi.draw(color=["PSI0", "RX", "CX"], layout="kamada_kawai")
 
 # %% [markdown]
-# Nevertheless, to understand the details of large circuits with long-range gates, it is preferable to switch to `matplotlib`, as crossings of tensor legs in the network can be clarified using a fixed layout. To this end, we introduce draw_circuit, which targets circuits composed of layers of single- and two-qubit rotations:
+# Nevertheless, to understand the details of large circuits with long-range gates, it is preferable to switch to `matplotlib`, as crossings of tensor legs in the network can be clarified using a fixed layout. To this end, we introduce `draw_layered_circuit`, which targets circuits composed of layers of single- and two-qubit rotations:
 
 # %%
 depth = max([gate.round for gate in circ_rand.gates]) + 1
-fig = draw_circuit(
+fig = draw_layered_circuit(
     circ_rand,
     list_names=[
         r"$0$",
@@ -126,7 +126,7 @@ fig = draw_circuit(
 )
 
 # %% [markdown]
-# The rationale behind `draw_circuit` is the very same as the `schematic` module of $\texttt{quimb}$, but we chose to build it ourselves for better picture scaling.
+# The rationale behind `draw_layered_circuit` is the very same as the `schematic` module of $\texttt{quimb}$, but we chose to build it ourselves for better picture scaling.
 
 # %% [markdown]
 # ### Recording and loading circuits
@@ -137,7 +137,7 @@ fig = draw_circuit(
 # In the following we introduce the following functions for each action:
 #
 # ```
-# generate quimb circuit:
+# generate `quimb` circuit:
 #     |
 #     --> save it:
 #     |   |
@@ -157,14 +157,14 @@ fig = draw_circuit(
 # Since the information on the rounds is not recorded usually
 # on `.qasm`, we added the option of saving that information on a different .txt
 dump_quimb_Circuit_to_qasm(
-    circ=circ_rand, savefile_base="my_quimb_circuit", save_rounds=True
+    circ=circ_rand, savefile_base="example_output_quimb_circuit", save_rounds=True
 )
 
 ## Saving as `.json`
 # The circuit needs to be properly serialized,
 # so return a dictionary with valid `.json` dtypes
 dict_circ = serialize_from_quimb_Circuit(qc=circ_rand)
-with open("my_quimb_circuit.json", "w") as f:
+with open("example_output_quimb_circuit.json", "w") as f:
     json.dump(dict_circ, f, indent=4)
 
 # %% [markdown]
@@ -193,10 +193,12 @@ with open("my_quimb_circuit.json", "w") as f:
 
 # %%
 # Loading from `.qasm`
-loaded_quimb_circ = load_qasm_to_quimb_Circuit("my_quimb_circuit", with_rounds=True)
+loaded_quimb_circ = load_qasm_to_quimb_Circuit(
+    "example_output_quimb_circuit", with_rounds=True
+)
 
 # Loading from `.json`
-with open("my_quimb_circuit.json") as f:
+with open("example_output_quimb_circuit.json") as f:
     dict_loaded_circ = json.load(f)
 loaded_quimb_circ = deserialize_to_quimb_Circuit(dict_loaded_circ)
 
@@ -234,21 +236,9 @@ for ci in qc.data:
 # This function allows us to feed any entanglement pattern
 # with nearest-neighbour, long-range, all-to-all or custom pairing
 
-qc_nn = n_local(
-    num_qubits=5,
-    rotation_blocks="ry",
-    entanglement_blocks="cx",
-    entanglement="linear",
-    reps=2,
-)
+qc_nn = n_local(5, "ry", "cx", entanglement="linear", reps=2)
 
-qc_lr = n_local(
-    num_qubits=4,
-    rotation_blocks="ry",
-    entanglement_blocks="cx",
-    entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)],
-    reps=2,
-)
+qc_lr = n_local(4, "ry", "cx", entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)], reps=2)
 
 # %% [markdown]
 # In order to feed the parameters, we only need to pass a list of values and assign them:
@@ -261,7 +251,7 @@ qc_with_values = qc_lr.assign_parameters(param_values)
 # %% [markdown]
 # ### Plotting circuits
 #
-# The plotting utility for $\texttt{qiskit}$ is similar to our `draw_circuit` function or to the `schematic` functionality from $\texttt{quimb}$:
+# The plotting utility for $\texttt{qiskit}$ is similar to our `draw_layered_circuit` function or to the `schematic` functionality from $\texttt{quimb}$:
 
 # %%
 # Drawing the circuit with `mpl` output allows for coloring the gates,
@@ -278,12 +268,12 @@ qc_with_values.draw(initial_state=True, fold=-1)
 # ### Recording and loading circuits
 
 # %% [markdown]
-# A `qiskit` circuit can be recorded as a `.qasm` file. However, because the plotting utility stacks gates according to their order of appearance, information about gate rounds is lost. As a result, there is no need to use the `.json` recording format in this case, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
-# To address and visualize a circuit coherently on a layer-by-layer basis, one must therefore rely on the functionalities previously introduced for `quimb`. Nevertheless, when a circuit is produced by the `quimb` pipeline, it can indeed be deserialized from a `.json` file.
+# A $\texttt{qiskit}$ circuit can be recorded as a `.qasm` file. However, because the plotting utility stacks gates according to their order of appearance, information about gate rounds is lost. As a result, there is no need to use the `.json` recording format in this case, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
+# To address and visualize a circuit coherently on a layer-by-layer basis, one must therefore rely on the functionalities previously introduced for $\texttt{quimb}$. Nevertheless, when a circuit is produced by the $\texttt{quimb}$ pipeline, it can indeed be deserialized from a `.json` file.
 
 # %% [markdown]
 # ```
-# generate qiskit circuit:
+# generate `qiskit` circuit:
 #     |
 #     --> save it:
 #     |   |
@@ -300,20 +290,20 @@ qc_with_values.draw(initial_state=True, fold=-1)
 # Save as `.qasm`
 # IMPORTANT: only circuits with bounded parameter values can be dumped in `.qasm`
 qasm_code = dumps(qc_with_values)
-with open("my_qiskit_circuit.qasm", "w") as f:
+with open("example_output_qiskit_circuit.qasm", "w") as f:
     f.write(qasm_code)
 
 # %% [markdown]
 # In $\texttt{qiskit}$ the `.qasm` files are loaded as:
 
 # %%
-qc = QuantumCircuit.from_qasm_file("my_quimb_circuit.qasm")
+qc = QuantumCircuit.from_qasm_file("example_output_quimb_circuit.qasm")
 
 # %% [markdown]
 # For the sake of completeness, we also introduce a deserialization from `.json` allowing for loading the circuit until a given depth saved in the key `"round"` of each `"gate"`:
 
 # %%
-with open("my_quimb_circuit.json") as f:
+with open("example_output_quimb_circuit.json") as f:
     dict_loaded_circ = json.load(f)
 qc = deserialize_to_qiskit_QuantumCircuit(dict_loaded_circ)
 
@@ -325,17 +315,11 @@ qc = deserialize_to_qiskit_QuantumCircuit(dict_loaded_circ, measure=True)
 qc.draw(output="mpl", initial_state=True, fold=-1)
 
 # %% [markdown]
-# The package $\texttt{qiskit-quimb}$ is a good option for fast transformation from $\texttt{qiskit}$ `QuantumCircuit` into $\texttt{quimb}$ `Circuit` classes. Note that the transformation does not include gate round information, so the output $\texttt{quimb}$ circuit cannot be plotted with `draw_circuit`:
+# The package $\texttt{qiskit-quimb}$ is a good option for fast transformation from $\texttt{qiskit}$ `QuantumCircuit` into $\texttt{quimb}$ `Circuit` classes. Note that the transformation does not include gate round information, so the output $\texttt{quimb}$ circuit cannot be plotted with `draw_layered_circuit`:
 
 # %%
 ent_pattern = [(0, 1), (1, 3), (3, 0), (2, 3), (1, 5), (4, 2), (4, 5), (5, 3)]
-qiskit_circ = n_local(
-    num_qubits=6,
-    rotation_blocks="h",
-    entanglement_blocks="cz",
-    entanglement=ent_pattern,
-    reps=2,
-)
+qiskit_circ = n_local(6, "h", "cz", entanglement=ent_pattern, reps=2)
 quimb_circ = quimb_circuit(qiskit_circ)
 quimb_circ.psi.draw(color=[f"I{i}" for i in range(quimb_circ.N)])
 

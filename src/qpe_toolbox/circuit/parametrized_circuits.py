@@ -157,11 +157,6 @@ def two_qubit_nn_layer(
         Possibility to invert direction of the layer.
         Relevant whe using controlled gates.
 
-    Returns
-    -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
-        The circuit with the entangling layer applied.
-
     Notes
     -----
     - Parameterized gates draw their parameter count from
@@ -197,8 +192,6 @@ def two_qubit_nn_layer(
             gate_round=gate_round,
             **extra_kwargs,
         )
-
-    return circ
 
 
 def two_qubit_rand_layer(
@@ -251,11 +244,6 @@ def two_qubit_rand_layer(
         Possibility to invert direction of the layer.
         Relevant whe using controlled gates.
 
-    Returns
-    -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
-        The circuit with the random entangling layer applied.
-
     Notes
     -----
     - Parameterized gates draw their parameter count from
@@ -283,12 +271,12 @@ def two_qubit_rand_layer(
         # if any parametrize is passed, even if False
         extra_kwargs["parametrize"] = bool(parametrize)
 
-    num_qubits = circ.N
-    order = reversed(range(num_qubits)) if reverse else range(num_qubits)
+    n_qubits = circ.N
+    order = reversed(range(n_qubits)) if reverse else range(n_qubits)
     for i in order:
         if rng.random() < gate_prob:
             j = i + 1 + rng.integers(gate_range)
-            if j < num_qubits:
+            if j < n_qubits:
                 circ.apply_gate(
                     gate_id=gate_label,
                     qubits=[i, j],
@@ -297,11 +285,9 @@ def two_qubit_rand_layer(
                     **extra_kwargs,
                 )
 
-    return circ
-
 
 def generate_brickwall_quimb(
-    num_qubits,
+    n_qubits,
     depth,
     sb_gate_label,
     ent_gate_label,
@@ -341,7 +327,7 @@ def generate_brickwall_quimb(
 
     Parameters
     ----------
-    num_qubits : int
+    n_qubits : int
         Number of qubits in the circuit.
 
     depth : int
@@ -389,7 +375,7 @@ def generate_brickwall_quimb(
     if ent_gate_label.lower() not in [lab.lower() for lab in list_two_body_labels]:
         raise ValueError(f"Expected a two-body gate: {ent_gate_label}")
 
-    circ = qtn.Circuit(num_qubits)
+    circ = qtn.Circuit(n_qubits)
     for k in range(depth):
         if start_ent:
             for start in range(2):
@@ -416,7 +402,7 @@ def generate_brickwall_quimb(
 
 
 def generate_rand_quimb(
-    num_qubits,
+    n_qubits,
     depth,
     sb_gate_label,
     ent_gate_label,
@@ -458,7 +444,7 @@ def generate_rand_quimb(
 
     Parameters
     ----------
-    num_qubits : int
+    n_qubits : int
         Number of qubits in the circuit.
 
     depth : int
@@ -521,7 +507,7 @@ def generate_rand_quimb(
     if rng is None:
         rng = np.random.default_rng()
 
-    circ = qtn.Circuit(num_qubits)
+    circ = qtn.Circuit(n_qubits)
 
     for k in range(depth):
         if start_ent:
@@ -550,7 +536,7 @@ def generate_rand_quimb(
     return circ
 
 
-def ansatz_circuit(n, depth, gate_round=0, random_coeff=1.0):
+def ansatz_circuit(n, depth, *, gate_round=0, random_coeff=1.0):
     """Construct an ansatz circuit of single qubit and entangling layers.
 
     Parameters
@@ -648,7 +634,7 @@ def recursive_stack(x):
     return autoray.do("stack", tuple(map(recursive_stack, x)))
 
 
-def ansatz_circuit_sym(n, depth, gate_round=0, random_coeff=1.0):
+def ansatz_circuit_sym(n, depth, *, gate_round=0, random_coeff=1.0):
     """
     Construct a symmetry-preserving ansatz circuit.
 

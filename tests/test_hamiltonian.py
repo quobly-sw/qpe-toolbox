@@ -8,10 +8,22 @@ from pyscf import gto
 from qpe_toolbox.estimation import build_hadamard_test_circuit
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian, heisenberg_hamiltonian
 
+h_str = """Hamiltonian(n_qubits=2, n_terms=3) with terms:
+   +0.25 XX @ [0, 1]
+   +0.25 YY @ [0, 1]
+   +0.25 ZZ @ [0, 1]"""
+
 
 def test_heisenberg():
-    for n_qbits in [2, 4]:
-        heis_ham = heisenberg_hamiltonian(n_qbits)
+    h = heisenberg_hamiltonian(2)
+    assert h.n_qubits == 2
+    assert h.n_terms == 3
+    assert h.shape == (4, 4)
+    assert repr(h) == "Hamiltonian(n_qubits=2, n_terms=3)"
+    assert str(h) == h_str
+
+    for n_qubits in [2, 4]:
+        heis_ham = heisenberg_hamiltonian(n_qubits)
         heis_mpo = heis_ham.to_mpo()
         heis_dense = heis_ham.to_dense()
         assert np.max(abs(heis_dense - heis_mpo.to_dense())) < 1e-12
@@ -27,7 +39,7 @@ def test_molecule_h2():
 
     _ = chemistry_hamiltonian(mol, hf_mode="uhf", do_fci=True, do_ccsd=True)
     h2_ham = chemistry_hamiltonian(mol, hf_mode="rhf", do_fci=True, do_ccsd=True)
-    assert h2_ham.n_qbits == 4
+    assert h2_ham.n_qubits == 4
     assert abs(h2_ham.e_ccsd - h2_ham.e_fci) < abs(e_hf - h2_ham.e_fci)
 
     # DMRG
@@ -59,31 +71,32 @@ def test_molecule_h2():
 
 
 def test_U():
-    n_qbits = 4
+    n_qubits = 4
+    tol = 1e-6
 
-    H = heisenberg_hamiltonian(n_qbits)
+    H = heisenberg_hamiltonian(n_qubits)
     H_dense = H.to_dense()
-    t = 1
+    t = 1.0
     U_dense = qu.expm(-1j * H_dense * t)
     eigvals, eigvecs = np.linalg.eigh(H_dense)
     psi0 = eigvecs[:, 0]
-    assert abs(np.angle(psi0.H @ U_dense @ psi0) + eigvals[0]) < 1e-11
+    assert np.isclose(psi0.H @ U_dense @ psi0, np.exp(-1j * t * eigvals[0]), atol=1e-11)
 
     H_mpo = H.to_mpo()
     dmrg = qtn.DMRG2(H_mpo, bond_dims=[10, 20, 40, 100, 100, 200], cutoffs=1e-10)
-    dmrg.solve(tol=1e-6)
-    E0_dmrg = dmrg.energy
+    dmrg.solve(tol=tol)
+    assert np.isclose(dmrg.energy, eigvals[0], atol=tol)
     psi0_mps = dmrg.state
 
-    data_reg = list(range(1, n_qbits + 1))
+    data_reg = list(range(1, n_qubits + 1))
     U_gate = H.get_U_exact(t, data_reg, controls=[0])
     Z = []
     for theta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)
         probs = circ.compute_marginal(where=[0])
         Z.append(probs[0] - probs[1])
-    phi_ref = np.angle(Z[0] + 1j * Z[1])
-    assert abs(phi_ref + E0_dmrg) < 1e-6
+    phi_ref = -np.angle(Z[0] + 1j * Z[1])
+    assert np.isclose(phi_ref, t * dmrg.energy, atol=tol)
 
     r = 1
     dt = t / r

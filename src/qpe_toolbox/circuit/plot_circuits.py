@@ -248,13 +248,14 @@ def add_circle(ax, x, y, col_face):
 
 def draw_2_qubit_layer(
     ax,
-    num_qubits,
+    n_qubits,
     X,
     sublayers,
     dict_sublayer,
     gate_label,
     fontsize,
     col_face,
+    active_qubits,
     *,
     reverse=False,
 ):
@@ -268,7 +269,7 @@ def draw_2_qubit_layer(
     ax : :class:`matplotlib.axes.Axes`
         Axes object on which the layer is drawn.
 
-    num_qubits : int
+    n_qubits : int
         Total number of qubits in the circuit. Used to position the layer label.
 
     X : float
@@ -293,6 +294,10 @@ def draw_2_qubit_layer(
     col_face : color
         Face color of the square gate markers (Matplotlib-compatible).
 
+    active_qubits : iterable of int
+        Indices of qubits on which the gate is applied.
+        Useful when drawing expectation values with unitary cancellation.
+
     reverse : bool, optional
         If ``True``, reverse the horizontal ordering of the sublayers. This is
         useful when plotting circuits from right to left, like in an expectation value
@@ -311,14 +316,15 @@ def draw_2_qubit_layer(
 
     for sublayer in sublayers:
         for g0, g1 in sublayer[1]:
-            x = X + mod_dict_sublayer[g0, g1]
-            add_square(ax, x=x, y=g0, col_face=col_face)
-            add_square(ax, x=x, y=g1, col_face=col_face)
-            ax.vlines(x, g0, g1, lw=4, color="k", zorder=1)
+            if g0 in active_qubits or g1 in active_qubits:
+                x = X + mod_dict_sublayer[g0, g1]
+                add_square(ax, x=x, y=g0, col_face=col_face)
+                add_square(ax, x=x, y=g1, col_face=col_face)
+                ax.vlines(x, g0, g1, lw=4, color="k", zorder=1)
 
     ax.text(
         X + (len(sublayers) - 1) / 2,
-        num_qubits,
+        n_qubits,
         gate_label,
         size=fontsize,
         **text_kwargs,
@@ -327,7 +333,7 @@ def draw_2_qubit_layer(
 
 def draw_1_qubit_layer(
     ax,
-    num_qubits,
+    n_qubits,
     X,
     gate_label,
     fontsize,
@@ -341,7 +347,7 @@ def draw_1_qubit_layer(
     ax : :class:`matplotlib.axes.Axes`
         Axes object on which the layer is drawn.
 
-    num_qubits : int
+    n_qubits : int
         Total number of qubits in the circuit.
 
     X : float
@@ -366,15 +372,15 @@ def draw_1_qubit_layer(
     - Only qubits listed in ``active_qubits`` are drawn.
 
     """
-    for i in range(num_qubits):
+    for i in range(n_qubits):
         if i in active_qubits:
             add_square(ax, x=X, y=i, col_face=col_face)
-    ax.text(X, num_qubits, gate_label, size=fontsize, **text_kwargs)
+    ax.text(X, n_qubits, gate_label, size=fontsize, **text_kwargs)
 
 
 def draw_init_product_state(
     ax,
-    num_qubits,
+    n_qubits,
     X,
     state_label,
     fontsize,
@@ -392,7 +398,7 @@ def draw_init_product_state(
     ax : :class:`matplotlib.axes.Axes`
         Axes object on which the initial state is drawn.
 
-    num_qubits : int
+    n_qubits : int
         Total number of qubits.
 
     X : float
@@ -411,7 +417,7 @@ def draw_init_product_state(
         Side on which to draw the qubit index labels. Default is left.
 
     """
-    for i in range(num_qubits):
+    for i in range(n_qubits):
         ax.text(X + 2 * is_right_side, i, f"{i + 1}", size=fontsize, **text_kwargs)
         add_circle(ax, X + 1, i, col_face=col_face)
         ax.text(X + 1, i, state_label, size=fontsize, **text_kwargs)
@@ -453,11 +459,11 @@ def determine_layout_depth(circ):
     return X_end - X_init
 
 
-def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
+def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     """
-    Draw a quantum circuit using Matplotlib.
+    Draw a layered quantum circuit using Matplotlib.
 
-    This function visualizes a quantum circuit composed of alternating
+    This function visualizes a quantum circuit, ASSUMING it is composed of alternating
     single-qubit and two-qubit layers. The circuit is drawn left-to-right,
     and gates placed according to their layer (round) structure.
 
@@ -467,7 +473,7 @@ def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
         Quantum circuit.
 
     max_depth : int or inf, optional
-        Maximum number of circuit layers to draw. Defauilt is inf, the full circuit
+        Maximum number of circuit layers to draw. Default is inf, the full circuit
         is drawn.
 
     list_names : list, optional
@@ -488,15 +494,19 @@ def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
     fig : matplotlib.figure.Figure
 
     """
-    num_qubits = circ.N
-    true_max_depth = max(gate.round for gate in circ.gates) + 1
+    n_qubits = circ.N
+    gate_rounds = [gate.round for gate in circ.gates]
+    if any(x is None for x in gate_rounds):
+        # without this information, no packing of gates within a layer
+        raise ValueError("Gate round information required.")
+    true_max_depth = max(gate_rounds) + 1
     depth = min(max_depth, true_max_depth)
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
 
     width = determine_layout_depth(circ)
 
-    fig, ax = plt.subplots(figsize=(width, num_qubits))
+    fig, ax = plt.subplots(figsize=(width, n_qubits))
     ax.set_facecolor("white")
 
     col_psi = "#e8e8e8"
@@ -504,11 +514,11 @@ def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
     col_U2 = "#d30000"
     fontsize = 30
 
-    ax.hlines(np.arange(num_qubits), 0, width, lw=4, color="#A9A9A9", zorder=1)
+    ax.hlines(np.arange(n_qubits), 0, width, lw=4, color="#A9A9A9", zorder=1)
 
     draw_init_product_state(
         ax=ax,
-        num_qubits=num_qubits,
+        n_qubits=n_qubits,
         X=-1,
         state_label=list_names[0],
         fontsize=fontsize,
@@ -526,31 +536,33 @@ def draw_circuit(circ, *, max_depth=np.inf, list_names=None):
             if kind == "1q":
                 draw_1_qubit_layer(
                     ax=ax,
-                    num_qubits=num_qubits,
+                    n_qubits=n_qubits,
                     X=X,
                     gate_label=list_names[1][layer],
                     fontsize=fontsize,
                     col_face=col_U1,
-                    active_qubits=list(range(num_qubits)),
+                    active_qubits=list(range(n_qubits)),
                 )
                 X += 2
 
             else:  # "2q"
                 draw_2_qubit_layer(
                     ax=ax,
-                    num_qubits=num_qubits,
+                    n_qubits=n_qubits,
                     X=X,
                     sublayers=sublayers,
                     dict_sublayer=dict_sublayer,
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
+                    active_qubits=list(range(n_qubits)),
+                    reverse=False,
                 )
                 X += len(sublayers) + 1
 
     ax.set_aspect("equal")
     ax.set_xlim(-3, width + 1)
-    ax.set_ylim(-1, num_qubits + 0.5)
+    ax.set_ylim(-1, n_qubits + 0.5)
     ax.axis("off")
 
     return fig
@@ -599,13 +611,13 @@ def build_circ_revlc(selected_edge, circ):
       than numerical simulation.
 
     """
-    num_qubits = circ.N
+    n_qubits = circ.N
 
     # Get the reverse light cone of the particular edge
     psi_edge = circ.get_psi_reverse_lightcone(where=selected_edge)
 
     # Build a reverse light cone Circuit instance
-    circ_revlc = qtn.Circuit(N=num_qubits)
+    circ_revlc = qtn.Circuit(N=n_qubits)
 
     for tensor in psi_edge.tensors:
         tags = list(tensor.tags)
@@ -654,21 +666,22 @@ def build_circ_revlc(selected_edge, circ):
             )
 
         else:
-            raise ValueError("Invalid gate shape")
+            msg = f"Invalid gate shape: {tensor.shape}"
+            raise ValueError(msg)
 
     return circ_revlc
 
 
-def draw_expval(selected_edge, circ, *, list_names=None):
+def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=True):
     """Draw the tensor-network representation of an expectation value
     ..math:
 
     `\\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle`.
 
-    This function visualizes the light-cone structure of a quantum circuit
-    around a two-site observable. The circuit is split symmetrically around
-    the observable and drawn from the inside out, showing how the light cone
-    grows layer by layer.
+    This function visualizes the light-cone structure of a quantum circuit,
+    ASSUMING that it consists on layers of single- and two-spin rotations, around a two-site observable.
+    The circuit is split symmetrically around the observable and drawn from the inside out,
+    showing how the light cone grows layer by layer.
 
     Parameters
     ----------
@@ -688,22 +701,32 @@ def draw_expval(selected_edge, circ, *, list_names=None):
         - ``list_names[2]`` : list of str
             Labels for two-qubit layers (indexed by layer).
 
+    commutation : bool, optional
+        If the entangling gates commute with themselves when overlapping
+        on one qubit (e.g. the RZZ gate), then further simplification
+        is carried out at the level of the active qubits of each layer.
+
     Returns
     -------
     fig : matplotlib.figure.Figure
 
     """
-    num_qubits = circ.N
+    n_qubits = circ.N
     if len(selected_edge) != 2:
         raise ValueError("Invalid selected_edge")
     circ_revlc = build_circ_revlc(selected_edge, circ)
-    depth = max(gate.round for gate in circ_revlc.gates) + 1
+
+    gate_rounds = [gate.round for gate in circ_revlc.gates]
+    if any(x is None for x in gate_rounds):
+        # without this information, no packing of gates within a layer
+        raise ValueError("Gate round information required.")
+    depth = max(gate_rounds) + 1
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
     width = 2 * determine_layout_depth(circ_revlc) - 5
     list_dict_gates_to_sublayers, list_sublayers = assign_sublayers(circ_revlc)
 
-    fig, ax = plt.subplots(figsize=(width, num_qubits))
+    fig, ax = plt.subplots(figsize=(width, n_qubits))
     ax.set_facecolor("white")
 
     col_psi = "#e8e8e8"
@@ -717,14 +740,14 @@ def draw_expval(selected_edge, circ, *, list_names=None):
 
     # Draw the quantum register lines
     ax.hlines(
-        np.arange(num_qubits), X_ledge + 1, X_redge, lw=4, color="#A9A9A9", zorder=1
+        np.arange(n_qubits), X_ledge + 1, X_redge, lw=4, color="#A9A9A9", zorder=1
     )
 
     # Draw the product states on the edges of the network
     for X, is_right_side in [(X_ledge, False), (X_redge - 1, True)]:
         draw_init_product_state(
             ax=ax,
-            num_qubits=num_qubits,
+            n_qubits=n_qubits,
             X=X,
             state_label=list_names[0],
             fontsize=fontsize,
@@ -735,7 +758,7 @@ def draw_expval(selected_edge, circ, *, list_names=None):
     # Draw the observable (usually a Pauli string, visually equal to a single-spin rotation)
     draw_1_qubit_layer(
         ax=ax,
-        num_qubits=num_qubits,
+        n_qubits=n_qubits,
         X=0.5 * width,
         gate_label=r"$\mathcal{O}$",
         fontsize=fontsize,
@@ -760,7 +783,7 @@ def draw_expval(selected_edge, circ, *, list_names=None):
             for X in [X_l, X_r]:
                 draw_1_qubit_layer(
                     ax=ax,
-                    num_qubits=num_qubits,
+                    n_qubits=n_qubits,
                     X=X,
                     gate_label=list_names[1][rev_layer],
                     fontsize=fontsize,
@@ -774,23 +797,31 @@ def draw_expval(selected_edge, circ, *, list_names=None):
             for X, reverse in [(X_l, False), (X_r, True)]:
                 draw_2_qubit_layer(
                     ax=ax,
-                    num_qubits=num_qubits,
+                    n_qubits=n_qubits,
                     X=X,
                     sublayers=list_sublayers[rev_layer],
                     dict_sublayer=list_dict_gates_to_sublayers[rev_layer],
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
+                    active_qubits=active_qubits,
                     reverse=reverse,
                 )
 
             X_r += len(list_sublayers[rev_layer]) - 1
 
             # List of qubits featuring in the light cone;
-            # `draw_1_qubit_layer` requires it to "blind" the rotations on unactive qubits
-            for i, j in list_dict_gates_to_sublayers[rev_layer]:
-                active_qubits.update((i, j))
-
+            # `draw_1_qubit_layer` and `draw_2_qubit_layer` require
+            # to "blind" the rotations on unactive qubits
+            if commutation:
+                new_active_qubits = active_qubits.copy()
+                for i, j in list_dict_gates_to_sublayers[rev_layer]:
+                    if i in active_qubits or j in active_qubits:
+                        new_active_qubits.update((i, j))
+                active_qubits.update(new_active_qubits)
+            else:
+                for i, j in list_dict_gates_to_sublayers[rev_layer]:
+                    active_qubits.update((i, j))
     else:  # outtermost layer is single spin rotations
         X_l -= 2
         # Loop over layers
@@ -798,6 +829,7 @@ def draw_expval(selected_edge, circ, *, list_names=None):
         for layer in range(depth):
             # start from the last layer (the one coupling to the observable)
             rev_layer = depth - layer - 1
+            # this ordering assumes commutation!
             for i, j in list_dict_gates_to_sublayers[rev_layer]:
                 active_qubits.update((i, j))
 
@@ -808,13 +840,14 @@ def draw_expval(selected_edge, circ, *, list_names=None):
             for X, reverse in [(X_l, False), (X_r, True)]:
                 draw_2_qubit_layer(
                     ax=ax,
-                    num_qubits=num_qubits,
+                    n_qubits=n_qubits,
                     X=X,
                     sublayers=list_sublayers[rev_layer],
                     dict_sublayer=list_dict_gates_to_sublayers[rev_layer],
                     gate_label=list_names[2][layer],
                     fontsize=fontsize,
                     col_face=col_U2,
+                    active_qubits=active_qubits,
                     reverse=reverse,
                 )
 
@@ -825,7 +858,7 @@ def draw_expval(selected_edge, circ, *, list_names=None):
             for X in [X_l, X_r]:
                 draw_1_qubit_layer(
                     ax=ax,
-                    num_qubits=num_qubits,
+                    n_qubits=n_qubits,
                     X=X,
                     gate_label=list_names[1][rev_layer],
                     fontsize=fontsize,
@@ -837,7 +870,7 @@ def draw_expval(selected_edge, circ, *, list_names=None):
 
     ax.set_aspect("equal")
     ax.set_xlim(X_ledge, X_redge + 1)
-    ax.set_ylim(-1, num_qubits + 0.5)
+    ax.set_ylim(-1, n_qubits + 0.5)
     ax.axis("off")
 
     return fig
