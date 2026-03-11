@@ -122,13 +122,13 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     """
     n_qubits = H.n_qubits
     phys_reg = list(range(1, n_qubits + 1))
-    t = 2**m
+    evolution_time = 2**m
     if (n_steps == "exact") or (n_steps == 0):
-        U_m = H.get_U_exact(t, phys_reg, controls=(0,))
+        U_m = H.get_U_exact(evolution_time, phys_reg, controls=(0,))
     else:
         if not (n_steps > 0):
             raise ValueError("Can only evolve for positive n_steps")
-        dt = t / n_steps
+        dt = evolution_time / n_steps
         U_m = [H.get_trotter_step(dt, phys_reg, trotter_order)] * n_steps
     X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
     Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)

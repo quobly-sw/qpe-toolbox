@@ -157,11 +157,6 @@ def two_qubit_nn_layer(
         Possibility to invert direction of the layer.
         Relevant whe using controlled gates.
 
-    Returns
-    -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
-        The circuit with the entangling layer applied.
-
     Notes
     -----
     - Parameterized gates draw their parameter count from
@@ -197,8 +192,6 @@ def two_qubit_nn_layer(
             gate_round=gate_round,
             **extra_kwargs,
         )
-
-    return circ
 
 
 def two_qubit_rand_layer(
@@ -251,11 +244,6 @@ def two_qubit_rand_layer(
         Possibility to invert direction of the layer.
         Relevant whe using controlled gates.
 
-    Returns
-    -------
-    circ : :class:`quimb.tensor.circuit.Circuit`
-        The circuit with the random entangling layer applied.
-
     Notes
     -----
     - Parameterized gates draw their parameter count from
@@ -296,8 +284,6 @@ def two_qubit_rand_layer(
                     gate_round=gate_round,
                     **extra_kwargs,
                 )
-
-    return circ
 
 
 def generate_brickwall_quimb(

@@ -8,8 +8,20 @@ from pyscf import gto
 from qpe_toolbox.estimation import build_hadamard_test_circuit
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian, heisenberg_hamiltonian
 
+h_str = """Hamiltonian(n_qubits=2, n_terms=3) with terms:
+   +0.25 XX @ [0, 1]
+   +0.25 YY @ [0, 1]
+   +0.25 ZZ @ [0, 1]"""
+
 
 def test_heisenberg():
+    h = heisenberg_hamiltonian(2)
+    assert h.n_qubits == 2
+    assert h.n_terms == 3
+    assert h.shape == (4, 4)
+    assert repr(h) == "Hamiltonian(n_qubits=2, n_terms=3)"
+    assert str(h) == h_str
+
     for n_qubits in [2, 4]:
         heis_ham = heisenberg_hamiltonian(n_qubits)
         heis_mpo = heis_ham.to_mpo()

@@ -104,8 +104,27 @@ class Hamiltonian:
         return self._terms
 
     @property
+    def n_terms(self):
+        return len(self._terms)
+
+    @property
     def n_qubits(self):
         return self._n_qubits
+
+    @property
+    def shape(self):
+        return (2**self._n_qubits, 2**self._n_qubits)
+
+    def __repr__(self):
+        return f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms})"
+
+    def __str__(self):
+        lines = [
+            f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms}) with terms:"
+        ]
+        for coeff, paulis, qubits in self._terms:
+            lines.append(f"  {coeff:+6g} {paulis.upper()} @ {qubits}")
+        return "\n".join(lines)
 
     def to_dense(self):
         """
@@ -158,7 +177,7 @@ class Hamiltonian:
         """
         return self.to_builder().build_mpo()
 
-    def get_U_exact(self, t, data_reg, controls):
+    def get_U_exact(self, evolution_time, data_reg, controls):
         """
         Construct the exact time-evolution operator as a quantum gate.
 
@@ -171,7 +190,7 @@ class Hamiltonian:
 
         Parameters
         ----------
-        t : float
+        evolution_time : float
             Evolution time.
         data_reg : sequence of int
             Qubit register on which the Hamiltonian acts.
@@ -187,7 +206,7 @@ class Hamiltonian:
         if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
         h_dense = self.to_dense()
-        U = qu.expm(-1j * h_dense * t)
+        U = qu.expm(-1j * h_dense * evolution_time)
         return qtn.Gate.from_raw(U, qubits=data_reg, controls=controls)
 
     def get_trotter_step(self, dt, data_reg, trotter_order):
@@ -219,35 +238,36 @@ class Hamiltonian:
         if trotter_order == 1:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, delta=dt, qubit_reg=data_reg)
+                program += rotation_gates(term, dt, data_reg)
             return program
         if trotter_order == 2:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, delta=dt / 2, qubit_reg=data_reg)
+                program += rotation_gates(term, dt / 2, data_reg)
             for term in reversed(self.terms):
-                program += rotation_gates(term, delta=dt / 2, qubit_reg=data_reg)
+                program += rotation_gates(term, dt / 2, data_reg)
             return program
         raise ValueError(f"order {trotter_order} not implemented")
 
 
-def rotation_gates(term, delta, qubit_reg):
+def rotation_gates(term, dt, qubit_reg):
     """
     Generate a gate sequence for exponentiating a Pauli-string term.
 
     Implements
 
     .. math::
-        e^{-i \\delta \\theta P}
+        e^{-i dt \\theta P}
 
-    where ``P`` is a tensor product of Pauli operators, using basis
-    rotations, CNOT chains, and a single ``RZ`` rotation.
+    where ``P`` is a tensor product of Pauli operators and ``\\theta`` is the associated
+    coefficient in the term. The implementation uses basis rotations, CNOT chains, and a
+    single ``RZ`` rotation.
 
     Parameters
     ----------
     term : tuple
         Hamiltonian term ``(theta, pauli_string, qubits)``.
-    delta : float
+    dt : float
         Time step or Trotter slice.
     qubit_reg : sequence of int
         Mapping from logical qubit indices to circuit qubits.
@@ -274,7 +294,7 @@ def rotation_gates(term, delta, qubit_reg):
 
     # RZ gate
     routine.append(
-        ("RZ", 2 * theta * delta, qubit_reg[qubits[-1]])
+        ("RZ", 2 * theta * dt, qubit_reg[qubits[-1]])
     )  ## RZ(alpha) = exp(-1j * alpha/2 * sigma_z)
 
     # CNOTs back
