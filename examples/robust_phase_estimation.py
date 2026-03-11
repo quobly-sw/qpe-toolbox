@@ -15,9 +15,9 @@
 # %% [markdown]
 # # Robust Phase Estimation
 #
-# This example introduces the Robust Phase Estimation algorithm. This is a flavor that requires only a single ancilla. The way the algorithm is implemented is inspired from **Phase estimation with partially randomized time evolution**, J.Gunther et al. [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
+# This example introduces the Robust Phase Estimation algorithm; this QPE version requires only a single ancilla/phase qubit. The way the algorithm is implemented is inspired from J.Gunther et al., *Phase estimation with partially randomized time evolution* [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
 #
-# We explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
+# In this notebook we explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
 #
 # We study the Trotter and statistical errors, and check that the RPE algorithm verifies Heisenberg scaling, i.e. the possibility to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
 
@@ -141,7 +141,7 @@ print(f"error = {abs(np.angle(Z) / t + E0):.2g}")
 # $$ \mathbb{E}\textbf{Z}(t) = \sum_k c_k e^{i E_k t}, \qquad \text{where} \qquad H\ket{\psi_k} = E_k \ket{\psi_k},~c_k = |\langle \psi | \psi_k \rangle|^2.  $$
 # In the following, we consider the simplest case $c_0=1$ ($\psi$ is the ground state).
 #
-#  *  With a QPU emulator like quimb, the probabilities $P(0)$, $P(1)$ can be computed exactly. On a real quantum device, these probabilities are estimated from repeated measurements (shots).
+#  *  With a QPU emulator like $\texttt{quimb}$, the probabilities $P(0)$, $P(1)$ can be computed exactly. On a real quantum device, these probabilities are estimated from repeated measurements (shots).
 # With a finite number of shots $N_{\rm shots}$, we can estimate $g(t)$ by taking the statistical mean over $N_{\rm shots}$ samples:
 #
 # $$ \bar{\bf Z}(t) = \frac{1}{N_{\rm shots}} \sum_{n=1}^{N_{\rm shots}} {\bf Z}^{(n)} (t). $$
@@ -559,3 +559,7 @@ print(f"Chemical accuracy eps={epsilon} requires M={M} iterations")
 # Reaching chemical accuracy requires at least ten iterations, and a sufficient number of shots and Trotter steps.
 # If you want to go further, you can first make an estimation of the runtime for $M=10$ and a given number of shots and Trotter steps,
 # then with some patience try to run the simulation.
+
+# %%
+
+# %%

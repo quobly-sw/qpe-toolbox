@@ -19,9 +19,9 @@
 # %% [markdown]
 # ## Approximate ground states via tensor-network circuit optimization
 #
-# We show how to represent an approximate ground state of an Hamiltonian expressed as Matrix-Product-Operator (MPO) as (i) a Matrix-Product-State (MPS), as (ii) the wavefunction associated with a quantum circuit of finite depth. This reproduces (to some extent) the work of R. Haghshenas et al., "Variational Power of Quantum Circuit Tensor Networks", [Phys. Rev. X 12, 011047](https://link.aps.org/doi/10.1103/PhysRevX.12.011047) (2022). This can be used to prepare an initial state for Quantum Phase Estimation ([arxiv:2409.11748](https://arxiv.org/abs/2409.11748)).
+# We show how to represent an approximate ground state of an Hamiltonian expressed as Matrix-Product-Operator (MPO) as (i) a Matrix-Product-State (MPS), and as (ii) the wavefunction associated with a quantum circuit of finite depth. This reproduces (to some extent) the work of R. Haghshenas et al., *Variational Power of Quantum Circuit Tensor Networks*, [Phys. Rev. X 12, 011047](https://link.aps.org/doi/10.1103/PhysRevX.12.011047) (2022). This can be used to prepare an initial state for Quantum Phase Estimation ([arxiv:2409.11748](https://arxiv.org/abs/2409.11748)).
 #
-# We also used some syntax and advice from the [Tensor Network Training of Quantum Circuits](https://quimb.readthedocs.io/en/latest/examples/ex_tn_train_circuit.html) example in [`quimb`](https://github.com/jcmgray/quimb)'s documentation.
+# We also used some syntax and advice from the [Tensor Network Training of Quantum Circuits](https://quimb.readthedocs.io/en/latest/examples/ex_tn_train_circuit.html) example in [$\texttt{quimb}$](https://github.com/jcmgray/quimb)'s documentation.
 
 # %%
 import os
@@ -47,7 +47,7 @@ opt = "auto-hq"
 # %% [markdown]
 # ### The DMRG algorithm to find an MPS ground state
 #
-# We first define our model Hamiltonian on $n=8$ qubits. Here we consider the Heisenberg model. We know that the ground state can be approximated as a MPS. We use first the DMRG algorithm as a black box to have a reference energy (using a very large bond dimension 100 to have essentially the exact GS energy)
+# We first define our model Hamiltonian (Heisenberg chain) on $n=8$ qubits. We know that its ground state can be approximated as a MPS. We use first the DMRG algorithm as a black box to have a reference energy (using a very large bond dimension 100 to have essentially the exact GS energy)
 
 # %%
 n = 8
@@ -64,7 +64,7 @@ H_MPO.draw(
 # %% [markdown]
 # ### MPS search via tensor-network differentiation
 #
-# Let us now write a custom optimizer to find the ground state MPS. We perform effectively the same task as in DMRG. The goal is simply to warm up for the circuit optimization that comes later.
+# Let us now write a custom optimizer to find the ground state MPS, effectively performing the same task as in DMRG. The goal is simply to warm up for the circuit optimization that comes later.
 #
 # When one optimizes the energy $H$ with respect to a variational wave function, we need first to be able to evaluate $\braket{\psi|H|\psi}$ as a tensor contraction
 
@@ -78,7 +78,7 @@ E.draw()
 
 
 # %% [markdown]
-# Now we can define a loss function, the energy, to be optimized w.r.t each tensor that makes the MPS $\psi$. We use jax as automatic differentiation tools to evaluate the gradients.
+# Now we can define a loss function, the energy, to be optimized w.r.t each tensor that makes the MPS $\ket{\psi}$. We use $\texttt{jax}$ as automatic differentiation tools to evaluate the gradients.
 
 
 # %%
@@ -136,7 +136,7 @@ plt.ylabel("energy error");
 # %% [markdown]
 # ### Finding a quantum circuit directly
 #
-# MPS are good candidates for the initial state of the QPE algorithm because they can be prepared efficiently in a quantum computer. One possibility would be to find variationally the circuit that best approximates an MPS (see e.g. [this recent proposal](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.132.040404)). Here, we take a shortcut, and directly find the circuit whose associated wavefunction minimizes the energy, in the spirit of R. Haghshenas et al.,  ["Variational Power of Quantum Circuit Tensor Networks"](https://link.aps.org/doi/10.1103/PhysRevX.12.011047). One practical advantage is that we may have less parameters to optimize using parametrized circuits compared to dense Tensors based MPS.
+# MPS are good candidates for the initial state of the QPE algorithm because they can be prepared efficiently in a quantum computer. One possibility would be to find variationally the circuit that best approximates an MPS (see e.g. [this recent proposal](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.132.040404)). Here, we take a shortcut, and directly find the circuit whose associated wavefunction minimizes the energy, in the spirit of R. Haghshenas et al.,  [*Variational Power of Quantum Circuit Tensor Networks*](https://link.aps.org/doi/10.1103/PhysRevX.12.011047). One practical advantage is that we may have less parameters to optimize using parametrized circuits compared to dense-tensors-based MPS.
 #
 # We consider finite-depth quantum circuits made of parametrized $U_3$ single qubit rotations and $R_{ZZ}$ two qubit gates.
 
@@ -187,7 +187,7 @@ def my_circ_optimizer(circ):
 
 
 # %% [markdown]
-# Let us make a first test. The contraction being a bit more involved than for MPS optimization, the simulation becomes a bit more tedious.
+# Let us make a first test. Since the contraction is a bit more involved than for straightforward MPS optimization, the simulation becomes a bit more tedious.
 
 # %%
 depth = 4
@@ -250,7 +250,7 @@ print("fidelity ", abs(overlap) ** 2)
 # %% [markdown]
 # ## Quantum Phase Estimation
 #
-# Let us know use a guess state the circuit optimization to initialize the Quantum Phase Estimation algorithm. For simplicity we will take a Hamiltonian defined on $n=4$ qubits.
+# Let us know use a guess state the circuit optimization to initialize the QPE algorithm. For simplicity we will take a Hamiltonian defined on $n=4$ qubits.
 
 # %%
 n = 4
@@ -310,7 +310,7 @@ E_const, Emax, evolution_time, global_phase = set_search_window(
 )
 
 # %% [markdown]
-# Trotter parameters
+# and the Trotter parameters
 
 # %%
 trotter_order = 2
@@ -318,7 +318,7 @@ n_steps = 4
 dt = evolution_time / n_steps
 
 # %% [markdown]
-# Run textbook QPE. This can take a minute or two. Since $n$ is small, for faster execution you can always set $dt=0$ to perform exact time evolution instead of a Trotterization.
+# then run textbook QPE (this can take a minute or two). Since $n$ is small, for faster execution you can always set $dt=0$ to perform exact time evolution instead of a Trotterization.
 
 # %%
 # %%time
@@ -332,13 +332,13 @@ traces, res = qpe_sample(
 )
 
 # %% [markdown]
-# NB: the energy minimum can be $< E_{exact}$
-#  when $E_{target} - \Delta/2 < E_{exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap (see e.g. Wikipedia for a derivation).
+# NB: the energy minimum can be $< E_{\rm exact}$
+#  when $E_{\rm target} - \Delta/2 < E_{\rm exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{\rm exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap (see e.g. [Measurement section of QPE Wikipedia](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm) for a derivation).
 #
 # NB: in practice one will not have access to the overlap. An approximation of the fidelity is sufficient. The following quantity can be used as a proxy, see [arxiv:2306.02620](https://arxiv.org/abs/2306.02620):
 #
-# $$ F \approx \exp(- \frac{(E-E_0)^2}{2\sigma^2}),$$
-# where $\sigma = \langle H^2 \rangle - E^2$ is the energy variance on guess state $\psi$, and $E_0$ is an estimate of the exact ground state energy that doesn't need to be very accurate.
+# $$ F \approx \exp\Big(- \frac{(E-E_0)^2}{2\sigma^2}\Big ),$$
+# where $\sigma = \langle H^2 \rangle - E^2$ is the energy variance on guess state $\ket{\psi}$, and $E_0$ is an estimate of the exact ground state energy that doesn't need to be very accurate.
 
 # %%
 k_probs_list = sorted(enumerate(np.ravel(res)), key=lambda x: x[1], reverse=True)
@@ -397,8 +397,10 @@ print(f"Fidelity before QPE = {fidelity:.5f}")
 print(f"Fidelity after QPE = {fidelity_qpe:.5f}")
 
 # %% [markdown]
-# We observe that even with a moderate overlap, Quantum Phase Estimation projects on the ground state. As an exercice, you can try to reproduce the following figure:
+# We observe that even with a moderate overlap, Quantum Phase Estimation projects on the ground state. As an exercise, you can try to reproduce the following figure:
 #
 # <img src="./figures/fig_overlaps_circ_opt.svg" align="center">
 #
 # it shows the infidelity as a function of circuit depth (orange curve) or bond dimension (blue curve) for a guess state prepared with either circuit optimization or DMRG. The colored stars then show how the fidelity quickly improves (error drops to $\sim 10^{-5}$) when running QPE with even a few phase qubits upon the trial state from circuit optimization.
+
+# %%

@@ -15,11 +15,11 @@
 # %% [markdown]
 # # QPE with Trotterization
 #
-# We perform Quantum Phase Estimation with a second-order Trotter decomposition of the time evolution operator $U(t) = \exp(-i H t)$.
+# In this example we perform Quantum Phase Estimation with a second-order Trotter decomposition of the time evolution operator $U(t) = \exp(-i H t)$.
 #
-# In the [Textbook QPE](./textbook_qpe.ipynb) example we had introduced and ran QPE with an exact matrix representation of $U$. This is only possible for small systems. In general, we use a Trotter approximation to exponentiate the Hamiltonian, see the tutorial on [Trotter-Suzuki decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter formulas.
+# Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we introduced and ran QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
 #
-# We study the precision obtained on the energy as a function of the number of phase qubits in the QPE circuits and the number of Trotter steps in the time evolution. We also perform some simple resource analysis: we quantify the number of entangling gates and the time required to simulate the circuits with quimb.
+# We study the precision obtained on the energy as a function of the number of phase qubits in the QPE circuits and the number of Trotter steps in the time evolution. We also perform some simple resource analysis: we quantify the number of entangling gates and the time required to simulate the circuits with $\texttt{quimb}$.
 
 # %%
 import matplotlib.pyplot as plt
@@ -54,9 +54,9 @@ h_spin = heisenberg_hamiltonian(n_qubits)
 exact_energy, psi0_mps = do_dmrg(h_spin)
 
 # %% [markdown]
-# - Then we set the different parameters to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$. See the example on [Textbook QPE](./textbook_qpe.ipynb).
+# - Then we set the different parameters to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$ (see the example on [Textbook QPE](./textbook_qpe.ipynb) ).
 #
-# - Note that the number of Trotter steps (which we note `n_trotter_steps` or `n_steps`) gives the number of Trotter steps to decompose the time interval $t$ (`evolution_time`) i.e. it sets the number of steps for the first controlled time evolution. Along the circuit, we apply time evolution over an exponentially growing time $2^k t$ conditioned on the $k$-th circuit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
+# - Note that the number of Trotter steps (which we denote by `n_trotter_steps` or `n_steps`) gives the number of Trotter steps to decompose the time interval $t$ (`evolution_time`) i.e. it sets the number of substeps for the first controlled time evolution. Along the circuit, we apply time evolution over an exponentially growing time $2^k t$ conditioned on the $k$-th circuit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
 
 # %%
 E_target = exact_energy + 0.2
@@ -77,7 +77,7 @@ circuit0 = make_circ(n_phase_bits0, psi0_mps)
 trotter_order0 = 1
 
 # %% [markdown]
-# - [Quimb](https://quimb.readthedocs.io/en/latest/) represents the QPE circuit as a tensor network:
+# - [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) represents the QPE circuit as a tensor network:
 
 # %%
 dt = evolution_time / n_trotter_steps0
@@ -123,7 +123,7 @@ print(
 # %% [markdown]
 # ## Precision: influence of the number of phase qubits and number of Trotter steps
 #
-# We run and measure the energy for several QPE circuits varying the number of phase qubits and Trotter steps. We also record the gate count and simulation time, and compare two modes of circuit simulation available with Quimb: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` hyperoptimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
+# We run and measure the energy for several QPE circuits varying the number of phase qubits and Trotter steps. We also record the gate count and simulation time, and compare two modes of circuit simulation available with $\texttt{quimb}$: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` hyperoptimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
 #
 # Let us first run the circuits (this may take a couple of minutes):
 
@@ -213,14 +213,14 @@ ax.set_xticks(range(1, 6))
 ax.set_xlabel("number of phase qubits")
 ax.set_ylabel("energy error");
 # %% [markdown]
-# $\Delta=$ `size_interval` is the size of the search window $[E_{\rm target} - \Delta/2, E_{\rm target} + \Delta/2]$ where we expect to find $E_0$, see the first example on  [textbook QPE](./textbook_qpe.ipynb). The black dashed curve $\Delta/2^{n_{\rm phase~bits}}$ is the upper bound of QPE error.
+# $\Delta=$ `size_interval` is the size of the search window $[E_{\rm target} - \Delta/2, E_{\rm target} + \Delta/2]$ where we expect to find $E_0$, see the first example on  [Textbook QPE](./textbook_qpe.ipynb). The black dashed curve $\Delta/2^{n_{\rm phase~bits}}$ is the upper bound of QPE error.
 #
 # For `n_trotter_steps >= 3`, the Trotter error becomes negligible and the curves overlap with exact time evolution.
 
 # %% [markdown]
 # ### Error versus number of Trotter steps
 #
-# We now plot the error as a function of the number of Trotter steps $n_{steps}$ for a given number of phase qubits:
+# We now plot the error as a function of the number of Trotter steps $n_{\rm steps}$ for a given number of phase qubits:
 
 # %%
 energies = np.array([res["energies"][i][-1] for i in range(len(ns_list) - 1)])
@@ -302,11 +302,14 @@ ax_t.set_ylabel("computation time (seconds)");
 #
 
 # %% [markdown]
+#
+
+# %% [markdown]
 # * The `CircuitMPS` mode is much more efficient than the `Circuit` mode (actual timing depends on the contraction order found by the optimizer, see [our notebook on Hyperoptimization](./hyperoptimization.ipynb)). The computation time is directly correlated with the number of entangling gates, which grows exponentially with the number of phase qubits.
 #
 # * We quickly reach computation times of tens of seconds due to the exponentially growing circuit depth. Recall that for such small systems, the Hamiltonian can be exactly diagonalized in a fraction of a second on any laptop. We know that for QPE to gain an advantage compared to exact diagonalization or DMRG, larger systems, with more than 30 qubits and strong correlations, must be considered.
 #
-# * Note that a comparison between Quimb's `CircuitMPS` and  Qiskit MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example. A detailed example on the way Quimb performs Tensor Network contraction and in particular hyperoptimization can be found in the [Hyperoptimization](./hyperoptimization.ipynb) notebook.
+# * Note that a comparison between $\texttt{quimb}$'s `CircuitMPS` and  $\texttt{qiskit}$ MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example. A detailed example on the way $\texttt{quimb}$ performs tensor network contraction and in particular hyperoptimization can be found in the [Hyperoptimization](./hyperoptimization.ipynb) notebook.
 
 # %% [markdown]
 # ## Resource analysis
