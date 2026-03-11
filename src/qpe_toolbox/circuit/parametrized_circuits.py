@@ -18,7 +18,7 @@ list_all_labels = (
     list_single_body_labels + list_two_body_labels
 )  # "all": 1- and 2-qubit gates only
 list_all_param_labels = list(qtn.circuit.ALL_PARAM_GATES)
-dict_quimb_all_param_single_body_numbers = {
+_dict_quimb_all_param_single_body_numbers = {
     "RX": 1,
     "RY": 1,
     "RZ": 1,
@@ -27,7 +27,7 @@ dict_quimb_all_param_single_body_numbers = {
     "U3": 3,
     "PHASE": 1,
 }
-dict_quimb_all_param_two_body_numbers = {
+_dict_quimb_all_param_two_body_numbers = {
     "CRX": 1,
     "CRY": 1,
     "CRZ": 1,
@@ -80,15 +80,13 @@ def one_qubit_layer(
 
     Notes
     -----
-    - If ``gate_label`` corresponds to a parameterized gate, the number of
-      parameters is inferred from ``dict_quimb_all_param_single_body_numbers``.
     - The same set of parameters is used for all qubits in the layer.
 
     """
 
     if gate_label.upper() in list_all_param_labels:
         list_params = random_coeff * qu.randn(
-            shape=(dict_quimb_all_param_single_body_numbers[gate_label.upper()]),
+            shape=(_dict_quimb_all_param_single_body_numbers[gate_label.upper()]),
             dist="uniform",
         )
     elif gate_label.upper() in list_all_labels:
@@ -159,8 +157,6 @@ def two_qubit_nn_layer(
 
     Notes
     -----
-    - Parameterized gates draw their parameter count from
-      ``dict_quimb_all_param_two_body_numbers``.
     - The same parameters are reused for all entangling gates in the layer.
     - Gates are applied between qubits ``(i, i+1)`` for
       ``i = start, start+2,`` ...
@@ -168,7 +164,7 @@ def two_qubit_nn_layer(
     """
     if gate_label.upper() in list_all_param_labels:
         list_params = random_coeff * qu.randn(
-            shape=(dict_quimb_all_param_two_body_numbers[gate_label.upper()]),
+            shape=(_dict_quimb_all_param_two_body_numbers[gate_label.upper()]),
             dist="uniform",
         )
     elif gate_label.upper() in list_all_labels:
@@ -246,8 +242,6 @@ def two_qubit_rand_layer(
 
     Notes
     -----
-    - Parameterized gates draw their parameter count from
-      ``dict_quimb_all_param_two_body_numbers``.
     - The same parameters are reused for all entangling gates in the layer.
     - Entangling partners are chosen as ``j = i + 1 + Δ``, where
       ``Δ`` is sampled uniformly from ``[0, gate_range)``.
@@ -255,7 +249,7 @@ def two_qubit_rand_layer(
     """
     if gate_label.upper() in list_all_param_labels:
         list_params = random_coeff * qu.randn(
-            dict_quimb_all_param_two_body_numbers[gate_label.upper()], dist="uniform"
+            _dict_quimb_all_param_two_body_numbers[gate_label.upper()], dist="uniform"
         )
     elif gate_label.upper() in list_all_labels:
         list_params = []
