@@ -456,14 +456,12 @@ def qpe_with_prob_success(
         hamiltonian, E_target, size_interval
     )
 
-    a = np.floor(theta_exact * 2**n_phase_bits)
-
-    # probs = qpe_get_full_probs(hamiltonian, psi0, n_phase_bits, evolution_time, global_phase)
     initial_circ = make_circ(n_phase_bits, psi0)
     _, probs = qpe.qpe_sample(
         hamiltonian, initial_circ, evolution_time, "exact", global_phase
     )
 
+    a = np.floor(theta_exact * 2**n_phase_bits)
     prob_success = 0
     if n_precision_bits + 1 < n_phase_bits:
         for x in sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True):
@@ -472,10 +470,7 @@ def qpe_with_prob_success(
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
-
-    energy = Emax - 2 * np.pi * theta / evolution_time
-    energy += E_const
-
+    energy = Emax - 2 * np.pi * theta / evolution_time + E_const
     return energy, np.max(probs), prob_success
 
 
