@@ -155,7 +155,7 @@ def two_qubit_nn_layer(
 
     reverse : bool, default ``False``
         Possibility to invert direction of the layer.
-        Relevant whe using controlled gates.
+        Relevant when using controlled gates.
 
     Notes
     -----
@@ -242,7 +242,7 @@ def two_qubit_rand_layer(
 
     reverse : bool, default ``False``
         Possibility to invert direction of the layer.
-        Relevant whe using controlled gates.
+        Relevant when using controlled gates.
 
     Notes
     -----
