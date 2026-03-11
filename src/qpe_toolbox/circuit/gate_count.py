@@ -10,7 +10,6 @@
 import numpy as np
 import quimb.tensor as qtn
 
-# Standard gates in quimb
 standard_gates = [
     "CCX",
     "CCY",
@@ -37,6 +36,7 @@ standard_gates = [
     "Z",
     "fsim",
 ]
+"""List of standard gates in ``quimb``."""
 
 
 def count_gates(circ):
