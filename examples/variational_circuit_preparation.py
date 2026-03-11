@@ -329,7 +329,7 @@ traces, res = qpe_sample(
 
 # %% [markdown]
 # NB: the energy minimum can be $< E_{\rm exact}$
-#  when $E_{\rm target} - \Delta/2 < E_{\rm exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{\rm exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap as explained in the [Textbook QPE](textbook_qpe.py) example.
+#  when $E_{\rm target} - \Delta/2 < E_{\rm exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{\rm exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap as explained in the [Textbook QPE](./textbook_qpe.ipynb) example.
 #
 # NB: in practice one will not have access to the overlap. An approximation of the fidelity is sufficient. The following quantity can be used as a proxy, see [arxiv:2306.02620](https://arxiv.org/abs/2306.02620):
 #
