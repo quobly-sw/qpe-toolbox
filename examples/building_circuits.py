@@ -72,7 +72,7 @@ circ.apply_gate(gate_id="cx", qubits=[2, 3], gate_round=3)
 circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 
 # %% [markdown]
-# When applying each one of the gates, we added further information on the `gate_round`; this information can be used for multiple purposes, like visualization. `quimb` includes 'pre-cooked' recipes for well-known circuits like the QAOA Ansatz, such that they do not need to be rebuilt from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa) ). We also provide some functions with simple brick-wall and random circuits, which are the main focus of our `performance.py` example:
+# When applying each one of the gates, we added further information on the `gate_round`; this information can be used for multiple purposes, like visualization. $\texttt{quimb}$ includes 'pre-cooked' recipes for well-known circuits like the QAOA Ansatz, such that they do not need to be rebuilt from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa) ). We also provide some functions with simple brick-wall and random circuits, which are the main focus of our `performance.py` example:
 
 # %%
 # Build a circuit with random parameters and two-layer structure;
@@ -137,7 +137,7 @@ fig = draw_layered_circuit(
 # In the following we introduce the following functions for each action:
 #
 # ```
-# generate quimb circuit:
+# generate `quimb` circuit:
 #     |
 #     --> save it:
 #     |   |
@@ -268,12 +268,12 @@ qc_with_values.draw(initial_state=True, fold=-1)
 # ### Recording and loading circuits
 
 # %% [markdown]
-# A `qiskit` circuit can be recorded as a `.qasm` file. However, because the plotting utility stacks gates according to their order of appearance, information about gate rounds is lost. As a result, there is no need to use the `.json` recording format in this case, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
-# To address and visualize a circuit coherently on a layer-by-layer basis, one must therefore rely on the functionalities previously introduced for `quimb`. Nevertheless, when a circuit is produced by the `quimb` pipeline, it can indeed be deserialized from a `.json` file.
+# A $\texttt{qiskit}$ circuit can be recorded as a `.qasm` file. However, because the plotting utility stacks gates according to their order of appearance, information about gate rounds is lost. As a result, there is no need to use the `.json` recording format in this case, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
+# To address and visualize a circuit coherently on a layer-by-layer basis, one must therefore rely on the functionalities previously introduced for $\texttt{quimb}$. Nevertheless, when a circuit is produced by the $\texttt{quimb}$ pipeline, it can indeed be deserialized from a `.json` file.
 
 # %% [markdown]
 # ```
-# generate qiskit circuit:
+# generate `qiskit` circuit:
 #     |
 #     --> save it:
 #     |   |

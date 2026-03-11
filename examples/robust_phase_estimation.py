@@ -141,7 +141,7 @@ print(f"error = {abs(np.angle(Z) / t + E0):.2g}")
 # $$ \mathbb{E}\textbf{Z}(t) = \sum_k c_k e^{i E_k t}, \qquad \text{where} \qquad H\ket{\psi_k} = E_k \ket{\psi_k},~c_k = |\langle \psi | \psi_k \rangle|^2.  $$
 # In the following, we consider the simplest case $c_0=1$ ($\psi$ is the ground state).
 #
-#  *  With a QPU emulator like quimb, the probabilities $P(0)$, $P(1)$ can be computed exactly. On a real quantum device, these probabilities are estimated from repeated measurements (shots).
+#  *  With a QPU emulator like $\texttt{quimb}$, the probabilities $P(0)$, $P(1)$ can be computed exactly. On a real quantum device, these probabilities are estimated from repeated measurements (shots).
 # With a finite number of shots $N_{\rm shots}$, we can estimate $g(t)$ by taking the statistical mean over $N_{\rm shots}$ samples:
 #
 # $$ \bar{\bf Z}(t) = \frac{1}{N_{\rm shots}} \sum_{n=1}^{N_{\rm shots}} {\bf Z}^{(n)} (t). $$

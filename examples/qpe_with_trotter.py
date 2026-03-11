@@ -123,7 +123,7 @@ print(
 # %% [markdown]
 # ## Precision: influence of the number of phase qubits and number of Trotter steps
 #
-# We run and measure the energy for several QPE circuits varying the number of phase qubits and Trotter steps. We also record the gate count and simulation time, and compare two modes of circuit simulation available with Quimb: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` hyperoptimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
+# We run and measure the energy for several QPE circuits varying the number of phase qubits and Trotter steps. We also record the gate count and simulation time, and compare two modes of circuit simulation available with $\texttt{quimb}$: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` hyperoptimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
 #
 # Let us first run the circuits (this may take a couple of minutes):
 
