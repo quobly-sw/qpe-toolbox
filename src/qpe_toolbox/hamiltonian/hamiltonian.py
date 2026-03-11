@@ -134,7 +134,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.qarray
+        :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
 
         """
@@ -152,7 +152,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.operator.SparseOperatorBuilder
+        :quimb:`quimb.operator.SparseOperatorBuilder <autoapi/quimb/operator/index.html#quimb.operator.SparseOperatorBuilder>`
             Builder object that can generate sparse matrices or MPOs.
 
         """
