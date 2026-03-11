@@ -117,7 +117,6 @@ autoapi_root = "autoapi"
 autoapi_add_toctree_entry = True
 autoapi_options = [
     "members",
-    "special-members",
     "show-inheritance",
     "show-module-summary",
     "undoc-members",
