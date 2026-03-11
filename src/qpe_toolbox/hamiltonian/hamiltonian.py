@@ -262,7 +262,7 @@ def rotation_gates(term, dt, qubit_reg):
         e^{-i dt \\theta P}
 
     where :math:`P` is a tensor product of Pauli operators and :math:`\\theta` is the associated
-    coefficient in the term. The implementation uses basis rotations, CNOT chains, and a
+    coefficient in the term. The implementation uses basis rotations, ``CNOT`` chains, and a
     single ``RZ`` rotation.
 
     Parameters
