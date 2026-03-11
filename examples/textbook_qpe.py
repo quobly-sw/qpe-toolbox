@@ -68,7 +68,7 @@ plt.rcParams.update({"font.size": 12})
 # Consider the nearest-neighbor Heisenberg Hamiltonian on a 1D chain wih open boundary conditions
 #
 # $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \cdot \vec{S}_{k+1} $$
-# where $\vec{S}_k  = \vec{\sigma}_k /2 \;$ are the $S=1/2$ generators of SU(2) acting on site $k$, with $\vec{\sigma} = (\sigma^x, \sigma^y, \sigma^z)$ the Pauli matrices.
+# where $\vec{S}_k  = \vec{\sigma}_k /2 \;$ are the spin-1/2 generators of SU(2) acting on site $k$, with $\vec{\sigma} = (\sigma^x, \sigma^y, \sigma^z)$ the Pauli matrices.
 #
 # We take $J=1$ in the following, such that all energies are expressed in units of $J$.
 #
@@ -198,17 +198,17 @@ psi.draw(
 # %%
 def prob_measure_a(delta, m):
     return (
-        abs(1 / 2**m * sum([np.exp(2 * 1j * np.pi * delta * q) for q in range(2**m)]))
-        ** 2
+        abs(1 / 2**m * sum([np.exp(2j * np.pi * delta * q) for q in range(2**m)])) ** 2
     )
 
 
 m = 4
 delta = np.linspace(-1 / 2 ** (m + 1), 1 / 2 ** (m + 1), 100)
 plt.plot(delta, prob_measure_a(delta, m))
-plt.title(r"$\theta = a / 2^m + \delta$ - QPE probability of measuring $|a\rangle$")
+plt.title(r"Probability of measuring $|a\rangle$ when $\theta = a / 2^m + \delta$")
 plt.xlabel(r"$\delta$")
 plt.ylabel(r"$P(a)$");
+
 
 # %% [markdown]
 # We observe that $P(a)$ is minimal when the distance between $\theta$ and $a$ is maximal, i.e. for $\delta = \pm 1/2^{m+1}$.
@@ -220,16 +220,14 @@ plt.ylabel(r"$P(a)$");
 # Below, we visualize the minimal probability $P(a)$ for $\delta = 1/2^{m+1}$ as a function of $m$.
 
 # %%
-ms = np.array(list(range(1, 12)))
-
-
 def min_prob_a(m):
     return prob_measure_a(1 / 2 ** (m + 1), m)
 
 
+ms = np.arange(1, 12)
 plt.plot(ms, [min_prob_a(m) for m in ms])
 plt.axhline(4 / np.pi**2, color="k", linestyle=":")
-plt.title(r"$\theta = a / 2^m + 1/2^{m+1}$ - QPE probability of measuring $|a\rangle$")
+plt.title(r"Probability of measuring $|a\rangle$ when $\theta = a / 2^m + 1/2^{m+1}$")
 plt.xlabel(r"$m$ phase qubits")
 plt.yticks([4 / np.pi**2, 0.45, 0.5], [r"$4/\pi^2$", "$0.45$", "$0.5$"])
 plt.ylabel(r"$P(a)$");
@@ -673,7 +671,7 @@ ax.set_xlabel("phase qubits number")
 ax.legend();
 
 # %% [markdown]
-# As expected, the energy error and success probability is independent of the number of physical qubits:
+# As expected, both the energy error and the success probability are independent of the number of physical qubits.
 
 # %%
 fig, axs = plt.subplots(nrows=3, figsize=(6, 6), sharex=True, layout="tight")
