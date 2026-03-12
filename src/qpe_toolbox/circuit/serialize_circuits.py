@@ -15,12 +15,6 @@ import quimb.tensor as qtn
 from qiskit import ClassicalRegister, QuantumCircuit
 from quimb.tensor.circuit import parse_openqasm2_file
 
-from .parametrized_circuits import (
-    list_all_param_labels,
-    list_single_body_labels,
-    list_two_body_labels,
-)
-
 dict_qiskit_gate_map = {
     "x": QuantumCircuit.x,
     "y": QuantumCircuit.y,
@@ -587,12 +581,12 @@ def dump_quimb_Circuit_to_qasm(circ, savefile_base, *, save_rounds=True):
             param_str = ",".join(f"{float(p):.8g}" for p in params)
             qubit_str = ",".join(f"q[{int(q)}]" for q in qubits)
 
-            if gate.label.upper() in list_all_param_labels:
+            if gate.label.upper() in qtn.circuit.ALL_PARAM_GATES:
                 qasm_lines.append(f"{label.lower()}({param_str}) {qubit_str};")
 
             elif (
-                gate.label.upper() in list_single_body_labels
-                or gate.label.upper() in list_two_body_labels
+                gate.label.upper() in qtn.circuit.ONE_QUBIT_GATES
+                or gate.label.upper() in qtn.circuit.TWO_QUBIT_GATES
             ):
                 qasm_lines.append(f"{label.lower()} {qubit_str};")
 
