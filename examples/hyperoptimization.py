@@ -79,8 +79,8 @@ G_reg = nx.random_regular_graph(d=regularity, n=10, seed=42)
 terms_reg = dict.fromkeys(G_reg.edges, 1)
 
 # weighted Erdos-Renyi graph
-sparsity = 0.25  # sparsity of the graph
-G_wER = nx.fast_gnp_random_graph(n=14, p=sparsity, seed=42)
+graph_sparsity = 0.25
+G_wER = nx.fast_gnp_random_graph(n=14, p=graph_sparsity, seed=42)
 terms_wER = {(i, j): rng.random() for i, j in G_wER.edges}
 amplitudes_wER = np.fromiter(terms_wER.values(), float)
 
