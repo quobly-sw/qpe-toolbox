@@ -267,7 +267,7 @@ def two_qubit_rand_layer(
                 )
 
 
-def generate_brickwall_quimb(
+def generate_brickwall_circuit(
     n_qubits,
     depth,
     one_qubit_gate_label,
@@ -386,7 +386,7 @@ def generate_brickwall_quimb(
     return circ
 
 
-def generate_rand_quimb(
+def generate_rand_circuit(
     n_qubits,
     depth,
     one_qubit_gate_label,
