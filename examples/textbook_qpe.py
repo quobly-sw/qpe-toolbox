@@ -658,12 +658,11 @@ for n_qubits in tqdm.tqdm(nqb_list):
     res["durations"].append(durations)
 
 # %%
-fig, ax = plt.subplots()
 for ind, n_qubits in enumerate(nqb_list):
-    ax.plot(ms, res["energies"][ind], "-o", label=f"$n_{{qb}}=${n_qubits}")
-ax.set_ylabel("Energy")
-ax.set_xlabel("phase qubits number")
-ax.legend();
+    plt.plot(ms, res["energies"][ind], "-o", label=f"$n_{{qb}}=${n_qubits}")
+plt.ylabel("Energy")
+plt.xlabel("phase qubits number")
+plt.legend();
 
 # %% [markdown]
 # As expected, both the energy error and the success probability are independent of the number of physical qubits.
