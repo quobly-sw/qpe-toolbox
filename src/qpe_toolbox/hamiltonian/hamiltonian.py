@@ -21,10 +21,12 @@ def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     The Hamiltonian is given by
 
     .. math::
-        H = \\sum_{i=0}^{N-2} \\frac{J s}{2}
+        H = \\sum_{i=0}^{N-2} \\frac{J}{4}
         (X_i X_{i+1} + Y_i Y_{i+1} + Z_i Z_{i+1})
 
-    where only spin-1/2 systems are supported.
+    where only spin-1/2 systems are supported. The normalization is chosen such that
+    ``heisenberg_hamiltonian(2)`` is the standard :math:`\\mathbf{S}\\cdot\\mathbf{S}` operator
+    with eigenvalues ``(-3/4, 1/4, 1/4, 1/4)``.
 
     Parameters
     ----------
@@ -52,7 +54,7 @@ def do_dmrg(hamiltonian):
     """
     Perform a DMRG ground-state calculation using quimb.
 
-    Based on quimb.tensor.DMRG2
+    Based on quimb :quimb-api:`DMRG2`
 
     Parameters
     ----------
@@ -63,7 +65,7 @@ def do_dmrg(hamiltonian):
     -------
     E0 : float
         Ground-state energy.
-    psi0 : quimb.tensor.MatrixProductState
+    psi0 : :quimb-api:`MatrixProductState`
         Ground-state wavefunction as a Matrix Product State.
 
     """
@@ -87,7 +89,7 @@ class Hamiltonian:
 
     Parameters
     ----------
-    terms : list of tuple
+    terms : sequence of tuple
         Hamiltonian terms in the form
         ``(coefficient, pauli_string, qubits)``, e.g. ``(0.5, "xy", [0, 1])``.
     n_qubits : int
@@ -96,8 +98,8 @@ class Hamiltonian:
     """
 
     def __init__(self, terms, n_qubits):
-        self._terms = terms
-        self._n_qubits = n_qubits
+        self._terms = list(terms)
+        self._n_qubits = int(n_qubits)
 
     @property
     def terms(self):
@@ -132,7 +134,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.qarray
+        :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
 
         """
@@ -150,7 +152,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.operator.SparseOperatorBuilder
+        :quimb:`quimb.operator.SparseOperatorBuilder <autoapi/quimb/operator/index.html#quimb.operator.SparseOperatorBuilder>`
             Builder object that can generate sparse matrices or MPOs.
 
         """
@@ -171,7 +173,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.tensor.MatrixProductOperator
+        :quimb-api:`MatrixProductOperator`
             MPO representation of the Hamiltonian.
 
         """
@@ -199,7 +201,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.tensor.Gate
+        :quimb-api:`Gate`
             Exact multi-qubit unitary gate.
 
         """
@@ -259,8 +261,8 @@ def rotation_gates(term, dt, qubit_reg):
     .. math::
         e^{-i dt \\theta P}
 
-    where ``P`` is a tensor product of Pauli operators and ``\\theta`` is the associated
-    coefficient in the term. The implementation uses basis rotations, CNOT chains, and a
+    where :math:`P` is a tensor product of Pauli operators and :math:`\\theta` is the associated
+    coefficient in the term. The implementation uses basis rotations, ``CNOT`` chains, and a
     single ``RZ`` rotation.
 
     Parameters

@@ -39,6 +39,9 @@ from qpe_toolbox.estimation import qpe_sample, set_search_window
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 # %%
+plt.rcParams.update({"font.size": 12})
+
+# %%
 opt = "auto-hq"
 
 # %% [markdown]
@@ -50,16 +53,18 @@ opt = "auto-hq"
 # We first define our model Hamiltonian (Heisenberg chain) on $n=8$ qubits. We know that its ground state can be approximated as a MPS. We use first the DMRG algorithm as a black box to have a reference energy (using a very large bond dimension 100 to have essentially the exact GS energy)
 
 # %%
-n = 8
-H = heisenberg_hamiltonian(n)
-H_MPO = H.to_mpo()
-dmrg = qtn.DMRG2(H_MPO, bond_dims=[10, 20, 40, 100], cutoffs=1e-13)
-dmrg.solve(tol=1e-6, verbosity=1)
-E_exact = np.real(dmrg.energy)
-print("Stored reference energy ", E_exact)
-H_MPO.draw(
+n_qubits = 8
+hamilt = heisenberg_hamiltonian(n_qubits)
+hamilt_mpo = hamilt.to_mpo()
+hamilt_mpo.draw(
     show_tags=True, show_inds=True, edge_scale=1, layout="kamada_kawai", edge_color=True
 )
+
+# %%
+dmrg = qtn.DMRG2(hamilt_mpo, bond_dims=[10, 20, 40, 100], cutoffs=1e-13)
+dmrg.solve(tol=1e-6, verbosity=1)
+dmrg_energy = np.real(dmrg.energy)
+print("DMRG reference energy:", dmrg_energy)
 
 # %% [markdown]
 # ### MPS search via tensor-network differentiation
@@ -69,12 +74,12 @@ H_MPO.draw(
 # When one optimizes the energy $H$ with respect to a variational wave function, we need first to be able to evaluate $\braket{\psi|H|\psi}$ as a tensor contraction
 
 # %%
-psi = qtn.MPS_rand_state(n, bond_dim=2)
+psi = qtn.MPS_rand_state(n_qubits, bond_dim=2)
 psiH = psi.H
-psi.align_(H_MPO, psiH)
-E = psiH & H_MPO & psi
-print(E.contract(all, optimize=opt))
-E.draw()
+psi.align_(hamilt_mpo, psiH)
+energy_tn = psiH & hamilt_mpo & psi
+print("Contracted energy:", energy_tn.contract(all, optimize=opt))
+energy_tn.draw()
 
 
 # %% [markdown]
@@ -82,23 +87,22 @@ E.draw()
 
 
 # %%
-def loss(psi, H_MPO):
+def loss(psi, mpo):
     psiH = psi.H
-    c = psiH & psi
-    psi.align_(H_MPO, psiH)
-    E = psiH & H_MPO & psi
-    return autoray.do("real", E.contract(all, optimize=opt)) / autoray.do(
-        "real", c.contract(all, optimize=opt)
-    )
+    norm_tn = psiH & psi
+    psi.align_(mpo, psiH)
+    energy_tn = psiH & mpo & psi
+    energy = autoray.do("real", energy_tn.contract(all, optimize=opt))
+    norm = autoray.do("real", norm_tn.contract(all, optimize=opt))
+    return energy / norm
 
 
-def myoptimizer(chi, H_MPO):
-    psi = qtn.MPS_rand_state(n, bond_dim=chi)
+def myoptimizer(chi, mpo):
+    psi = qtn.MPS_rand_state(n_qubits, bond_dim=chi)
     return qtn.TNOptimizer(
         psi,  # the tensor network we want to optimize
         loss,  # the function we want to minimize
-        loss_constants={"H_MPO": H_MPO},
-        # tags=['U3'],              # only optimize U3 tensors
+        loss_constants={"mpo": mpo},
         autodiff_backend="jax",  # use 'autograd' for non-compiled optimization
         optimizer="L-BFGS-B",  # the optimization algorithm
     )
@@ -108,29 +112,28 @@ def myoptimizer(chi, H_MPO):
 # Let us optimize for a first bond dimension $\chi=4$. This is already extremely fast and accurate.
 
 # %%
-tn_opt = myoptimizer(4, H_MPO)
+tn_opt = myoptimizer(4, hamilt_mpo)
 psi_opt = tn_opt.optimize(n=200)
 print("Optimized energy ", tn_opt.loss)
-print("Exact energy ", E_exact)
-# tn_opt.plot(hlines={'analytic':E_exact})
+print("Exact energy ", dmrg_energy)
 
 # %% [markdown]
 # Let us be more quantitative by relating the energy estimation to the number of variational parameters $d=2((n-2)\chi^2+2\chi)$ of an MPS, for various $\chi$
 
 # %%
-chi_a = [2, 4, 10, 20]
-nbp = len(chi_a)
-d_a = np.zeros(nbp)
-E_a = np.zeros(nbp)
-for i in range(nbp):
-    tn_opt = myoptimizer(chi_a[i], H_MPO)
+bond_dimensions = [2, 4, 10, 20]
+n_values = len(bond_dimensions)
+n_parameters = np.zeros(n_values)
+optimized_energies = np.zeros(n_values)
+for i in range(n_values):
+    tn_opt = myoptimizer(bond_dimensions[i], hamilt_mpo)
     psi_opt = tn_opt.optimize(n=200)
-    d_a[i] = tn_opt.d
-    E_a[i] = tn_opt.loss
+    n_parameters[i] = tn_opt.d
+    optimized_energies[i] = tn_opt.loss
 
 # %%
-plt.loglog(d_a, E_a - E_exact, "-o")
-plt.xlabel("number of params")
+plt.loglog(n_parameters, optimized_energies - dmrg_energy, "-o")
+plt.xlabel("number of parameters")
 plt.ylabel("energy error");
 
 # %% [markdown]
@@ -145,17 +148,17 @@ plt.ylabel("energy error");
 
 # %%
 depth = 4
-circ = ansatz_circuit(n, depth)
+circ = ansatz_circuit(n_qubits, depth)
 psi = circ.psi
 psi.draw(color=["U3", "RZZ"], show_inds=True)
 psiH = psi.H
-psi.align_(H_MPO, psiH)
-E = psiH & H_MPO & psi
-print(len(E.tensors))
-E.draw(color=["U3", "RZZ"], show_inds=True)
-Es = E.full_simplify()
-print(len(Es.tensors))
-Es.draw(color=["U3", "RZZ"], show_inds=True)
+psi.align_(hamilt_mpo, psiH)
+energy_tn = psiH & hamilt_mpo & psi
+print(len(energy_tn.tensors))
+energy_tn.draw(color=["U3", "RZZ"], show_inds=True)
+simplified_tn = energy_tn.full_simplify()
+print(len(simplified_tn.tensors))
+simplified_tn.draw(color=["U3", "RZZ"], show_inds=True)
 
 
 # %% [markdown]
@@ -163,24 +166,22 @@ Es.draw(color=["U3", "RZZ"], show_inds=True)
 
 
 # %%
-def loss_circ(circ, H_MPO):
+def loss_circ(circ, mpo):
     psi = circ.psi
     psiH = psi.H
-    c = psiH & psi
-    psi.align_(H_MPO, psiH)
-    E = psiH & H_MPO & psi  # .full_simplify()
-    return autoray.do("real", E.contract(all, optimize=opt)) / autoray.do(
-        "real", c.contract(all, optimize=opt)
-    )
+    norm_tn = psiH & psi
+    psi.align_(mpo, psiH)
+    energy_tn = psiH & mpo & psi
+    energy = autoray.do("real", energy_tn.contract(all, optimize=opt))
+    norm = autoray.do("real", norm_tn.contract(all, optimize=opt))
+    return energy / norm
 
 
-def my_circ_optimizer(circ):
+def make_circuit_optimizer(circ, mpo):
     return qtn.TNOptimizer(
         circ,  # the tensor network we want to optimize
         loss_circ,  # the function we want to minimize
-        loss_constants={
-            "H_MPO": H_MPO
-        },  # supply U to the loss function as a constant TN
+        loss_constants={"mpo": mpo},  # supply U to the loss function as a constant TN
         autodiff_backend="jax",  # use 'autograd' for non-compiled optimization
         optimizer="L-BFGS-B",
     )
@@ -191,60 +192,60 @@ def my_circ_optimizer(circ):
 
 # %%
 depth = 4
-circ = ansatz_circuit(n, depth)
-# tn_opt_circ = mycircoptimizer(depth,H_MPO,circ)
-my_circ_optimizer_ = my_circ_optimizer(circ)
-circ_opt = my_circ_optimizer_.optimize(n=100)
-print("Optimized energy ", my_circ_optimizer_.loss)
-print("Exact energy ", E_exact)
-my_circ_optimizer_.plot();
+circ = ansatz_circuit(n_qubits, depth)
+circ_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
+optimal_circuit = circ_optimizer.optimize(n=100)
+print("Optimized energy ", circ_optimizer.loss)
+print("Exact energy ", dmrg_energy)
+circ_optimizer.plot();
 
 # %% [markdown]
 # It can be also interesting to optimize a circuit of large depth using the optimized parameters from a circuit of smaller depth. However as shown below, we don't observe an improvement. So we will not use that in the following.
 
 # %%
 # optimize a shallow circuit
-circ = ansatz_circuit(n, 2)
-my_circ_optimizer_ = my_circ_optimizer(circ)
-circ_opt = my_circ_optimizer_.optimize(n=100)
+circ = ansatz_circuit(n_qubits, 2)
+circ_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
+optimal_circuit = circ_optimizer.optimize(n=100)
+
 # initialize a deeper circuit with previously optimized parameters
-circ = ansatz_circuit(n, 4, random_coeff=1e-4)
-circ.set_params(circ_opt.get_params())
+circ = ansatz_circuit(n_qubits, 4, random_coeff=1e-4)
+circ.set_params(optimal_circuit.get_params())
+
 # optimize the deeper circuit
-my_circ_optimizer_ = my_circ_optimizer(circ)
-circ_opt = my_circ_optimizer_.optimize(n=100)
-print("Optimized energy ", my_circ_optimizer_.loss)
-print("Exact energy ", E_exact)
+circ_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
+optimal_circuit = circ_optimizer.optimize(n=100)
+print("Optimized energy ", circ_optimizer.loss)
+print("Exact energy ", dmrg_energy)
 
 # %% [markdown]
 # Let us analyze how things improve increasing the depth
 
 # %%
-depth_max = 4
-depth_b = range(1, depth_max + 1)
-nbp = depth_max
-E_b = np.zeros(nbp)
-d_b = np.zeros(nbp)
-# E = np.zeros(depth_max)
-for i in range(nbp):
-    circ = ansatz_circuit(n, depth_b[i])
-    my_circ_optimizer_ = my_circ_optimizer(circ)
-    circ_opt = my_circ_optimizer_.optimize(n=100)
-    d_b[i] = my_circ_optimizer_.d
-    E_b[i] = my_circ_optimizer_.loss
-    print("Depth ", depth_b[i])
-    print("Current energy ", E_b[i])
+max_depth = 4
+depths = np.arange(1, max_depth + 1)
+n_values = len(depths)
+depth_parameters = np.zeros(n_values)
+depth_energies = np.zeros(n_values)
+for i in range(n_values):
+    circ = ansatz_circuit(n_qubits, depths[i])
+    circ_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
+    optimal_circuit = circ_optimizer.optimize(n=100)
+    depth_parameters[i] = circ_optimizer.d
+    depth_energies[i] = circ_optimizer.loss
+    print("Depth ", depths[i])
+    print("Current energy ", depth_energies[i])
 
 
 # %%
-plt.loglog(d_b, E_b - E_exact, "-s", color="tab:orange", label="circuit")
-plt.xlabel("number of params")
+plt.loglog(depth_parameters, depth_energies - dmrg_energy, "-s", color="tab:orange")
+plt.xlabel("number of parameters")
 plt.ylabel("energy error")
-plt.legend();
+plt.title(f"Optimizing {n_qubits} qubits");
 
 # %%
 psi_exact = dmrg.state
-overlap = (psi_exact.H & circ_opt.psi).contract()
+overlap = (psi_exact.H & optimal_circuit.psi).contract()
 print("fidelity ", abs(overlap) ** 2)
 
 # %% [markdown]
@@ -253,34 +254,34 @@ print("fidelity ", abs(overlap) ** 2)
 # Let us know use a guess state the circuit optimization to initialize the QPE algorithm. For simplicity we will take a Hamiltonian defined on $n=4$ qubits.
 
 # %%
-n = 4
-H = heisenberg_hamiltonian(n)
-H_MPO = H.to_mpo()
+n_qubits = 4
+hamilt = heisenberg_hamiltonian(n_qubits)
+hamilt_mpo = hamilt.to_mpo()
 
-dmrg = qtn.DMRG2(H_MPO, bond_dims=[10, 20, 40, 100], cutoffs=1e-13)
+dmrg = qtn.DMRG2(hamilt_mpo, bond_dims=[10, 20, 40, 100], cutoffs=1e-13)
 dmrg.solve(tol=1e-6, verbosity=1)
-E_exact = np.real(dmrg.energy)
+dmrg_energy = np.real(dmrg.energy)
 psi_exact = dmrg.state
 
-print("\nStored reference energy ", E_exact)
+print("\nStored reference energy ", dmrg_energy)
 
 # %% [markdown]
 # We take the shallowest circuit
 
 # %%
 depth = 1
-circ = ansatz_circuit(n, depth)
-my_circ_optimizer_ = my_circ_optimizer(circ)
-circ_opt = my_circ_optimizer_.optimize(n=100)
+circ = ansatz_circuit(n_qubits, depth)
+circ_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
+optimal_circuit = circ_optimizer.optimize(n=100)
 
-print("Optimized energy ", my_circ_optimizer_.loss)
-print("Exact energy ", E_exact)
+print("Optimized energy ", circ_optimizer.loss)
+print("Exact energy ", dmrg_energy)
 
 # %% [markdown]
 # With this depth, we should be able to reach around 30% fidelity. If it isn't the case, try to rerun the optimization
 
 # %%
-overlap = (psi_exact.H & circ_opt.psi).contract()
+overlap = (psi_exact.H & optimal_circuit.psi).contract()
 fidelity = abs(overlap) ** 2
 print("fidelity ", fidelity)
 
@@ -289,24 +290,24 @@ print("fidelity ", fidelity)
 # Let us initialize a circuit with a physical register and a phase register. We take $m=3$ phase qubits.
 
 # %%
-m = 3  # number of phase qubits
+n_phase_qubits = 3
 
 # circuit from optimized gates
-circ_qpe = qtn.CircuitMPS(m + n)
+circ_qpe = qtn.CircuitMPS(n_phase_qubits + n_qubits)
 
-for gate in circ_opt.gates:
+for gate in optimal_circuit.gates:
     label, params, qubits = gate.label, gate.params, gate.qubits
-    qubits = tuple(qb + m for qb in qubits)
+    qubits = tuple(qb + n_phase_qubits for qb in qubits)
     circ_qpe.apply_gate(label, *params, *qubits)
 
 # %% [markdown]
 # Set QPE parameters: first define the size of the search interval $\Delta$ which sets the evolution time $t$
 
 # %%
-E_target = my_circ_optimizer_.loss
+E_target = circ_optimizer.loss
 size_interval = 3
 E_const, Emax, evolution_time, global_phase = set_search_window(
-    H, E_target, size_interval
+    hamilt, E_target, size_interval
 )
 
 # %% [markdown]
@@ -318,22 +319,17 @@ n_steps = 4
 dt = evolution_time / n_steps
 
 # %% [markdown]
-# then run textbook QPE (this can take a minute or two). Since $n$ is small, for faster execution you can always set $dt=0$ to perform exact time evolution instead of a Trotterization.
+# then run textbook QPE (this can take a minute or two). Since `n_qubits` is small, for faster execution you can always use exact time evolution instead of a Trotterization.
 
 # %%
 # %%time
 traces, res = qpe_sample(
-    H,
-    circ_qpe,
-    evolution_time,
-    dt,  # Trotter timestep. 0 for exact time evolution
-    global_phase,
-    trotter_order=trotter_order,
+    hamilt, circ_qpe, evolution_time, dt, global_phase, trotter_order=trotter_order
 )
 
 # %% [markdown]
 # NB: the energy minimum can be $< E_{\rm exact}$
-#  when $E_{\rm target} - \Delta/2 < E_{\rm exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{\rm exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap (see e.g. [Measurement section of QPE Wikipedia](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm) for a derivation).
+#  when $E_{\rm target} - \Delta/2 < E_{\rm exact}$. We only consider the bitstrings with probability $> 4/\pi^2 F$ where $F = |\langle{\psi}|\psi_{\rm exact}\rangle|^2$. The $4/\pi^2$ factor gives a lower bound on the QPE success probability depending on the initial overlap as explained in the [Textbook QPE](./textbook_qpe.ipynb) example.
 #
 # NB: in practice one will not have access to the overlap. An approximation of the fidelity is sufficient. The following quantity can be used as a proxy, see [arxiv:2306.02620](https://arxiv.org/abs/2306.02620):
 #
@@ -343,13 +339,13 @@ traces, res = qpe_sample(
 # %%
 k_probs_list = sorted(enumerate(np.ravel(res)), key=lambda x: x[1], reverse=True)
 
-kmin = 2 ** (m - 1)
+kmin = 2 ** (n_phase_qubits - 1)
 prob_min = 0
 emin = E_target
 energies = []
 
 for k, prob in k_probs_list:
-    energy = E_target + size_interval * (1 / 2 - k / 2**m)
+    energy = E_target + size_interval * (1 / 2 - k / 2**n_phase_qubits)
     energies.append(energy)
     if energy < emin and prob > fidelity * 4 / np.pi**2:
         emin = energy
@@ -360,7 +356,7 @@ print(f"Most probable energy = {energies[0]:.5f} w prob = {k_probs_list[0][1]:.5
 print(f"First 5 energies = {np.round(energies[:5], 5)}")
 print(f'Minimal "significant" energy = {emin:.5f} with probability {prob_min:.5f}')
 print(
-    f"error = {abs(E_exact - emin):.5f} (theoretical error bound = {size_interval / 2**m:.5f})"
+    f"error = {abs(dmrg_energy - emin):.5f} (theoretical error bound = {size_interval / 2**n_phase_qubits:.5f})"
 )
 
 # %% [markdown]
@@ -370,21 +366,12 @@ print(
 
 # %%
 psi_final = traces["circuit"].psi
-
-
-# We change psi_final.backend from 'jax' to
-# 'numpy' to avoid a ValueError when calling
-# psi_final. measure. See the following issue
+# change psi_final.backend from 'jax' to numpy as a workaround for
 # https://github.com/jcmgray/quimb/issues/340
-# Problem should be fixed by quimb's commit fec27eb
-def to_backend(x):
-    return np.asarray(x)
+psi_final.apply_to_arrays(np.asarray)
 
-
-psi_final.apply_to_arrays(to_backend)
-
-bin_kmin = f"{kmin:b}".zfill(m)
-for i in range(m):
+bin_kmin = f"{kmin:b}".zfill(n_phase_qubits)
+for i in range(n_phase_qubits):
     psi_final.measure_(0, outcome=int(bin_kmin[i]), remove=True)
 
 # %% [markdown]

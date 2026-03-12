@@ -44,7 +44,7 @@ def qpe_energy(
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
-    initial_circ : quimb.tensor.Circuit or CircuitMPS
+    initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Initial circuit preparing the trial state in the data register.
     n_steps : int or str
         Number of time steps for Trotterized evolution, or "exact" for exact evolution.
@@ -150,7 +150,7 @@ def qpe_sample(
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
-    initial_circ : quimb.tensor.Circuit or CircuitMPS
+    initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Circuit preparing the trial state.
     evolution_time : float
         Total evolution time for the controlled-U operations.
@@ -263,7 +263,7 @@ def qpe_first_stage(
     ----------
     hamiltonian : Hamiltonian
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
-    initial_circ : quimb.tensor.Circuit or CircuitMPS
+    initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Initial state of the system.
     evolution_time : float
         Total evolution time.
@@ -282,7 +282,7 @@ def qpe_first_stage(
     -------
     traces : dict
         Contains bond dimensions, computation times, and optionally other metadata.
-    circ_or_gates : quimb.tensor.Circuit or list
+    circ_or_gates : :quimb-api:`Circuit` or list
         Updated circuit if ``run_simulation`` is True; otherwise, list of gate instructions.
 
     Notes

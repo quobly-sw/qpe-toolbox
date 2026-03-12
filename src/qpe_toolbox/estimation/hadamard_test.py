@@ -29,9 +29,9 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
 
     Parameters
     ----------
-    init_mps : quimb.tensor.MatrixProductState
+    init_mps : :quimb-api:`MatrixProductState`
         Initial state :math:`\ket{\psi}` of the data register.
-    U_gate : quimb.tensor.circuit.Gate or list
+    U_gate : :quimb-api:`Gate` or list
         Unitary operator to be tested.
         If a ``Gate`` instance is provided, it must act on all data qubits
         and be controlled by the ancilla qubit.
@@ -45,7 +45,7 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
 
     Returns
     -------
-    circ : quimb.tensor.CircuitMPS
+    circ : :quimb-api:`CircuitMPS`
         Circuit implementing the Hadamard test.
 
     """
@@ -88,9 +88,9 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
 
     Parameters
     ----------
-    init_mps : quimb.tensor.MatrixProductState
+    init_mps : :quimb-api:`MatrixProductState`
         Initial state :math:`\ket{\psi}` of the data register.
-    U_gate : quimb.tensor.circuit.Gate or list
+    U_gate : :quimb-api:`Gate` or list
         Unitary operator used in the Hadamard test.
         See ``build_circuit`` method for accepted formats.
     theta : float

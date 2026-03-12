@@ -26,7 +26,7 @@ def get_integrals_rhf(rhf):
 
     Parameters
     ----------
-    rhf : pyscf.scf.RHF
+    rhf : :pyscf-api:`pyscf.scf.RHF <scf.html>`
 
     Returns
     -------
@@ -36,9 +36,9 @@ def get_integrals_rhf(rhf):
         number of electrons
     constant : float
         the zero-body (constant) term
-    hpq : numpy.ndarray
+    hpq : :numpy-api:`ndarray`
         the one-body term
-    hpqrs : numpy.ndarray
+    hpqrs : :numpy-api:`ndarray`
         the two-body term in chemist notation
 
     """
@@ -56,7 +56,7 @@ def get_integrals_uhf(uhf):
 
     Parameters
     ----------
-    uhf : pyscf.scf.UHF
+    uhf : :pyscf-api:`pyscf.scf.UHF <scf.html>`
 
     Returns
     -------
@@ -66,9 +66,9 @@ def get_integrals_uhf(uhf):
         number of electrons
     constant : float
         the zero-body (constant) term
-    hpq : tuple of numpy.ndarray
+    hpq : tuple of :numpy-api:`ndarray`
         the one-body terms (u and d)
-    hpqrs : tuple of numpy.ndarray
+    hpqrs : tuple of :numpy-api:`ndarray`
         the two-body terms in chemist notation (uu, ud, and dd)
 
     """
@@ -104,7 +104,7 @@ def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
 
     Parameters
     ----------
-    rhf : pyscf.scf.RHF
+    rhf : :pyscf-api:`pyscf.scf.RHF <scf.html>`
     ncas : int
         number of active orbitals
     nelecas : int or tuple of int
@@ -120,9 +120,9 @@ def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
         number of active electrons
     constant : float
         the zero-body (constant) term
-    hpq : numpy.ndarray
+    hpq : :numpy-api:`ndarray`
         the one-body term
-    hpqrs : numpy.ndarray
+    hpqrs : :numpy-api:`ndarray`
         the two-body term in chemist notation
 
     """
@@ -138,7 +138,7 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
 
     Parameters
     ----------
-    uhf : pyscf.scf.UHF
+    uhf : :pyscf-api:`pyscf.scf.UHF <scf.html>`
     ncas : int
         number of active orbitals
     nelecas : int or tuple of int
@@ -154,9 +154,9 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
         number of active electrons
     constant : float
         the zero-body (constant) term
-    hpq : tuple of numpy.ndarray
+    hpq : tuple of :numpy-api:`ndarray`
         the one-body terms (u and d)
-    hpqrs : tuple of numpy.ndarray
+    hpqrs : tuple of :numpy-api:`ndarray`
         the two-body terms in chemist notation (uu, ud, and dd)
 
     """
@@ -168,14 +168,14 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
 
 
 def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
-    """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
+    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
     using the results of get_integrals_rhf/get_integrals_rhf_cas
 
     Parameters
     ----------
     constant : float
-    hpq : numpy.ndarray
-    hpqrs : numpy.ndarray
+    hpq : :numpy-api:`ndarray`
+    hpqrs : :numpy-api:`ndarray`
         results from get_integrals_rhf/get_integrals_rhf_cas
     orbital_major: bool, default : True
         if True
@@ -187,7 +187,7 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
 
     Returns
     -------
-    openfermion.ops.InteractionOperator
+    :openfermion-ops:`InteractionOperator`
 
     """
     norb = hpq.shape[0]
@@ -222,14 +222,14 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
 
 
 def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
-    """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
+    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
     using the results of get_integrals_uhf/get_integrals_uhf_cas
 
     Parameters
     ----------
     constant : float
-    hpq : tuple of numpy.ndarray
-    hpqrs : tuple of numpy.ndarray
+    hpq : tuple of :numpy-api:`ndarray`
+    hpqrs : tuple of :numpy-api:`ndarray`
         results from get_integrals_uhf/get_integrals_uhf_cas
     orbital_major: bool, default : True
         if True
@@ -241,7 +241,7 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
 
     Returns
     -------
-    openfermion.ops.InteractionOperator
+    :openfermion-ops:`InteractionOperator`
 
     """
     hpq_u, hpq_d = hpq
@@ -280,12 +280,12 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
 # can select the get_integrals_rhf/get_integrals_uhf function manually
 # or automatically
 def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
-    """Construct the Hamiltonian, as an openfermion.ops.InteractionOperator,
-    from an pyscf.scf.RHF/pyscf.scf.ROHF/pyscf.scf.UHF object
+    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
+    from an :pyscf-api:`pyscf.scf.RHF <scf.html>`/:pyscf-api:`pyscf.scf.ROHF <scf.html>`/:pyscf-api:`pyscf.scf.UHF <scf.html>` object
 
     Parameters
     ----------
-    mf : pyscf.scf.RHF or pyscf.scf.ROHF or pyscf.scf.UHF
+    mf : :pyscf-api:`pyscf.scf.RHF <scf.html>` or :pyscf-api:`pyscf.scf.ROHF <scf.html>` or :pyscf-api:`pyscf.scf.UHF <scf.html>`
     orbital_major: bool, default : True
         if True
           * qubit [0, norb) will be for spin up
@@ -296,7 +296,7 @@ def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
 
     Returns
     -------
-    openfermion.ops.InteractionOperator
+    :openfermion-ops:`InteractionOperator`
 
     """
     if isinstance(mf, (scf.hf.RHF, scf.rohf.ROHF)):

@@ -10,7 +10,7 @@ on initializing and setting up QPE circuits, (2) an internal circuit-level simul
 functionalities for retrieving final energies.
 For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [`openFermion`](https://quantumai.google/openfermion) and [`pyscf`](https://pyscf.org/).
 
-```{figure} customapi/figures/toolbox.png
+```{figure} _static/qpe-toolbox_pipeline.png
 :name: fig:toolbox_global_view
 :width: 100%
 :align: center
@@ -41,12 +41,12 @@ The {doc}`tensor <autoapi/qpe_toolbox/tensor/index>` module provides a set of fu
 
 ## In-depth presentation of the QPE Toolbox
 
-Check {download}`here <customapi/documents/2512_toolbox_deepdive.pdf>` for a presentation introducing our motivation and philosophy about the toolbox.
+Check {download}`here <_static/2512_toolbox_deepdive.pdf>` for a presentation introducing our motivation and philosophy about the toolbox.
 
 
 ## Source
 
-The code is hosted on [GitHub](https://github.com/quobly-sw/qpe-toolbox), and docs are hosted on [GitHub pages](https://quantuminformation.pages.quobly.io/qpe-toolbox/index.html#).
+The code is hosted on [GitHub](https://github.com/quobly-sw/qpe-toolbox), and docs are hosted on [GitHub pages](https://quobly-sw.github.io/qpe-toolbox).
 
 ```{toctree}
 :maxdepth: 1

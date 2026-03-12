@@ -67,18 +67,18 @@ def build_lcu_prepare_state_mps(hamiltonian, *, cutoff=1e-10):
     Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
 
     .. math::
-        \ket{\mathcal{L}} = sum_\ell sqrt(w_\ell / lambda) \ket{\ell}
+        \ket{\mathcal{L}} = \sum_\ell \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}
 
     Parameters
     ----------
     hamiltonian : Hamiltonian
-        Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
+        Hamiltonian to encode with LCU.
     cutoff : float, default ``1e-10``
         Singular value cutoff for MPS compression.
 
     Returns
     -------
-    L_mps : quimb.tensor.MPS
+    L_mps : :quimb-api:`MatrixProductState`
         MPS representing the state :math:`\ket{\mathcal{L}}`.
 
     """
@@ -102,13 +102,13 @@ def build_lcu_prepare_mpo(hamiltonian, *, cutoff=1e-10):
     Parameters
     ----------
     hamiltonian : Hamiltonian
-        Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
+        Hamiltonian to encode with LCU.
     cutoff : float, default ``1e-10``
         Cutoff for MPO compression.
 
     Returns
     -------
-    prep_mpo : quimb.tensor.MatrixProductOperator
+    prep_mpo : :quimb-api:`MatrixProductOperator`
         MPO implementing the PREPARE oracle.
 
     """
@@ -166,7 +166,7 @@ def lcu_select_gates(hamiltonian):
 
     Returns
     -------
-    gates : list of quimb.tensor.circuit.Gate
+    gates : list of :quimb-api:`Gate`
         Gate sequence implementing the SELECT oracle.
 
     """
@@ -190,7 +190,7 @@ def _gates_llxHl(hamiltonian, l_term):
 
     Returns
     -------
-    gates : list of quimb.tensor.circuit.Gate
+    gates : list of :quimb-api:`Gate`
         Gates implementing controlled :math:`H_\ell`.
 
     """
@@ -241,7 +241,7 @@ def _build_Hl_mpo(hamiltonian, l_term):
 
     Returns
     -------
-    Hl_mpo : quimb.tensor.MatrixProductOperator
+    Hl_mpo : :quimb-api:`MatrixProductOperator`
         MPO representing the l-th term of the Hamiltonian.
 
     """
@@ -287,7 +287,7 @@ def _build_llxHl_mpo(hamiltonian, l_term):
 
     Returns
     -------
-    llxHl_mpo : quimb.tensor.MatrixProductOperator
+    llxHl_mpo : :quimb-api:`MatrixProductOperator`
         MPO representing :math:`\ket{\ell}\bra{\ell} \otimes H_\ell`.
 
     """
@@ -313,7 +313,7 @@ def build_lcu_select_mpo(hamiltonian, *, cutoff=1e-10):
 
     Returns
     -------
-    select_mpo : quimb.tensor.MatrixProductOperator
+    select_mpo : :quimb-api:`MatrixProductOperator`
         MPO implementing :math:`SELECT = \sum_\ell \ket{\ell}\bra{\ell} \otimes H_\ell`.
 
     """
@@ -350,7 +350,7 @@ def build_lcu_reflection_mpo(hamiltonian, *, cutoff=1e-10):
 
     Returns
     -------
-    R_L : quimb.tensor.MatrixProductOperator
+    R_L : :quimb-api:`MatrixProductOperator`
         MPO representing the reflection
 
     """
@@ -381,7 +381,7 @@ def run_qpe_lcu_walk_operator(
     ----------
     H : Hamiltonian
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
-    psi0_mps : quimb.tensor.MPS
+    psi0_mps : :quimb-api:`MatrixProductState`
         Initial state of the physical register.
     m_ph : int
         Number of phase estimation qubits.
@@ -454,7 +454,7 @@ def qpe_first_stage_walk(
     ----------
     H : Hamiltonian
         Hamiltonian from the QPE-Toolbox ``Hamiltonian`` class.
-    psi0_mps : quimb.tensor.MPS
+    psi0_mps : :quimb-api:`MatrixProductState`
         Initial state of the physical register.
     m_ph : int
         Number of phase qubits.
@@ -471,7 +471,7 @@ def qpe_first_stage_walk(
     -------
     traces : dict
         Contains timing information: {'ctimes': [...]}.
-    circ : quimb.tensor.CircuitMPS
+    circ : :quimb-api:`CircuitMPS`
         Circuit representing the applied QPE first stage.
 
     """
@@ -550,7 +550,7 @@ def get_energy_from_lcu_walk_phase(theta, lmb):
     r"""
     Get the energy from the eigenphase of the LCU Walk operator.
 
-    ..math:
+    .. math::
         E = \lambda \cos(2 \pi \theta)
 
     Parameters
