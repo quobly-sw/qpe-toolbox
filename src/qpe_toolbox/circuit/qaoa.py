@@ -18,7 +18,7 @@ import optuna
 import quimb as qu
 import quimb.tensor as qtn
 
-ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
+_ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
 
 
 def brute_force_maxcut(graph_matrix, terms):
@@ -95,7 +95,7 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
         communities may be smaller if some generated sizes are <= 1.
         Default is 4.
 
-    rng : :class:`numpy.random.Generator`, optional
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
         Random number generator used to sample community sizes.
         If ``None``, a default generator is created.
 
@@ -157,7 +157,7 @@ def qaoa_energy(x, terms, opt):
         Dictionary mapping edges ``(i, j)`` to their weights in the
         cost Hamiltonian.
 
-    opt : cotengra.ReusableHyperOptimizer
+    opt : :cotengra-api:`ReusableHyperOptimizer`
         Optimizer object for tensor network contraction ordering. Should be
         an instance of ``cotengra``'s ``ReusableHyperOptimizer`` (or compatible
         optimizer). Reusing this object across multiple calls improves
@@ -183,7 +183,7 @@ def qaoa_energy(x, terms, opt):
     circ = qtn.circ_qaoa(terms, p, gammas, betas)
 
     ens = [
-        circ.local_expectation(weight * ZZ, edge, optimize=opt, backend="jax")
+        circ.local_expectation(weight * _ZZ, edge, optimize=opt, backend="jax")
         for edge, weight in terms.items()
     ]
 
@@ -208,7 +208,7 @@ def study_optimization_time_costs(
         Dictionary representing the Hamiltonian to optimize, typically mapping
         edges or terms to weights, compatible with the ``energy`` function.
 
-    hyperopt : :class:`cotengra.ReusableHyperOptimizer`
+    hyperopt : :cotengra-api:`ReusableHyperOptimizer`
         Optimizer object used in the ``energy`` function to control tensor network
         contraction ordering. Reusing this object across multiple calls improves
         performance.
@@ -241,7 +241,7 @@ def study_optimization_time_costs(
         List of times (in seconds per Hamiltonian term per parameter set) spent
         computing the energies in each iteration.
 
-    study : :class:`optuna.study.Study`
+    study : :optuna-api:`study.Study`
         The ``optuna`` study object after all iterations. Can be used to query
         best parameters, best value, or continue optimization.
 
@@ -306,11 +306,11 @@ def compute_qaoa_contraction_costs(
         Dictionary mapping graph identifiers to entries. Each entry must have at
         least a key ``"terms"`` listing the edges as pairs of vertices.
 
-    hyperopt : :class:`cotengra.ReusableHyperOptimizer`
+    hyperopt : :cotengra-api:`ReusableHyperOptimizer`
         Optimizer object used for tensor network contraction rehearsal. Reusing this
         object across multiple graphs improves performance.
 
-    circuit_depths : enum of int, optional
+    circuit_depths : sequence of int, optional
         List of QAOA circuit depths (number of layers) to analyze. Default is (2, 3, 4).
 
     verbosity : int, optional
@@ -345,8 +345,8 @@ def compute_qaoa_contraction_costs(
     Notes
     -----
     - For each graph, a random QAOA parameter initialization is used (``gammas`` and ``betas``).
-    - Contraction rehearsal is performed using
-      :meth:`quimb.tensor.circuit.Circuit.local_expectation_rehearse` for each term.
+    - Contraction rehearsal is performed using :quimb-api:`Circuit.local_expectation_rehearse` for each
+      term in the Hamiltonian.
     - The average width ``W`` is computed over all local contraction trees.
     - The total contraction cost ``C`` is computed using a numerically stable log-sum-exp
       over all local contraction costs.
@@ -374,7 +374,7 @@ def compute_qaoa_contraction_costs(
             circ = qtn.circ_qaoa(terms, depth, gammas, betas)
 
             local_exp_rehs = [
-                circ.local_expectation_rehearse(weight * ZZ, edge, optimize=hyperopt)
+                circ.local_expectation_rehearse(weight * _ZZ, edge, optimize=hyperopt)
                 for edge, weight in terms.items()
             ]
 

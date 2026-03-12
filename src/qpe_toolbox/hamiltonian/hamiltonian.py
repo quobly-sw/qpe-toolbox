@@ -21,10 +21,12 @@ def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     The Hamiltonian is given by
 
     .. math::
-        H = \\sum_{i=0}^{N-2} \\frac{J s}{2}
+        H = \\sum_{i=0}^{N-2} \\frac{J}{4}
         (X_i X_{i+1} + Y_i Y_{i+1} + Z_i Z_{i+1})
 
-    where only spin-1/2 systems are supported.
+    where only spin-1/2 systems are supported. The normalization is chosen such that
+    ``heisenberg_hamiltonian(2)`` is the standard :math:`\\mathbf{S}\\cdot\\mathbf{S}` operator
+    with eigenvalues ``(-3/4, 1/4, 1/4, 1/4)``.
 
     Parameters
     ----------
@@ -52,7 +54,7 @@ def do_dmrg(hamiltonian):
     """
     Perform a DMRG ground-state calculation using quimb.
 
-    Based on quimb.tensor.DMRG2
+    Based on quimb :quimb-api:`DMRG2`
 
     Parameters
     ----------
@@ -63,7 +65,7 @@ def do_dmrg(hamiltonian):
     -------
     E0 : float
         Ground-state energy.
-    psi0 : quimb.tensor.MatrixProductState
+    psi0 : :quimb-api:`MatrixProductState`
         Ground-state wavefunction as a Matrix Product State.
 
     """
@@ -87,7 +89,7 @@ class Hamiltonian:
 
     Parameters
     ----------
-    terms : list of tuple
+    terms : sequence of tuple
         Hamiltonian terms in the form
         ``(coefficient, pauli_string, qubits)``, e.g. ``(0.5, "xy", [0, 1])``.
     n_qubits : int
@@ -96,16 +98,35 @@ class Hamiltonian:
     """
 
     def __init__(self, terms, n_qubits):
-        self._terms = terms
-        self._n_qubits = n_qubits
+        self._terms = list(terms)
+        self._n_qubits = int(n_qubits)
 
     @property
     def terms(self):
         return self._terms
 
     @property
+    def n_terms(self):
+        return len(self._terms)
+
+    @property
     def n_qubits(self):
         return self._n_qubits
+
+    @property
+    def shape(self):
+        return (2**self._n_qubits, 2**self._n_qubits)
+
+    def __repr__(self):
+        return f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms})"
+
+    def __str__(self):
+        lines = [
+            f"Hamiltonian(n_qubits={self._n_qubits}, n_terms={self.n_terms}) with terms:"
+        ]
+        for coeff, paulis, qubits in self._terms:
+            lines.append(f"  {coeff:+6g} {paulis.upper()} @ {qubits}")
+        return "\n".join(lines)
 
     def to_dense(self):
         """
@@ -113,7 +134,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.qarray
+        :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
 
         """
@@ -131,7 +152,7 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.operator.SparseOperatorBuilder
+        :quimb:`quimb.operator.SparseOperatorBuilder <autoapi/quimb/operator/index.html#quimb.operator.SparseOperatorBuilder>`
             Builder object that can generate sparse matrices or MPOs.
 
         """
@@ -152,13 +173,13 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.tensor.MatrixProductOperator
+        :quimb-api:`MatrixProductOperator`
             MPO representation of the Hamiltonian.
 
         """
         return self.to_builder().build_mpo()
 
-    def get_U_exact(self, t, data_reg, controls):
+    def get_U_exact(self, evolution_time, data_reg, controls):
         """
         Construct the exact time-evolution operator as a quantum gate.
 
@@ -171,7 +192,7 @@ class Hamiltonian:
 
         Parameters
         ----------
-        t : float
+        evolution_time : float
             Evolution time.
         data_reg : sequence of int
             Qubit register on which the Hamiltonian acts.
@@ -180,14 +201,14 @@ class Hamiltonian:
 
         Returns
         -------
-        quimb.tensor.Gate
+        :quimb-api:`Gate`
             Exact multi-qubit unitary gate.
 
         """
         if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
         h_dense = self.to_dense()
-        U = qu.expm(-1j * h_dense * t)
+        U = qu.expm(-1j * h_dense * evolution_time)
         return qtn.Gate.from_raw(U, qubits=data_reg, controls=controls)
 
     def get_trotter_step(self, dt, data_reg, trotter_order):
@@ -219,35 +240,36 @@ class Hamiltonian:
         if trotter_order == 1:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, delta=dt, qubit_reg=data_reg)
+                program += rotation_gates(term, dt, data_reg)
             return program
         if trotter_order == 2:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, delta=dt / 2, qubit_reg=data_reg)
+                program += rotation_gates(term, dt / 2, data_reg)
             for term in reversed(self.terms):
-                program += rotation_gates(term, delta=dt / 2, qubit_reg=data_reg)
+                program += rotation_gates(term, dt / 2, data_reg)
             return program
         raise ValueError(f"order {trotter_order} not implemented")
 
 
-def rotation_gates(term, delta, qubit_reg):
+def rotation_gates(term, dt, qubit_reg):
     """
     Generate a gate sequence for exponentiating a Pauli-string term.
 
     Implements
 
     .. math::
-        e^{-i \\delta \\theta P}
+        e^{-i dt \\theta P}
 
-    where ``P`` is a tensor product of Pauli operators, using basis
-    rotations, CNOT chains, and a single ``RZ`` rotation.
+    where :math:`P` is a tensor product of Pauli operators and :math:`\\theta` is the associated
+    coefficient in the term. The implementation uses basis rotations, ``CNOT`` chains, and a
+    single ``RZ`` rotation.
 
     Parameters
     ----------
     term : tuple
         Hamiltonian term ``(theta, pauli_string, qubits)``.
-    delta : float
+    dt : float
         Time step or Trotter slice.
     qubit_reg : sequence of int
         Mapping from logical qubit indices to circuit qubits.
@@ -274,7 +296,7 @@ def rotation_gates(term, delta, qubit_reg):
 
     # RZ gate
     routine.append(
-        ("RZ", 2 * theta * delta, qubit_reg[qubits[-1]])
+        ("RZ", 2 * theta * dt, qubit_reg[qubits[-1]])
     )  ## RZ(alpha) = exp(-1j * alpha/2 * sigma_z)
 
     # CNOTs back

@@ -16,7 +16,9 @@
 # # Hyperoptimization
 
 # %% [markdown]
-#  We aim at providing more advanced circuit simulations for the toolbox; this tutorial complements the MPS contraction from a boundary of the network presented in the tutorial `performance.py`, and focuses on how to use [hyperoptimization](https://arxiv.org/abs/2002.01935) without intermediate [compression](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.14.011009). It is used for the exact contraction of relatively large networks representing expectation values of local observables, which can contribute for example in the computation of global energy expectation value. The particular example we chose is the optimization of the Ansatz circuit for the [Quantum Approximate Optimization Algorithm](https://arxiv.org/abs/1411.4028) in order to solve a MaxCut problem. **This notebook is based on the several examples from [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/) and [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) for optimized contractions. In particular, we revisit the example on [Bayesian Optimizing QAOA Circuit Energy](https://quimb.readthedocs.io/en/main/examples/ex_tn_qaoa_energy_bayesopt.html).**
+#  We aim at providing more advanced circuit simulations for the toolbox; this tutorial complements the MPS contraction from a boundary of the network presented in the tutorial on [MPS contraction](./performance_mps.ipynb), and focuses on how to use [hyperoptimization](https://arxiv.org/abs/2002.01935) without intermediate [compression](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.14.011009). It is used for the exact contraction of relatively large networks representing expectation values of local observables, which can contribute for example in the computation of global energy expectation values.
+#
+# The particular example we chose is the optimization of the Ansatz circuit for the [Quantum Approximate Optimization Algorithm](https://arxiv.org/abs/1411.4028) in order to solve a MaxCut problem. **This notebook is based on the several examples from [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/) and [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) for optimized contractions. In particular, we revisit the example on [Bayesian Optimizing QAOA Circuit Energy](https://quimb.readthedocs.io/en/main/examples/ex_tn_qaoa_energy_bayesopt.html).**
 
 # %%
 import os
@@ -129,7 +131,7 @@ ax_wER.set_title(r"Weighted Erdos-Renyi graph")
 #
 #
 #
-#  In order to find the partition(s) with the lowest energy, the [QAOA Ansatz](https://arxiv.org/abs/1411.4028) of depth $p$ takes inspiration from the quantum annealing approach and uses a parametrized circuit constituted by 'trotterized' layers of real time evolution, alternating the action of a mixer Hamiltonian with an easy ground state (the transverse magnetization $\mathbb{M}_x=\sum_i \sigma^x_i$ with phase $\beta$) and the AFIM (with phase $\gamma$):
+#  In order to find the partition(s) with the lowest energy, the [QAOA Ansatz](https://arxiv.org/abs/1411.4028) of depth $p$ takes inspiration from the quantum annealing approach and uses a parametrized circuit constituted by 'Trotterized' layers of real time evolution (see our example `trotter_decomposition`). It alternates the action of a mixer Hamiltonian with an easy ground state, the transverse magnetization $\mathbb{M}_x=\sum_i \sigma^x_i$ with phase $\beta$, and the target Hamiltonian AFIM with phase $\gamma$:
 #
 #
 #
@@ -137,7 +139,7 @@ ax_wER.set_title(r"Weighted Erdos-Renyi graph")
 #
 #
 #
-#  Given the local structure of $\mathbb{M}_x$ and $H$ together with the 'trotterized' construction of the circuit, the computation of the expectation value of the energy
+#  Given the local structure of $\mathbb{M}_x$ and $H$ together with the 'Trotterized' construction of the circuit, the computation of the expectation value of the energy
 #
 #
 #
@@ -153,13 +155,13 @@ p = 3
 gammas = rng.standard_normal(p)
 betas = rng.standard_normal(p)
 
-# $\texttt{quimb}$ already includes constructor functions for generating the `Circuit`` instance for QAOA
+# quimb already includes constructor functions for generating the `Circuit` instance for QAOA
 circ_reg = qtn.circ_qaoa(terms_reg, p, gammas, betas)
 circ_wER = qtn.circ_qaoa(terms_wER, p, gammas, betas)
 
 
 # %% [markdown]
-#  The constructed circuit associated to the ansatz is the following:
+#  The constructed circuit associated to the Ansatz is the following:
 
 # %%
 fig = draw_layered_circuit(
@@ -173,13 +175,13 @@ fig = draw_layered_circuit(
 
 
 # %% [markdown]
-#  In the following, we select the subset of gates involved in the computation of the energy of an edge, which may be much smaller thanks to the locality of the associated operator. The simplification arises from unitary cancellation
+#  For efficiency, we may only contract the subset of gates involved in the computation of the energy of an edge, which may be much smaller thanks to the locality of the associated operator. The simplification arises from unitary cancellation
 #
 #  $$U U^\dagger=U^\dagger U = 1$$
 #
-# and is conditioned by the layout of the circuit: if the circuit is deep and narrow, unitary cancellation may occur only on the first layers close to the edge operator (central columns around $h_{ij}$ in the following plot); on the other hand, the wider the circuit is, the more cancellation may occur.
+# and it is conditioned by the layout of the circuit: if the circuit is deep and narrow, unitary cancellation may occur only on the first layers close to the edge operator (central columns around $h_{ij}$ in the following plot); on the other hand, the wider the circuit is, the more cancellation may occur.
 #
-# The following function depicts the expectation value with unitary cancellation for the energy term between nodes 0 and 1 in the random regular graph QAOA ansatz of depth $p=3$. The drawing must be read from left to right as
+# The following function depicts the expectation value with unitary cancellation for the energy term between nodes 0 and 1 in the random regular graph QAOA Ansatz of depth $p=3$. The drawing must be read from left to right as
 #
 # $$\langle \mathrm{GS}\{\mathbb{M}_x\} |~ U_x^{(1)}~U_{zz}^{(1)}~U_x^{(2)}~U_{zz}^{(2)}~U_x^{(3)}~U_{zz}^{(3)}~ h_{0,1} ~U_x^{(3)}~U_{zz}^{(3)}~U_x^{(2)}~U_{zz}^{(2)}~U_x^{(1)}~U_{zz}^{(1)}~|\mathrm{GS}\{\mathbb{M}_x\}\rangle$$
 #
@@ -191,15 +193,11 @@ list_names = [
     [f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, p + 1)],
     ["$\\mathrm{{R_{{zz}} }}$"] * p,
 ]
-fig = draw_layered_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_names);
+fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_names);
 
 
 # %% [markdown]
-#  If we compare the former two pictures, we clearly see that in the expectation value the rotations of the first layer $U^{(1)}$ (outermost, closest to the state at the edges) appear completely unchanged, while the second layer $U^{(2)}$ is shallower thank to some cancellation, and the third layer $U^{(3)}$ (innermost, closest to the edge operator) is extremely simplified.
-#
-#
-#
-#  **Note that `draw_layered_expval` internally makes use of `get_psi_reverse_lightcone` from $\texttt{quimb}$; at this stage, cancellation due to commutativity of the gates is not taken into account. Therefore, the reader may appreaciate that some gates that should cancel out do not, since in the original circuit they were placed in such an order that causality would not leave them out of the simplification.**
+#  If we compare the former two pictures, we clearly see that in the expectation value the rotations of the first layer $U^{(1)}$ (outermost, closest to the state at the edges) appear completely unchanged, while the second layer $U^{(2)}$ is shallower thank to some cancellation, and the third layer $U^{(3)}$ (innermost, closest to the edge operator) is more simplified.
 #
 #
 #
@@ -213,7 +211,7 @@ fig = draw_layered_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_n
 # ## Understanding the cost of contractions: the contraction tree, W and C
 
 # %% [markdown]
-#  Luckily, [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/index.html) automatizes the optimization process for finding the best series of pairwise contractions in a network. The whole machinery is wrapped up into a [$\texttt{HyperOptimizer}$ class](https://github.com/jcmgray/cotengra/blob/5e22dcdb60bca4a30e34248b93b00bc736f214d5/cotengra/hyperoptimizers/hyper.py#L353), and in this notebook we will try to understand the different options it offers.
+#  Luckily, [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/index.html) automatizes the optimization process for finding the best series of pairwise contractions in a network. The whole machinery is wrapped up into a [`HyperOptimizer class`](https://github.com/jcmgray/cotengra/blob/5e22dcdb60bca4a30e34248b93b00bc736f214d5/cotengra/hyperoptimizers/hyper.py#L353).
 #
 #
 #
@@ -221,10 +219,10 @@ fig = draw_layered_expval(selected_edge=(2, 3), circ=circ_reg, list_names=list_n
 #
 #
 #
-#  Before explaining the details, we need to introduce the concept of contraction tree. For the sake of clearness, the reader may execute the following two cells (where we define generic simple hyperoptimizers and rehearse the energy computation) and jump to the next explanation.
+#  Before examining the inner workings of hyperoptimization, we first introduce the concept of a contraction tree, which is closely tied to the cost functions the hyperoptimizer seeks to minimize. For the sake of clearness, the reader may execute the following two cells (where we define generic simple hyperoptimizers and rehearse the energy computation) and jump to the next explanation.
 
 # %%
-# generic minimal options for hyperoptimization (more about it later)
+# generic minimal options for hyperoptimization
 opt_eco_reg = ctg.ReusableHyperOptimizer(
     max_repeats=128,
     methods=["greedy"],

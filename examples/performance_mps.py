@@ -39,7 +39,6 @@ from qpe_toolbox.circuit import (
     deserialize_to_quimb_Circuit,
     deserialize_to_quimb_CircuitMPS,
     draw_layered_circuit,
-    draw_layered_expval,
     generate_rand_quimb,
     serialize_from_quimb_Circuit,
 )
@@ -377,21 +376,3 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # * [`sample`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3523-L3674) : uses light-cone simplification and caching of the marginal distributions for chosen groupings of qubits.
 # * [`sample_gate_by_gate`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L4023-L4143) : achieves a cost for sampling similar to that of computing single amplitudes, but enlarges the amount of tensor networks to be contracted. This method was [introduced in 2021](https://arxiv.org/abs/2112.08499).
 # * [`sample_chaotic`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3762-L3892) : assumes that only subgroups of qubits are correlated, while the rest of the sampled bitstring results are essentially random. This strategy was successful at classically replicating one of the latest [quantum advantage claims](https://www.nature.com/articles/s41586-019-1666-5).
-#
-# Below we illustrate light-cone simplification and plot the reduced tensor network required to measure the expectation value of a local observable acting on qubits 6 and 7. The interested reader can find an introduction to this technique and other advanced contraction tools in a wider tensor network context in our example [hyperoptimization](hyperoptimization.ipynb).
-
-# %%
-for ctype in circuit_types:
-    circ = deserialize_to_quimb_Circuit(circuit_data[ctype][ctype + "_16"])
-    depth = max([gate.round for gate in circ.gates]) + 1
-    fig = draw_layered_expval(
-        (5, 6),
-        circ,
-        list_names=[
-            r"$0$",
-            [f"$\\mathrm{{R_y^{{({i})}} }}$" for i in range(1, depth + 1)],
-            [r"$\mathrm{CNOT}$"] * depth,
-        ],
-    )
-
-# %%

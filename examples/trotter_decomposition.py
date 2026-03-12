@@ -20,7 +20,7 @@
 #
 # ## Introduction
 #
-# We start by introducing the general idea of Trotterization. We would like to compute the exponentiation of an operator $H$. For small systems, it can be performed exactly by `quimb` or `scipy` linear algebra methods. In the `qpe-toolbox`, the method `get_U_exact` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using `quimb`'s `expm` matrix exponentiation routine. For larger systems however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
+# We start by introducing the general idea of Trotterization. We would like to compute the exponentiation of an operator $H$. For small systems, it can be performed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_U_exact` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
 #
 # Let us decompose the operator as $H = A + B$. In practice, we decompose the Hamiltonian into a sum of operators whose exponentiation can be easily implemented, e.g. Pauli strings. When $A$ and $B$ commute, as for scalar numbers, the exponential of the sum is the product of exponentials:
 #
@@ -79,7 +79,7 @@ qubit_reg = list(range(n_qubits))
 #
 # The error is now quadratic in $\delta t$.
 #
-# In `qpe-toolbox`, first- and second-order trotterization are implemented by the `get_trotter_step` method of the `Hamiltonian` class.
+# In $\texttt{qpe-toolbox}$, first- and second-order Trotterization are implemented by the `get_trotter_step` method of the `Hamiltonian` class.
 #
 # Below, we visualize the circuits for one timestep:
 
@@ -106,11 +106,11 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 # %% [markdown]
 # ## Trotter error: full unitary distance as metric
 #
-# Let us first use the distance of the full time evolution as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - {\rm Id}||$
+# Let us first use the distance of the full time evolution as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - \mathbb{1}~||$
 #
 # We define a function that collects the errors defined for given times $t$ in `t_list`, number of timesteps $n_{steps}$ in `ns_list` and Trotterization order `order`.
 #
-# NB: in this example we consider the Frobenius norm to define the error. Any other norm suppprted by `quimb.norm` option can be used via the optional parameter `ntype`.
+# NB: in this example we consider the Frobenius norm to define the error. Any other norm supported by `quimb.norm` can be used via the optional parameter `ntype`.
 
 
 # %%
@@ -159,7 +159,7 @@ ns_list = np.array([5, 10, 50, 100, 200])
 res = errors_trotter_slice(t_list, ns_list, trotter_order=1)
 
 # %% [markdown]
-# As seen in the introduction, we expect the error to scale like $t_f^2 / n_{steps}$. Let us plot the errors versus $n_{steps}$ (left, linear scale) and versus $t_f^2 / n_{steps}$ (right, log scale):
+# As seen in the introduction, we expect the error to scale like $t_f^2 / n_{\rm steps}$. Let us plot the errors versus $n_{\rm steps}$ (left, linear scale) and versus $t_f^2 / n_{\rm steps}$ (right, log scale):
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
@@ -182,7 +182,7 @@ fig.suptitle("First order Trotter");
 # ### Second order Trotter
 
 # %% [markdown]
-# Similarly, we plot the errors reached with a second order Trotter formula, as a function of $n_{steps}$ (left, linear scale) and as a function of $t_f^3 / n_{steps}^2$ (right, log scale).
+# Similarly, we plot the errors reached with a second order Trotter formula, as a function of $n_{\rm steps}$ (left, linear scale) and as a function of $t_f^3 / n_{\rm steps}^2$ (right, log scale).
 
 # %%
 res2 = errors_trotter_slice(t_list, ns_list, trotter_order=2)
@@ -208,13 +208,13 @@ fig.suptitle("Second order Trotter");
 # %% [markdown]
 # ### Number of steps required to get below a given error
 #
-# For the first order Trotter formula, since the error scales like $t_f^2 / n_{steps}$, to reach an error $\epsilon$ requires a minimal number of steps:
+# For the first order Trotter formula, since the error scales like $t_f^2 / n_{\rm steps}$, to reach an error $\epsilon$ requires a minimal number of steps:
 #
-# $$ n_{steps} = \mathcal{O} (t_f^2 / \epsilon) $$
+# $$ n_{\rm steps} = \mathcal{O} (t_f^2 / \epsilon) $$
 #
 # Since in QPE maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is number of phase bits, we get
 #
-# $$ n_{steps} = \mathcal{O} (2^{2m} / \epsilon). $$
+# $$ n_{\rm steps} = \mathcal{O} (2^{2m} / \epsilon). $$
 #
 # As shown on the plot below, the number of Trotter steps quickly grows to about $10^6$, which translates into at least as many CNOT gates. This is why in practice we use the second-order Trotter decomposition.
 #
@@ -224,7 +224,7 @@ fig.suptitle("Second order Trotter");
 #
 # Since in QPE the maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is number of phase bits, we get
 #
-# $$ n_{steps} = \mathcal{O} (\sqrt{2^{3m} / \epsilon}) $$
+# $$ n_{\rm steps} = \mathcal{O} (\sqrt{2^{3m} / \epsilon}) $$
 
 # %%
 epsilon = 1e-2
@@ -255,7 +255,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # The different terms in the Hamiltonian can be written as Pauli strings, i.e. using the Pauli operator basis:
 #
-# $$ H_\ell = U_1 \otimes U_2 \otimes \dots \otimes U_n, \qquad U_k \in \{I, X, Y, Z\}, $$
+# $$ H_\ell = U_1 \otimes U_2 \otimes \dots \otimes U_n, \qquad U_k \in \{\mathbb{1}, X, Y, Z\}, $$
 # where $n$ is the number of qubits required to represent the Hilbert space.
 #
 # Here we present the algorithm to exponentiate $H_\ell$, i.e. to encode
@@ -265,7 +265,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # Let us first state the following two properties
 # :
 # * $ e^{-i t Z} = R_Z(2t) $ by definition.
-# * $ e^{-i t Z_{i_1} Z_{i_2} \dots Z_{i_M}} = CX_{i_1 i_2} CX_{i_2 i_3} \dots CX_{i_{M-1} i_M} \left( Id^{\otimes (i_M-1)} \otimes R_Z(2t) \otimes Id^{\otimes (n - i_M - 1)} \right) CX_{i_{M-1} i_M} CX_{i_{M-1} i_{M-2}} \dots CX_{i_1 i_2} $ (see [arXiv:2501.17780](https://arxiv.org/abs/2501.17780)).
+# * $ e^{-i t Z_{i_1} Z_{i_2} \dots Z_{i_M}} = CX_{i_1 i_2} CX_{i_2 i_3} \dots CX_{i_{M-1} i_M} \left( \mathbb{1}^{\otimes (i_M-1)} \otimes R_Z(2t) \otimes \mathbb{1}^{\otimes (n - i_M - 1)} \right) CX_{i_{M-1} i_M} CX_{i_{M-1} i_{M-2}} \dots CX_{i_1 i_2} $ (see [arXiv:2501.17780](https://arxiv.org/abs/2501.17780)).
 #
 #
 # The algorithm proceeds as follows:
@@ -278,7 +278,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # 5. Bring the qubits back to their original basis applying the inverse rotations.
 #
 #
-# This algorithm is executed by the `rotation_gates` function from `qpe_toolbox`'s `hamiltonian` module.
+# This algorithm is executed by the `rotation_gates` function from $\texttt{qpe-toolbox}$ 's `hamiltonian` module.
 
 # %% [markdown]
 # #### CNOT gate count
@@ -302,7 +302,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # $$ e^{ - i H dt } = \prod_{j=0}^{n-2} e^{-i  X_j X_{j+1} dt J/4} e^{-i  Y_j Y_{j+1} dt J/4} e^{-i  Z_j Z_{j+1} dt J/4} \prod_{k=0}^{n-2} e^{-i  Z_{n-2-k} Z_{n-1-k} dt J/4} e^{-i  Y_{n-2-k} Y_{n-1-k} dt J/4} e^{-i  X_{n-2-k} X_{n-1-k} dt J/4} + \mathcal{O} (dt^3). $$
 #
-# Total CNOT gate count second order trotterization:
+# Total CNOT gate count second order Trotterization:
 #
 # $$ 12(n - 1)n_{steps} \qquad \mathrm{CNOT~gates}.$$
 #

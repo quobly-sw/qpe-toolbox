@@ -21,12 +21,12 @@ def _build_init_mps(n_phase_bits, psi_mps):
     ----------
     n_phase_bits : int
         Number of qubits in the phase (auxiliary) register.
-    psi_mps : quimb.tensor.MatrixProductState
+    psi_mps : :quimb-api:`MatrixProductState`
         Initial state of the data register.
 
     Returns
     -------
-    quimb.tensor.MatrixProductState
+    :quimb-api:`MatrixProductState`
         Combined MPS of total length ``n_phase_bits + psi_mps.L``.
 
     """
@@ -66,13 +66,13 @@ def make_circ(n_phase_bits, psi_mps):
     ----------
     n_phase_bits : int
         Number of qubits in the phase (auxiliary) register.
-    psi_mps : quimb.tensor.MatrixProductState
+    psi_mps : :quimb-api:`MatrixProductState`
         Initial state of the data register as an MPS. Its sites will be
         reindexed and retagged to follow the phase register.
 
     Returns
     -------
-    quimb.tensor.Circuit
+    :quimb-api:`Circuit`
         Quantum circuit initialized with the combined MPS state.
 
     Notes
@@ -97,7 +97,7 @@ def make_circMPS(n_phase_bits, psi_mps, *, cutoff=1e-10, max_bond=None):
     ----------
     n_phase_bits : int
         Number of qubits in the phase (ancilla) register.
-    psi_mps : quimb.tensor.MatrixProductState
+    psi_mps : :quimb-api:`MatrixProductState`
         Initial data-register state as an MPS.
     cutoff : float, optional
         Singular-value truncation threshold used during tensor compression.
@@ -108,7 +108,7 @@ def make_circMPS(n_phase_bits, psi_mps, *, cutoff=1e-10, max_bond=None):
 
     Returns
     -------
-    quimb.tensor.CircuitMPS
+    :quimb-api:`CircuitMPS`
         Quantum circuit initialized with an MPS backend.
 
     Notes

@@ -14,7 +14,7 @@ jobs:
         python-version: "3.13"
 
     - name: Install the project
-      run: uv sync --locked --only-group={dev,docs}
+      run: uv sync --locked --group=docs
 
     # This job does not run the notebooks as it is expensive
     # it just checks the doc can be constructed
