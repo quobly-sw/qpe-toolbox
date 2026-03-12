@@ -4,11 +4,7 @@ import autoray
 import numpy as np
 import quimb.tensor as qtn
 
-from qpe_toolbox.circuit.parametrized_circuits import (
-    ansatz_circuit,
-    ansatz_circuit_su4,
-    ansatz_circuit_sym,
-)
+from qpe_toolbox.circuit import ansatz_circuit, ansatz_circuit_su4, ansatz_circuit_sym
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 opt = "auto-hq"

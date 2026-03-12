@@ -209,7 +209,7 @@ circ_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
 optimal_circuit = circ_optimizer.optimize(n=100)
 
 # initialize a deeper circuit with previously optimized parameters
-circ = ansatz_circuit(n_qubits, 4, random_coeff=1e-4)
+circ = ansatz_circuit(n_qubits, 4, param_scaling=1e-4)
 circ.set_params(optimal_circuit.get_params())
 
 # optimize the deeper circuit
