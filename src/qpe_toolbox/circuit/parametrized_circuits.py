@@ -10,7 +10,7 @@
 import numpy as np
 import quimb.tensor as qtn
 
-_dict_quimb_all_param_single_body_numbers = {
+_gate_parameter_numbers = {
     "RX": 1,
     "RY": 1,
     "RZ": 1,
@@ -18,8 +18,6 @@ _dict_quimb_all_param_single_body_numbers = {
     "U2": 2,
     "U3": 3,
     "PHASE": 1,
-}
-_dict_quimb_all_param_two_body_numbers = {
     "CRX": 1,
     "CRY": 1,
     "CRZ": 1,
@@ -84,9 +82,7 @@ def one_qubit_layer(
     if gate_label in qtn.circuit.ONE_QUBIT_PARAM_GATES:
         if rng is None:
             rng = np.random.default_rng()
-        params = param_scaling * rng.random(
-            _dict_quimb_all_param_single_body_numbers[gate_label]
-        )
+        params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
     elif gate_label in qtn.circuit.ONE_QUBIT_GATES:
         params = np.empty(0)
@@ -164,9 +160,7 @@ def two_qubit_nn_layer(
     if gate_label in qtn.circuit.TWO_QUBIT_PARAM_GATES:
         if rng is None:
             rng = np.random.default_rng()
-        params = param_scaling * rng.random(
-            _dict_quimb_all_param_single_body_numbers[gate_label]
-        )
+        params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
     elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
         params = np.empty(0)
@@ -251,9 +245,7 @@ def two_qubit_rand_layer(
     gate_label = gate_label.upper()
     extra_kwargs = {}
     if gate_label in qtn.circuit.ALL_PARAM_GATES:
-        params = param_scaling * rng.random(
-            _dict_quimb_all_param_two_body_numbers[gate_label]
-        )
+        params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
     elif gate_label in qtn.circuit.TWO_QUBIT_GATES:
         params = np.empty(0)
