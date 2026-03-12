@@ -54,6 +54,9 @@ import qpe_toolbox.estimation as qpe
 from qpe_toolbox.circuit import make_circ
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
+# %%
+plt.rcParams.update({"font.size": 12})
+
 # %% [markdown]
 # ## Quantum phase estimation
 # ### Example : 1D Heisenberg Hamiltonian
@@ -62,11 +65,10 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 # - diagonalize exactly
 # - encode as a quantum circuit
 #
-# Consider the nearest-neighbour 1D Heisenberg Hamiltonian with open boundary conditions
+# Consider the nearest-neighbor Heisenberg Hamiltonian on a 1D chain wih open boundary conditions
 #
-# $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \vec{S}_{k+1}, $$
-#
-# where $S_k = \sigma_k/2$ are the $S=1/2$ spin matrices, and $\sigma_k$ the Pauli matrices.
+# $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \cdot \vec{S}_{k+1} $$
+# where $\vec{S}_k  = \vec{\sigma}_k /2 \;$ are the spin-1/2 generators of SU(2) acting on site $k$, with $\vec{\sigma} = (\sigma^x, \sigma^y, \sigma^z)$ the Pauli matrices.
 #
 # We take $J=1$ in the following, such that all energies are expressed in units of $J$.
 #
@@ -196,17 +198,17 @@ psi.draw(
 # %%
 def prob_measure_a(delta, m):
     return (
-        abs(1 / 2**m * sum([np.exp(2 * 1j * np.pi * delta * q) for q in range(2**m)]))
-        ** 2
+        abs(1 / 2**m * sum([np.exp(2j * np.pi * delta * q) for q in range(2**m)])) ** 2
     )
 
 
 m = 4
 delta = np.linspace(-1 / 2 ** (m + 1), 1 / 2 ** (m + 1), 100)
 plt.plot(delta, prob_measure_a(delta, m))
-plt.title(r"$\theta = a / 2^m + \delta$ - QPE probability of measuring $|a\rangle$")
+plt.title(r"Probability of measuring $|a\rangle$ when $\theta = a / 2^m + \delta$")
 plt.xlabel(r"$\delta$")
 plt.ylabel(r"$P(a)$");
+
 
 # %% [markdown]
 # We observe that $P(a)$ is minimal when the distance between $\theta$ and $a$ is maximal, i.e. for $\delta = \pm 1/2^{m+1}$.
@@ -218,16 +220,14 @@ plt.ylabel(r"$P(a)$");
 # Below, we visualize the minimal probability $P(a)$ for $\delta = 1/2^{m+1}$ as a function of $m$.
 
 # %%
-ms = np.array(list(range(1, 12)))
-
-
 def min_prob_a(m):
     return prob_measure_a(1 / 2 ** (m + 1), m)
 
 
+ms = np.arange(1, 12)
 plt.plot(ms, [min_prob_a(m) for m in ms])
 plt.axhline(4 / np.pi**2, color="k", linestyle=":")
-plt.title(r"$\theta = a / 2^m + 1/2^{m+1}$ - QPE probability of measuring $|a\rangle$")
+plt.title(r"Probability of measuring $|a\rangle$ when $\theta = a / 2^m + 1/2^{m+1}$")
 plt.xlabel(r"$m$ phase qubits")
 plt.yticks([4 / np.pi**2, 0.45, 0.5], [r"$4/\pi^2$", "$0.45$", "$0.5$"])
 plt.ylabel(r"$P(a)$");
@@ -456,14 +456,12 @@ def qpe_with_prob_success(
         hamiltonian, E_target, size_interval
     )
 
-    a = np.floor(theta_exact * 2**n_phase_bits)
-
-    # probs = qpe_get_full_probs(hamiltonian, psi0, n_phase_bits, evolution_time, global_phase)
     initial_circ = make_circ(n_phase_bits, psi0)
     _, probs = qpe.qpe_sample(
         hamiltonian, initial_circ, evolution_time, "exact", global_phase
     )
 
+    a = np.floor(theta_exact * 2**n_phase_bits)
     prob_success = 0
     if n_precision_bits + 1 < n_phase_bits:
         for x in sorted(enumerate(np.ravel(probs)), key=lambda x: x[1], reverse=True):
@@ -472,10 +470,7 @@ def qpe_with_prob_success(
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
-
-    energy = Emax - 2 * np.pi * theta / evolution_time
-    energy += E_const
-
+    energy = Emax - 2 * np.pi * theta / evolution_time + E_const
     return energy, np.max(probs), prob_success
 
 
@@ -519,7 +514,7 @@ def minimal_number_phase_qubits(b, α):
 
 
 # %%
-fig, axs = plt.subplots(2, 1)
+fig, axs = plt.subplots(nrows=2, sharex=True, figsize=(7, 7))
 axs[0].plot(ms, energies, "-o")
 axs[0].axhline(y=E0, color="k", linestyle="dotted")
 tol = size_interval / 2**b
@@ -595,7 +590,7 @@ for n_phase_bits in tqdm.tqdm(ms):
     durations.append(traces["ctimes"][-1])
 
 # %%
-fig, axs = plt.subplots(3, 1)
+fig, axs = plt.subplots(nrows=3, sharex=True, figsize=(6, 6), layout="tight")
 
 fig.suptitle(f"1D Heisenberg with {n_qubits} spins")
 axs[0].semilogy(ms, [abs(E - E0) for E in energies], "-o")
@@ -608,8 +603,7 @@ axs[1].set_ylabel("best guess prob")
 
 axs[2].plot(ms, durations, "-o")
 axs[2].set_xlabel("phase qubits number")
-axs[2].set_ylabel("duration (sec)")
-plt.tight_layout()
+axs[2].set_ylabel("duration (sec)");
 
 # %% [markdown]
 # ### Influence of system size (number of spins / physical qubits in the data register)
@@ -671,10 +665,10 @@ plt.xlabel("phase qubits number")
 plt.legend();
 
 # %% [markdown]
-# As expected, the energy error and success probability is independent of the number of physical qubits:
+# As expected, both the energy error and the success probability are independent of the number of physical qubits.
 
 # %%
-fig, axs = plt.subplots(3, 1, figsize=(6, 6), sharex=True)
+fig, axs = plt.subplots(nrows=3, figsize=(6, 6), sharex=True, layout="tight")
 
 for ind, n_qubits in enumerate(nqb_list):
     axs[0].semilogy(
@@ -683,9 +677,7 @@ for ind, n_qubits in enumerate(nqb_list):
         "-o",
         label=f"$n_{{qb}}=${n_qubits}",
     )
-
     axs[1].plot(ms, res["probs"][ind], "-o")
-
     axs[2].semilogy(ms, res["durations"][ind], "-o")
 
 
@@ -703,48 +695,45 @@ axs[2].semilogy(
 axs[2].set_xlabel("phase qubits number")
 axs[2].set_ylabel("duration (sec)")
 axs[2].legend()
-axs[1].legend()
-plt.tight_layout()
+axs[1].legend();
 
 # %% [markdown]
-# ### Influence of $E_{\rm target}$ and $\Delta$
+# ### Influence of interval size and target energy
 #
-# Now we try to vary $\Delta$ and $E_{\rm target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range we are sure to find errors after executing the algorithm, because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi (\theta + k)) = \exp(i 2\pi \theta)$.
+# Now we try to vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure ti find errors after executing the algorithm, because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
 
 # %%
 n_qubits = 4
 h_spin = heisenberg_hamiltonian(n_qubits)
-
-
 E0, psi0_mps = do_dmrg(h_spin)
 
 n_phase_bits = 10
 initial_circ = make_circ(n_phase_bits, psi0_mps)
 
-siz_list = np.arange(0.2 * abs(E0), 4 * abs(E0), 0.9 * abs(E0))
-
-
-for size_interval in tqdm.tqdm(siz_list):
-    assert size_interval > 0
-    Etgt_list = np.linspace(E0 - 0.5 * size_interval, E0 + 0.4 * size_interval, 11)
-    energies = []
-    probs = []
-    for E_target in tqdm.tqdm(Etgt_list, leave=False):
-        traces, energy = qpe.qpe_energy(
-            h_spin, initial_circ, "exact", E_target, size_interval
+interval_sizes = np.arange(0.2 * abs(E0), 4 * abs(E0), 0.9 * abs(E0))
+interval_energies = []
+num_points = 11
+for Δ in tqdm.tqdm(interval_sizes):
+    assert Δ > 0
+    energy_targets = np.linspace(E0 - 0.5 * Δ, E0 + 0.4 * Δ, num_points)
+    energies_Δ = np.empty((num_points,))
+    for i in tqdm.tqdm(range(num_points), leave=False):
+        _, energies_Δ[i] = qpe.qpe_energy(
+            h_spin, initial_circ, "exact", energy_targets[i], Δ
         )
-        energies.append(energy)
-        probs.append(traces["prob"])
-    plt.plot(
-        [x - E0 for x in Etgt_list],
-        [x - E0 for x in energies],
-        "-o",
-        label=rf"$\Delta={size_interval / abs(E0):.2f}E_0$",
-    )
-plt.xlabel("$E_{target} - E_0$")
-plt.ylabel("$E - E_0$")
-plt.title(f"{n_phase_bits} phase qubits")
-plt.legend();
+    interval_energies.append(energies_Δ)
+
+# %%
+fig, ax = plt.subplots()
+for Δ, energies_Δ in zip(interval_sizes, interval_energies, strict=True):
+    energy_targets = np.linspace(E0 - 0.5 * Δ, E0 + 0.4 * Δ, 11)
+    label = rf"$\Delta={Δ / abs(E0):.2f}E_0$"
+    ax.plot(energy_targets - E0, energies_Δ - E0, "-o", label=label)
+
+ax.set_xlabel("$E_{target} - E_0$")
+ax.set_ylabel("$E - E_0$")
+fig.suptitle(f"{n_phase_bits} phase qubits")
+ax.legend();
 
 # %% [markdown]
 # Note that the smallest the size $\Delta$ of the search window, the smallest the error, provided $E_0 \in [E_{\rm target}-\Delta/2, E_{\rm target}+\Delta/2]$.
