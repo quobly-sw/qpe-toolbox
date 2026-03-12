@@ -1,4 +1,4 @@
-![qpe-toolbox logo](docs/source/_static/qpe-toolbox.png)
+![qpe-toolbox logo](docs/source/_static/qpe-toolbox_logo.png)
 
 
 `qpe-toolbox` is an open-source python package, which
@@ -45,7 +45,7 @@ uv pip install -e .
 ```
 
 # Requirements
-`numpy`, `openfermion`, `pyscf`, `quimb`, `scipy` are core dependencies. `pytest` is only used to run the test. `jupyterlab` and `jupytext` are needed to run the examples as notebooks. `kahypar` and `optuna` are `quimb` optional dependencies used to speed-up computations.
+Our packaged is built above [`numpy`](https://github.com/numpy/numpy), [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf), [`quimb`](https://github.com/jcmgray/quimb), [`scipy`](https://github.com/scipy/scipy) as core dependencies. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](./pyproject.toml).
 ### A note on Jupytext
 The examples are notebooks encoded in the `py:percent` format with a `.py` extension. In `jupyterlab` right-click and select "Open with > Notebook" or "Jupytext Notebook".
 The examples folder contains a `jupytext.toml` file. It is a configuration file that associates the `.py` scripts with a twin `.ipynb` notebook (this allows you to save the notebook's outputs in your local repository).
@@ -68,7 +68,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
    2.2. Parametrized circuit optimization - see the tutorial on [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html).
 
-3. Encode $\hat{H}$ into a unitary via either:
+3. Encode the Hamiltonian into a unitary via either:
 
    3.1. Exact time evolution or Trotterization, available as methods of the `Hamiltonian` class - see the
     tutorial on [`trotter_decomposition`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/trotter_decomposition.html).
