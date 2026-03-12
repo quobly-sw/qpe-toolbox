@@ -10,39 +10,11 @@
 import re
 
 import matplotlib as mpl
-import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
 
 _text_kwargs = {"color": "k", "ha": "center", "va": "center"}
-
-
-def rand_high_sat_color(*, rng=None):
-    """Generate a random high-saturation, high-brightness RGB color.
-
-    The color is sampled uniformly in hue and restricted to high saturation
-    and value (brightness) in HSV space.
-
-    Parameters
-    ----------
-    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
-        Random number generator. If ``None``, a default generator is created.
-
-    Returns
-    -------
-    rgb : ndarray of shape (3,)
-        RGB color represented as a NumPy array with values in the range
-        ``[0, 1]``.
-
-    """
-    if rng is None:
-        rng = np.random.default_rng()
-
-    h = rng.random()  # hue: 0-1
-    s = rng.uniform(0.8, 1)  # high saturation
-    v = rng.uniform(0.8, 1)  # bright
-    return mcolors.hsv_to_rgb((h, s, v))
 
 
 def assign_sublayers_per_round(circ, gate_round):

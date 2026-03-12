@@ -13,7 +13,6 @@ from qpe_toolbox.circuit import (
     draw_layered_circuit,
     draw_layered_expval,
     generate_brickwall_circuit,
-    rand_high_sat_color,
     serialize_from_quimb_Circuit,
 )
 
@@ -38,10 +37,6 @@ def test_drawings():
     depth = max(gate.round for gate in circ.gates) + 1
     assert isinstance(draw_layered_circuit(circ, max_depth=depth // 2), plt.Figure)
     assert isinstance(draw_layered_expval((1, 2), circ), plt.Figure)
-
-    color_arr = rand_high_sat_color(rng=rng)
-    assert len(color_arr) == 3
-    assert np.sum(color_arr) <= 3
 
 
 if __name__ == "__main__":
