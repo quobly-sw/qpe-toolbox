@@ -269,8 +269,8 @@ def two_qubit_rand_layer(
 def generate_brickwall_quimb(
     n_qubits,
     depth,
-    sb_gate_label,
-    ent_gate_label,
+    one_qubit_gate_label,
+    two_qubit_gate_label,
     *,
     start_ent=False,
     random_coeff=1.0,
@@ -313,10 +313,10 @@ def generate_brickwall_quimb(
     depth : int
         Number of circuit layers (identified here with the gate rounds).
 
-    sb_gate_label : str
+    one_qubit_gate_label : str
         Label identifying the single-body gate.
 
-    ent_gate_label : str
+    two_qubit_gate_label : str
         Label identifying the two-body entangling gate.
 
     start_ent : bool, optional
@@ -338,8 +338,8 @@ def generate_brickwall_quimb(
     Raises
     ------
     ValueError
-        If ``sb_gate_label`` does not correspond to a valid single-body gate,
-        or if ``ent_gate_label`` is not a valid two-body gate.
+        If ``one_qubit_gate_label`` does not correspond to a valid single-body gate,
+        or if ``two_qubit_gate_label`` is not a valid two-body gate.
 
     Notes
     -----
@@ -350,10 +350,10 @@ def generate_brickwall_quimb(
       given layer.
 
     """
-    if sb_gate_label.upper() not in qtn.circuit.ONE_QUBIT_GATES:
-        raise ValueError(f"Expected a single-body gate: {sb_gate_label}")
-    if ent_gate_label.upper() not in qtn.circuit.TWO_QUBIT_GATES:
-        raise ValueError(f"Expected a two-body gate: {ent_gate_label}")
+    if one_qubit_gate_label.upper() not in qtn.circuit.ONE_QUBIT_GATES:
+        raise ValueError(f"Expected a single-body gate: {one_qubit_gate_label}")
+    if two_qubit_gate_label.upper() not in qtn.circuit.TWO_QUBIT_GATES:
+        raise ValueError(f"Expected a two-body gate: {two_qubit_gate_label}")
 
     circ = qtn.Circuit(n_qubits)
     for k in range(depth):
@@ -362,18 +362,18 @@ def generate_brickwall_quimb(
                 two_qubit_nn_layer(
                     circ,
                     start,
-                    ent_gate_label,
+                    two_qubit_gate_label,
                     random_coeff=random_coeff,
                     gate_round=k,
                 )
-            one_qubit_layer(circ, sb_gate_label, gate_round=k)
+            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
         else:
-            one_qubit_layer(circ, sb_gate_label, gate_round=k)
+            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
             for start in range(2):
                 two_qubit_nn_layer(
                     circ,
                     start,
-                    ent_gate_label,
+                    two_qubit_gate_label,
                     random_coeff=random_coeff,
                     gate_round=k,
                 )
@@ -384,10 +384,10 @@ def generate_brickwall_quimb(
 def generate_rand_quimb(
     n_qubits,
     depth,
-    sb_gate_label,
-    ent_gate_label,
-    ent_gate_range,
-    ent_gate_prob,
+    one_qubit_gate_label,
+    two_qubit_gate_label,
+    two_qubit_gate_range,
+    two_qubit_gate_prob,
     *,
     start_ent=False,
     random_coeff=1.0,
@@ -409,7 +409,7 @@ def generate_rand_quimb(
         q2 ──[]───●───|───  ^
                   |   |     |
         q3 ──[]───|───●───  |
-                  |         | ent_gate_range=2
+                  |         | two_qubit_gate_range=2
         q4 ──[]───|───────  |
                   |         |
         q5 ──[]───●───────  v
@@ -430,17 +430,17 @@ def generate_rand_quimb(
     depth : int
         Number of circuit layers (rounds).
 
-    sb_gate_label : str
+    one_qubit_gate_label : str
         Label identifying the single-body gate applied at each layer.
 
-    ent_gate_label : str
+    two_qubit_gate_label : str
         Label identifying the two-body entangling gate.
 
-    ent_gate_range : int
-        Sets a maximum interaction range ``(ent_gate_range+1)`` for two-body entangling gates,
+    two_qubit_gate_range : int
+        Sets a maximum interaction range ``(two_qubit_gate_range+1)`` for two-body entangling gates,
         measured in qubit index separation.
 
-    ent_gate_prob : float
+    two_qubit_gate_prob : float
         Probability threshold controlling the application of an entangling
         gate for a given qubit.
 
@@ -463,8 +463,8 @@ def generate_rand_quimb(
     Raises
     ------
     ValueError
-        If ``sb_gate_label`` does not correspond to a valid single-body gate,
-        or if ``ent_gate_label`` is not a valid two-body gate.
+        If ``one_qubit_gate_label`` does not correspond to a valid single-body gate,
+        or if ``two_qubit_gate_label`` is not a valid two-body gate.
 
     Notes
     -----
@@ -480,10 +480,10 @@ def generate_rand_quimb(
     - Gate parameters are shared across all gates within the same layer.
 
     """
-    if sb_gate_label.upper() not in qtn.circuit.ONE_QUBIT_GATES:
-        raise ValueError(f"Expected a single-body gate: {sb_gate_label}")
-    if ent_gate_label.upper() not in qtn.circuit.TWO_QUBIT_GATES:
-        raise ValueError(f"Expected a two-body gate: {ent_gate_label}")
+    if one_qubit_gate_label.upper() not in qtn.circuit.ONE_QUBIT_GATES:
+        raise ValueError(f"Expected a single-body gate: {one_qubit_gate_label}")
+    if two_qubit_gate_label.upper() not in qtn.circuit.TWO_QUBIT_GATES:
+        raise ValueError(f"Expected a two-body gate: {two_qubit_gate_label}")
     if rng is None:
         rng = np.random.default_rng()
 
@@ -493,21 +493,21 @@ def generate_rand_quimb(
         if start_ent:
             two_qubit_rand_layer(
                 circ,
-                ent_gate_label,
-                gate_range=ent_gate_range,
-                gate_prob=ent_gate_prob,
+                two_qubit_gate_label,
+                gate_range=two_qubit_gate_range,
+                gate_prob=two_qubit_gate_prob,
                 random_coeff=random_coeff,
                 gate_round=k,
                 rng=rng,
             )
-            one_qubit_layer(circ, sb_gate_label, gate_round=k)
+            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
         else:
-            one_qubit_layer(circ, sb_gate_label, gate_round=k)
+            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
             two_qubit_rand_layer(
                 circ,
-                ent_gate_label,
-                gate_range=ent_gate_range,
-                gate_prob=ent_gate_prob,
+                two_qubit_gate_label,
+                gate_range=two_qubit_gate_range,
+                gate_prob=two_qubit_gate_prob,
                 random_coeff=random_coeff,
                 gate_round=k,
                 rng=rng,
