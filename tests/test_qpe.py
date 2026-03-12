@@ -6,8 +6,9 @@ import tempfile
 import numpy as np
 import quimb.tensor as qtn
 
+from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import deserialize_to_quimb_CircuitMPS, make_circMPS
-from qpe_toolbox.estimation import EXACT, quantum_phase_estimation as qpe
+from qpe_toolbox.estimation import quantum_phase_estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 from qpe_toolbox.tensor import kron_mps
 

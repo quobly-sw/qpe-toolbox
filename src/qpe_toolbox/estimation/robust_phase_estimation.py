@@ -11,8 +11,9 @@ import time
 
 import numpy as np
 
+from qpe_toolbox import EXACT
+
 from .hadamard_test import run_hadamard_test
-from .misc import EXACT
 
 
 def robust_phase_estimation(
@@ -38,7 +39,7 @@ def robust_phase_estimation(
         Target precision for the phase estimate.
     sign_E0 : float
         Sign of the target energy eigenvalue.
-    n_steps : int or EXACT
+    n_steps : int or qpe_toolbox.EXACT
         Number of Trotter steps used to approximate the time evolution.
         Use ``EXACT`` for exact time evolution.
     n_shots : int or EXACT
@@ -106,9 +107,9 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
         Initial quantum state :math:`\ket{\psi_0}`.
     m : int
         Iteration index corresponding to evolution time ``2**m``.
-    n_steps : int or EXACT
+    n_steps : int or qpe_toolbox.EXACT
         Number of Trotter steps. Use ``EXACT`` for exact time evolution.
-    n_shots : int or EXACT
+    n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
     trotter_order : int, default ``2``

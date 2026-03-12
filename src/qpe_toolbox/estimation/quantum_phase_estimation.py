@@ -13,13 +13,13 @@ import warnings
 import numpy as np
 from quimb.tensor.circuit import parse_to_gate
 
+from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates
 from qpe_toolbox.circuit.serialize_circuits import (
     serialize_from_quimb_Circuit,
     serialize_from_quimb_gates,
 )
 
-from .misc import EXACT
 from .qft import iqft_swapped
 
 
@@ -47,7 +47,7 @@ def qpe_energy(
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Initial circuit preparing the trial state in the data register.
-    n_steps : int or EXACT
+    n_steps : int or qpe_toolbox.EXACT
         Number of time steps for Trotterized evolution, or ``EXACT`` for exact
         evolution.
     E_target : float
@@ -156,7 +156,7 @@ def qpe_sample(
         Circuit preparing the trial state.
     evolution_time : float
         Total evolution time for the controlled-U operations.
-    dt : float or EXACT
+    dt : float or qpe_toolbox.EXACT
         Trotter step size; if ``EXACT``, evolution is exact.
     global_phase : float
         Global phase added to the controlled-U operations.
@@ -269,7 +269,7 @@ def qpe_first_stage(
         Initial state of the system.
     evolution_time : float
         Total evolution time.
-    dt : float or EXACT
+    dt : float or qpe_toolbox.EXACT
         Time step for Trotter decomposition; ``EXACT`` for exact evolution.
     global_phase : float
         Global phase applied to controlled-U operations.

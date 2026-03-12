@@ -24,7 +24,6 @@ from .lcu_walk_operator import (
     lcu_select_gates,
     run_qpe_lcu_walk_operator,
 )
-from .misc import EXACT
 from .qft import iqft, iqft_swapped
 from .quantum_phase_estimation import (
     qpe_energy,
