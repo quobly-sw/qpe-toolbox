@@ -7,7 +7,6 @@
 #
 # --------------------------------------------------------------------------------------
 
-import autoray
 import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
@@ -600,26 +599,6 @@ def ansatz_circuit_su4(n, depth, *, gate_round=0, random_coeff=1.0):
                 parametrize=True,
             )
     return circ
-
-
-def recursive_stack(x):
-    """
-    Recursively stack nested sequences into a tensor.
-
-    Parameters
-    ----------
-    x : array-like or nested sequence
-        Input structure to stack.
-
-    Returns
-    -------
-    array-like
-        Stacked array compatible with the active autoray backend.
-
-    """
-    if not isinstance(x, (list, tuple)):
-        return x
-    return autoray.do("stack", tuple(map(recursive_stack, x)))
 
 
 def ansatz_circuit_sym(n, depth, *, gate_round=0, random_coeff=1.0):
