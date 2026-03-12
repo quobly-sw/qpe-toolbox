@@ -77,26 +77,22 @@ def one_qubit_layer(
 
     """
 
-    if gate_label.upper() in qtn.circuit.ALL_PARAM_GATES:
-        list_params = random_coeff * qu.randn(
-            shape=(_dict_quimb_all_param_single_body_numbers[gate_label.upper()]),
+    gate_label = gate_label.upper()
+    extra_kwargs = {}
+    if gate_label in qtn.circuit.ONE_QUBIT_PARAM_GATES:
+        params = random_coeff * qu.randn(
+            shape=(_dict_quimb_all_param_single_body_numbers[gate_label]),
             dist="uniform",
         )
-    elif gate_label.upper() in qtn.circuit.ONE_QUBIT_GATES:
-        list_params = []
-    else:
-        raise ValueError(f"Expected a gate from: {qtn.circuit.ONE_QUBIT_GATES}")
-
-    extra_kwargs = {}
-    if len(list_params) > 0:
-        # quimb automatically raises an error for constant gates
-        # if any parametrize is passed, even if False
         extra_kwargs["parametrize"] = bool(parametrize)
-
+    elif gate_label in qtn.circuit.ONE_QUBIT_GATES:
+        params = []
+    else:
+        raise KeyError(f"Unknown gate_label: {gate_label}")
     for i in range(circ.N):
         circ.apply_gate(
             gate_id=gate_label,
-            params=list_params,
+            params=params,
             qubits=[i],
             gate_round=gate_round,
             **extra_kwargs,
@@ -155,19 +151,19 @@ def two_qubit_nn_layer(
       ``i = start, start+2,`` ...
 
     """
-    if gate_label.upper() in qtn.circuit.ALL_PARAM_GATES:
-        list_params = random_coeff * qu.randn(
-            shape=(_dict_quimb_all_param_two_body_numbers[gate_label.upper()]),
+
+    gate_label = gate_label.upper()
+    extra_kwargs = {}
+    if gate_label in qtn.circuit.TWO_QUBIT_PARAM_GATES:
+        params = random_coeff * qu.randn(
+            shape=(_dict_quimb_all_param_two_body_numbers[gate_label]),
             dist="uniform",
         )
-    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
-        list_params = []
-    else:
-        raise ValueError(f"Expected a gate from: {qtn.circuit.TWO_QUBIT_GATES} or ")
-
-    extra_kwargs = {}
-    if len(list_params) > 0:
         extra_kwargs["parametrize"] = bool(parametrize)
+    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
+        params = []
+    else:
+        raise KeyError(f"Unknown gate_label: {gate_label}")
 
     if reverse:
         order = reversed(range(start, circ.N - 1, 2))
@@ -176,7 +172,7 @@ def two_qubit_nn_layer(
     for i in order:
         circ.apply_gate(
             gate_id=gate_label,
-            params=list_params,
+            params=params,
             qubits=[i, i + 1],
             gate_round=gate_round,
             **extra_kwargs,
@@ -240,23 +236,20 @@ def two_qubit_rand_layer(
       ``Δ`` is sampled uniformly from ``[0, gate_range)``.
 
     """
-    if gate_label.upper() in qtn.circuit.ALL_PARAM_GATES:
-        list_params = random_coeff * qu.randn(
-            _dict_quimb_all_param_two_body_numbers[gate_label.upper()], dist="uniform"
-        )
-    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
-        list_params = []
-    else:
-        raise ValueError(f"Expected a gate from: {qtn.circuit.TWO_QUBIT_GATES}")
-
     if rng is None:
         rng = np.random.default_rng()
 
+    gate_label = gate_label.upper()
     extra_kwargs = {}
-    if len(list_params) > 0:
-        # quimb automatically raises an error for constant gates
-        # if any parametrize is passed, even if False
+    if gate_label in qtn.circuit.ALL_PARAM_GATES:
+        params = random_coeff * rng.random(
+            _dict_quimb_all_param_two_body_numbers[gate_label]
+        )
         extra_kwargs["parametrize"] = bool(parametrize)
+    elif gate_label in qtn.circuit.TWO_QUBIT_GATES:
+        params = []
+    else:
+        raise KeyError(f"Unknown gate_label: {gate_label}")
 
     n_qubits = circ.N
     order = reversed(range(n_qubits)) if reverse else range(n_qubits)
@@ -267,7 +260,7 @@ def two_qubit_rand_layer(
                 circ.apply_gate(
                     gate_id=gate_label,
                     qubits=[i, j],
-                    params=list_params,
+                    params=params,
                     gate_round=gate_round,
                     **extra_kwargs,
                 )
@@ -523,13 +516,13 @@ def generate_rand_quimb(
     return circ
 
 
-def ansatz_circuit(n, depth, *, gate_round=0, random_coeff=1.0):
+def ansatz_circuit(n_qubits, depth, *, gate_round=0, random_coeff=1.0):
     """Construct an ansatz circuit of single qubit and entangling layers.
 
     Parameters
     ----------
-    n : int
-        Number of qubits.
+    n_qubits : int
+        Number of qubits in the circuit.
     depth : int
         Number of repeated ansatz layers.
     gate_round : int, default ``0``
@@ -543,9 +536,8 @@ def ansatz_circuit(n, depth, *, gate_round=0, random_coeff=1.0):
         Parametrized ansatz circuit.
 
     """
-    circ = qtn.Circuit(n)
+    circ = qtn.Circuit(n_qubits)
     for r in range(gate_round, gate_round + depth):
-        # single qubit gate layer
         one_qubit_layer(
             circ,
             "U3",
@@ -566,14 +558,14 @@ def ansatz_circuit(n, depth, *, gate_round=0, random_coeff=1.0):
     return circ
 
 
-def ansatz_circuit_su4(n, depth, *, gate_round=0, random_coeff=1.0):
+def ansatz_circuit_su4(n_qubits, depth, *, gate_round=0, random_coeff=1.0):
     """
     Construct an ansatz circuit using SU(4) two-qubit gates.
 
     Parameters
     ----------
-    n : int
-        Number of qubits.
+    n_qubits : int
+        Number of qubits in the cricuit.
     depth : int
         Number of circuit layers.
     gate_round : int, default ``0``
@@ -587,7 +579,7 @@ def ansatz_circuit_su4(n, depth, *, gate_round=0, random_coeff=1.0):
         Parametrized SU(4) ansatz circuit.
 
     """
-    circ = qtn.Circuit(n)
+    circ = qtn.Circuit(n_qubits)
     for r in range(gate_round, gate_round + depth):
         for start in range(2):
             two_qubit_nn_layer(
@@ -601,7 +593,7 @@ def ansatz_circuit_su4(n, depth, *, gate_round=0, random_coeff=1.0):
     return circ
 
 
-def ansatz_circuit_sym(n, depth, *, gate_round=0, random_coeff=1.0):
+def ansatz_circuit_sym(n_qubits, depth, *, gate_round=0, random_coeff=1.0):
     """
     Construct a symmetry-preserving ansatz circuit.
 
@@ -626,7 +618,7 @@ def ansatz_circuit_sym(n, depth, *, gate_round=0, random_coeff=1.0):
 
     """
 
-    circ = qtn.Circuit(n)
+    circ = qtn.Circuit(n_qubits)
     if gate_round == 0:
         for i in range(circ.N // 2):
             circ.apply_gate("X", 2 * i)
