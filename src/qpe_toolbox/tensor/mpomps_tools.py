@@ -25,14 +25,14 @@ def kron_mpos(mpo1, mpo2):
 
     Parameters
     ----------
-    mpo1 : quimb.tensor.MatrixProductOperator
+    mpo1 : :quimb-api:`MatrixProductOperator`
         First MPO operand.
-    mpo2 : quimb.tensor.MatrixProductOperator
+    mpo2 : :quimb-api:`MatrixProductOperator`
         Second MPO operand.
 
     Returns
     -------
-    quimb.tensor.MatrixProductOperator
+    :quimb-api:`MatrixProductOperator`
         The Kronecker product MPO acting on the concatenated Hilbert space.
 
     Raises
@@ -78,16 +78,16 @@ def kron_mps(mps1, mps2, *, verbosity=0):
 
     Parameters
     ----------
-    mps1 : quimb.tensor.MatrixProductState
+    mps1 : :quimb-api:`MatrixProductState`
         First MPS operand.
-    mps2 : quimb.tensor.MatrixProductState
+    mps2 : :quimb-api:`MatrixProductState`
         Second MPS operand.
     verbosity : int, default ``0``
         If ``> 0``, print the shapes of the resulting tensors.
 
     Returns
     -------
-    quimb.tensor.MatrixProductState
+    :quimb-api:`MatrixProductState`
         The Kronecker product MPS on the combined physical register.
 
     Raises
@@ -139,9 +139,9 @@ def apply_gate_from_mpo(circ, mpo, *, compress=False, cutoff=1e-10, max_bond=0):
 
     Parameters
     ----------
-    circ : quimb.tensor.Circuit or quimb.tensor.CircuitMPS
+    circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Input circuit whose state will be acted on.
-    mpo : quimb.tensor.MatrixProductOperator
+    mpo : :quimb-api:`MatrixProductOperator`
         MPO representing the quantum gate or evolution operator.
     compress : bool, default ``False``
         Whether to compress the resulting MPS during application.
@@ -152,7 +152,7 @@ def apply_gate_from_mpo(circ, mpo, *, compress=False, cutoff=1e-10, max_bond=0):
 
     Returns
     -------
-    quimb.tensor.CircuitMPS
+    :quimb-api:`CircuitMPS`
         New circuit with the updated MPS state.
 
     Notes
@@ -181,7 +181,7 @@ def add_creg_mpo(mpo, mpo_reg, creg, cket):
 
     Parameters
     ----------
-    mpo : quimb.tensor.MatrixProductOperator
+    mpo : :quimb-api:`MatrixProductOperator`
         Base MPO representing the target operation.
     mpo_reg : list[int]
         Indices of the physical register acted on by ``mpo``.
@@ -193,7 +193,7 @@ def add_creg_mpo(mpo, mpo_reg, creg, cket):
 
     Returns
     -------
-    quimb.tensor.MatrixProductOperator
+    :quimb-api:`MatrixProductOperator`
         MPO with added control qubits.
 
     Raises
@@ -242,14 +242,14 @@ def add_cqubit_mpo(mpo, location):
 
     Parameters
     ----------
-    mpo : quimb.tensor.MatrixProductOperator
+    mpo : :quimb-api:`MatrixProductOperator`
         Base MPO representing the target operation.
     location : {"before", "after"}
         Whether to add the control qubit before or after the MPO qubits.
 
     Returns
     -------
-    quimb.tensor.MatrixProductOperator
+    :quimb-api:`MatrixProductOperator`
         MPO augmented with a single control qubit.
 
     Raises
@@ -300,7 +300,7 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
 
     Parameters
     ----------
-    mpo : quimb.tensor.MatrixProductOperator
+    mpo : :quimb-api:`MatrixProductOperator`
         Input MPO in the form ``Id ⊗ U``.
     phys_reg : list[int]
         Indices of the physical register qubits.
@@ -313,7 +313,7 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
 
     Returns
     -------
-    quimb.tensor.MatrixProductOperator
+    :quimb-api:`MatrixProductOperator`
         Controlled MPO.
 
     Raises

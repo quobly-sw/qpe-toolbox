@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
 
-text_kwargs = {"color": "k", "ha": "center", "va": "center"}
+_text_kwargs = {"color": "k", "ha": "center", "va": "center"}
 
 
 def rand_high_sat_color(*, rng=None):
@@ -26,7 +26,7 @@ def rand_high_sat_color(*, rng=None):
 
     Parameters
     ----------
-    rng : class:`numpy.random.Generator`, optional
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
         Random number generator. If ``None``, a default generator is created.
 
     Returns
@@ -61,7 +61,7 @@ def assign_sublayers_per_round(circ, gate_round):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     gate_round : int
@@ -135,7 +135,7 @@ def assign_sublayers(circ):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     Returns
@@ -172,7 +172,7 @@ def assign_sublayers(circ):
     return list_dict_gates_to_sublayers, list_sublayers
 
 
-def add_square(ax, x, y, col_face):
+def _add_square(ax, x, y, col_face):
     """Add a filled square patch to a Matplotlib Axes.
 
     The square is drawn as a rotated ``RegularPolygon`` with four vertices,
@@ -180,7 +180,7 @@ def add_square(ax, x, y, col_face):
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object to which the square patch is added.
 
     x : float
@@ -211,13 +211,13 @@ def add_square(ax, x, y, col_face):
     )
 
 
-def add_circle(ax, x, y, col_face):
+def _add_circle(ax, x, y, col_face):
     """Add a filled circle patch to a Matplotlib Axes,
     centered at the specified coordinates.
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object to which the circle patch is added.
 
     x : float
@@ -266,7 +266,7 @@ def draw_2_qubit_layer(
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object on which the layer is drawn.
 
     n_qubits : int
@@ -318,8 +318,8 @@ def draw_2_qubit_layer(
         for g0, g1 in sublayer[1]:
             if g0 in active_qubits or g1 in active_qubits:
                 x = X + mod_dict_sublayer[g0, g1]
-                add_square(ax, x=x, y=g0, col_face=col_face)
-                add_square(ax, x=x, y=g1, col_face=col_face)
+                _add_square(ax, x=x, y=g0, col_face=col_face)
+                _add_square(ax, x=x, y=g1, col_face=col_face)
                 ax.vlines(x, g0, g1, lw=4, color="k", zorder=1)
 
     ax.text(
@@ -327,7 +327,7 @@ def draw_2_qubit_layer(
         n_qubits,
         gate_label,
         size=fontsize,
-        **text_kwargs,
+        **_text_kwargs,
     )
 
 
@@ -344,7 +344,7 @@ def draw_1_qubit_layer(
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object on which the layer is drawn.
 
     n_qubits : int
@@ -374,8 +374,8 @@ def draw_1_qubit_layer(
     """
     for i in range(n_qubits):
         if i in active_qubits:
-            add_square(ax, x=X, y=i, col_face=col_face)
-    ax.text(X, n_qubits, gate_label, size=fontsize, **text_kwargs)
+            _add_square(ax, x=X, y=i, col_face=col_face)
+    ax.text(X, n_qubits, gate_label, size=fontsize, **_text_kwargs)
 
 
 def draw_init_product_state(
@@ -395,7 +395,7 @@ def draw_init_product_state(
 
     Parameters
     ----------
-    ax : :class:`matplotlib.axes.Axes`
+    ax : :matplotlib-api:`axes.Axes`
         Axes object on which the initial state is drawn.
 
     n_qubits : int
@@ -418,12 +418,12 @@ def draw_init_product_state(
 
     """
     for i in range(n_qubits):
-        ax.text(X + 2 * is_right_side, i, f"{i + 1}", size=fontsize, **text_kwargs)
-        add_circle(ax, X + 1, i, col_face=col_face)
-        ax.text(X + 1, i, state_label, size=fontsize, **text_kwargs)
+        ax.text(X + 2 * is_right_side, i, f"{i + 1}", size=fontsize, **_text_kwargs)
+        _add_circle(ax, X + 1, i, col_face=col_face)
+        ax.text(X + 1, i, state_label, size=fontsize, **_text_kwargs)
 
 
-def determine_layout_depth(circ):
+def _determine_layout_depth(circ):
     """Determine the horizontal layout depth required to draw a quantum circuit.
 
     This function computes the total horizontal space needed to plot a circuit
@@ -432,7 +432,7 @@ def determine_layout_depth(circ):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit whose layout depth is to be determined.
 
     Returns
@@ -469,7 +469,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
 
     Parameters
     ----------
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     max_depth : int or inf, optional
@@ -491,7 +491,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
+    fig : :matplotlib-api:`figure.Figure`
 
     """
     n_qubits = circ.N
@@ -504,7 +504,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
 
-    width = determine_layout_depth(circ)
+    width = _determine_layout_depth(circ)
 
     fig, ax = plt.subplots(figsize=(width, n_qubits))
     ax.set_facecolor("white")
@@ -568,7 +568,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     return fig
 
 
-def build_circ_revlc(selected_edge, circ):
+def build_reverse_light_cone_circuit(selected_edge, circ):
     """Construct the reverse light-cone circuit skelleton for a given interaction edge
     on a circuit constituted by single-qubit rotations and entangling layers
     for visualization purposes:
@@ -581,7 +581,7 @@ def build_circ_revlc(selected_edge, circ):
 
     This function extracts the light cone of a selected two-qubit
     interaction term (Pauli string with weight 2) from a full circuit and
-    reconstructs it as an explicit :class:`quimb.tensor.circuit.Circuit` instance.
+    reconstructs it as an explicit :quimb-api:`Circuit` instance.
     The resulting circuit contains only the gates that
     causally influence the selected edge, ordered by their round.
 
@@ -594,14 +594,14 @@ def build_circ_revlc(selected_edge, circ):
     selected_edge : tuple[int, int]
         The edge (pair of qubit indices) for which the light cone is constructed.
 
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     Returns
     -------
-    circ_revlc : :class:`quimb.tensor.circuit.Circuit`
+    circ_revlc : :quimb-api:`Circuit`
         A new circuit containing only the gates in the reverse light cone of
-        ``selected_edge``, acting on the same number of qubits as ``circ_qaoa``.
+        ``selected_edge``, acting on the same number of qubits as ``circ``.
 
     Notes
     -----
@@ -674,9 +674,10 @@ def build_circ_revlc(selected_edge, circ):
 
 def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=True):
     """Draw the tensor-network representation of an expectation value
-    ..math:
 
-    `\\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle`.
+    .. math::
+
+        \\langle \\Psi | U^\\dagger O_{\\text{edge}} U | \\Psi \\rangle
 
     This function visualizes the light-cone structure of a quantum circuit,
     ASSUMING that it consists on layers of single- and two-spin rotations, around a two-site observable.
@@ -688,7 +689,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
     selected_edge : iterable of int with length 2
         Pair of qubit indices on which the observable acts.
 
-    circ : :class:`quimb.tensor.circuit.Circuit`
+    circ : :quimb-api:`Circuit`
         Quantum circuit.
 
     list_names : list, optional
@@ -708,13 +709,13 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
+    fig : :matplotlib-api:`figure.Figure`
 
     """
     n_qubits = circ.N
     if len(selected_edge) != 2:
         raise ValueError("Invalid selected_edge")
-    circ_revlc = build_circ_revlc(selected_edge, circ)
+    circ_revlc = build_reverse_light_cone_circuit(selected_edge, circ)
 
     gate_rounds = [gate.round for gate in circ_revlc.gates]
     if any(x is None for x in gate_rounds):
@@ -723,7 +724,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
     depth = max(gate_rounds) + 1
     if list_names is None:
         list_names = [[""], [""] * depth, [""] * depth]  # empty labels
-    width = 2 * determine_layout_depth(circ_revlc) - 5
+    width = 2 * _determine_layout_depth(circ_revlc) - 5
     list_dict_gates_to_sublayers, list_sublayers = assign_sublayers(circ_revlc)
 
     fig, ax = plt.subplots(figsize=(width, n_qubits))

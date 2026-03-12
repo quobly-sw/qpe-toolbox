@@ -38,7 +38,7 @@ def chemistry_hamiltonian(
 
     Parameters
     ----------
-    molecule : pyscf.gto.Mole
+    molecule : :pyscf-api:`pyscf.gto.Mole <gto.html#pyscf.gto.mole.Mole>`
         PySCF molecule object defining geometry and basis.
     hf_mode : {'rhf', 'uhf'}, optional
         Type of Hartree-Fock calculation. Default is ``'rhf'``.
@@ -83,7 +83,7 @@ def do_pyscf(molecule, hf_mode, do_fci, do_ccsd):
 
     Parameters
     ----------
-    molecule : pyscf.gto.Mole
+    molecule : :pyscf-api:`pyscf.gto.Mole <gto.html#pyscf.gto.mole.Mole>`
         Molecular system.
     hf_mode : {'rhf', 'uhf'}
         Hartree-Fock flavor.
@@ -98,7 +98,7 @@ def do_pyscf(molecule, hf_mode, do_fci, do_ccsd):
         FCI ground-state energy.
     e_ccsd : float or None
         CCSD ground-state energy.
-    hf : pyscf.scf.hf.SCF
+    hf : :pyscf-api:`pyscf.scf.hf.SCF <scf.html>`
         Hartree-Fock object containing molecular orbitals and integrals.
 
     """
@@ -141,7 +141,7 @@ def make_qubit_hamiltonian(hf, hf_mode, encoding):
 
     Parameters
     ----------
-    hf : pyscf.scf.hf.SCF
+    hf : :pyscf-api:`pyscf.scf.hf.SCF <scf.html>`
         Converged HF object.
     hf_mode : {'rhf', 'uhf'}
         Hartree-Fock type.
@@ -196,7 +196,7 @@ def make_fermionic_hamiltonian(
 
     Returns
     -------
-    openfermion.FermionOperator
+    :openfermion-ops:`FermionOperator`
         Fermionic Hamiltonian operator.
 
     """
@@ -256,7 +256,7 @@ def terms_from_openfermion(qubit_operator):
 
     Parameters
     ----------
-    qubit_operator : openfermion.QubitOperator
+    qubit_operator : :openfermion-ops:`QubitOperator`
         Qubit Hamiltonian expressed as a sum of Pauli strings.
 
     Returns
