@@ -12,6 +12,7 @@ from qpe_toolbox.circuit.parametrized_circuits import (
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 opt = "auto-hq"
+rng = np.random.default_rng(42)
 
 n_qubits = 2
 hamilt = heisenberg_hamiltonian(n_qubits)
@@ -43,12 +44,12 @@ def make_circuit_optimizer(circ, mpo):
 
 
 def test_ansatz_circuit():
-    circ = ansatz_circuit(n_qubits, depth)
+    circ = ansatz_circuit(n_qubits, depth, rng=rng)
     assert len(circ.gates) == depth * ((n_qubits - 1) + n_qubits)
 
 
 def test_ansatz_circuit_su4():
-    circ = ansatz_circuit_su4(n_qubits, depth)
+    circ = ansatz_circuit_su4(n_qubits, depth, rng=rng)
     c = 0
     for g in circ.gates:
         if g.label == "SU4":
@@ -57,16 +58,16 @@ def test_ansatz_circuit_su4():
 
 
 def test_ansatz_circuit_sym():
-    circ = ansatz_circuit_sym(n_qubits, depth, gate_round=0)
+    circ = ansatz_circuit_sym(n_qubits, depth, gate_round=0, rng=rng)
     assert circ.gates[0].label == "X"
     assert circ.gates[-1].label == "RZ"
 
 
 def test_ansatz_circuit_opt():
-    circ = ansatz_circuit(n_qubits, 1)
+    circ = ansatz_circuit(n_qubits, 1, rng=rng)
     circuit_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
     optimal_circuit = circuit_optimizer.optimize(10)
-    circ = ansatz_circuit(n_qubits, 2, param_scaling=1e-4)
+    circ = ansatz_circuit(n_qubits, 2, param_scaling=1e-4, rng=rng)
     circ.set_params(optimal_circuit.get_params())
     circuit_optimizer = make_circuit_optimizer(circ, hamilt_mpo)
     optimal_circuit = circuit_optimizer.optimize(10)
