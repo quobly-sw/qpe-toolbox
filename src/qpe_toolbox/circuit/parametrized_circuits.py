@@ -12,7 +12,6 @@ import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
 
-_ONE_TWO_QUBIT_GATES = qtn.circuit.ONE_QUBIT_GATES | qtn.circuit.TWO_QUBIT_GATES
 _dict_quimb_all_param_single_body_numbers = {
     "RX": 1,
     "RY": 1,
@@ -84,10 +83,10 @@ def one_qubit_layer(
             shape=(_dict_quimb_all_param_single_body_numbers[gate_label.upper()]),
             dist="uniform",
         )
-    elif gate_label.upper() in _ONE_TWO_QUBIT_GATES:
+    elif gate_label.upper() in qtn.circuit.ONE_QUBIT_GATES:
         list_params = []
     else:
-        raise ValueError(f"Expected a gate from: {_ONE_TWO_QUBIT_GATES}")
+        raise ValueError(f"Expected a gate from: {qtn.circuit.ONE_QUBIT_GATES}")
 
     extra_kwargs = {}
     if len(list_params) > 0:
@@ -162,10 +161,10 @@ def two_qubit_nn_layer(
             shape=(_dict_quimb_all_param_two_body_numbers[gate_label.upper()]),
             dist="uniform",
         )
-    elif gate_label.upper() in _ONE_TWO_QUBIT_GATES:
+    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
         list_params = []
     else:
-        raise ValueError(f"Expected a gate from: {_ONE_TWO_QUBIT_GATES}")
+        raise ValueError(f"Expected a gate from: {qtn.circuit.TWO_QUBIT_GATES} or ")
 
     extra_kwargs = {}
     if len(list_params) > 0:
@@ -246,10 +245,10 @@ def two_qubit_rand_layer(
         list_params = random_coeff * qu.randn(
             _dict_quimb_all_param_two_body_numbers[gate_label.upper()], dist="uniform"
         )
-    elif gate_label.upper() in _ONE_TWO_QUBIT_GATES:
+    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
         list_params = []
     else:
-        raise ValueError(f"Expected a gate from: {_ONE_TWO_QUBIT_GATES}")
+        raise ValueError(f"Expected a gate from: {qtn.circuit.TWO_QUBIT_GATES}")
 
     if rng is None:
         rng = np.random.default_rng()
