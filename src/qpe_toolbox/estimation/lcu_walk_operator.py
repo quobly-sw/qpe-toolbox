@@ -44,7 +44,7 @@ def get_lcu_weights(hamiltonian):
         Number of original Hamiltonian terms.
     m_L : int
         Number of qubits required for the auxiliary L-register,
-        i.e., ceil(log2(L)).
+        i.e., ``ceil(log2(L))``.
     """
     weights = [abs(P[0]) for P in hamiltonian.terms]
 
