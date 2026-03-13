@@ -569,14 +569,11 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
     """
     Extract the reverse light-cone circuit around a selected two-qubit interaction edge.
 
-    The circuit is constituted by single-qubit rotations and entangling layers,
-    e.g. for QAOA:
+    The input circuit must be made of one- and two-qubit gates only (as e.g. QAOA)
 
     .. math::
 
        U_1 U_{\\mathrm{ent}} U_1 U_{\\mathrm{ent}} \\cdots |\\text{initial product state}\\rangle
-
-    i.e. :math:`U_x U_{zz} U_x U_{zz} |+\\rangle`.
 
     This function extracts the light cone of a selected two-qubit
     interaction term (Pauli string with weight 2) from a full circuit and
