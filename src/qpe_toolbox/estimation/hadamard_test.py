@@ -9,9 +9,9 @@
 
 from collections import Counter
 
-import numpy as np
 import quimb.tensor as qtn
 
+from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import make_circMPS
 
 
@@ -93,10 +93,9 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
         See ``build_circuit`` method for accepted formats.
     theta : float
         Phase angle applied to the ancilla qubit.
-    n_shots : int
-        Number of measurement shots.
-        - If ``0`` or ``inf``, probabilities are computed exactly.
-        - If finite, probabilities are estimated by sampling.
+    n_shots : int or qpe_toolbox.EXACT
+        Number of measurement shots. If ``EXACT``, probabilities are computed exactly,
+        else probabilities are estimated by sampling.
 
     seed : int, optional
         Random seed for shot sampling. Only used when ``n_shots`` is finite.
@@ -109,7 +108,7 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
     """
     circ = build_hadamard_test_circuit(init_mps, U_gate, theta)
     aux_ind = 0
-    if (n_shots == 0) or np.isposinf(n_shots):
+    if n_shots is EXACT:
         probs = circ.compute_marginal(where=[aux_ind])
     else:
         count = Counter(circ.sample(C=n_shots, seed=seed))
