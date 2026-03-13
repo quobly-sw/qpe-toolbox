@@ -160,18 +160,13 @@ def count_gates_by_qb(gate_count):
     Parameters
     ----------
     gate_count : dict
-        Dictionary mapping gate labels to counts.
+        Dictionary mapping gate labels to counts as producd by
+        qpe_toolbox.estimation.qpe_energy.
 
     Returns
     -------
     dict
         Dictionary with keys ``'1qb'``, ``'2qb'``, and ``'3+qb'``.
-
-    Notes
-    -----
-    - Classification is inferred from the number of leading ``'C'``
-      characters in the gate label.
-    - This function is marked as experimental and not fully tested.
     """
     count = {"1qb": 0, "2qb": 0, "3+qb": 0}
     for label in gate_count:
