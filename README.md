@@ -10,9 +10,6 @@ on initializing and setting up QPE circuits, (2) an internal circuit-level simul
 functionalities for retrieving final energies.
 For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [`openFermion`](https://quantumai.google/openfermion) and [`pyscf`](https://pyscf.org/).
 
->[!WARNING]
-> **This project is "pre-alpha", and is not yet stable. The API is subject to significant changes.**
-
 **Documentation:** https://quobly-sw.github.io/qpe-toolbox/
 
 **qpe-toolbox presentation slides:** https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf
