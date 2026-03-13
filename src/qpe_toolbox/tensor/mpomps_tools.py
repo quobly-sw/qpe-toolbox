@@ -18,7 +18,7 @@ def kron_mpos(mpo1, mpo2):
     Construct the Kronecker (tensor) product of two MPOs.
 
     This returns an MPO representing :math:`\\mathrm{MPO}_1 \\otimes \\mathrm{MPO}_2`,
-    with tensors arranged in the ``lrud`` index convention used by quimb.
+    with tensors arranged in the left, right, up, down index ordering
 
     The function supports both single-site and multi-site MPOs and handles
     boundary tensor reshaping explicitly.
@@ -42,6 +42,10 @@ def kron_mpos(mpo1, mpo2):
         MPO boundary conventions.
 
     """
+    # make sure MPOs tensors are in the order left, right, up, down
+    mpo1.permute_arrays("lrud")
+    mpo2.permute_arrays("lrud")
+
     arrays = []
 
     sites1 = list(mpo1.gen_sites_present())
@@ -74,7 +78,7 @@ def kron_mps(mps1, mps2, *, verbosity=0):
     Construct the Kronecker (tensor) product of two MPS objects.
 
     This returns an MPS representing :math:`\\mathrm{MPS}_1 \\otimes \\mathrm{MPS}_2`,
-    with tensors arranged in the ``lrp`` index convention.
+    with tensors arranged in the left, right, physical index ordering.
 
     Parameters
     ----------
@@ -97,6 +101,10 @@ def kron_mps(mps1, mps2, *, verbosity=0):
         MPS boundary conventions.
 
     """
+    # make sure MPS tensors are in the order left, right, physical
+    mps1.permute_arrays("lrp")
+    mps2.permute_arrays("lrp")
+
     arrays = []
 
     sites1 = list(mps1.gen_sites_present())
@@ -209,6 +217,9 @@ def add_creg_mpo(mpo, mpo_reg, creg, cket):
     multi-control configurations.
 
     """
+    # make sure indices of each tensor in the MPO are in the order left, right, up, down
+    mpo.permute_arrays("lrud")
+
     if len(creg) == 1:
         if cket in ["1", 1]:
             location = "after" if (mpo_reg[-1] < creg[0]) else "before"
@@ -258,6 +269,9 @@ def add_cqubit_mpo(mpo, location):
         If ``location`` is not one of ``"before"`` or ``"after"``.
 
     """
+    # make sure indices of each tensor in the MPO are in the order left, right, up, down
+    mpo.permute_arrays("lrud")
+
     sites = list(mpo.gen_sites_present())
     if location == "before":
         arrays = [np.array([[[0, 0], [0, 1]]], dtype=mpo.dtype)]
@@ -327,6 +341,9 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
     correspond to identity operators.
 
     """
+    # make sure indices of each tensor in the MPO are in the order left, right, up, down
+    mpo.permute_arrays("lrud")
+
     sites = list(mpo.gen_sites_present())
     if phys_reg[0] < aux_reg[-1]:
         raise ValueError("only implemented for min(phys_reg) > max(aux_reg)")
