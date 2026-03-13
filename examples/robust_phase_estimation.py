@@ -31,6 +31,7 @@ from pyscf import gto
 from tqdm import notebook as tqdm
 
 import qpe_toolbox.estimation as qpe
+from qpe_toolbox import EXACT
 from qpe_toolbox.hamiltonian import (
     chemistry_hamiltonian,
     do_dmrg,
@@ -123,7 +124,7 @@ t = rng.random()
 data_reg = list(range(1, n_qubits + 1))
 U = H.get_U_exact(t, data_reg, controls=(0,))
 
-n_shots = np.inf  # infinite number of shots (perfect measure)
+n_shots = EXACT  # exact computation (no sampling)
 
 X = qpe.run_hadamard_test(psi0, U, 0, n_shots)
 Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots)
@@ -279,11 +280,11 @@ M = int(np.ceil(np.log2(1 / epsilon)))
 n_shots = 2
 
 # m = 0
-phi_0 = qpe.rpe_get_hadamard_output(H, psi0, 0, "exact", n_shots)
+phi_0 = qpe.rpe_get_hadamard_output(H, psi0, 0, EXACT, n_shots)
 theta_0 = phi_0
 
 m = 1
-phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, "exact", n_shots)
+phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots)
 S_1 = [(phi_1 + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
 
 # %% [markdown]
@@ -327,7 +328,7 @@ print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
 n_shots = 1
 
 theta_list = qpe.robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, "exact", n_shots, verbosity=1
+    H, psi0, epsilon, sign_E0, EXACT, n_shots, verbosity=1
 )
 
 # %%
@@ -348,9 +349,7 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shot_list = [1, 2, 3, 4]
 
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(
-        H, psi0, epsilon, sign_E0, "exact", n_shots
-    )
+    theta_list = qpe.robust_phase_estimation(H, psi0, epsilon, sign_E0, EXACT, n_shots)
     plt.semilogy(
         [qpe.rpe_distance(theta, E0) for theta in theta_list[1:]],
         "-o",
@@ -441,9 +440,7 @@ res_list = []
 for epsilon in epsilon_list:
     M = int(np.ceil(np.log2(1 / epsilon)))
     cost_list.append(sum([n_shots * 2**m for m in range(M + 1)]))
-    theta_list = qpe.robust_phase_estimation(
-        H, psi0, epsilon, sign_E0, "exact", n_shots
-    )
+    theta_list = qpe.robust_phase_estimation(H, psi0, epsilon, sign_E0, EXACT, n_shots)
     res_list.append(theta_list[-1])
 
 # %%
@@ -498,7 +495,7 @@ n_shot_list = [2, 3, 4]
 
 for n_shots in n_shot_list:
     theta_list = qpe.robust_phase_estimation(
-        H_H2, psi0_H2, epsilon, sign_E0, "exact", n_shots
+        H_H2, psi0_H2, epsilon, sign_E0, EXACT, n_shots
     )
     plt.semilogy(
         [qpe.rpe_distance(theta, E0_H2) for theta in theta_list[1:]],

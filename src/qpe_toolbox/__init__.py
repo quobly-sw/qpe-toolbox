@@ -6,5 +6,18 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
+import enum
 
 __version__ = "0.2.0"
+
+
+class _Exact(enum.Enum):
+    EXACT = "exact"
+
+
+EXACT = _Exact.EXACT
+"""Sentinel constant for requesting exact computation.
+
+Use ``Exact.EXACT`` to replace an approximation in real world quantum computation
+(e.g., time evolution or sampling)
+"""

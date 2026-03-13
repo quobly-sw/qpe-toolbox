@@ -6,6 +6,7 @@ import tempfile
 import numpy as np
 import quimb.tensor as qtn
 
+from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import deserialize_to_quimb_CircuitMPS, make_circMPS
 from qpe_toolbox.estimation import quantum_phase_estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
@@ -20,7 +21,7 @@ size_interval = 2
 def test_qpe():
     circ = make_circMPS(5, psi0)
 
-    _, energy = qpe.qpe_energy(ham, circ, "exact", E_target, size_interval)
+    _, energy = qpe.qpe_energy(ham, circ, EXACT, E_target, size_interval)
 
     assert np.isclose(energy, -0.7375)
 
