@@ -51,6 +51,7 @@ from quimb.tensor import MatrixProductState
 from tqdm import notebook as tqdm
 
 import qpe_toolbox.estimation as qpe
+from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import make_circ
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
@@ -137,7 +138,7 @@ evolution_time = 2 * np.pi / size_interval
 global_phase = Emax * evolution_time
 
 traces, circ = qpe.qpe_first_stage(
-    h_spin, initial_circ, evolution_time, "exact", global_phase
+    h_spin, initial_circ, evolution_time, EXACT, global_phase
 )
 
 circ.psi.retag_({f"I{i}": f"I_phase{i}" for i in range(n_phase_bits)})
@@ -300,7 +301,7 @@ print(
 
 circ = make_circ(n_phase_bits=n_phase_bits, psi_mps=psi0_mps)
 traces, energy = qpe.qpe_energy(
-    h_spin, circ, "exact", E_target, size_interval, verbosity=1
+    h_spin, circ, EXACT, E_target, size_interval, verbosity=1
 )
 
 print("\nBest guess =", np.real(energy))
@@ -366,7 +367,7 @@ print(
 
 circ = make_circ(n_phase_bits, psi0_mps)
 traces, energy = qpe.qpe_energy(
-    h_spin, circ, "exact", E_target, size_interval, verbosity=1
+    h_spin, circ, EXACT, E_target, size_interval, verbosity=1
 )
 
 # %%
@@ -399,7 +400,7 @@ print(
 
 circ = make_circ(n_phase_bits, psi0_mps)
 traces, energy = qpe.qpe_energy(
-    h_spin, circ, "exact", E_target, size_interval, verbosity=1
+    h_spin, circ, EXACT, E_target, size_interval, verbosity=1
 )
 
 # %%
@@ -458,7 +459,7 @@ def qpe_with_prob_success(
 
     initial_circ = make_circ(n_phase_bits, psi0)
     _, probs = qpe.qpe_sample(
-        hamiltonian, initial_circ, evolution_time, "exact", global_phase
+        hamiltonian, initial_circ, evolution_time, EXACT, global_phase
     )
 
     a = np.floor(theta_exact * 2**n_phase_bits)
@@ -579,7 +580,7 @@ for n_phase_bits in tqdm.tqdm(ms):
     traces, energy = qpe.qpe_energy(
         h_spin,
         initial_circ,
-        "exact",
+        EXACT,
         E_target,
         size_interval,
         optimize=optimize,
@@ -646,7 +647,7 @@ for n_qubits in tqdm.tqdm(nqb_list):
         st = time.time()
         initial_circ = make_circ(n_phase_bits, psi0_mps)
         traces, energy = qpe.qpe_energy(
-            h_spin, initial_circ, "exact", E_target, size_interval, optimize=optimize
+            h_spin, initial_circ, EXACT, E_target, size_interval, optimize=optimize
         )
         et = time.time() - st
         energies.append(energy)
@@ -719,7 +720,7 @@ for Δ in tqdm.tqdm(interval_sizes):
     energies_Δ = np.empty((num_points,))
     for i in tqdm.tqdm(range(num_points), leave=False):
         _, energies_Δ[i] = qpe.qpe_energy(
-            h_spin, initial_circ, "exact", energy_targets[i], Δ
+            h_spin, initial_circ, EXACT, energy_targets[i], Δ
         )
     interval_energies.append(energies_Δ)
 
@@ -778,7 +779,7 @@ for Omega in Omegas:
 
     initial_circ = make_circ(n_phase_bits, psi_target_mps)
     traces_o, energy_o = qpe.qpe_energy(
-        h_spin, initial_circ, "exact", E_target, size_interval
+        h_spin, initial_circ, EXACT, E_target, size_interval
     )
     E_o.append(energy_o)
     p_o.append(traces_o["prob"])
