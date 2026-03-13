@@ -19,6 +19,6 @@ EXACT = _Exact.EXACT
 """
 Sentinel constant for requesting exact computation.
 
-Use ``Exact.EXACT`` to replace an approximation in real world quantum computation
+Use ``EXACT`` to replace an approximation in real world quantum computation
 (e.g., time evolution or sampling)
 """
