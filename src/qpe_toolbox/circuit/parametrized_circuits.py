@@ -315,7 +315,6 @@ def generate_brickwall_quimb(
           <─────────────>
             first layer
 
-
     where::
 
         []     = single-body gate
@@ -431,7 +430,6 @@ def generate_rand_quimb(
         q5 ──[]───●───────  v
           <─────────────>
             first layer
-
 
     where::
 

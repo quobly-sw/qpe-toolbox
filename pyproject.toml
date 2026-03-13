@@ -94,6 +94,25 @@ build-backend = "hatchling.build"
   wrap-summaries = 0
   wrap-descriptions = 0
 
+  [tool.numpydoc_validation]
+  checks = [
+      "all",   # report on all checks, except the below
+      "EX01",
+      "SA01",
+      "ES01",
+      "GL08",
+      "RT02",
+      "ES01",
+  ]
+  # remember to use single quotes for regex in TOML
+  exclude = [  # don't report on objects that match any of these regex
+      '\.__repr__$',
+  ]
+  exclude_files = [ # don't process filepaths that match these regex
+      '^tests/.*',
+      '^examples/.*',
+  ]
+
   [tool.hatch.version]
   path = "src/qpe_toolbox/__init__.py"
 

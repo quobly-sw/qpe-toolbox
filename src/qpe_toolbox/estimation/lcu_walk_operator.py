@@ -62,7 +62,7 @@ def get_lcu_weights(hamiltonian):
 
 def build_lcu_prepare_state_mps(hamiltonian, *, cutoff=1e-10):
     r"""
-    Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`
+    Construct the normalized MPS representing the L register state :math:`\ket{\mathcal{L}}`.
 
     .. math::
         \ket{\mathcal{L}} = \sum_\ell \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}
@@ -354,7 +354,7 @@ def build_lcu_reflection_mpo(hamiltonian, *, cutoff=1e-10):
     Returns
     -------
     R_L : :quimb-api:`MatrixProductOperator`
-        MPO representing the reflection
+        MPO representing the reflection.
     """
     L_mps = build_lcu_prepare_state_mps(hamiltonian)
     m_L = L_mps.L
@@ -473,7 +473,6 @@ def qpe_first_stage_walk(
         Contains timing information: {'ctimes': [...]}.
     circ : :quimb-api:`CircuitMPS`
         Circuit representing the applied QPE first stage.
-
     """
     st = time.time()
     traces = {"ctimes": []}

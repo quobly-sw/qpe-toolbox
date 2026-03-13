@@ -6,9 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-"""This subpackage provides a set of functions for performing different flavors of Quantum
-Phase Estimation.
-"""
+"""Functions for performing different flavors of Quantum Phase Estimation."""
 
 from .hadamard_test import build_hadamard_test_circuit, run_hadamard_test
 from .lcu_walk_operator import (

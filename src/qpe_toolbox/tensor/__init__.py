@@ -6,9 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-"""This subpackage provides a set of functions for the manipulation of Matrix Product
-Operators (MPO) and Matrix Product States (MPS).
-"""
+"""Tools for the manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS)."""
 
 from .mpomps_tools import (
     add_cqubit_mpo,
