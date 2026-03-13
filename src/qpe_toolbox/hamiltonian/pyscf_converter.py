@@ -7,6 +7,15 @@
 #
 # --------------------------------------------------------------------------------------
 
+"""
+PySCF integral conversion utilities.
+
+Functions for extracting one- and two-electron integrals from PySCF mean-field
+objects (RHF, UHF, ROHF, CASCI) and assembling them into
+:openfermion-ops:`InteractionOperator` Hamiltonians, with optional single
+factorization (SF) and double factorization (DF).
+"""
+
 # the openfermionpyscf is just for testing purposes
 # as we write our own link between openfermion and pyscf
 # explained in make_fermionic_hamiltonian function
@@ -22,24 +31,26 @@ from pyscf.lib import einsum
 
 
 def get_integrals_rhf(rhf):
-    """Obtain hpq and hpqrs integrals for spin restricted systems
+    """
+    Obtain one- and two-electron integrals for spin-restricted systems.
 
     Parameters
     ----------
     rhf : :pyscf-api:`pyscf.scf.RHF <scf.html>`
+        Converged restricted Hartree-Fock object.
 
     Returns
     -------
     ncas : int
-        number of orbitals
+        Number of molecular orbitals.
     nelec : int
-        number of electrons
-    constant : float
-        the zero-body (constant) term
+        Total number of electrons.
+    nuclear_energy : float
+        Nuclear repulsion energy (constant term).
     hpq : :numpy-api:`ndarray`
-        the one-body term
+        One-electron integrals in the MO basis, shape ``(norb, norb)``.
     hpqrs : :numpy-api:`ndarray`
-        the two-body term in chemist notation
+        Two-electron integrals in chemist notation, shape ``(norb, norb, norb, norb)``.
 
     """
     ncas = rhf.mo_coeff.shape[1]
@@ -52,24 +63,27 @@ def get_integrals_rhf(rhf):
 # u is spin up
 # d is spin down
 def get_integrals_uhf(uhf):
-    """Obtain hpq and hpqrs integrals for spin unrestricted systems
+    """
+    Obtain one- and two-electron integrals for spin-unrestricted systems.
 
     Parameters
     ----------
     uhf : :pyscf-api:`pyscf.scf.UHF <scf.html>`
+        Converged unrestricted Hartree-Fock object.
 
     Returns
     -------
     ncas : int
-        number of orbitals
+        Number of molecular orbitals.
     nelec : int
-        number of electrons
-    constant : float
-        the zero-body (constant) term
+        Total number of electrons.
+    nuclear_energy : float
+        Nuclear repulsion energy (constant term).
     hpq : tuple of :numpy-api:`ndarray`
-        the one-body terms (u and d)
+        One-electron integrals ``(h_up, h_down)``, each of shape ``(norb, norb)``.
     hpqrs : tuple of :numpy-api:`ndarray`
-        the two-body terms in chemist notation (uu, ud, and dd)
+        Two-electron integrals in chemist notation ``(hpqrs_uu, hpqrs_ud, hpqrs_dd)``,
+        each of shape ``(norb, norb, norb, norb)``.
 
     """
     mo_u, mo_d = uhf.mo_coeff
@@ -86,7 +100,7 @@ def get_integrals_uhf(uhf):
     hpqrs_dd = ao2mo.full(uhf.mol, mo_d, compact=False)
     hpqrs_dd = hpqrs_dd.reshape((ncas, ncas, ncas, ncas))
 
-    # due to symmetry, hpqrs_du = hpqrs_ud.transpose((1, 0, 3, 2))
+    # due to SU(2) symmetry, hpqrs_du = hpqrs_ud.transpose((1, 0, 3, 2))
 
     return (
         ncas,
@@ -97,33 +111,33 @@ def get_integrals_uhf(uhf):
     )
 
 
-# Active space method
 def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
-    """Obtain hpq and hpqrs integrals for spin restricted systems,
-    with parameters to enable active spaces
+    """
+    Obtain one- and two-electron integrals for spin-restricted active-space systems.
 
     Parameters
     ----------
     rhf : :pyscf-api:`pyscf.scf.RHF <scf.html>`
+        Converged restricted Hartree-Fock object.
     ncas : int
-        number of active orbitals
+        Number of active-space orbitals.
     nelecas : int or tuple of int
-        number of active electrons
-    ncore : int or tuple of int or None, default: None
-        number of core electrons
+        Number of active-space electrons.
+    ncore : int or None, default: None
+        Number of frozen core orbitals. Inferred from ``nelecas`` if ``None``.
 
     Returns
     -------
     ncas : int
-        number of active orbitals
+        Number of active-space orbitals (as resolved by CASCI).
     nelec : int or tuple of int
-        number of active electrons
-    constant : float
-        the zero-body (constant) term
+        Number of active-space electrons (as resolved by CASCI).
+    nuclear_energy : float
+        Nuclear repulsion energy (constant term).
     hpq : :numpy-api:`ndarray`
-        the one-body term
+        One-electron integrals in the active-space MO basis, shape ``(ncas, ncas)``.
     hpqrs : :numpy-api:`ndarray`
-        the two-body term in chemist notation
+        Two-electron integrals in chemist notation, shape ``(ncas, ncas, ncas, ncas)``.
 
     """
     mc = mcscf.CASCI(rhf, ncas, nelecas, ncore=ncore)
@@ -134,30 +148,33 @@ def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
 
 
 def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
-    """Obtain hpq and hpqrs integrals for spin unrestricted systems
+    """
+    Obtain one- and two-electron integrals for spin-unrestricted active-space systems.
 
     Parameters
     ----------
     uhf : :pyscf-api:`pyscf.scf.UHF <scf.html>`
+        Converged unrestricted Hartree-Fock object.
     ncas : int
-        number of active orbitals
+        Number of active-space orbitals.
     nelecas : int or tuple of int
-        number of active electrons
-    ncore : int or tuple of int or None, default: None
-        number of core electrons
+        Number of active-space electrons.
+    ncore : int or None, default: None
+        Number of frozen core orbitals. Inferred from ``nelecas`` if ``None``.
 
     Returns
     -------
     ncas : int
-        number of active orbitals
+        Number of active-space orbitals (as resolved by UCASCI).
     nelec : int or tuple of int
-        number of active electrons
-    constant : float
-        the zero-body (constant) term
+        Number of active-space electrons (as resolved by UCASCI).
+    nuclear_energy : float
+        Nuclear repulsion energy (constant term).
     hpq : tuple of :numpy-api:`ndarray`
-        the one-body terms (u and d)
+        One-electron integrals ``(h_up, h_down)``, each of shape ``(ncas, ncas)``.
     hpqrs : tuple of :numpy-api:`ndarray`
-        the two-body terms in chemist notation (uu, ud, and dd)
+        Two-electron integrals in chemist notation ``(hpqrs_uu, hpqrs_ud, hpqrs_dd)``,
+        each of shape ``(ncas, ncas, ncas, ncas)``.
 
     """
     mc = mcscf.UCASCI(uhf, ncas, nelecas, ncore=ncore)
@@ -168,26 +185,30 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
 
 
 def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
-    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
-    using the results of get_integrals_rhf/get_integrals_rhf_cas
+    """
+    Construct an :openfermion-ops:`InteractionOperator` from RHF/CASCI integrals.
+
+    Assembles the fermionic second-quantised Hamiltonian from the outputs of
+    :func:`get_integrals_rhf` or :func:`get_integrals_rhf_cas`.
 
     Parameters
     ----------
     constant : float
+        Zero-body (nuclear repulsion / core energy) term.
     hpq : :numpy-api:`ndarray`
+        One-electron integrals in the MO basis, shape ``(norb, norb)``.
     hpqrs : :numpy-api:`ndarray`
-        results from get_integrals_rhf/get_integrals_rhf_cas
-    orbital_major: bool, default : True
-        if True
-          * qubit [0, norb) will be for spin up
-          * qubit [norb, 2*norb) will be for spin down
-        otherwise
-          * even qubits (starting from 0) will be for spin up
-          * odd qubits will be for spin down
+        Two-electron integrals in chemist notation, shape ``(norb, norb, norb, norb)``.
+    orbital_major : bool, default: True
+        Spin-to-qubit mapping convention.
+        If ``True``, qubits ``[0, norb)`` carry spin-up and qubits
+        ``[norb, 2*norb)`` carry spin-down.
+        If ``False``, even qubits carry spin-up and odd qubits carry spin-down.
 
     Returns
     -------
     :openfermion-ops:`InteractionOperator`
+        Second-quantised fermionic Hamiltonian.
 
     """
     norb = hpq.shape[0]
@@ -221,27 +242,32 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
     return InteractionOperator(constant, one_elec_tensor, two_elec_tensor)
 
 
-def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
-    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
-    using the results of get_integrals_uhf/get_integrals_uhf_cas
+def make_fermionic_hamiltonian_uhf(energy_constant, hpq, hpqrs, *, orbital_major=True):
+    """
+    Construct an :openfermion-ops:`InteractionOperator` from UHF/UCASCI integrals.
+
+    Assembles the fermionic second-quantised Hamiltonian from the outputs of
+    :func:`get_integrals_uhf` or :func:`get_integrals_uhf_cas`.
 
     Parameters
     ----------
-    constant : float
+    energy_constant : float
+        Zero-body (nuclear repulsion / core energy) term.
     hpq : tuple of :numpy-api:`ndarray`
+        One-electron integrals ``(h_up, h_down)``, each of shape ``(norb, norb)``.
     hpqrs : tuple of :numpy-api:`ndarray`
-        results from get_integrals_uhf/get_integrals_uhf_cas
-    orbital_major: bool, default : True
-        if True
-          * qubit [0, norb) will be for spin up
-          * qubit [norb, 2*norb) will be for spin down
-        otherwise
-          * even qubits (starting from 0) will be for spin up
-          * odd qubits will be for spin down
+        Two-electron integrals in chemist notation ``(hpqrs_uu, hpqrs_ud, hpqrs_dd)``,
+        each of shape ``(norb, norb, norb, norb)``.
+    orbital_major : bool, default: True
+        Spin-to-qubit mapping convention.
+        If ``True``, qubits ``[0, norb)`` carry spin-up and qubits
+        ``[norb, 2*norb)`` carry spin-down.
+        If ``False``, even qubits carry spin-up and odd qubits carry spin-down.
 
     Returns
     -------
     :openfermion-ops:`InteractionOperator`
+        Second-quantised fermionic Hamiltonian.
 
     """
     hpq_u, hpq_d = hpq
@@ -274,29 +300,33 @@ def make_fermionic_hamiltonian_uhf(constant, hpq, hpqrs, *, orbital_major=True):
     two_elec_tensor[dw, up, up, dw] = hpqrs_ud.transpose((2, 0, 1, 3)) / 2.0
     two_elec_tensor[dw, dw, dw, dw] = hpqrs_dd.transpose((0, 2, 3, 1)) / 2.0
 
-    return InteractionOperator(constant, one_elec_tensor, two_elec_tensor)
+    return InteractionOperator(energy_constant, one_elec_tensor, two_elec_tensor)
 
 
 # can select the get_integrals_rhf/get_integrals_uhf function manually
 # or automatically
 def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
-    """Construct the Hamiltonian, as an :openfermion-ops:`InteractionOperator`,
-    from an :pyscf-api:`pyscf.scf.RHF <scf.html>`/:pyscf-api:`pyscf.scf.ROHF <scf.html>`/:pyscf-api:`pyscf.scf.UHF <scf.html>` object
+    """
+    Construct an :openfermion-ops:`InteractionOperator` from any PySCF mean-field object.
+
+    Dispatches to :func:`make_fermionic_hamiltonian_rhf` for
+    :pyscf-api:`pyscf.scf.RHF <scf.html>` /
+    :pyscf-api:`pyscf.scf.ROHF <scf.html>` objects and to
+    :func:`make_fermionic_hamiltonian_uhf` for
+    :pyscf-api:`pyscf.scf.UHF <scf.html>` objects.
 
     Parameters
     ----------
     mf : :pyscf-api:`pyscf.scf.RHF <scf.html>` or :pyscf-api:`pyscf.scf.ROHF <scf.html>` or :pyscf-api:`pyscf.scf.UHF <scf.html>`
-    orbital_major: bool, default : True
-        if True
-          * qubit [0, norb) will be for spin up
-          * qubit [norb, 2*norb) will be for spin down
-        otherwise
-          * even qubits (starting from 0) will be for spin up
-          * odd qubits will be for spin down
+        Converged PySCF mean-field object.
+    orbital_major : bool, default: True
+        Spin-to-qubit mapping convention passed through to the underlying
+        assembly function. See :func:`make_fermionic_hamiltonian_rhf`.
 
     Returns
     -------
     :openfermion-ops:`InteractionOperator`
+        Second-quantised fermionic Hamiltonian.
 
     """
     if isinstance(mf, (scf.hf.RHF, scf.rohf.ROHF)):
@@ -315,7 +345,30 @@ def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
 # for rhf, input the hpqrs
 # for uhf, input the hpqrs_uu, hpqrs_ud, hpqrs_dd separately
 def do_sf(hpqrs, *, threshold=1.6e-3):
-    """Perform Cholesky decomposition for the hpqrs term"""
+    """
+    Perform eigenvalue-based single factorization of the two-electron integral tensor.
+
+    Decomposes ``hpqrs`` via eigendecomposition of its matrix representation
+    and truncates eigenvectors until the Frobenius-norm reconstruction error
+    falls below ``threshold``.
+
+    Parameters
+    ----------
+    hpqrs : :numpy-api:`ndarray`
+        Two-electron integrals in chemist notation, shape ``(ncas, ncas, ncas, ncas)``.
+    threshold : float, default: 1.6e-3
+        Frobenius-norm convergence threshold for the truncated reconstruction.
+
+    Returns
+    -------
+    rank : int
+        Number of eigenvectors retained.
+    diff : float
+        Frobenius norm of the truncation error.
+    hpqrs_truncated : :numpy-api:`ndarray`
+        Truncated two-electron integral tensor, shape ``(ncas, ncas, ncas, ncas)``.
+
+    """
     ncas = hpqrs.shape[0]
     n2 = ncas * ncas
     hpqrs = hpqrs.reshape((n2, n2))
@@ -334,7 +387,35 @@ def do_sf(hpqrs, *, threshold=1.6e-3):
 
 
 def do_df(hpqrs, *, threshold=1.6e-3):
-    """Perform double factorization for the hpqrs term"""
+    """
+    Perform double factorization of the two-electron integral tensor.
+
+    First applies an outer eigendecomposition (single factorization), then
+    diagonalises each factor and discards eigenvalues whose scaled magnitude
+    falls below ``threshold``. Algorithm follows
+    ``openfermion.resource_estimates.df.factorize_df``.
+
+    Parameters
+    ----------
+    hpqrs : :numpy-api:`ndarray`
+        Two-electron integrals in chemist notation, shape ``(ncas, ncas, ncas, ncas)``.
+    threshold : float, default: 1.6e-3
+        Per-factor eigenvalue truncation threshold.
+
+    Returns
+    -------
+    neig : int
+        Total number of eigenvalues retained across all factors.
+    rank : int
+        Number of outer factors retained.
+    df_factors : :numpy-api:`ndarray`
+        Double-factorized tensor factors, shape ``(ncas, ncas, rank_retained)``.
+    hpqrs_truncated : :numpy-api:`ndarray`
+        Truncated two-electron integral tensor, shape ``(ncas, ncas, ncas, ncas)``.
+    diff : float
+        Frobenius norm of the truncation error.
+
+    """
     # copied from openfermion.resource_estimates.df.factorize_df
     ncas = hpqrs.shape[0]
     n2 = ncas * ncas
