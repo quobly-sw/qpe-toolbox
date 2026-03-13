@@ -140,7 +140,7 @@ def two_qubit_nn_layer(
         ``0`` or ``1``). Allows for defining even (0) and odd (1) layers.
 
     gate_label : str
-        Label identifying the two-body entangling gate (e.g. ``"CNOT"``)
+        Label identifying the two-body entangling gate (e.g. ``"CNOT"``).
 
     random_coeff : float, default ``1.0``
         Scaling factor for randomly initialized parameters.

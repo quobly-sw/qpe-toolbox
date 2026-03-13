@@ -173,7 +173,7 @@ def lcu_select_gates(hamiltonian):
     Parameters
     ----------
     hamiltonian : Hamiltonian
-        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
 
     Returns
     -------

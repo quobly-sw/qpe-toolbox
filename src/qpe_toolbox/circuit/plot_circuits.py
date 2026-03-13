@@ -185,10 +185,10 @@ def _add_square(ax, x, y, col_face):
         Axes object to which the square patch is added.
 
     x : float
-        x-coordinate of the square center.
+        X-coordinate of the square center.
 
     y : float
-        y-coordinate of the square center.
+        Y-coordinate of the square center.
 
     col_face : color
         Face color of the square.
@@ -222,10 +222,10 @@ def _add_circle(ax, x, y, col_face):
         Axes object to which the circle patch is added.
 
     x : float
-        x-coordinate of the circle center.
+        X-coordinate of the circle center.
 
     y : float
-        y-coordinate of the circle center.
+        Y-coordinate of the circle center.
 
     col_face : color
         Face color of the circle.
