@@ -15,7 +15,7 @@ EXAMPLES = sorted(glob.glob("*.py"))
 
 @pytest.mark.parametrize("example", EXAMPLES)
 def test_example_runs(example):
-    """Test that examples run without errors"""
+    """Test that examples run without errors."""
     result = subprocess.run([sys.executable, str(example)], text=True, check=False)  # noqa: S603
     assert result.returncode == 0, result.stderr
 

@@ -67,7 +67,6 @@ def count_gates(circ):
     - SWAP counting assumes a linear qubit layout with nearest-neighbor
       connectivity.
     - For quimb circuits, gate information is extracted from ``circ.gates``.
-
     """
     gates_count = {"SWAP": 0}
     if isinstance(circ, list):
@@ -110,7 +109,6 @@ def count_swaps(qubits, controls):
     -----
     - This is a heuristic estimate and does not correspond to an
       explicit routing algorithm.
-
     """
     if qubits is None:
         qubits = []
@@ -146,7 +144,6 @@ def distance_qubits(i, j):
     -------
     int
         Distance between qubits ``i`` and ``j``.
-
     """
     return abs(i - j)
 
@@ -175,7 +172,6 @@ def count_gates_by_qb(gate_count):
     - Classification is inferred from the number of leading ``'C'``
       characters in the gate label.
     - This function is marked as experimental and not fully tested.
-
     """
     count = {"1qb": 0, "2qb": 0, "3+qb": 0}
     for label in gate_count:

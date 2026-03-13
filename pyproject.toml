@@ -88,6 +88,12 @@ build-backend = "hatchling.build"
   skip_covered = true
   fail_under = 70
 
+  [tool.docformatter]
+  pre-summary-newline = true
+  close-quotes-on-newline = true
+  wrap-summaries = 0
+  wrap-descriptions = 0
+
   [tool.hatch.version]
   path = "src/qpe_toolbox/__init__.py"
 
@@ -114,7 +120,6 @@ build-backend = "hatchling.build"
         "D209",
         "D403",
         "D405",
-        "D413",
         "E",
         "EXE",
         "F",

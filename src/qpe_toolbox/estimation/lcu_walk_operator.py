@@ -46,7 +46,6 @@ def get_lcu_weights(hamiltonian):
     m_L : int
         Number of qubits required for the auxiliary L-register,
         i.e., ceil(log2(L)).
-
     """
     weights = [abs(P[0]) for P in hamiltonian.terms]
 
@@ -80,7 +79,6 @@ def build_lcu_prepare_state_mps(hamiltonian, *, cutoff=1e-10):
     -------
     L_mps : :quimb-api:`MatrixProductState`
         MPS representing the state :math:`\ket{\mathcal{L}}`.
-
     """
     weights, lmb, L, m_L = get_lcu_weights(hamiltonian)
 
@@ -110,7 +108,6 @@ def build_lcu_prepare_mpo(hamiltonian, *, cutoff=1e-10):
     -------
     prep_mpo : :quimb-api:`MatrixProductOperator`
         MPO implementing the PREPARE oracle.
-
     """
     weights, lmb, _, m_L = get_lcu_weights(hamiltonian)
 
@@ -168,7 +165,6 @@ def lcu_select_gates(hamiltonian):
     -------
     gates : list of :quimb-api:`Gate`
         Gate sequence implementing the SELECT oracle.
-
     """
     L = len(hamiltonian.terms)
     return list(
@@ -192,7 +188,6 @@ def _gates_llxHl(hamiltonian, l_term):
     -------
     gates : list of :quimb-api:`Gate`
         Gates implementing controlled :math:`H_\ell`.
-
     """
     L = len(hamiltonian.terms)
     if not (0 <= l_term < L):
@@ -230,7 +225,7 @@ def _gates_llxHl(hamiltonian, l_term):
 # MPO representation of SELECT oracle
 def _build_Hl_mpo(hamiltonian, l_term):
     r"""
-    Build MPO for the l-th Pauli string of a Hamiltonian
+    Build MPO for the l-th Pauli string of a Hamiltonian.
 
     Parameters
     ----------
@@ -243,7 +238,6 @@ def _build_Hl_mpo(hamiltonian, l_term):
     -------
     Hl_mpo : :quimb-api:`MatrixProductOperator`
         MPO representing the l-th term of the Hamiltonian.
-
     """
     if l_term >= len(hamiltonian.terms):
         return qtn.MPO_identity(hamiltonian.n_qubits)
@@ -289,7 +283,6 @@ def _build_llxHl_mpo(hamiltonian, l_term):
     -------
     llxHl_mpo : :quimb-api:`MatrixProductOperator`
         MPO representing :math:`\ket{\ell}\bra{\ell} \otimes H_\ell`.
-
     """
     m_L = int(np.ceil(np.log2(len(hamiltonian.terms))))
     l_mps = qtn.MPS_computational_state(f"{{0:0{m_L}b}}".format(l_term))
@@ -315,7 +308,6 @@ def build_lcu_select_mpo(hamiltonian, *, cutoff=1e-10):
     -------
     select_mpo : :quimb-api:`MatrixProductOperator`
         MPO implementing :math:`SELECT = \sum_\ell \ket{\ell}\bra{\ell} \otimes H_\ell`.
-
     """
     L = len(hamiltonian.terms)
     m_L = int(np.ceil(np.log2(L)))
@@ -352,7 +344,6 @@ def build_lcu_reflection_mpo(hamiltonian, *, cutoff=1e-10):
     -------
     R_L : :quimb-api:`MatrixProductOperator`
         MPO representing the reflection
-
     """
     L_mps = build_lcu_prepare_state_mps(hamiltonian)
     m_L = L_mps.L
@@ -399,7 +390,6 @@ def run_qpe_lcu_walk_operator(
         Contains timing information: {'ctimes': [...]}.
     theta : float
         Estimated phase from the walk operator.
-
     """
     st = time.time()
     ctimes = []
@@ -537,7 +527,6 @@ def _get_registers_qpe_lcu(n_qubits, m_L, m_ph):
     -------
     regs : dict
         Dictionary with keys 'phase', 'L', 'phys' giving tuples of qubit indices.
-
     """
     regs = {}
     regs["phase"] = tuple(range(m_ph))
@@ -564,7 +553,6 @@ def get_energy_from_lcu_walk_phase(theta, lmb):
     -------
     energy : float
         Estimated energy.
-
     """
     return lmb * np.cos(2 * np.pi * theta)
 
@@ -586,6 +574,5 @@ def estimate_lcu_error(m_ph, E0, lmb):
     -------
     delta_E : float
         Estimated upper bound on the energy error.
-
     """
     return lmb * np.sqrt(1 - (E0 / lmb) ** 2) * 2 * np.pi / 2**m_ph

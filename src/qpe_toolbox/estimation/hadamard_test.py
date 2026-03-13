@@ -47,7 +47,6 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
     -------
     circ : :quimb-api:`CircuitMPS`
         Circuit implementing the Hadamard test.
-
     """
     n_qubits = init_mps.L
     circ = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
@@ -104,7 +103,6 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
     -------
     Z : float
         Estimated value of :math:`Z(\theta) = P(0) - P(1)`.
-
     """
     circ = build_hadamard_test_circuit(init_mps, U_gate, theta)
     aux_ind = 0

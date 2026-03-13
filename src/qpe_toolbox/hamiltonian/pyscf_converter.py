@@ -6,7 +6,6 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-
 """
 PySCF integral conversion utilities.
 
@@ -51,7 +50,6 @@ def get_integrals_rhf(rhf):
         One-electron integrals in the MO basis, shape ``(norb, norb)``.
     hpqrs : :numpy-api:`ndarray`
         Two-electron integrals in chemist notation, shape ``(norb, norb, norb, norb)``.
-
     """
     ncas = rhf.mo_coeff.shape[1]
     hpq = rhf.mo_coeff.T.conj() @ rhf.get_hcore() @ rhf.mo_coeff
@@ -84,7 +82,6 @@ def get_integrals_uhf(uhf):
     hpqrs : tuple of :numpy-api:`ndarray`
         Two-electron integrals in chemist notation ``(hpqrs_uu, hpqrs_ud, hpqrs_dd)``,
         each of shape ``(norb, norb, norb, norb)``.
-
     """
     mo_u, mo_d = uhf.mo_coeff
     ncas = mo_u.shape[1]
@@ -138,7 +135,6 @@ def get_integrals_rhf_cas(rhf, ncas, nelecas, *, ncore=None):
         One-electron integrals in the active-space MO basis, shape ``(ncas, ncas)``.
     hpqrs : :numpy-api:`ndarray`
         Two-electron integrals in chemist notation, shape ``(ncas, ncas, ncas, ncas)``.
-
     """
     mc = mcscf.CASCI(rhf, ncas, nelecas, ncore=ncore)
     hpq, ecore = mc.get_h1cas()
@@ -175,7 +171,6 @@ def get_integrals_uhf_cas(uhf, ncas, nelecas, *, ncore=None):
     hpqrs : tuple of :numpy-api:`ndarray`
         Two-electron integrals in chemist notation ``(hpqrs_uu, hpqrs_ud, hpqrs_dd)``,
         each of shape ``(ncas, ncas, ncas, ncas)``.
-
     """
     mc = mcscf.UCASCI(uhf, ncas, nelecas, ncore=ncore)
     hpq, ecore = mc.get_h1cas()
@@ -209,7 +204,6 @@ def make_fermionic_hamiltonian_rhf(constant, hpq, hpqrs, *, orbital_major=True):
     -------
     :openfermion-ops:`InteractionOperator`
         Second-quantised fermionic Hamiltonian.
-
     """
     norb = hpq.shape[0]
     nqubit = norb * 2
@@ -268,7 +262,6 @@ def make_fermionic_hamiltonian_uhf(energy_constant, hpq, hpqrs, *, orbital_major
     -------
     :openfermion-ops:`InteractionOperator`
         Second-quantised fermionic Hamiltonian.
-
     """
     hpq_u, hpq_d = hpq
     hpqrs_uu, hpqrs_ud, hpqrs_dd = hpqrs
@@ -327,7 +320,6 @@ def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
     -------
     :openfermion-ops:`InteractionOperator`
         Second-quantised fermionic Hamiltonian.
-
     """
     if isinstance(mf, (scf.hf.RHF, scf.rohf.ROHF)):
         _, _, ecore, hpq, hpqrs = get_integrals_rhf(mf)
@@ -367,7 +359,6 @@ def do_sf(hpqrs, *, threshold=1.6e-3):
         Frobenius norm of the truncation error.
     hpqrs_truncated : :numpy-api:`ndarray`
         Truncated two-electron integral tensor, shape ``(ncas, ncas, ncas, ncas)``.
-
     """
     ncas = hpqrs.shape[0]
     n2 = ncas * ncas
@@ -414,7 +405,6 @@ def do_df(hpqrs, *, threshold=1.6e-3):
         Truncated two-electron integral tensor, shape ``(ncas, ncas, ncas, ncas)``.
     diff : float
         Frobenius norm of the truncation error.
-
     """
     # copied from openfermion.resource_estimates.df.factorize_df
     ncas = hpqrs.shape[0]

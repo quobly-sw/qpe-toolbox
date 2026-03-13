@@ -22,7 +22,8 @@ _ZZ = qu.pauli("Z") & qu.pauli("Z")  # edge operator (classical Ising energy)
 
 
 def brute_force_maxcut(graph_matrix, terms):
-    """Compute the Max-Cut value of a graph by brute-force enumeration.
+    """
+    Compute the Max-Cut value of a graph by brute-force enumeration.
 
     This function enumerates all possible non-trivial bipartitions of the
     vertex set and computes the corresponding cut value. It is intended
@@ -55,7 +56,6 @@ def brute_force_maxcut(graph_matrix, terms):
       as equivalent; only subsets of size ``1`` to ``N-1`` are enumerated.
     - The computational complexity scales as :math:`O(2^N)` and is only
       practical for small graphs.
-
     """
     n_qubits = np.shape(graph_matrix)[0]
     possible_bipartitions = []
@@ -79,7 +79,8 @@ def brute_force_maxcut(graph_matrix, terms):
 
 
 def generate_community_graph(N, *, N_comm=4, rng=None):
-    """Generate a random graph with community (block) structure.
+    """
+    Generate a random graph with community (block) structure.
 
     The graph is generated using a stochastic block model, where vertices
     are divided into communities of random sizes and intra-community edges
@@ -110,7 +111,6 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
     - The probability matrix is chosen such that:
         - Intra-community edge probability is 0.5.
         - Inter-community edge probability is ``0.5 / (N_comm - 1)``.
-
     """
     if rng is None:
         rng = np.random.default_rng()
@@ -139,7 +139,8 @@ def generate_community_graph(N, *, N_comm=4, rng=None):
 
 
 def qaoa_energy(x, terms, opt):
-    """Evaluate the QAOA energy for a given parameter vector.
+    """
+    Evaluate the QAOA energy for a given parameter vector.
 
     This function constructs a QAOA circuit for the Max-Cut Hamiltonian
     and computes the expectation value of the cost Hamiltonian using
@@ -175,7 +176,6 @@ def qaoa_energy(x, terms, opt):
       ``circ.local_expectation`` with the JAX backend.
     - The returned value is real; any small imaginary part arising from
       numerical errors is discarded.
-
     """
     p = np.size(x) // 2
     gammas = x[:p]
@@ -193,7 +193,8 @@ def qaoa_energy(x, terms, opt):
 def study_optimization_time_costs(
     hamilt_terms, hyperopt, bounds, *, batch_size=5, num_iter=20, verbosity=0, seed=None
 ):
-    """Measure time costs for batched parameter suggestions and evaluations
+    """
+    Measure time costs for batched parameter suggestions and evaluations
     in an ``optuna`` optimization loop.
 
     This function runs a ``CMA-ES`` optimization study using ``optuna`` and records the
@@ -249,7 +250,6 @@ def study_optimization_time_costs(
     -----
     - ``cost_time`` is normalized by the number of Hamiltonian terms and batch size
       to give an average per term per parameter set.
-
     """
     ask_time, cost_time, tell_time = [], [], []
     study = optuna.create_study(sampler=optuna.samplers.CmaEsSampler(seed=seed))
@@ -294,7 +294,8 @@ def compute_qaoa_contraction_costs(
     verbosity=0,
     description="None",
 ):
-    """Compute contraction widths and costs for QAOA circuits on multiple graphs.
+    """
+    Compute contraction widths and costs for QAOA circuits on multiple graphs.
 
     Generates QAOA circuits of varying depth for each graph and estimates the
     tensor network contraction width (W) and log-scaled contraction cost (C)
@@ -350,7 +351,6 @@ def compute_qaoa_contraction_costs(
     - The average width ``W`` is computed over all local contraction trees.
     - The total contraction cost ``C`` is computed using a numerically stable log-sum-exp
       over all local contraction costs.
-
     """
     result = copy.deepcopy(graph_dict)
 

@@ -6,10 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-
-"""
-This subpackage provides a set of functions for creating and manipulating quimb circuits.
-"""
+"""This subpackage provides a set of functions for creating and manipulating quimb circuits."""
 
 from .controls import shift_control_gates
 from .gate_count import count_gates, count_gates_by_qb

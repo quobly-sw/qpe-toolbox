@@ -40,7 +40,6 @@ def kron_mpos(mpo1, mpo2):
     ValueError
         If the tensor shapes of either MPO are not compatible with the expected
         MPO boundary conventions.
-
     """
     # make sure MPOs tensors are in the order left, right, up, down
     mpo1.permute_arrays("lrud")
@@ -99,7 +98,6 @@ def kron_mps(mps1, mps2, *, verbosity=0):
     ValueError
         If the tensor shapes of either MPS are not compatible with the expected
         MPS boundary conventions.
-
     """
     # make sure MPS tensors are in the order left, right, physical
     mps1.permute_arrays("lrp")
@@ -166,7 +164,6 @@ def apply_gate_from_mpo(circ, mpo, *, compress=False, cutoff=1e-10, max_bond=0):
     Notes
     -----
     This function does not modify the input circuit in place.
-
     """
     psi = mpo.apply(circ.psi, compress=compress, cutoff=cutoff, max_bond=max_bond)
     return qtn.CircuitMPS(psi0=psi, cutoff=cutoff, max_bond=max_bond)
@@ -215,7 +212,6 @@ def add_creg_mpo(mpo, mpo_reg, creg, cket):
     -----
     This function is not fully tested and should be used with care for
     multi-control configurations.
-
     """
     # make sure indices of each tensor in the MPO are in the order left, right, up, down
     mpo.permute_arrays("lrud")
@@ -267,7 +263,6 @@ def add_cqubit_mpo(mpo, location):
     ------
     ValueError
         If ``location`` is not one of ``"before"`` or ``"after"``.
-
     """
     # make sure indices of each tensor in the MPO are in the order left, right, up, down
     mpo.permute_arrays("lrud")
@@ -339,7 +334,6 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
     -----
     This implementation assumes that all auxiliary-register tensors initially
     correspond to identity operators.
-
     """
     # make sure indices of each tensor in the MPO are in the order left, right, up, down
     mpo.permute_arrays("lrud")

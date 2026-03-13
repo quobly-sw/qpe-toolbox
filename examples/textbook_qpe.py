@@ -448,7 +448,9 @@ def qpe_with_prob_success(
     size_interval,
     n_precision_bits,
 ):
-    """Build the circuit and perform the quantum phase estimation algorithm.
+    """
+    Build the circuit and perform the quantum phase estimation algorithm.
+
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
     """
 
@@ -508,7 +510,7 @@ for n_phase_bits in tqdm.tqdm(ms):
 # %%
 def minimal_number_phase_qubits(b, α):
     """Compute the minimal number of phase qubits required
-    to reach b-bits precision with probability 1-α
+    to reach b-bits precision with probability 1-α.
     """
     return b + np.ceil(np.log2(2 + 1 / (2 * α)))
 

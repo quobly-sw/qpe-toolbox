@@ -57,7 +57,6 @@ def chemistry_hamiltonian(
     Hamiltonian
         Qubit Hamiltonian with additional attributes:
         ``norb``, ``nelec``, ``e_hf``, and optionally ``e_fci`` and ``e_ccsd``.
-
     """
     e_fci, e_ccsd, hf = do_pyscf(molecule, hf_mode, do_fci, do_ccsd)
 
@@ -100,7 +99,6 @@ def do_pyscf(molecule, hf_mode, do_fci, do_ccsd):
         CCSD ground-state energy.
     hf : :pyscf-api:`pyscf.scf.hf.SCF <scf.html>`
         Hartree-Fock object containing molecular orbitals and integrals.
-
     """
     if hf_mode.lower() == "rhf":
         hf = scf.RHF(molecule)
@@ -152,7 +150,6 @@ def make_qubit_hamiltonian(hf, hf_mode, encoding):
     -------
     Hamiltonian
         Qubit Hamiltonian with constant energy shift stored in ``e_const``.
-
     """
     if hf_mode.lower() == "rhf":
         ncas, _nelec, ecore, hpq, hpqrs = get_integrals_rhf(hf)
@@ -198,7 +195,6 @@ def make_fermionic_hamiltonian(
     -------
     :openfermion-ops:`FermionOperator`
         Fermionic Hamiltonian operator.
-
     """
     hf_mode = hf_mode.lower()
     if hf_mode not in ("rhf", "uhf"):
@@ -266,7 +262,6 @@ def terms_from_openfermion(qubit_operator):
         ``(coefficient, pauli_string, qubits)``.
     e_const : float
         Constant energy offset corresponding to the identity term.
-
     """
     term_list = []
     e_const = 0

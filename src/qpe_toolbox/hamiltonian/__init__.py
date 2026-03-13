@@ -6,9 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-
-"""
-This subpackage provides the class for defining Hamiltonians, and a interface with
+"""This subpackage provides the class for defining Hamiltonians, and a interface with
 ``pyscf`` for chemistry.
 """
 

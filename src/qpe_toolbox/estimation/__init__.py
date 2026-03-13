@@ -6,9 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-
-"""
-This subpackage provides a set of functions for performing different flavors of Quantum
+"""This subpackage provides a set of functions for performing different flavors of Quantum
 Phase Estimation.
 """
 

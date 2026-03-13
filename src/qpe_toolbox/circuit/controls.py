@@ -6,10 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-
-"""
-Routines for quimb circuits and/or gates
-"""
+"""Routines for quimb circuits and/or gates."""
 
 
 def shift_control_gates(gates, m_aux, k_ctrl):
@@ -48,7 +45,6 @@ def shift_control_gates(gates, m_aux, k_ctrl):
     - If a gate originally has no controls, it becomes singly controlled
       by ``k_ctrl``.
     - The original gate objects are not modified.
-
     """
     if not 0 <= k_ctrl < m_aux:
         raise ValueError(

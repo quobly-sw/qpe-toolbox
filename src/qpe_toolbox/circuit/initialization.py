@@ -28,7 +28,6 @@ def _build_init_mps(n_phase_bits, psi_mps):
     -------
     :quimb-api:`MatrixProductState`
         Combined MPS of total length ``n_phase_bits + psi_mps.L``.
-
     """
     n_qubits = psi_mps.L
     psi_aux = psi_mps.copy()
@@ -80,7 +79,6 @@ def make_circ(n_phase_bits, psi_mps):
     - The physical qubits of ``psi_mps`` are shifted by ``n_phase_bits`` to
       avoid index collisions.
     - The resulting circuit has ``n_phase_bits + psi_mps.L`` qubits in total.
-
     """
     return qtn.Circuit(psi0=_build_init_mps(n_phase_bits, psi_mps))
 
@@ -116,7 +114,6 @@ def make_circMPS(n_phase_bits, psi_mps, *, cutoff=1e-10, max_bond=None):
     - ``CircuitMPS`` is more efficient than ``Circuit`` for large systems
       or deep circuits, at the cost of controlled approximation.
     - The phase register qubits precede the data register in qubit ordering.
-
     """
     return qtn.CircuitMPS(
         psi0=_build_init_mps(n_phase_bits, psi_mps), cutoff=cutoff, max_bond=max_bond

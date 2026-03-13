@@ -53,7 +53,6 @@ def robust_phase_estimation(
     theta_list : list of float
         List of phase estimates at each iteration.
         The last element corresponds to the most accurate estimate.
-
     """
     if abs(abs(sign_E0) - 1.0) > 1e-12:
         raise ValueError("sign_E0 must be +-1")
@@ -118,7 +117,6 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     -------
     phi_m : float
         Estimated phase angle in radians.
-
     """
     n_qubits = H.n_qubits
     phys_reg = list(range(1, n_qubits + 1))
@@ -153,7 +151,6 @@ def rpe_distance(phi, theta):
     -------
     d : float
         Angular distance between ``phi`` and ``theta``.
-
     """
     sign = np.sign(phi - theta)
     K = int(abs(phi - theta) / (2 * np.pi) + 1 / 2)
@@ -180,7 +177,6 @@ def rpe_update_theta(S, theta_ref):
         Angle in ``S`` closest to ``theta_ref``.
     d_min : float
         Corresponding minimal angular distance.
-
     """
     d_min = rpe_distance(S[0], theta_ref)
     theta_min = S[0]

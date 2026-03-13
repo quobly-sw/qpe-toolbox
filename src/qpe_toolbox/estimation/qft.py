@@ -36,7 +36,6 @@ def qft_swapped(wires):
     - Recursive implementation.
     - No final SWAP gates are included.
     - Use ``qft`` for standard bit ordering with swaps.
-
     """
     routine = [("H", wires[0])]
     n = len(wires)
@@ -70,7 +69,6 @@ def iqft_swapped(wires):
     -----
     - Controlled-phase gates have their angles negated relative to ``qft_sw``.
     - No final SWAP gates are included.
-
     """
     qftsw_routine = qft_swapped(wires)
     depth = len(qftsw_routine)
@@ -102,7 +100,6 @@ def qft(wires):
     Notes
     -----
     - Combines ``qft_sw`` with SWAP gates to reorder qubits to standard output order.
-
     """
     routine = qft_swapped(wires)
     n = len(wires)
@@ -131,7 +128,6 @@ def iqft(wires):
     -----
     - The angles of controlled-phase gates are negated relative to the QFT.
     - Bit ordering should be checked if interfacing with other routines.
-
     """
 
     qft_routine = qft(wires)
@@ -168,6 +164,5 @@ def count_gates_qft_swapped(m):
     -----
     - SWAP gates are **not** counted.
     - Gate count corresponds to the reversed-output QFT.
-
     """
     return {"H": m, "CPHASE": (m * (m - 1)) // 2}

@@ -39,7 +39,6 @@ def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     -------
     Hamiltonian
         Heisenberg Hamiltonian represented as a qubit operator.
-
     """
     terms = []
     for i in range(n_qubits - 1):
@@ -67,7 +66,6 @@ def do_dmrg(hamiltonian):
         Ground-state energy.
     psi0 : :quimb-api:`MatrixProductState`
         Ground-state wavefunction as a Matrix Product State.
-
     """
     mpo = hamiltonian.to_mpo()
     dmrg = qtn.DMRG2(mpo)
@@ -94,7 +92,6 @@ class Hamiltonian:
         ``(coefficient, pauli_string, qubits)``, e.g. ``(0.5, "xy", [0, 1])``.
     n_qubits : int
         Total number of qubits.
-
     """
 
     def __init__(self, terms, n_qubits):
@@ -136,7 +133,6 @@ class Hamiltonian:
         -------
         :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
-
         """
         h_dense = np.zeros([2**self.n_qubits, 2**self.n_qubits], dtype="complex")
         for coeff, paulis, qubits in self.terms:
@@ -154,7 +150,6 @@ class Hamiltonian:
         -------
         :quimb:`quimb.operator.SparseOperatorBuilder <autoapi/quimb/operator/index.html#quimb.operator.SparseOperatorBuilder>`
             Builder object that can generate sparse matrices or MPOs.
-
         """
         builder = SparseOperatorBuilder()
         for coeff, paulis, qubits in self.terms:
@@ -175,7 +170,6 @@ class Hamiltonian:
         -------
         :quimb-api:`MatrixProductOperator`
             MPO representation of the Hamiltonian.
-
         """
         return self.to_builder().build_mpo()
 
@@ -203,7 +197,6 @@ class Hamiltonian:
         -------
         :quimb-api:`Gate`
             Exact multi-qubit unitary gate.
-
         """
         if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
@@ -233,7 +226,6 @@ class Hamiltonian:
         ------
         ValueError
             If the Trotter order is not implemented.
-
         """
         if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
@@ -278,7 +270,6 @@ def rotation_gates(term, dt, qubit_reg):
     -------
     list
         Abstract quantum gate instructions suitable for circuit construction.
-
     """
     (theta, pauli_string, qubits) = term
     routine = []

@@ -44,13 +44,12 @@ dict_qiskit_gate_map = {
     "swap": QuantumCircuit.swap,
     "cswap": QuantumCircuit.cswap,
 }
-"""
-Mapping between quimb and qiskit gates
-"""
+"""Mapping between quimb and qiskit gates."""
 
 
 def apply_gate_qiskit(qc, label, qubits, params):
-    """Apply a quantum gate to a ``qiskit`` :qiskit-api:`QuantumCircuit` using a string label.
+    """
+    Apply a quantum gate to a ``qiskit`` :qiskit-api:`QuantumCircuit` using a string label.
 
     This function dispatches gate application based on:
 
@@ -120,7 +119,6 @@ def apply_gate_qiskit(qc, label, qubits, params):
     Apply a two-qubit parameterized gate:
 
     >>> apply_gate_qiskit(qc, "rxx", [0, 1], [0.3])
-
     """
 
     label = label.lower()
@@ -150,7 +148,8 @@ def apply_gate_qiskit(qc, label, qubits, params):
 def deserialize_to_qiskit_QuantumCircuit(
     full_gate_dict, *, max_depth=np.inf, measure=False
 ):
-    """Deserialize a gate dictionary into a ``qiskit`` :qiskit-api:`QuantumCircuit`.
+    """
+    Deserialize a gate dictionary into a ``qiskit`` :qiskit-api:`QuantumCircuit`.
 
     This function reconstructs a :qiskit-api:`QuantumCircuit` from a serialized gate
     representation, where gates are annotated with qubit indices, parameters,
@@ -211,7 +210,6 @@ def deserialize_to_qiskit_QuantumCircuit(
     - Gate ordering within the same round is preserved as given in the input.
     - No validation is performed on qubit index bounds.
     - Parameter consistency is delegated to :func:`apply_gate_qiskit` and ``qiskit``.
-
     """
     N = int(full_gate_dict["n_qubits"])
     qc = QuantumCircuit(N)
@@ -227,7 +225,8 @@ def deserialize_to_qiskit_QuantumCircuit(
 
 
 def serialize_from_quimb_Circuit(qc):
-    """Serialize a ``quimb`` circuit into a ``JSON``-compatible dictionary.
+    """
+    Serialize a ``quimb`` circuit into a ``JSON``-compatible dictionary.
 
     This function converts a :quimb-api:`Circuit` object into
     a plain ``python`` dictionary containing only ``JSON``-serializable types.
@@ -282,13 +281,13 @@ def serialize_from_quimb_Circuit(qc):
 
     deserialize_to_qiskit_QuantumCircuit :
         Reconstruct a ``qiskit`` :qiskit-api:`QuantumCircuit` from the serialized dictionary.
-
     """
     return serialize_from_quimb_gates(qc.N, qc.gates)
 
 
 def serialize_from_quimb_gates(n_qubits, gates_list):
-    """Serialize a list of ``quimb`` gates into a ``JSON``-compatible dictionary.
+    """
+    Serialize a list of ``quimb`` gates into a ``JSON``-compatible dictionary.
 
     This function converts a list of :quimb-api:`Gate` objects into
     a plain ``python`` dictionary containing only ``JSON``-serializable types.
@@ -345,7 +344,6 @@ def serialize_from_quimb_gates(n_qubits, gates_list):
 
     deserialize_to_qiskit_QuantumCircuit :
         Reconstruct a ``qiskit`` :qiskit-api:`QuantumCircuit` from the serialized dictionary.
-
     """
     return {
         "n_qubits": n_qubits,
@@ -367,7 +365,8 @@ def serialize_from_quimb_gates(n_qubits, gates_list):
 def deserialize_to_quimb_Circuit(
     full_gate_dict, *, max_depth=np.inf, contract=False, **gate_opts
 ):
-    """Deserialize a gate dictionary into a :quimb-api:`Circuit` up to a given depth.
+    """
+    Deserialize a gate dictionary into a :quimb-api:`Circuit` up to a given depth.
 
     This function reconstructs a circuit from a serialized
     representation of a quantum circuit (i.e. the one that can be saved as JSON).
@@ -421,7 +420,6 @@ def deserialize_to_quimb_Circuit(
       compatible with :quimb-api:`Circuit.apply_gate`.
     - Useful when assessing the complexity of a circuit and its
       contraction layer-by-layer.
-
     """
     qc = qtn.Circuit(N=int(full_gate_dict["n_qubits"]))
 
@@ -449,7 +447,8 @@ def deserialize_to_quimb_CircuitMPS(
     perm=False,
     psi0=None,
 ):
-    """Deserialize a gate dictionary into a :quimb-api:`CircuitMPS` or
+    """
+    Deserialize a gate dictionary into a :quimb-api:`CircuitMPS` or
     :quimb-api:`CircuitPermMPS` up to a given depth from a serialized
     representation of a quantum circuit (i.e., the same format as saved in JSON).
     Only gates whose `round` index is strictly smaller than ``max_depth`` are applied,
@@ -497,7 +496,6 @@ def deserialize_to_quimb_CircuitMPS(
            :quimb-api:`CircuitPermMPS`
         An MPS representation of the reconstructed circuit containing
         all gates contracted up to the specified depth.
-
     """
     N = int(full_gate_dict["n_qubits"])
     if perm:
@@ -565,7 +563,6 @@ def dump_quimb_Circuit_to_qasm(circ, savefile_base, *, save_rounds=True):
       formatted with limited precision to ensure portability.
     - Circuit round information is *not* part of the QASM standard and
       is therefore stored separately.
-
     """
     qasm_lines = [
         "OPENQASM 2.0;",
@@ -615,7 +612,8 @@ def load_qasm_to_quimb_Circuit(
     gate_contract=False,
     min_layout=False,
 ):
-    """This function parses a QASM 2.0 file and reconstructs a
+    """
+    This function parses a QASM 2.0 file and reconstructs a
     :quimb-api:`Circuit`. Optionally, it can restore
     circuit round (layer) information from a sidecar file and
     load only a truncated circuit depth.
@@ -660,7 +658,6 @@ def load_qasm_to_quimb_Circuit(
       gate.
     - This function assumes that the QASM file uses gate labels
       compatible with quimb.
-
     """
     # Load the gates
     parsed_qasm = parse_openqasm2_file(filename + ".qasm")

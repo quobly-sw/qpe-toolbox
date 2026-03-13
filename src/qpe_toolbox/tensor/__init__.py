@@ -6,9 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-
-"""
-This subpackage provides a set of functions for the manipulation of Matrix Product
+"""This subpackage provides a set of functions for the manipulation of Matrix Product
 Operators (MPO) and Matrix Product States (MPS).
 """
 
