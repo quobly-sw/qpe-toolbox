@@ -12,7 +12,7 @@ For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on
 
 **Documentation:** https://quobly-sw.github.io/qpe-toolbox/
 
-**qpe-toolbox presentation slides:** https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf
+[**qpe-toolbox presentation slides**](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf)
 
 # Installation
 Open a terminal and clone this repository with
