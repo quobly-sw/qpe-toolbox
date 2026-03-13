@@ -27,6 +27,7 @@ import numpy as np
 from tqdm import notebook as tqdm
 
 import qpe_toolbox.estimation as qpe
+from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates_by_qb, make_circ, make_circMPS
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
@@ -131,7 +132,7 @@ print(
 res = {"durations_tn": [], "durations_mps": [], "energies": [], "entangling_gates": []}
 trotter_order = 2
 nphase_list = np.array([1, 2, 3, 4, 5])
-ns_list = [1, 2, 3, 4, "exact"]
+ns_list = [1, 2, 3, 4, EXACT]
 max_tn_nphase = 5
 max_tn_nsteps = 3
 
@@ -143,7 +144,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
     for n_phase_bits in tqdm.tqdm(nphase_list, leave=False):
         initial_circMPS = make_circMPS(n_phase_bits, psi0_mps)
 
-        if (n_trotter_steps != "exact") and (
+        if (n_trotter_steps is not EXACT) and (
             n_phase_bits < max_tn_nphase or n_trotter_steps < max_tn_nsteps
         ):
             # using generic tensor network contraction to simulate a quantum circuit
