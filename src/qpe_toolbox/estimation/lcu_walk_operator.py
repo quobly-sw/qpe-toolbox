@@ -136,6 +136,11 @@ def _prepare_computational_state(k, n_qubits):
         Computational basis index, must satisfy ``0 <= k < 2**n``.
     n_qubits : int
         Number of qubits.
+
+    Returns
+    -------
+    :quimb-api:`MatrixProductOperator`
+        MPO representing :math:`\\ketbra{k}{0}`.
     """
     if not (0 <= k < 2**n_qubits):
         raise ValueError("k must be between 0 and 2**n")

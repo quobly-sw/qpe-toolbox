@@ -492,6 +492,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
     Returns
     -------
     fig : :matplotlib-api:`figure.Figure`
+        Figure showing the layered circuit diagram.
     """
     n_qubits = circ.N
     gate_rounds = [gate.round for gate in circ.gates]
@@ -710,6 +711,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
     Returns
     -------
     fig : :matplotlib-api:`figure.Figure`
+        Figure showing the tensor-network expectation value diagram.
     """
     n_qubits = circ.N
     if len(selected_edge) != 2:
