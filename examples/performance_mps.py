@@ -148,22 +148,21 @@ plot_histogram(
 # %% [markdown]
 # ## Dependence of contraction and sampling times for quimb
 #
-# In the following we present a non-exhaustive study of the dependence of the MPS (layer-by-layer) contraction time $t_{\mathrm{contr}}$ and sampling $t_{\mathrm{sampl}}$ in $\texttt{quimb}$. We will seek the trend of these times as the number of qubits $N$ (length of the MPS) and depth $D$ rise; note that the depth of the circuit upper bounds the bond dimension $\chi$ of the fully contracted MPS as $\chi \leq 2^D$.
+# In the following we present a non-exhaustive study of the dependence of the MPS (layer-by-layer) contraction time $t_{\mathrm{contr}}$ and sampling $t_{\mathrm{sampl}}$ in $\texttt{quimb}$. We will seek the trend of these times as the number of qubits `n_qubits` (length of the MPS) and depth rise; note that the depth of the circuit upper bounds the bond dimension $\chi$ of the fully contracted MPS as $\chi \leq 2^{\rm depth}$.
 #
 # We will compare the results for both types of quantum circuit instances introduced above. Since these classes of circuits are both random (in the sense that the parametrization of the single body gates is random), a thorough study would require averaging over circuit architectures and parametrizations. Such a study is beyond the scope of this example; we will actually observe that without averaging out this randomness we can extract solid comparisons.
 #
 # The conditions of the simulations include:
+# - A maximum bond dimension `max_bond` $\chi=2^{\rm depth}$, such that the simulation should not introduce any norm truncation due to bond dimension capping.
+# - A `cutoff` parameter, set to $\varepsilon=10^{-10}$; this cutoff controls the tail of singular values that is cut out after a local gate application.
 #
-# (1) A maximum bond dimension `max_bond` $\chi=2^{D}$, such that the simulation should not introduce any norm truncation due to bond dimension capping.
-# (2) A `cutoff` parameter, set to $\varepsilon=10^{-10}$; this cutoff controls the tail of singular values that is cut out after a local gate application.
-#
-# A more natural prescription for the study than the one chosen here would be to set a maximum accumulated error in the norm $\varepsilon_{\mathrm{total}}$, and study the growth of $t_{\mathrm{contr}}$, $t_{\mathrm{sampl}}$ and $\chi$ for that fixed threshold in $N$ and $\chi$. We avoid this prescription due to the difficulty of fixing the maximum error across different backends.
+# A more natural prescription for the study than the one chosen here would be to set a maximum accumulated error in the norm $\varepsilon_{\mathrm{total}}$, and study the growth of $t_{\mathrm{contr}}$, $t_{\mathrm{sampl}}$ and $\chi$ for that fixed threshold in `n_qubits` and $\chi$. We avoid this prescription due to the difficulty of fixing the maximum error across different backends.
 
 # %% [markdown]
-# ### Dependence in the number of qubits N
+# ### Dependence in the number of qubits
 
 # %% [markdown]
-# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen depths are $D=1, 3, 5$, and the $\texttt{quimb}$ class $\texttt{PermMPS}$ is also used for random circuits of $D=1$:
+# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen depths are `depth=1, 3, 5`, and the $\texttt{quimb}$ class $\texttt{PermMPS}$ is also used for random circuits with `depth=1`:
 
 # %%
 mycolors = ("tab:red", "tab:orange", "tab:olive", "tab:purple", "tab:pink", "tab:cyan")
@@ -217,32 +216,34 @@ fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsiz
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
-# Both the contraction and sampling times vary linearly with the number of qubtis. Indeed the circuit classes treated here involve a number of gates proportional to the number of qubits in the register, therefore the circuit contraction process repeats the gate application procedure an amount times that is $\propto N$. This behavior is reflected by the scaling of the red markers. To highlight the scaling, a set of parallel power-law lines $\propto N$ are added to the grid as a guide to the eye.
+# Both the contraction and sampling times vary linearly with the number of qubtis. Indeed the circuit classes treated here involve a number of gates proportional to the number of qubits in the register, therefore the circuit contraction process repeats the gate application procedure an amount times that is $\propto {\rm n_qubits}$. This behavior is reflected by the scaling of the red markers. To highlight the scaling, a set of parallel power-law lines $\propto {\rm n_qubits}$ are added to the grid as a guide to the eye.
 #
-# Conversely, the sampling requires finding the probability marginals for different outcomes by fixing the local value of the bitstrings to 0 or 1 in all $N$ qubits. Therefore, the scaling of sampling times with the number of qubits is also $\propto N$.
+# Conversely, the sampling requires finding the probability marginals for different outcomes by fixing the local value of the bitstrings to 0 or 1 in all `n_qubits` qubits. Therefore, the scaling of sampling times with the number of qubits is also $\propto {\rm n_qubits}$.
 #
 # Note though, that it is not the same to sample a single bitstring or 10 bitstrings in one go: the `sample` method from $\texttt{quimb}$ caches the marginal distributions between calls; this means that sampling more and more bitstrings gets everso faster than a single bitstring. This effect is reflected by the gap between the orange markers (1 sample) and the yellow markers (10 samples): the later indicate the average sampling time for drawing 10 bitstrings (thus we are timing `sample(C=10)/10` rather than `sample(C=1)`).
 #
-# The former discussion was fully dedicated to the `CircuitMPS` class from $\texttt{quimb}$. Nevertheless, there exists another MPS class that tries to leverage the non-locality of long-range circuits: `PermMPS`. The goal of this class can be understood by diving a bit into the procedure for applying a long-range gate: it requires permuting the two involved qubits through the 1-dimensional layout until they are nearest-neighbors, followed by the local application of the two-body gate. While `CircuitMPS` would restore the initial layout after the gate application, `PermMPS` leaves this new layout and tracks the intermediate trajectories of the qubits. Obviously, this class may yield advantageous wall-clock time measures when the number of gates is sparse. Opposed to that, our circuit instances are not sparse enough to detect a clear advantage. This can be seen for $D=1$ in the right column (random entangling pattern). Despite these results, we expect that a study with varying `ent_prob` and `ent_range` in the function `generate_rand_quimb` would define a regime of dominance of `PermMPS` over `CircuitMPS` for sparse circuits (low `ent_prob`, medium-low `ent_range`).
+# The former discussion was fully dedicated to the `CircuitMPS` class from $\texttt{quimb}$. Nevertheless, there exists another MPS class that tries to leverage the non-locality of long-range circuits: `PermMPS`. The goal of this class can be understood by diving a bit into the procedure for applying a long-range gate: it requires permuting the two involved qubits through the 1-dimensional layout until they are nearest-neighbors, followed by the local application of the two-body gate. While `CircuitMPS` would restore the initial layout after the gate application, `PermMPS` leaves this new layout and tracks the intermediate trajectories of the qubits. Obviously, this class may yield advantageous wall-clock time measures when the number of gates is sparse. Opposed to that, our circuit instances are not sparse enough to detect a clear advantage. This can be seen for `depth=1` in the right column (random entangling pattern). Despite these results, we expect that a study with varying `ent_prob` and `ent_range` in the function `generate_rand_quimb` would define a regime of dominance of `PermMPS` over `CircuitMPS` for sparse circuits (low `ent_prob`, medium-low `ent_range`).
 
 # %% [markdown]
 # ### Dependence in the bond dimension
 
 # %% [markdown]
-# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen sizes are $N=64, 128, 256$:
+# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen circiuit sizes are $n_{\rm qubits} \in \{64, 128, 256\}$:
 
 # %%
 x_range = np.linspace(1, 256)
-Ns = (64, 128, 256)
+n_qubits_values = (64, 128, 256)
 depths = range(1, 8)
 ylims = ((1e-2, 5.0), (1e-2, 1e2), (1e-2, 1.0), (1e-2, 5.0))
 mycolors = ("tab:blue", "tab:orange", "tab:green")
 fig, axes = plt.subplots(2, 2, sharex=True, figsize=(10, 5 * 2 / 1.61))
-for iN, N in enumerate(Ns):
-    plot_errorbar(axes[0, 0], dum, dum, dum, mycolors[iN], label=rf"N={N}")
+for iN, n_qubits in enumerate(n_qubits_values):
+    plot_errorbar(
+        axes[0, 0], dum, dum, dum, mycolors[iN], label=rf"n_qubits={n_qubits}"
+    )
     for j, ctype in enumerate(circuit_types):
         for depth in depths:
-            data = circuit_data[ctype][f"{ctype}_{N}"]
+            data = circuit_data[ctype][f"{ctype}_{n_qubits}"]
             bond_dim = data[f"depth{depth}"]["quimb MPS bondim"]
             values = (
                 data[f"depth{depth}"]["quimb MPS contr"],
@@ -282,7 +283,7 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # %% [markdown]
 # In order to understand scaling of the contraction and sampling times with the bond dimension we first need to recall which are the algorithmic expectations for each case.
 #
-# The contraction procedure involves (as mentioned earlier) the application of a two-body gate onto a pair of local tensors on an MPS, which after a depth $D$ may have a bond dimension $\chi\leq 2^D$. The algorithmic cost for this contraction is $\propto \chi^3$, as it can be easily computed by [dimension arguments](https://www.tensors.net/p-tutorial-1). This scaling only becomes visible for the largest bond dimensions in the right column for the random entangling pattern circuits, which at the same time saturate the bound between the circuit depth and the bond dimension: $\chi=2^D$. As a guide to the eye, we have added the cubic power law that passes by the points with highest $\chi$.
+# The contraction procedure involves (as mentioned earlier) the application of a two-body gate onto a pair of local tensors on an MPS, which at a given depth may have a bond dimension $\chi\leq 2^{\rm depth}$. The algorithmic cost for this contraction is $\propto \chi^3$, as it can be easily computed by [dimension arguments](https://www.tensors.net/p-tutorial-1). This scaling only becomes visible for the largest bond dimensions in the right column for the random entangling pattern circuits, which at the same time saturate the bound between the circuit depth and the bond dimension: $\chi=2^{\rm depth}$. As a guide to the eye, we have added the cubic power law that passes by the points with highest $\chi$.
 #
 # For the case of sampling a single bitstring, the scaling can be trickier: sampling a single bitstring requires constructing the diagonal of a reduced density matrix, which can be done with cost $\propto \chi^2$ if we consider only contracting the bra and ket parts of the MPS around the sites where the bitstring outcome is to be fixed. This is actually the scaling observed in the lower row of results for all the intances (see quadratic power law in grey passing by the points with highest $\chi$); despite that, we want to note that before contracting the MPS bra and ket, the MPS must be canonicalized. If the cost of such a process was to be included within the sampling time, then the cost would scale as $\propto \chi^3$, due to the [cost of performing rank-revealing matrix decompositions](https://www.tensors.net/p-tutorial-2).
 
@@ -293,12 +294,12 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # this means that the simulator only returns $t_{\mathrm{total}}(n_{\mathrm{sampl}})$, which is not necessarily equal to $t_{\mathrm{total}}(n_{\mathrm{sampl}})=t_{\mathrm{contr}}+n_{\mathrm{sampl}}\cdot t_{\mathrm{sampl}}$. The simplest way to estimate $t_{\mathrm{contr}}$ could be to repeat the simulation for a fixed circuit architecture and a list of $n_{\mathrm{sampl}}$ values, and to deduce $t_{\mathrm{contr}}$ and $t_{\mathrm{sampl}}$ from a $n_{\mathrm{sampl}}\to 0$ extrapolation. Nevertheless, when we explored this behavior for few instances, we found that there exist different regimes where the extrapolation would follow a particular scaling power law in $n_{\mathrm{sampl}}$:
 
 # %%
-N = 32
+n_qubits = 32
 num_samples = np.rint(np.logspace(np.log10(1), np.log10(5000), num=40)).astype(int)
 num_repetitions = 5
 depth = 3
 qc = deserialize_to_qiskit_QuantumCircuit(
-    circuit_data["brick"][f"brick_{N}"], max_depth=depth + 1, measure=True
+    circuit_data["brick"][f"brick_{n_qubits}"], max_depth=depth + 1, measure=True
 )
 dict_total_qiskit = {}
 for shots in num_samples:
@@ -335,7 +336,7 @@ ax.grid(which="both", linestyle="-", linewidth=0.25)
 # Therefore we restrain ourselves to compare the total wall-clock time for contracting the different circuits and sample 10 strings in both backends:
 
 # %%
-Ns = 2 ** np.arange(4, 9)
+n_qubits_values = 2 ** np.arange(4, 9)
 fig, axes = plt.subplots(3, 2, sharex=True, figsize=(5 * 2, 5 * 3 / 1.61))
 for idx, ax in np.ndenumerate(axes):
     depth = idx[0] + 4
@@ -348,10 +349,10 @@ for idx, ax in np.ndenumerate(axes):
         plot_errorbar(ax, x, np.mean(total_quimb), np.std(total_quimb), "tab:orange")
         plot_errorbar(ax, x, np.mean(total_qiskit), np.std(total_qiskit), "tab:cyan")
 
-    ax.set_xlim(Ns[0] / 2, Ns[-1] * 2)
+    ax.set_xlim(n_qubits_values[0] / 2, n_qubits_values[-1] * 2)
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
-    ax.set_xticks(Ns)
+    ax.set_xticks(n_qubits_values)
     ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
     ax.grid(which="both", linestyle="-", linewidth=0.25)
     if idx[1] == 0:
@@ -367,7 +368,7 @@ fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsiz
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
-# Interestingly, while for all sizes and depths of the chosen brickwall circuits $\texttt{qiskit-aer}$ dominates with speedups of almost an order of magnitude, the same cannot be told for random circuits with long-range entangling gates. We observe that for deep enough instances ($D\geq 4$), $\texttt{qiskit-aer}$ and $\texttt{quimb}$ already perform comparably; for the deepest random circuits explored here, $\texttt{quimb}$ surpasses $\texttt{qiskit-aer}$ by an order of magnitude.
+# Interestingly, while for all sizes and depths of the chosen brickwall circuits $\texttt{qiskit-aer}$ dominates with speedups of almost an order of magnitude, the same cannot be told for random circuits with long-range entangling gates. We observe that for deep enough instances (${\rm depth}\geq 4$), $\texttt{qiskit-aer}$ and $\texttt{quimb}$ already perform comparably; for the deepest random circuits explored here, $\texttt{quimb}$ surpasses $\texttt{qiskit-aer}$ by an order of magnitude.
 
 # %% [markdown]
 # ## Other strategies within quimb

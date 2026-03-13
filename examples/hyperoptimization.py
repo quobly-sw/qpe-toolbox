@@ -18,7 +18,7 @@
 # %% [markdown]
 #  We aim at providing more advanced circuit simulations for the toolbox; this tutorial complements the MPS contraction from a boundary of the network presented in the tutorial on [MPS contraction](./performance_mps.ipynb), and focuses on how to use [hyperoptimization](https://arxiv.org/abs/2002.01935) without intermediate [compression](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.14.011009). It is used for the exact contraction of relatively large networks representing expectation values of local observables, which can contribute for example in the computation of global energy expectation values.
 #
-# The particular example we chose is the optimization of the Ansatz circuit for the [Quantum Approximate Optimization Algorithm](https://arxiv.org/abs/1411.4028) in order to solve a MaxCut problem. **This notebook is based on the several examples from [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/) and [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) for optimized contractions. In particular, we revisit the example on [Bayesian Optimizing QAOA Circuit Energy](https://quimb.readthedocs.io/en/main/examples/ex_tn_qaoa_energy_bayesopt.html).**
+# The particular example we chose is the optimization of the Ansatz circuit for the [Quantum Approximate Optimization Algorithm (QAOA)](https://arxiv.org/abs/1411.4028) in order to solve a MaxCut problem. **This notebook is based on the several examples from [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/) and [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) for optimized contractions. In particular, we revisit the example on [Bayesian Optimizing QAOA Circuit Energy](https://quimb.readthedocs.io/en/main/examples/ex_tn_qaoa_energy_bayesopt.html).**
 
 # %%
 import os
@@ -79,8 +79,8 @@ G_reg = nx.random_regular_graph(d=regularity, n=10, seed=42)
 terms_reg = dict.fromkeys(G_reg.edges, 1)
 
 # weighted Erdos-Renyi graph
-sparsity = 0.25  # sparsity of the graph
-G_wER = nx.fast_gnp_random_graph(n=14, p=sparsity, seed=42)
+graph_sparsity = 0.25
+G_wER = nx.fast_gnp_random_graph(n=14, p=graph_sparsity, seed=42)
 terms_wER = {(i, j): rng.random() for i, j in G_wER.edges}
 amplitudes_wER = np.fromiter(terms_wER.values(), float)
 
@@ -123,7 +123,7 @@ ax_wER.set_title(r"Weighted Erdos-Renyi graph")
 #
 #
 #
-#  This corresponds to finding the ground state of the classical AntiFerromagnetic Ising Model (AFIM)
+#  This corresponds to finding the ground state of the classical antiferromagnetic Ising model
 #
 #
 #
@@ -131,7 +131,7 @@ ax_wER.set_title(r"Weighted Erdos-Renyi graph")
 #
 #
 #
-#  In order to find the partition(s) with the lowest energy, the [QAOA Ansatz](https://arxiv.org/abs/1411.4028) of depth $p$ takes inspiration from the quantum annealing approach and uses a parametrized circuit constituted by 'Trotterized' layers of real time evolution (see our example `trotter_decomposition`). It alternates the action of a mixer Hamiltonian with an easy ground state, the transverse magnetization $\mathbb{M}_x=\sum_i \sigma^x_i$ with phase $\beta$, and the target Hamiltonian AFIM with phase $\gamma$:
+#  In order to find the partition(s) with the lowest energy, the [QAOA Ansatz](https://arxiv.org/abs/1411.4028) of depth $p$ takes inspiration from the quantum annealing approach and uses a parametrized circuit constituted by 'Trotterized' layers of real time evolution (see our example [trotter_decomposition](trotter_decomposition.ipynb)). It alternates the action of a mixer Hamiltonian with an easy ground state, the transverse magnetization $\mathbb{M}_x=\sum_i \sigma^x_i$ with phase $\beta$, and the target antiferromagnetic Ising Hamiltonian with phase $\gamma$:
 #
 #
 #
@@ -211,7 +211,7 @@ fig = draw_layered_expval(selected_edge=(3, 4), circ=circ_reg, list_names=list_n
 # ## Understanding the cost of contractions: the contraction tree, W and C
 
 # %% [markdown]
-#  Luckily, [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/index.html) automatizes the optimization process for finding the best series of pairwise contractions in a network. The whole machinery is wrapped up into a [`HyperOptimizer class`](https://github.com/jcmgray/cotengra/blob/5e22dcdb60bca4a30e34248b93b00bc736f214d5/cotengra/hyperoptimizers/hyper.py#L353).
+#  Luckily, [$\texttt{cotengra}$](https://cotengra.readthedocs.io/en/latest/index.html) automatizes the optimization process for finding the best series of pairwise contractions in a network. The whole machinery is wrapped up into a [`HyperOptimizer`](https://github.com/jcmgray/cotengra/blob/5e22dcdb60bca4a30e34248b93b00bc736f214d5/cotengra/hyperoptimizers/hyper.py#L353) object.
 #
 #
 #
