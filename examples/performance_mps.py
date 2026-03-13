@@ -39,7 +39,7 @@ from qpe_toolbox.circuit import (
     deserialize_to_quimb_Circuit,
     deserialize_to_quimb_CircuitMPS,
     draw_layered_circuit,
-    generate_rand_quimb,
+    generate_rand_circuit,
     serialize_from_quimb_Circuit,
 )
 
@@ -103,13 +103,13 @@ for ctype in circuit_types:
 # %%
 # Create small circuit
 depth = 3
-circ_quimb = generate_rand_quimb(
+circ_quimb = generate_rand_circuit(
     n_qubits=5,
     depth=depth,
-    sb_gate_label="rx",
-    ent_gate_label="cx",
-    ent_gate_range=4,
-    ent_gate_prob=0.5,
+    one_qubit_gate_label="rx",
+    two_qubit_gate_label="cx",
+    two_qubit_gate_range=4,
+    two_qubit_gate_prob=0.5,
 )
 
 # Recast it into the right classes
@@ -216,13 +216,40 @@ fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsiz
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
-# Both the contraction and sampling times vary linearly with the number of qubtis. Indeed the circuit classes treated here involve a number of gates proportional to the number of qubits in the register, therefore the circuit contraction process repeats the gate application procedure an amount times that is $\propto {\rm n_qubits}$. This behavior is reflected by the scaling of the red markers. To highlight the scaling, a set of parallel power-law lines $\propto {\rm n_qubits}$ are added to the grid as a guide to the eye.
+# Both the contraction and sampling times vary linearly with the number of qubtis.
+# Indeed the circuit classes treated here involve a number of gates proportional
+# to the number of qubits in the register, therefore the circuit contraction process
+# repeats the gate application procedure an amount times that is $\propto n_{\rm qubits}$.
+# This behavior is reflected by the scaling of the red markers. To highlight the scaling,
+# a set of parallel power-law lines $\propto n_{\rm qubits}$ are added to the grid
+# as a guide to the eye.
 #
-# Conversely, the sampling requires finding the probability marginals for different outcomes by fixing the local value of the bitstrings to 0 or 1 in all `n_qubits` qubits. Therefore, the scaling of sampling times with the number of qubits is also $\propto {\rm n_qubits}$.
+# Conversely, the sampling requires finding the probability marginals for different
+# outcomes by setting the $n_{\rm qubits}$ bitstring.
+# Therefore, the scaling of sampling times with the number of qubits is also $\propto n_{\rm qubits}$.
 #
-# Note though, that it is not the same to sample a single bitstring or 10 bitstrings in one go: the `sample` method from $\texttt{quimb}$ caches the marginal distributions between calls; this means that sampling more and more bitstrings gets everso faster than a single bitstring. This effect is reflected by the gap between the orange markers (1 sample) and the yellow markers (10 samples): the later indicate the average sampling time for drawing 10 bitstrings (thus we are timing `sample(C=10)/10` rather than `sample(C=1)`).
+# Note though, that it is not the same to sample a single bitstring or 10 bitstrings
+# in one go: the `sample` method from $\texttt{quimb}$ caches the marginal distributions
+# between calls; this means that sampling more and more bitstrings gets everso faster
+# than a single bitstring. This effect is reflected by the gap between the orange
+# markers (1 sample) and the yellow markers (10 samples): the later indicate the average
+# sampling time for drawing 10 bitstrings (thus we are timing `sample(C=10)/10` rather than `sample(C=1)`).
 #
-# The former discussion was fully dedicated to the `CircuitMPS` class from $\texttt{quimb}$. Nevertheless, there exists another MPS class that tries to leverage the non-locality of long-range circuits: `PermMPS`. The goal of this class can be understood by diving a bit into the procedure for applying a long-range gate: it requires permuting the two involved qubits through the 1-dimensional layout until they are nearest-neighbors, followed by the local application of the two-body gate. While `CircuitMPS` would restore the initial layout after the gate application, `PermMPS` leaves this new layout and tracks the intermediate trajectories of the qubits. Obviously, this class may yield advantageous wall-clock time measures when the number of gates is sparse. Opposed to that, our circuit instances are not sparse enough to detect a clear advantage. This can be seen for `depth=1` in the right column (random entangling pattern). Despite these results, we expect that a study with varying `ent_prob` and `ent_range` in the function `generate_rand_quimb` would define a regime of dominance of `PermMPS` over `CircuitMPS` for sparse circuits (low `ent_prob`, medium-low `ent_range`).
+# The former discussion was fully dedicated to the `CircuitMPS` class from $\texttt{quimb}$.
+# Nevertheless, there exists another MPS class that tries to leverage the non-locality of
+# long-range circuits: `PermMPS`. The goal of this class can be understood by diving a bit
+# into the procedure for applying a long-range gate: it requires permuting the two
+# involved qubits through the 1-dimensional layout until they are nearest-neighbors,
+# followed by the local application of the two-body gate. While `CircuitMPS` would
+# restore the initial layout after the gate application, `PermMPS` leaves this new
+# layout and tracks the intermediate trajectories of the qubits. Obviously, this
+# class may yield advantageous wall-clock time measures when the number of gates
+# is sparse. Opposed to that, our circuit instances are not sparse enough to detect
+# a clear advantage. This can be seen for `depth=1` in the right column
+# (random entangling pattern). Despite these results, we expect that a study with
+# varying `ent_prob` and `ent_range` in the function `generate_rand_circuit` would
+# define a regime of dominance of `PermMPS` over `CircuitMPS` for sparse circuits
+# (low `ent_prob`, medium-low `ent_range`).
 
 # %% [markdown]
 # ### Dependence in the bond dimension

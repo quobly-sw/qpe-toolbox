@@ -34,8 +34,8 @@ from qpe_toolbox.circuit import (
     deserialize_to_quimb_Circuit,
     draw_layered_circuit,
     dump_quimb_Circuit_to_qasm,
-    generate_brickwall_quimb,
-    generate_rand_quimb,
+    generate_brickwall_circuit,
+    generate_rand_circuit,
     load_qasm_to_quimb_Circuit,
     serialize_from_quimb_Circuit,
 )
@@ -50,8 +50,9 @@ from qpe_toolbox.circuit import (
 # In the first place we need to know how wide our circuit is, i.e. specify the number of qubits on which the protocol will be executed. Once we know this, we can call the class `Circuit` to generate an empty instance. Once we have our empty instance, we will start appending the gates of interest, according to the quantum algorithm that we aim to execute. $\texttt{quimb}$ includes a list of constant and parametrizable one- and two-qubit gates that can be used for gate-by-gate construction. For example:
 
 # %%
-N = 5  # total number of qubits
-circ = qtn.Circuit(N=N)  # instantiate the class, get an empty circuit
+rng = np.random.default_rng(42)
+n_qubits = 5  # total number of qubits
+circ = qtn.Circuit(n_qubits)  # instantiate the class, get an empty circuit
 
 # Hadamard on the 2nd qubit and 0th layer
 circ.apply_gate(gate_id="h", qubits=[1], gate_round=0)
@@ -78,19 +79,24 @@ circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 # Build a circuit with random parameters and two-layer structure;
 # one layer is a single-body rotation, and the other is
 # an entangling two-body gate
-circ_brick = generate_brickwall_quimb(
-    n_qubits=10, depth=4, sb_gate_label="rx", ent_gate_label="cnot"
+brickwall_circuit = generate_brickwall_circuit(
+    n_qubits=10,
+    depth=4,
+    one_qubit_gate_label="rx",
+    two_qubit_gate_label="cnot",
+    rng=rng,
 )
 
 # Same as before, but the entangling layer randomly picks pairs
 # of qubits at a maximum distance `ent_range`
-circ_rand = generate_rand_quimb(
+random_circuit = generate_rand_circuit(
     n_qubits=10,
     depth=4,
-    sb_gate_label="rx",
-    ent_gate_label="cnot",
-    ent_gate_range=3,
-    ent_gate_prob=0.33,
+    one_qubit_gate_label="rx",
+    two_qubit_gate_label="cnot",
+    two_qubit_gate_range=3,
+    two_qubit_gate_prob=0.33,
+    rng=rng,
 )
 
 # %% [markdown]
@@ -101,22 +107,22 @@ circ_rand = generate_rand_quimb(
 
 # %%
 # Indicate the set of tensors acting on particular qubits
-circ_brick.psi.draw(color=[f"I{i}" for i in range(circ_brick.N)])
+brickwall_circuit.psi.draw(color=[f"I{i}" for i in range(brickwall_circuit.N)])
 
 # Indicate the gate round
 depth = max(gate.round for gate in circ.gates) + 1
 circ.psi.draw(color=["PSI0"] + [f"ROUND_{i}" for i in range(depth)])
 
 # Indicate different gates
-circ_rand.psi.draw(color=["PSI0", "RX", "CX"], layout="kamada_kawai")
+random_circuit.psi.draw(color=["PSI0", "RX", "CX"], layout="kamada_kawai")
 
 # %% [markdown]
 # Nevertheless, to understand the details of large circuits with long-range gates, it is preferable to switch to `matplotlib`, as crossings of tensor legs in the network can be clarified using a fixed layout. To this end, we introduce `draw_layered_circuit`, which targets circuits composed of layers of single- and two-qubit rotations:
 
 # %%
-depth = max([gate.round for gate in circ_rand.gates]) + 1
+depth = max([gate.round for gate in random_circuit.gates]) + 1
 fig = draw_layered_circuit(
-    circ_rand,
+    random_circuit,
     list_names=[
         r"$0$",
         [f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, depth + 1)],
@@ -157,13 +163,13 @@ fig = draw_layered_circuit(
 # Since the information on the rounds is not recorded usually
 # on `.qasm`, we added the option of saving that information on a different .txt
 dump_quimb_Circuit_to_qasm(
-    circ=circ_rand, savefile_base="example_output_quimb_circuit", save_rounds=True
+    circ=random_circuit, savefile_base="example_output_quimb_circuit", save_rounds=True
 )
 
 ## Saving as `.json`
 # The circuit needs to be properly serialized,
 # so return a dictionary with valid `.json` dtypes
-dict_circ = serialize_from_quimb_Circuit(qc=circ_rand)
+dict_circ = serialize_from_quimb_Circuit(qc=random_circuit)
 with open("example_output_quimb_circuit.json", "w") as f:
     json.dump(dict_circ, f, indent=4)
 
@@ -244,7 +250,6 @@ qc_lr = n_local(4, "ry", "cx", entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)], re
 # In order to feed the parameters, we only need to pass a list of values and assign them:
 
 # %%
-rng = np.random.default_rng()
 param_values = rng.uniform(0, 2 * np.pi, qc_lr.num_parameters)
 qc_with_values = qc_lr.assign_parameters(param_values)
 
