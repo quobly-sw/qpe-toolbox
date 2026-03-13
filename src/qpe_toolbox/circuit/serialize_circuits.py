@@ -406,7 +406,9 @@ def deserialize_to_quimb_Circuit(
     contract : bool, optional
         Whether to contract the quimb Circuit. Default is False.
 
-    gate_opts : Supplied to the gate function, options here will override the default gate_opts
+    **gate_opts : dict
+        Additional keyword arguments forwarded to
+        :quimb-api:`Circuit.apply_gate`. Override any default gate options.
 
     Returns
     -------
@@ -489,6 +491,10 @@ def deserialize_to_quimb_CircuitMPS(
     perm : bool, optional
         If ``True``, use :quimb-api:`CircuitPermMPS` instead of
         :quimb-api:`CircuitMPS`. Default is False.
+
+    psi0 : :quimb-api:`MatrixProductState` or None, optional
+        Initial MPS state. If ``None``, the all-zeros computational basis
+        state is used. Default is None.
 
     Returns
     -------

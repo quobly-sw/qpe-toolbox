@@ -99,6 +99,10 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
         - If ``0`` or ``inf``, probabilities are computed exactly.
         - If finite, probabilities are estimated by sampling.
 
+    seed : int, optional
+        Random seed for shot sampling. Only used when ``n_shots`` is finite.
+        Default is 42.
+
     Returns
     -------
     Z : float

@@ -228,6 +228,10 @@ def study_optimization_time_costs(
         Controls printing of intermediate results. If ``>= 1``, prints the
         lowest energy in each batch. Default is 0.
 
+    seed : int or None, optional
+        Random seed passed to the ``optuna`` sampler for reproducibility.
+        Default is None.
+
     Returns
     -------
     ask_time : list of float

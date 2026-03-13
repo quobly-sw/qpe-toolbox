@@ -126,17 +126,26 @@ def build_lcu_prepare_mpo(hamiltonian, *, cutoff=1e-10):
     return prep_mpo
 
 
-def _prepare_computational_state(k, n):
-    """Get the MPO for :math:`\\ketbra{k}{0}` where :math:`0 \\leq k < 2^n`"""
-    if not (0 <= k < 2**n):
+def _prepare_computational_state(k, n_qubits):
+    """
+    Get the MPO for :math:`\\ketbra{k}{0}` where :math:`0 \\leq k < 2^n`.
+
+    Parameters
+    ----------
+    k : int
+        Computational basis index, must satisfy ``0 <= k < 2**n``.
+    n_qubits : int
+        Number of qubits.
+    """
+    if not (0 <= k < 2**n_qubits):
         raise ValueError("k must be between 0 and 2**n")
-    bitstring = f"{k:0{n}b}"
+    bitstring = f"{k:0{n_qubits}b}"
     arrays = []
     for idx, ik in enumerate(bitstring):
-        if idx == 0 or idx == n - 1:
+        if idx == 0 or idx == n_qubits - 1:
             aux = np.zeros([1, 2, 2], dtype=complex)  # internal, upper, lower
             aux[0, int(ik), 0] = 1
-        elif idx < n - 1:
+        elif idx < n_qubits - 1:
             aux = np.zeros(
                 [1, 1, 2, 2], dtype=complex
             )  # left internal, right internal, upper, lower
