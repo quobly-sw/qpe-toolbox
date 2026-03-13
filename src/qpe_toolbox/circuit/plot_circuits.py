@@ -47,8 +47,7 @@ def rand_high_sat_color(*, rng=None):
 
 def assign_sublayers_per_round(circ, gate_round):
     """
-    Assign non-overlapping two-qubit gates of a given circuit round
-    to sublayers for plotting purposes.
+    Assign non-overlapping two-qubit gates of a given circuit round to sublayers for plotting.
 
     This function groups all two-qubit gates acting in a given entangling layer (``gate_round``)
     into sublayers, such that no two gates within the same sublayer act on overlapping
@@ -131,8 +130,7 @@ def assign_sublayers_per_round(circ, gate_round):
 
 def assign_sublayers(circ):
     """
-    Assign non-overlapping two-qubit gates of a given circuit
-    to sublayers at all depths for plotting purposes. See :func:`assign_sublayers_per_round`.
+    Assign non-overlapping two-qubit gates to sublayers across all circuit depths.
 
     Parameters
     ----------
@@ -213,8 +211,7 @@ def _add_square(ax, x, y, col_face):
 
 def _add_circle(ax, x, y, col_face):
     """
-    Add a filled circle patch to a Matplotlib Axes,
-    centered at the specified coordinates.
+    Add a filled circle patch to a Matplotlib Axes, centered at the specified coordinates.
 
     Parameters
     ----------
@@ -569,15 +566,17 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
 
 
 def build_reverse_light_cone_circuit(selected_edge, circ):
-    """Construct the reverse light-cone circuit skelleton for a given interaction edge
-    on a circuit constituted by single-qubit rotations and entangling layers
-    for visualization purposes:
+    """
+    Extract the reverse light-cone circuit around a selected two-qubit interaction edge.
+
+    The circuit is constituted by single-qubit rotations and entangling layers,
+    e.g. for QAOA:
 
     .. math::
 
        U_1 U_{\\mathrm{ent}} U_1 U_{\\mathrm{ent}} \\cdots |\\text{initial product state}\\rangle
 
-    e.g. for QAOA: :math:`U_x U_{zz} U_x U_{zz} |+\\rangle`.
+    i.e. :math:`U_x U_{zz} U_x U_{zz} |+\\rangle`.
 
     This function extracts the light cone of a selected two-qubit
     interaction term (Pauli string with weight 2) from a full circuit and
@@ -609,7 +608,6 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
     - Gate parameters are set to zero when reconstructing the circuit, as the
       function is intended for structural and visualization purposes rather
       than numerical simulation.
-
     """
     n_qubits = circ.N
 

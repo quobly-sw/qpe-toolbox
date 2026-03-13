@@ -26,8 +26,7 @@ from .qft import iqft_swapped
 
 def get_lcu_weights(hamiltonian):
     """
-    Compute the weights for the linear combination of unitaries (LCU) representation
-    of a Hamiltonian, including normalization factor and ancilla register size.
+    Compute the LCU weights, normalization factor, and ancilla register size for a Hamiltonian.
 
     Parameters
     ----------
@@ -188,8 +187,7 @@ def lcu_select_gates(hamiltonian):
 
 def _gates_llxHl(hamiltonian, l_term):
     r"""
-    Construct gate instructions for controlled :math:`H_\ell`
-    (conditioned on L-register).
+    Construct gate instructions for controlled :math:`H_\ell` (conditioned on L-register).
 
     Parameters
     ----------
@@ -283,8 +281,7 @@ def _build_Hl_mpo(hamiltonian, l_term):
 
 def _build_llxHl_mpo(hamiltonian, l_term):
     r"""
-    Construct the MPO for :math:`\ket{\ell}\bra{\ell} \otimes H_\ell`,
-    used in the SELECT oracle.
+    Construct the MPO for :math:`\ket{\ell}\bra{\ell} \otimes H_\ell` used in the SELECT oracle.
 
     Parameters
     ----------
@@ -451,8 +448,7 @@ def qpe_first_stage_walk(
     H, psi0_mps, m_ph, regs, *, max_bond=0, cutoff=1e-10, verbosity=0
 ):
     """
-    LCU and first stage of QPE using walk operator: apply Hadamard wall
-    and controlled-W sequence.
+    LCU first stage of QPE: apply Hadamard wall and controlled-W sequence.
 
     Parameters
     ----------
@@ -525,8 +521,7 @@ def qpe_first_stage_walk(
 
 def _get_registers_qpe_lcu(n_qubits, m_L, m_ph):
     """
-    Return dictionary of qubit registers for the phase, L,
-    and physical registers in LCU QPE.
+    Return dictionary of qubit registers for the phase, L, and physical registers in LCU QPE.
 
     Parameters
     ----------

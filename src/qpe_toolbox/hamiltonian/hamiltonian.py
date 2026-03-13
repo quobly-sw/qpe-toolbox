@@ -15,8 +15,7 @@ from quimb.operator import SparseOperatorBuilder
 
 def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     """
-    Construct a 1D nearest-neighbor spin 1/2 Heisenberg Hamiltonian with open
-    boundaries.
+    Construct a 1D nearest-neighbor spin 1/2 Heisenberg Hamiltonian with open boundaries.
 
     The Hamiltonian is given by
 

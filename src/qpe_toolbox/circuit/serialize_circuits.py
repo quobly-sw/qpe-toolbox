@@ -450,10 +450,10 @@ def deserialize_to_quimb_CircuitMPS(
     psi0=None,
 ):
     """
-    Deserialize a gate dictionary into a :quimb-api:`CircuitMPS` or
-    :quimb-api:`CircuitPermMPS` up to a given depth from a serialized
-    representation of a quantum circuit (i.e., the same format as saved in JSON).
-    Only gates whose `round` index is strictly smaller than ``max_depth`` are applied,
+    Deserialize a gate dictionary into a :quimb-api:`CircuitMPS` or :quimb-api:`CircuitPermMPS`.
+
+    Accepts the same serialized format as saved in JSON.
+    Only gates whose ``round`` index is strictly smaller than ``max_depth`` are applied,
     allowing for partial reconstruction of the circuit.
 
     Parameters

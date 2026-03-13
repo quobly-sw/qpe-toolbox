@@ -72,8 +72,7 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
 
 def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
     r"""
-    Run the Hadamard test circuit and estimate the expectation value
-    :math:`Z(\theta)`.
+    Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
 
     The returned value is
 

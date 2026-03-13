@@ -194,8 +194,7 @@ def study_optimization_time_costs(
     hamilt_terms, hyperopt, bounds, *, batch_size=5, num_iter=20, verbosity=0, seed=None
 ):
     """
-    Measure time costs for batched parameter suggestions and evaluations
-    in an ``optuna`` optimization loop.
+    Measure time costs for batched parameter suggestions and evaluations in an ``optuna`` loop.
 
     This function runs a ``CMA-ES`` optimization study using ``optuna`` and records the
     time taken for three steps in each iteration:

@@ -204,6 +204,7 @@ def two_qubit_rand_layer(
 ):
     """
     Apply a random two-body entangling layer to a ``quimb`` :quimb-api:`Circuit`.
+
     This function applies two-qubit entangling gates between randomly chosen
     qubit pairs. For each qubit, a partner qubit is selected within a given
     range, and the entangling gate is applied with a specified probability.
