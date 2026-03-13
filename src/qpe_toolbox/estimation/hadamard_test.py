@@ -70,7 +70,7 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
     return circ
 
 
-def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
+def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
     r"""
     Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
 
@@ -96,10 +96,8 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=42):
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots. If ``EXACT``, probabilities are computed exactly,
         else probabilities are estimated by sampling.
-
-    seed : int, optional
-        Random seed for shot sampling. Only used when ``n_shots`` is finite.
-        Default is 42.
+    seed : None or int, optional
+        A random seed, passed to ``numpy.random.seed`` if given.
 
     Returns
     -------
