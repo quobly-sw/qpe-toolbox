@@ -225,7 +225,7 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # as a guide to the eye.
 #
 # Conversely, the sampling requires finding the probability marginals for different
-# outcomes by fixing the local value of the bitstrings to 0 or 1 in all `n_qubits` qubits.
+# outcomes by setting the $n_{\rm qubits}$ bitstring.
 # Therefore, the scaling of sampling times with the number of qubits is also $\propto n_{\rm qubits}$.
 #
 # Note though, that it is not the same to sample a single bitstring or 10 bitstrings
