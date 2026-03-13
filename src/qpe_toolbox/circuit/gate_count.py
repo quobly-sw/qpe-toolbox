@@ -160,8 +160,8 @@ def count_gates_by_qb(gate_count):
     Parameters
     ----------
     gate_count : dict
-        Dictionary mapping gate labels to counts as producd by
-        qpe_toolbox.estimation.qpe_energy.
+        Dictionary mapping gate labels to counts as produced by
+        :func:`qpe_toolbox.estimation.quantum_phase_estimation.qpe_energy`.
 
     Returns
     -------
