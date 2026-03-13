@@ -15,39 +15,6 @@ import quimb.tensor as qtn
 from qiskit import ClassicalRegister, QuantumCircuit
 from quimb.tensor.circuit import parse_openqasm2_file
 
-from .parametrized_circuits import (
-    list_all_param_labels,
-    list_single_body_labels,
-    list_two_body_labels,
-)
-
-dict_qiskit_gate_map = {
-    "x": QuantumCircuit.x,
-    "y": QuantumCircuit.y,
-    "z": QuantumCircuit.z,
-    "h": QuantumCircuit.h,
-    "s": QuantumCircuit.s,
-    "sdg": QuantumCircuit.sdg,
-    "t": QuantumCircuit.t,
-    "tdg": QuantumCircuit.tdg,
-    "id": QuantumCircuit.id,
-    "rx": QuantumCircuit.rx,
-    "ry": QuantumCircuit.ry,
-    "rz": QuantumCircuit.rz,
-    "p": QuantumCircuit.p,
-    "u": QuantumCircuit.u,
-    "cx": QuantumCircuit.cx,  # CNOT
-    "cz": QuantumCircuit.cz,
-    "cy": QuantumCircuit.cy,
-    "ch": QuantumCircuit.ch,
-    "cp": QuantumCircuit.cp,
-    "swap": QuantumCircuit.swap,
-    "cswap": QuantumCircuit.cswap,
-}
-"""
-Mapping between quimb and qiskit gates
-"""
-
 
 def apply_gate_qiskit(qc, label, qubits, params):
     """Apply a quantum gate to a ``qiskit`` :qiskit-api:`QuantumCircuit` using a string label.
@@ -62,9 +29,6 @@ def apply_gate_qiskit(qc, label, qubits, params):
 
     It is inspired in the :quimb-api:`Circuit.apply_gate` method from `quimb`'s :quimb-api:`Circuit`.
 
-    The gate implementation is retrieved from ``dict_qiskit_gate_map``, which
-    maps lowercase gate labels to the corresponding :qiskit-api:`QuantumCircuit`
-    methods (e.g. ``"rx" -> `` :qiskit-api:`qiskit.QuantumCircuit.rx <QuantumCircuit>`).
     The alias ``"cnot"`` is automatically mapped to ``"cx"``.
 
     Parameters
@@ -97,14 +61,11 @@ def apply_gate_qiskit(qc, label, qubits, params):
     ValueError
         If the number of qubits is not supported (i.e. not 1 or 2).
 
-    KeyError
-        If the gate label is not present in ``dict_qiskit_gate_map``.
+    AttributeError
+        If the gate label does not correspond to a qiskit gate.
 
     Notes
     -----
-    - This function does not validate parameter counts; incorrect parameter
-      lengths may raise a ``TypeError`` from ``qiskit``.
-
     - Qubit index bounds are not checked and must be valid for the circuit.
 
     Examples
@@ -129,22 +90,9 @@ def apply_gate_qiskit(qc, label, qubits, params):
 
     # Check the number of qubits
     n_qubits = len(qubits)
-    if n_qubits == 1:
-        if len(params) == 0:
-            gate_func = dict_qiskit_gate_map[label]
-            gate_func(qc, qubits[0])
-        else:
-            gate_func = dict_qiskit_gate_map[label]
-            gate_func(qc, *params, qubits[0])
-    elif n_qubits == 2:
-        if len(params) == 0:
-            gate_func = dict_qiskit_gate_map[label]
-            gate_func(qc, qubits[0], qubits[1])
-        else:
-            gate_func = dict_qiskit_gate_map[label]
-            gate_func(qc, *params, qubits[0], qubits[1])
-    else:
+    if len(qubits) not in (1, 2):
         raise ValueError(f"Unsupported number of qubits: {n_qubits}")
+    getattr(qc, label)(*params, *qubits)
 
 
 def deserialize_to_qiskit_QuantumCircuit(
@@ -587,12 +535,12 @@ def dump_quimb_Circuit_to_qasm(circ, savefile_base, *, save_rounds=True):
             param_str = ",".join(f"{float(p):.8g}" for p in params)
             qubit_str = ",".join(f"q[{int(q)}]" for q in qubits)
 
-            if gate.label.upper() in list_all_param_labels:
+            if gate.label.upper() in qtn.circuit.ALL_PARAM_GATES:
                 qasm_lines.append(f"{label.lower()}({param_str}) {qubit_str};")
 
             elif (
-                gate.label.upper() in list_single_body_labels
-                or gate.label.upper() in list_two_body_labels
+                gate.label.upper() in qtn.circuit.ONE_QUBIT_GATES
+                or gate.label.upper() in qtn.circuit.TWO_QUBIT_GATES
             ):
                 qasm_lines.append(f"{label.lower()} {qubit_str};")
 

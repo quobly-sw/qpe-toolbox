@@ -16,8 +16,10 @@ from .gate_count import count_gates, count_gates_by_qb
 from .initialization import make_circ, make_circMPS
 from .parametrized_circuits import (
     ansatz_circuit,
-    generate_brickwall_quimb,
-    generate_rand_quimb,
+    ansatz_circuit_su4,
+    ansatz_circuit_sym,
+    generate_brickwall_circuit,
+    generate_rand_circuit,
 )
 from .plot_circuits import draw_layered_circuit, draw_layered_expval
 from .qaoa import (

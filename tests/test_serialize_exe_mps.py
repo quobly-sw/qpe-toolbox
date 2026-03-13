@@ -7,15 +7,13 @@ from collections import Counter
 import numpy as np
 from qiskit_aer import AerSimulator
 
-from qpe_toolbox.circuit.parametrized_circuits import (
-    generate_brickwall_quimb,
-    generate_rand_quimb,
-)
-from qpe_toolbox.circuit.serialize_circuits import (
+from qpe_toolbox.circuit import (
     deserialize_to_qiskit_QuantumCircuit,
     deserialize_to_quimb_Circuit,
     deserialize_to_quimb_CircuitMPS,
     dump_quimb_Circuit_to_qasm,
+    generate_brickwall_circuit,
+    generate_rand_circuit,
     serialize_from_quimb_Circuit,
 )
 
@@ -36,7 +34,7 @@ def _run_build_save_load_quimb():
     n_qubits = 4
     depth = 2
     rng = np.random.default_rng(666)
-    circ_quimb = generate_rand_quimb(
+    circ_quimb = generate_rand_circuit(
         n_qubits, depth, "rx", "cu3", 4, 0.75, start_ent=True, rng=rng
     )
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
@@ -64,9 +62,10 @@ def _run_build_save_load_quimb():
 
 
 def test_sample_quimb_qiskit():
+    rng = np.random.default_rng(666)
     n_qubits = 5
     depth = 2
-    circ_quimb = generate_brickwall_quimb(n_qubits, depth, "rx", "cnot")
+    circ_quimb = generate_brickwall_circuit(n_qubits, depth, "rx", "cnot", rng=rng)
 
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
     circ_quimb = deserialize_to_quimb_CircuitMPS(
