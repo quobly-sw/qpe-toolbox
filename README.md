@@ -22,7 +22,7 @@ Our packaged is built above [`numpy`](https://github.com/numpy/numpy), [`openfer
 
 ## Installation from sources
 Installing from sources gives access to our [examples](#Examples) which contains detailed explanations on the Quantum Phase Estimation algorithm.
-## with pip
+### with pip
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
@@ -37,7 +37,7 @@ source .venv/bin/activate
 pip install -e . --group=examples
 ```
 
-## with uv
+### with uv
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
