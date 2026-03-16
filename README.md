@@ -14,14 +14,14 @@ Check [here](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdi
 We articulate the toolbox on top of the tensor-network library [`quimb`](https://github.com/jcmgray/quimb) to provide: (1) classical preprocessing strategies focused
 on initializing and setting up QPE circuits, (2) an internal circuit-level simulator, and (3) a list of postprocessing
 functionalities for retrieving final energies.
-For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [`openFermion`](https://quantumai.google/openfermion) and [`pyscf`](https://pyscf.org/).
+For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [OpenFermion](https://quantumai.google/openfermion) and [PySCF](https://pyscf.org/).
 
 # Installation
 ## Requirements
 Our packaged is built above [`numpy`](https://github.com/numpy/numpy), [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf), [`quimb`](https://github.com/jcmgray/quimb), [`scipy`](https://github.com/scipy/scipy) as core dependencies. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](./pyproject.toml).
 
 ## Installation from sources
-Installing from sources gives access to our [examples](#Examples) which contains detailled explanations on the Quantum Phase Estimation algorithm.
+Installing from sources gives access to our [examples](#Examples) which contains detailed explanations on the Quantum Phase Estimation algorithm.
 ## with pip
 ```bash
 # clone the project
@@ -61,7 +61,7 @@ The package is divided in four modules:
 
 
 # Examples
-We provide a list of notebooks that introduce the basics of the package and contain detailled explanations on the Quantum Phase Estimation algorithm. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them and pair them with a twin `.ipynb` notebook.
+We provide a list of notebooks that introduce the basics of the package and contain detailed explanations on the Quantum Phase Estimation algorithm. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them and pair them with a twin `.ipynb` notebook.
 To convert a given example and execute it as a notebook, open `jupyterlab`, right-click on the `.py` file and select "Open with > Notebook" or "Jupytext Notebook": this allows you to save the notebook's outputs in your local repository. We also include [the executed notebooks in our documentation](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html).
 
 1. [`building_circuits`](examples/building_circuits.py) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
