@@ -144,7 +144,7 @@ Authors:
 - Thibaud Louvet (thibaud.louvet@quobly.io)
 - Calvin Ku (calvin.ku@foxconn.com)
 - Yu-Cheng Chen (kesson.yc.chen@foxconn.com)
-- Carlos Ramos Marimon (carlos.marimon@quobly.io)
+- Carlos Ramos Marimón (carlos.marimon@quobly.io)
 - Olivier Gauthé (olivier.gauthe@quobly.io)
 - Tristan Meunier (tristan.meunier@quobly.io)
 - Min-Hsiu Hsieh (min-hsiu.hsieh@foxconn.com)
