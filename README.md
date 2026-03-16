@@ -3,7 +3,6 @@
 [![Doc](https://img.shields.io/badge/Doc-dev-green.svg)](https://quobly-sw.github.io/qpe-toolbox)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)
-[![PyPI](https://img.shields.io/pypi/v/qpe-toolbox?color=teal)](https://pypi.org/project/qpe-toolbox)
 
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source python package, which
 combines quantum chemistry and tensor networks methods to compile and simulate the quantum circuits of
