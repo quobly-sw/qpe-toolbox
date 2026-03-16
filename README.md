@@ -18,7 +18,10 @@ functionalities for retrieving final energies.
 For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [`openFermion`](https://quantumai.google/openfermion) and [`pyscf`](https://pyscf.org/).
 
 # Installation
-## From sources with pip
+## Requirements
+Our packaged is built above [`numpy`](https://github.com/numpy/numpy), [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf), [`quimb`](https://github.com/jcmgray/quimb), [`scipy`](https://github.com/scipy/scipy) as core dependencies. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](./pyproject.toml).
+
+## Installation from sources with pip
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
@@ -33,7 +36,7 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-## From sources with uv
+## Installation from sources with uv
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
@@ -44,13 +47,6 @@ uv sync --locked
 # activate it
 source .venv/bin/activate
 ```
-
-# Requirements
-Our packaged is built above [`numpy`](https://github.com/numpy/numpy), [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf), [`quimb`](https://github.com/jcmgray/quimb), [`scipy`](https://github.com/scipy/scipy) as core dependencies. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](./pyproject.toml).
-### A note on Jupytext
-The examples are notebooks encoded in the `py:percent` format with a `.py` extension. In `jupyterlab` right-click and select "Open with > Notebook" or "Jupytext Notebook".
-The examples folder contains a `jupytext.toml` file. It is a configuration file that associates the `.py` scripts with a twin `.ipynb` notebook (this allows you to save the notebook's outputs in your local repository).
-See https://jupytext.readthedocs.io/en/latest/ for more on how Jupytext works.
 
 
 # Basic workflow
@@ -95,14 +91,15 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 # Contents
 
 The package is divided in four modules:
-- `circuit`: functions for creating and manipulating `quimb` circuits.
-- `hamiltonian`: class for defining Hamiltonians, and a interface with `pyscf` for chemistry.
+- `circuit`: creation and manipulation of `quimb` circuits.
+- `hamiltonian`: class for defining Hamiltonians and interface with `pyscf` for chemistry.
 - `estimation`: perform different flavors of Quantum Phase Estimation.
-- `tensor`: manipulation of Matrix Product Operators (MPO) and Matrix Product States.
+- `tensor`: manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
 
 
 # Examples
-We provide a list of notebooks that introduce the basics of the package. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. See the [note on Jupytext](#a-note-on-jupytext) in [Requirements](#requirements) section on how to convert them and execute as notebooks.
+We provide a list of notebooks that introduce the basics of the package. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them with a twin `.ipynb` notebook (this allows you to save the notebook's outputs in your local repository).
+To convert a given example and execute it as a notebook, open `jupyterlab`, right-click on the `.py` file and select "Open with > Notebook" or "Jupytext Notebook".
 
 1. [`building_circuits`](examples/building_circuits.py) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
 
