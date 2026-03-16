@@ -1,9 +1,13 @@
-![qpe-toolbox logo](docs/source/_static/qpe-toolbox_logo.png)
+![qpe-toolbox logo](https://github.com/quobly-sw/qpe-toolbox/raw/main/docs/source/_static/qpe-toolbox_logo.png)
 
+[![Doc](https://img.shields.io/badge/Doc-dev-green.svg)](https://quobly-sw.github.io/qpe-toolbox)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)
+[![PyPI](https://img.shields.io/pypi/v/qpe-toolbox?color=teal)](https://pypi.org/project/qpe-toolbox)
 
-`qpe-toolbox` is an open-source python package, which
+[`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source python package, which
 combines quantum chemistry and tensor networks methods to compile and simulate the quantum circuits of
-the quantum phase estimation (QPE) algorithm.
+the Quantum Phase Estimation (QPE) algorithm.
 
 We articulate the toolbox on top of the tensor-network library [`quimb`](https://github.com/jcmgray/quimb) to provide: (1) classical preprocessing strategies focused
 on initializing and setting up QPE circuits, (2) an internal circuit-level simulator, and (3) a list of postprocessing
@@ -61,7 +65,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
 2. Prepare an initial state as a Matrix Product State. Two methods are available:
 
-   2.1. Density Matrix Renormalization Group (DMRG) - see the [`chemistry_to_qubit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/chemistry_to_qubit.html)  tutorial.
+   2.1. Density Matrix Renormalization Group (DMRG) - see the [`chemistry_to_qubit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/chemistry_to_qubit.html) tutorial.
 
    2.2. Parametrized circuit optimization - see the tutorial on [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html).
 
@@ -70,7 +74,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
    3.1. Exact time evolution or Trotterization, available as methods of the `Hamiltonian` class - see the
     tutorial on [`trotter_decomposition`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/trotter_decomposition.html).
 
-   3.2. Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries:  [`qpe_with_lcu`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_lcu.html).
+   3.2. Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries: [`qpe_with_lcu`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_lcu.html).
 
 4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, chose between:
 
@@ -122,7 +126,7 @@ Here is a list of notebooks that introduce the basics of the package. They are a
 
 7. [`robust_phase_estimation`](examples/robust_phase_estimation.py) introduces the Robust Phase Estimation algorithm, based on the Hadamard test circuit.
 
-8. [`performance_mps`](examples/performance_mps.py) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
+8. [`performance_mps`](examples/performance_mps.py) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
 
 9. [`hyperoptimization`](examples/hyperoptimization.py) presents advanced contraction schemes provided by `quimb`.
 
