@@ -20,7 +20,9 @@ For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on
 ## Requirements
 Our packaged is built above [`numpy`](https://github.com/numpy/numpy), [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf), [`quimb`](https://github.com/jcmgray/quimb), [`scipy`](https://github.com/scipy/scipy) as core dependencies. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](./pyproject.toml).
 
-## Installation from sources with pip
+## Installation from sources
+Installing from sources gives access to our [examples](#Examples) which contains detailled explanations on the Quantum Phase Estimation algorithm.
+## with pip
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
@@ -32,10 +34,10 @@ python3 -m venv --system-site-packages .venv --prompt qpe-toolbox
 source .venv/bin/activate
 
 # install the package and its dependencies
-pip install -e .
+pip install .
 ```
 
-## Installation from sources with uv
+## with uv
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
