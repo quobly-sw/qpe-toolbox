@@ -48,6 +48,40 @@ source .venv/bin/activate
 ```
 
 
+
+# Contents
+
+The package is divided in four modules:
+- `circuit`: creation and manipulation of `quimb` circuits.
+- `hamiltonian`: class for defining Hamiltonians and interface with `pyscf` for chemistry.
+- `estimation`: perform different flavors of Quantum Phase Estimation.
+- `tensor`: manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
+
+
+# Examples
+We provide a list of notebooks that introduce the basics of the package. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them with a twin `.ipynb` notebook (this allows you to save the notebook's outputs in your local repository).
+To convert a given example and execute it as a notebook, open `jupyterlab`, right-click on the `.py` file and select "Open with > Notebook" or "Jupytext Notebook".
+
+1. [`building_circuits`](examples/building_circuits.py) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
+
+2. [`chemistry_to_qubit`](examples/chemistry_to_qubit.py) describes how to build the qubit Hamiltonian and perform the Density Matrix Renormalization Group (DMRG) algorithm for a given molecule.
+
+3. [`textbook_qpe`](examples/textbook_qpe.py) introduces the textbook Quantum Phase Estimation algorithm assuming time evolution is implemented exactly.
+
+4. [`trotter_decomposition`](examples/trotter_decomposition.py) introduces the Trotter-Suzuki decomposition to implement a time evolution operator $U$.
+
+5. [`qpe_with_trotter`](examples/qpe_with_trotter.py) studies the Quantum Phase Estimation algorithm using Trotterization of the evolution operator, and provides resource estimates.
+
+6. [`qpe_with_lcu`](examples/qpe_with_lcu.py) gives an introduction to Block Encoding via Linear Combination of Unitaries.
+
+7. [`robust_phase_estimation`](examples/robust_phase_estimation.py) introduces the Robust Phase Estimation algorithm, based on the Hadamard test circuit.
+
+8. [`performance_mps`](examples/performance_mps.py) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
+
+9. [`hyperoptimization`](examples/hyperoptimization.py) presents advanced contraction schemes provided by `quimb`.
+
+10. [`variational_circuit_preparation`](examples/variational_circuit_preparation.py) finds an initial guess state with variational circuit optimization.
+
 # Basic workflow
 
 To perform Quantum Phase Estimation with the toolbox, take the following steps:
@@ -85,40 +119,6 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
    5.1. Textbook QPE: see the corresponding tutorial [`textbook_qpe`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/textbook_qpe.html).
 
    5.2. Robust Phase Estimation, a version of QPE with a single ancilla and circuit repetitions - see the [`robust_phase_estimation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/robust_phase_estimation.html) tutorial.
-
-
-# Contents
-
-The package is divided in four modules:
-- `circuit`: creation and manipulation of `quimb` circuits.
-- `hamiltonian`: class for defining Hamiltonians and interface with `pyscf` for chemistry.
-- `estimation`: perform different flavors of Quantum Phase Estimation.
-- `tensor`: manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
-
-
-# Examples
-We provide a list of notebooks that introduce the basics of the package. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them with a twin `.ipynb` notebook (this allows you to save the notebook's outputs in your local repository).
-To convert a given example and execute it as a notebook, open `jupyterlab`, right-click on the `.py` file and select "Open with > Notebook" or "Jupytext Notebook".
-
-1. [`building_circuits`](examples/building_circuits.py) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
-
-2. [`chemistry_to_qubit`](examples/chemistry_to_qubit.py) describes how to build the qubit Hamiltonian and perform the Density Matrix Renormalization Group (DMRG) algorithm for a given molecule.
-
-3. [`textbook_qpe`](examples/textbook_qpe.py) introduces the textbook Quantum Phase Estimation algorithm assuming time evolution is implemented exactly.
-
-4. [`trotter_decomposition`](examples/trotter_decomposition.py) introduces the Trotter-Suzuki decomposition to implement a time evolution operator $U$.
-
-5. [`qpe_with_trotter`](examples/qpe_with_trotter.py) studies the Quantum Phase Estimation algorithm using Trotterization of the evolution operator, and provides resource estimates.
-
-6. [`qpe_with_lcu`](examples/qpe_with_lcu.py) gives an introduction to Block Encoding via Linear Combination of Unitaries.
-
-7. [`robust_phase_estimation`](examples/robust_phase_estimation.py) introduces the Robust Phase Estimation algorithm, based on the Hadamard test circuit.
-
-8. [`performance_mps`](examples/performance_mps.py) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
-
-9. [`hyperoptimization`](examples/hyperoptimization.py) presents advanced contraction schemes provided by `quimb`.
-
-10. [`variational_circuit_preparation`](examples/variational_circuit_preparation.py) finds an initial guess state with variational circuit optimization.
 
 # License
 
