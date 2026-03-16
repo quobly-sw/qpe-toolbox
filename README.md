@@ -95,22 +95,14 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 # Contents
 
 The package is divided in four modules:
-
-## Circuit
-The `circuit` module provides a set of functions for creating and manipulating `quimb` circuits.
-
-## Hamiltonian
-The `hamiltonian` module provides the class for defining Hamiltonians, and a interface with `pyscf` for chemistry.
-
-## Estimation
-The `estimation` module provides a set of functions for performing different flavors of Quantum Phase Estimation.
-
-## Tensor
-The `tensor` module provides a set of functions for the manipulation of Matrix Product Operators and Matrix Product States.
+- `circuit`: functions for creating and manipulating `quimb` circuits.
+- `hamiltonian`: class for defining Hamiltonians, and a interface with `pyscf` for chemistry.
+- `estimation`: perform different flavors of Quantum Phase Estimation.
+- `tensor`: manipulation of Matrix Product Operators (MPO) and Matrix Product States.
 
 
 # Examples
-Here is a list of notebooks that introduce the basics of the package. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. See the [note on Jupytext](#a-note-on-jupytext) in [Requirements](#requirements) section on how to convert them and execute as notebooks.
+We provide a list of notebooks that introduce the basics of the package. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. See the [note on Jupytext](#a-note-on-jupytext) in [Requirements](#requirements) section on how to convert them and execute as notebooks.
 
 1. [`building_circuits`](examples/building_circuits.py) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
 
