@@ -28,7 +28,7 @@ Installing from sources gives access to our [examples](#Examples) which contains
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
 
 # Create a virtual environment
-python3 -m venv --system-site-packages .venv --prompt qpe-toolbox
+python3 -m venv .venv --prompt qpe-toolbox
 
 # activate it
 source .venv/bin/activate
