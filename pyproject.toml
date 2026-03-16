@@ -58,8 +58,7 @@ dependencies = [
   Issues = "https://github.com/quobly-sw/qpe-toolbox/issues"
 
 [dependency-groups]
-# add jupytext in dev to install it in CI without the heavy project dependencies
-dev = ["jupytext>=1.18.1"]
+dev = ["jupytext>=1.18.1"]  # used in format hook
 docs = [
   "furo>=2024.6.29",
   "myst-nb>=1.3.0",
@@ -70,8 +69,8 @@ docs = [
 ]
 examples = [
   "jupyter>=1.1.1",
-  "jupytext>=1.18.1",
   "qiskit-quimb>=0.0.9",
+  {include-group = "dev"},
 ]
 lint = ["pre-commit>=4.3.0", "ruff>=0.14.10"]
 test = ["pytest>=9.0.0", "pytest-cov>=7.0.0", "pytest-xdist>=3.8"]
