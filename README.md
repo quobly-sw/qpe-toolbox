@@ -7,42 +7,42 @@
 
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source python package, which
 combines quantum chemistry and tensor networks methods to compile and simulate the quantum circuits of
-the Quantum Phase Estimation (QPE) algorithm.
+the Quantum Phase Estimation (QPE) algorithm. The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
+and docs are hosted on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
+
+Check [here](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf) for a presentation introducing our motivation and philosophy about the toolbox.
 
 We articulate the toolbox on top of the tensor-network library [`quimb`](https://github.com/jcmgray/quimb) to provide: (1) classical preprocessing strategies focused
 on initializing and setting up QPE circuits, (2) an internal circuit-level simulator, and (3) a list of postprocessing
 functionalities for retrieving final energies.
 For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [`openFermion`](https://quantumai.google/openfermion) and [`pyscf`](https://pyscf.org/).
 
-**Documentation:** https://quobly-sw.github.io/qpe-toolbox/
-
-[**qpe-toolbox presentation slides**](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf)
-
 # Installation
-Open a terminal and clone this repository with
+## From sources with pip
 ```bash
+# clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
-```
 
-Create a virtual environment with either `pip` or `uv`
-```bash
-# with pip
-python3 -m venv --system-site-packages .venv
+# Create a virtual environment
+python3 -m venv --system-site-packages .venv --prompt qpe-toolbox
 
-# with uv
-uv sync --locked
-```
-Activate it
-```bash
+# activate it
 source .venv/bin/activate
-```
-Then install the package and its dependencies
-```bash
-# with pip
-pip install -e .
 
-# with uv
-uv pip install -e .
+# install the package and its dependencies
+pip install -e .
+```
+
+## From sources with uv
+```bash
+# clone the project
+git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
+
+# synchronize with lock
+uv sync --locked
+
+# activate it
+source .venv/bin/activate
 ```
 
 # Requirements
