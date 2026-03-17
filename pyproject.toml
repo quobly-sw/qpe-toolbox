@@ -58,7 +58,7 @@ dependencies = [
   Issues = "https://github.com/quobly-sw/qpe-toolbox/issues"
 
 [dependency-groups]
-dev = ["jupytext>=1.18.1"]  # used in format hook
+jupytext = ["jupytext>=1.18.1"]  # used in format hook
 docs = [
   "furo>=2024.6.29",
   "myst-nb>=1.3.0",
@@ -66,14 +66,21 @@ docs = [
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
   "sphinx>=8",
+  {include-group = "jupytext"},
 ]
 examples = [
   "jupyter>=1.1.1",
   "qiskit-quimb>=0.0.9",
-  {include-group = "dev"},
+  {include-group = "jupytext"},
 ]
 lint = ["pre-commit>=4.3.0", "ruff>=0.14.10"]
 test = ["pytest>=9.0.0", "pytest-cov>=7.0.0", "pytest-xdist>=3.8"]
+dev = [
+    {include-group = "docs"},
+    {include-group = "examples"},
+    {include-group = "lint"},
+    {include-group = "test"},
+]
 
 [build-system]
 requires = ["hatchling >= 1.26"]
