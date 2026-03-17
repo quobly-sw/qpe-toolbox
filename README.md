@@ -21,7 +21,8 @@ For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on
 Our packaged is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
 
 ## Installation from sources
-Installing from sources gives access to our [examples](#Examples) which contains detailed explanations on the Quantum Phase Estimation algorithm.
+Installing from sources gives access to our [tutorials](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html) which contains detailed explanations on the Quantum Phase Estimation algorithm.
+
 ### with pip
 ```bash
 # clone the project
