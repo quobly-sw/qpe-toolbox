@@ -46,7 +46,6 @@ dependencies = [
   "scipy>=1.16.3,!=1.17.0",
   "cmaes>=0.12.0",
   "qiskit>=2.3.0",
-  "qiskit-aer>=0.17.2",
   "autoray>=0.8.4",
   "cotengra>=0.7.5",
   "matplotlib>=3.10.8",
@@ -71,11 +70,12 @@ docs = [
 examples = [
   "jupyter>=1.1.1",
   "pylatexenc>=2.10",
+  "qiskit-aer>=0.17.2",
   "qiskit-quimb>=0.0.9",
   {include-group = "jupytext"},
 ]
 lint = ["pre-commit>=4.3.0", "ruff>=0.14.10"]
-test = ["pytest>=9.0.0", "pytest-cov>=7.0.0", "pytest-xdist>=3.8"]
+test = ["pytest>=9.0.0", "pytest-cov>=7.0.0", "pytest-xdist>=3.8", "qiskit-aer"]
 dev = [
     {include-group = "docs"},
     {include-group = "examples"},
