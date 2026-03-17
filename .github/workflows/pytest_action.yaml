@@ -21,7 +21,7 @@ jobs:
       run: uv sync --locked --group=test --no-default-groups
 
     - name: Run tests
-      run: uv run --no-sync pytest -v --deselect tests/test_examples.py --durations=0 --durations-min=0.5 --color=yes --cov-report=html
+      run: uv run --no-sync pytest -n auto -v --deselect tests/test_examples.py --durations=0 --durations-min=0.5 --color=yes --cov-report=html
 
     - name: upload HTML coverage
       uses: actions/upload-artifact@v6
