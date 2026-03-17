@@ -34,7 +34,7 @@ python3 -m venv .venv --prompt qpe-toolbox
 source .venv/bin/activate
 
 # install the package and its dependencies
-pip install -e . --group=examples
+pip install -e . --group=dev
 ```
 
 ### with uv
@@ -42,8 +42,8 @@ pip install -e . --group=examples
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
 
-# synchronize with lock
-uv sync --locked --group=examples
+# Create a virtual environment and synchronize it with lock
+uv sync --locked
 
 # activate it
 source .venv/bin/activate
