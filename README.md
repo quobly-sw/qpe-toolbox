@@ -4,17 +4,19 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml)
 
-[`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source python package, which
-combines quantum chemistry and tensor networks methods to compile and simulate the quantum circuits of
-the Quantum Phase Estimation (QPE) algorithm. The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
+[`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source
+Python package for compiling and simulating Quantum Phase Estimation (QPE)
+circuits, combining quantum chemistry with tensor-network methods.
+See our [overview presentation](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf)
+for the motivation and philosophy behind the toolbox.
+The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
 and docs are available on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
 
-Check [here](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf) for a presentation introducing our motivation and philosophy about the toolbox.
 
-We articulate the toolbox on top of the tensor-network library [`quimb`](https://github.com/jcmgray/quimb) to provide: (1) classical preprocessing strategies focused
-on initializing and setting up QPE circuits, (2) an internal circuit-level simulator, and (3) a list of postprocessing
-functionalities for retrieving final energies.
-For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [OpenFermion](https://quantumai.google/openfermion) and [PySCF](https://pyscf.org/).
+Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb), it provides:
+  - **Classical preprocessing**: quantum chemistry with [PySCF](https://pyscf.org) and fermionic encodings via [OpenFermion](https://quantumai.google/openfermion)
+  - **Quantum simulation**: QPE circuit construction and circuit-level simulator with tensor networks
+  - **Postprocessing**: energy retrieval from phase measurement outcomes  >
 
 # Installation
 ## Requirements
