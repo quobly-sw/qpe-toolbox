@@ -64,28 +64,28 @@ The package is divided in four modules:
 
 
 # Examples
-We provide a list of notebooks that introduce the basics of the package and contain detailed explanations on the Quantum Phase Estimation algorithm. They are available in the `examples` directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them and pair them with a twin `.ipynb` notebook.
+We provide a list of notebooks that introduce the basics of the package and contain detailed explanations on the Quantum Phase Estimation algorithm. They are available in the [`examples`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples) directory as plain `.py` files using the `py:percent` format. We use [Jupytext](https://jupytext.readthedocs.io/en/latest/) to convert them and pair them with a twin `.ipynb` notebook.
 To convert a given example and execute it as a notebook, open `jupyterlab`, right-click on the `.py` file and select "Open with > Notebook" or "Jupytext Notebook": this allows you to save the notebook's outputs in your local repository. We also include [the executed notebooks in our documentation](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html).
 
-1. [`building_circuits`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/building_circuits.py) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
+1. [`building_circuits`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/building_circuits.html) explains how to create, plot, record and load quantum circuits in `quimb` and `qiskit`.
 
-2. [`chemistry_to_qubit`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/chemistry_to_qubit.py) describes how to build the qubit Hamiltonian and perform the Density Matrix Renormalization Group (DMRG) algorithm for a given molecule.
+2. [`chemistry_to_qubit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/chemistry_to_qubit.html) describes how to build the qubit Hamiltonian and perform the Density Matrix Renormalization Group (DMRG) algorithm for a given molecule.
 
-3. [`textbook_qpe`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/textbook_qpe.py) introduces the textbook Quantum Phase Estimation algorithm assuming time evolution is implemented exactly.
+3. [`textbook_qpe`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/textbook_qpe.html) introduces the textbook Quantum Phase Estimation algorithm assuming time evolution is implemented exactly.
 
-4. [`trotter_decomposition`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/trotter_decomposition.py) introduces the Trotter-Suzuki decomposition to implement a time evolution operator $U$.
+4. [`trotter_decomposition`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/trotter_decomposition.html) introduces the Trotter-Suzuki decomposition to implement a time evolution operator $U$.
 
-5. [`qpe_with_trotter`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/qpe_with_trotter.py) studies the Quantum Phase Estimation algorithm using Trotterization of the evolution operator, and provides resource estimates.
+5. [`qpe_with_trotter`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_trotter.html) studies the Quantum Phase Estimation algorithm using Trotterization of the evolution operator, and provides resource estimates.
 
-6. [`qpe_with_lcu`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/qpe_with_lcu.py) gives an introduction to Block Encoding via Linear Combination of Unitaries.
+6. [`qpe_with_lcu`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_lcu.html) gives an introduction to Block Encoding via Linear Combination of Unitaries.
 
-7. [`robust_phase_estimation`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/robust_phase_estimation.py) introduces the Robust Phase Estimation algorithm, based on the Hadamard test circuit.
+7. [`robust_phase_estimation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/robust_phase_estimation.html) introduces the Robust Phase Estimation algorithm, based on the Hadamard test circuit.
 
-8. [`performance_mps`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/performance_mps.py) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
+8. [`performance_mps`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/performance_mps.html) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
 
-9. [`hyperoptimization`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/hyperoptimization.py) presents advanced contraction schemes provided by `quimb`.
+9. [`hyperoptimization`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/hyperoptimization.html) presents advanced contraction schemes provided by `quimb`.
 
-10. [`variational_circuit_preparation`](https://github.com/quobly-sw/qpe-toolbox/blob/main/examples/variational_circuit_preparation.py) finds an initial guess state with variational circuit optimization.
+10. [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html) finds an initial guess state with variational circuit optimization.
 
 # Basic workflow
 
@@ -120,7 +120,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
 # Contributing
 
-Contributions are welcome and highly appreciated. To get started, check out the [contributing guidelines](CONTRIBUTING.md).
+Contributions are welcome and highly appreciated. To get started, check out the [contributing guidelines](https://github.com/quobly-sw/qpe-toolbox/blob/main/CONTRIBUTING.md).
 
 # License
 
