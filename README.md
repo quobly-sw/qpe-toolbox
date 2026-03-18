@@ -123,6 +123,10 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
    5.2. Robust Phase Estimation, a version of QPE with a single ancilla and circuit repetitions - see the [`robust_phase_estimation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/robust_phase_estimation.html) tutorial.
 
+# Contributing
+
+Contributions are welcome and highly appreciated. To get started, check out the [contributing guidelines](CONTRIBUTING.md).
+
 # License
 
 Apache 2.0
