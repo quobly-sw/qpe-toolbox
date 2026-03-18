@@ -7,7 +7,7 @@
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source python package, which
 combines quantum chemistry and tensor networks methods to compile and simulate the quantum circuits of
 the Quantum Phase Estimation (QPE) algorithm. The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
-and docs are hosted on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
+and docs are available on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
 
 Check [here](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf) for a presentation introducing our motivation and philosophy about the toolbox.
 
@@ -18,7 +18,7 @@ For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on
 
 # Installation
 ## Requirements
-Our packaged is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
+Our package is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](https://github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
 
 ## Installation from sources
 Installing from sources gives access to our [tutorials](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html) which contains detailed explanations on the Quantum Phase Estimation algorithm.
@@ -35,7 +35,7 @@ python3 -m venv .venv --prompt qpe-toolbox
 source .venv/bin/activate
 
 # install the package and its dependencies
-pip install -e . --group=dev
+pip install -e .[dev]
 ```
 
 ### with uv
