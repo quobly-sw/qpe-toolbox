@@ -7,16 +7,16 @@
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source
 Python package for compiling and simulating Quantum Phase Estimation (QPE)
 circuits, combining quantum chemistry with tensor-network methods.
-See our [overview presentation](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf)
-for the motivation and philosophy behind the toolbox.
 The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
 and docs are available on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
 
+See our [overview presentation](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf)
+for the motivation and philosophy behind the toolbox.
 
 Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb), it provides:
   - **Classical preprocessing**: quantum chemistry with [PySCF](https://pyscf.org) and fermionic encodings via [OpenFermion](https://quantumai.google/openfermion)
   - **Quantum simulation**: QPE circuit construction and circuit-level simulator with tensor networks
-  - **Postprocessing**: energy retrieval from phase measurement outcomes  >
+  - **Postprocessing**: energy retrieval from phase measurement outcomes
 
 # Installation
 ## Requirements
