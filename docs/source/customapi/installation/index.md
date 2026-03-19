@@ -15,26 +15,32 @@ QPE Toolbox is a pure python library and will run on any system as long as its d
 pip install qpe-toolbox
 ```
 
-**Installing with `conda`**
+## Installation from sources
+Installing from sources gives access to our [tutorials](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html) which contains detailed explanations on the Quantum Phase Estimation algorithm.
 
+### with pip
 ```bash
-conda install qpe-toolbox
+# clone the project
+git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
+
+# Create a virtual environment
+python3 -m venv .venv --prompt qpe-toolbox
+
+# activate it
+source .venv/bin/activate
+
+# install the package and its dependencies
+pip install -e .[dev]
 ```
 
-**Installing directly from GitHub**
-
+### with uv
 ```bash
-git clone https://github.com/quobly-sw/qpe-toolbox
-cd qpe-toolbox
-pip install .
-```
+# clone the project
+git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
 
+# Create a virtual environment and synchronize it with lock
+uv sync --locked
 
-**Documentation toolchain**
-
-To build the documentation locally:
-
-```bash
-pip install ".[docs]"
-make -C docs html
+# activate it
+source .venv/bin/activate
 ```
