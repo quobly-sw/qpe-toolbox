@@ -2833,6 +2833,7 @@ dev = [
     { name = "sphinx-autoapi" },
     { name = "sphinx-copybutton" },
     { name = "sphinx-design" },
+    { name = "tqdm" },
 ]
 docs = [
     { name = "furo" },
@@ -2849,6 +2850,7 @@ examples = [
     { name = "pylatexenc" },
     { name = "qiskit-quimb" },
     { name = "qpe-toolbox", extra = ["recommended"] },
+    { name = "tqdm" },
 ]
 jupytext = [
     { name = "jupytext" },
@@ -2902,6 +2904,7 @@ dev = [
     { name = "sphinx-autoapi", specifier = ">=3.6" },
     { name = "sphinx-copybutton", specifier = ">=0.5.2" },
     { name = "sphinx-design", specifier = ">=0.6.1" },
+    { name = "tqdm", specifier = ">=4.67.3" },
 ]
 docs = [
     { name = "furo", specifier = ">=2024.6.29" },
@@ -2918,6 +2921,7 @@ examples = [
     { name = "pylatexenc", specifier = ">=2.10" },
     { name = "qiskit-quimb", specifier = ">=0.0.9" },
     { name = "qpe-toolbox", extras = ["recommended"] },
+    { name = "tqdm", specifier = ">=4.67.3" },
 ]
 jupytext = [{ name = "jupytext", specifier = ">=1.18.1" }]
 lint = [
