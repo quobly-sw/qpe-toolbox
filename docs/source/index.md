@@ -1,47 +1,53 @@
-Welcome to QPE Toolbox's documentation!
-=====================
+# Welcome to QPE Toolbox's documentation!
 
-`qpe-toolbox` is an open-source python package, which
-combines quantum chemistry and tensor networks methods to compile and simulate the quantum circuits of
-the quantum phase estimation (QPE) algorithm.
+[![Doc](https://img.shields.io/badge/Doc-dev-green.svg)](https://quobly-sw.github.io/qpe-toolbox)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml)
+[![PyPI](https://img.shields.io/pypi/v/qpe-toolbox?color=teal)](https://pypi.org/project/qpe-toolbox)
 
-We articulate the toolbox on top of the tensor-network library [`quimb`](https://github.com/jcmgray/quimb) to provide: (1) classical preprocessing strategies focused
-on initializing and setting up QPE circuits, (2) an internal circuit-level simulator, and (3) a list of postprocessing
-functionalities for retrieving final energies.
-For the preprocessing stage, the QPE Toolbox offers fermionic encodings based on [`openFermion`](https://quantumai.google/openfermion) and [`pyscf`](https://pyscf.org/).
+[`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source
+Python package for compiling and simulating Quantum Phase Estimation (QPE)
+circuits, combining quantum chemistry with tensor-network methods.
+The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
+and docs are available on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
+
+Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb), it provides:
+  - **Classical preprocessing**: quantum chemistry with [PySCF](https://pyscf.org) and fermionic encodings via [OpenFermion](https://quantumai.google/openfermion)
+  - **Quantum simulation**: QPE circuit construction and circuit-level simulator with tensor networks
+  - **Postprocessing**: energy retrieval from phase measurement outcomes
 
 ```{figure} _static/qpe-toolbox_pipeline.png
 :name: fig:toolbox_global_view
 :width: 100%
 :align: center
-The **`qpe-toolbox`** pipeline.
+The `qpe-toolbox` pipeline.
 ```
 
 ## Package Modules
 ::::{grid} 4
-:::{grid-item-card} Circuit
-The {doc}`circuit <autoapi/qpe_toolbox/circuit/index>` module provides a set of functions for creating and manipulating `quimb` circuits.
+:::{grid-item-card} {doc}`circuit <autoapi/qpe_toolbox/circuit/index>`
+Creation and manipulation of `quimb` circuits.
 :::
 
-:::{grid-item-card} Hamiltonian
-The {doc}`hamiltonian <autoapi/qpe_toolbox/hamiltonian/index>` module provides the class for defining Hamiltonians, and a interface with `pyscf` for chemistry.
+:::{grid-item-card} {doc}`hamiltonian <autoapi/qpe_toolbox/hamiltonian/index>`
+class for defining Hamiltonians and interface with `pyscf` for chemistry.
 :::
 
-:::{grid-item-card} Estimation
-The {doc}`estimation <autoapi/qpe_toolbox/estimation/index>` module provides a set of functions for performing different flavors of Quantum Phase Estimation.
+:::{grid-item-card} {doc}`estimation <autoapi/qpe_toolbox/estimation/index>`
+perform different flavors of Quantum Phase Estimation.
 
 :::
 
-:::{grid-item-card} Tensor
-The {doc}`tensor <autoapi/qpe_toolbox/tensor/index>` module provides a set of functions for the manipulation of Matrix Product Operators and Matrix Product States.
-
+:::{grid-item-card} {doc}`tensor <autoapi/qpe_toolbox/tensor/index>`
+manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
 
 :::
 ::::
 
 ## In-depth presentation of the QPE Toolbox
 
-Check {download}`here <_static/2512_toolbox_deepdive.pdf>` for a presentation introducing our motivation and philosophy about the toolbox.
+See our [overview presentation](_static/2512_toolbox_deepdive.pdf)
+for the motivation and philosophy behind the toolbox.
 
 
 ## Source
