@@ -11,6 +11,9 @@ circuits, combining quantum chemistry with tensor-network methods.
 The code is hosted on [github](https://github.com/quobly-sw/qpe-toolbox),
 and docs are available on [GitHub Pages](https://quobly-sw.github.io/qpe-toolbox).
 
+See our [overview presentation](https://quobly-sw.github.io/qpe-toolbox/_static/2512_toolbox_deepdive.pdf)
+for the motivation and philosophy behind the toolbox.
+
 Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb), it provides:
   - **Classical preprocessing**: quantum chemistry with [PySCF](https://pyscf.org) and fermionic encodings via [OpenFermion](https://quantumai.google/openfermion)
   - **Quantum simulation**: QPE circuit construction and circuit-level simulator with tensor networks
@@ -44,19 +47,10 @@ manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
 :::
 ::::
 
-## In-depth presentation of the QPE Toolbox
-
-See our [overview presentation](_static/2512_toolbox_deepdive.pdf)
-for the motivation and philosophy behind the toolbox.
-
-
-## Source
-
-The code is hosted on [GitHub](https://github.com/quobly-sw/qpe-toolbox), and docs are hosted on [GitHub pages](https://quobly-sw.github.io/qpe-toolbox).
+## Contents
 
 ```{toctree}
 :maxdepth: 1
-:caption: Contents
 
 Installation Guide <customapi/installation/index>
 
