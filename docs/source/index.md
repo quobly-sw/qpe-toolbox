@@ -51,6 +51,7 @@ manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
 
 ```{toctree}
 :maxdepth: 1
+:caption: Contents
 
 Installation Guide <customapi/installation/index>
 
