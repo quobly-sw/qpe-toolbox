@@ -51,13 +51,19 @@ manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
 
 ```{toctree}
 :maxdepth: 1
-:caption: Contents
+:caption: Guides
 
 Installation Guide <customapi/installation/index>
 
 Basic Workflow <customapi/workflow/index>
 
 Tutorials <customapi/tutorials/index>
+```
+
+```{toctree}
+:maxdepth: 1
+:caption: Development
+Changelog <changelog>
 
 GitHub Repository <https://github.com/quobly-sw/qpe-toolbox>
 
