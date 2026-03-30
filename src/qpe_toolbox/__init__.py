@@ -23,7 +23,7 @@ Subpackages must be explicitly imported:
 
 import enum
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 
 class _Exact(enum.Enum):
