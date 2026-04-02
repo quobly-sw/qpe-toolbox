@@ -7,7 +7,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-03-31
+## [1.1.0] - 2026-04-02
 
 ### Changed
 
