@@ -54,8 +54,11 @@ python3 -m venv .venv --prompt qpe-toolbox
 # activate it
 source .venv/bin/activate
 
+# update pip to support dependency-groups (requires pip >= 25.1)
+pip install --upgrade pip
+
 # install the package and its dependencies
-pip install -e . --group dev
+pip install -e ".[recommended]" --group dev
 ```
 
 ### with uv
