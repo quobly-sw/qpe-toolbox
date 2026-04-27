@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml)
 [![PyPI](https://img.shields.io/pypi/v/qpe-toolbox?color=teal)](https://pypi.org/project/qpe-toolbox)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/qpe-toolbox)](https://anaconda.org/conda-forge/qpe-toolbox)
 
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source
 Python package for compiling and simulating Quantum Phase Estimation (QPE)
@@ -24,9 +25,19 @@ Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb),
 Our package is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](https://github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
 
 ## Installation from pypi
-`qpe-toolbox` is available on [pypi](https://pypi.org/project/qpe-toolbox). Install it with
+`qpe-toolbox` is available on [PyPI](https://pypi.org/project/qpe-toolbox):
 ```bash
 pip install qpe-toolbox
+```
+
+## Installation from conda-forge
+`qpe-toolbox` is available on [conda-forge](https://anaconda.org/conda-forge/qpe-toolbox). Install it with `conda`:
+```bash
+conda install -c conda-forge qpe-toolbox
+```
+or with `pixi`:
+```bash
+pixi add qpe-toolbox
 ```
 
 ## Installation from sources
@@ -44,7 +55,7 @@ python3 -m venv .venv --prompt qpe-toolbox
 source .venv/bin/activate
 
 # install the package and its dependencies
-pip install -e .[dev]
+pip install -e . --group dev
 ```
 
 ### with uv
@@ -57,6 +68,15 @@ uv sync --locked
 
 # activate it
 source .venv/bin/activate
+```
+
+### with pixi
+```bash
+# clone the project
+git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
+
+# Install all dependencies and activate the environment
+pixi shell --environment dev
 ```
 
 
