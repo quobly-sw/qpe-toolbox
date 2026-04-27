@@ -402,7 +402,7 @@ def init_cost_tn(unitary_mpo, depth, tol = 1e-1, factorize = False, closed = Fal
     return TN
 
 
-def get_environments(n_qubits, x, cost_tn, draw_env = False):
+def get_envs_tns(n_qubits, x, cost_tn, draw_env = False):
     
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
     
@@ -416,63 +416,66 @@ def get_environments(n_qubits, x, cost_tn, draw_env = False):
         copy_tn.select(tags=[f"I{x}"], which="!any").select(tags=right_tags, which="any")#.add_tag(f"R{x}")
         copy_tn.draw((f"L{x}", f"R{x}", f"Uref{x}"), layout="kamada_kawai", show_inds=False, show_tags=False)
     
-    list_env_tn = []
+    list_envs_tns = []
     if x > 0:
-        list_env_tn.append(env_tn.select(tags=left_tags, which="any"))
+        list_envs_tns.append(env_tn.select(tags=left_tags, which="any"))
     if x < n_qubits - 1:
-        list_env_tn.append(env_tn.select(tags=right_tags, which="any"))
+        list_envs_tns.append(env_tn.select(tags=right_tags, which="any"))
 
-    return list_env_tn
+    return list_envs_tns
 
 
 def find_transfer_structure(n_qubits, cost_tn):
     
-    dict_L_env = {}
-    dict_R_env = {}
+    dict_uncontr_envs = {"L": {}, "R": {}}
     for x in range(n_qubits):
-        list_env_tn = get_environments(n_qubits, x, cost_tn)
+        list_envs_tns = get_envs_tns(n_qubits, x, cost_tn)
+        
         if x == 0:
-            dict_R_env[f"I{x}"] = list_env_tn[0]
+            dict_uncontr_envs["R"][f"I{x}"] = list_envs_tns[0]
         elif x == n_qubits-1:
-            dict_L_env[f"I{x}"] = list_env_tn[0]
+            dict_uncontr_envs["L"][f"I{x}"] = list_envs_tns[0]
         else:
-            dict_L_env[f"I{x}"] = list_env_tn[0]
-            dict_R_env[f"I{x}"] = list_env_tn[1]
+            dict_uncontr_envs["L"][f"I{x}"] = list_envs_tns[0]
+            dict_uncontr_envs["R"][f"I{x}"] = list_envs_tns[1]
     
-    dict_L_transf = {}
-    dict_R_transf = {}
+    dict_transf = {"L": {}, "R": {}}
     for x in range(1, n_qubits - 1):
         
         # left transfer
-        
-        transf_tn = dict_L_env[f"I{x + 1}"].select(tags=(f"I{x}"), which="any")
+        transf_tn = dict_uncontr_envs["L"][f"I{x + 1}"].select(
+            tags=(f"I{x}"),
+            which="any"
+            )
         transf_tags = get_tags(transf_tn)
         filtered_tags = []
         for tag in transf_tags:
             if tag[0] == "G" or tag[0] == "U":
                 filtered_tags.append(tag)
-        dict_L_transf[f"L{x}_to_L{x + 1}"] = filtered_tags
+        dict_transf["L"][f"L{x}_to_L{x + 1}"] = filtered_tags
         
         # right transfer
-        
-        transf_tn = dict_R_env[f"I{n_qubits - 2 - x}"].select(tags=(f"I{n_qubits - 1 - x}"), which="any")
+        transf_tn = dict_uncontr_envs["R"][f"I{n_qubits - 2 - x}"].select(
+            tags=(f"I{n_qubits - 1 - x}"),
+            which="any"
+            )
         transf_tags = get_tags(transf_tn)
         filtered_tags = []
         for tag in transf_tags:
             if tag[0] == "G" or tag[0] == "U":
                 filtered_tags.append(tag)
-        dict_R_transf[f"R{n_qubits - 1 - x}_to_R{n_qubits - 2 - x}"] = filtered_tags
+        dict_transf["R"][f"R{n_qubits - 1 - x}_to_R{n_qubits - 2 - x}"] = filtered_tags
         
-    return dict_L_transf, dict_R_transf
+    return dict_transf
 
 
-def build_first_sweep(n_qubits, cost_tn, dict_L_transf, dict_R_transf, drop_tags=True):
+def build_first_sweep(n_qubits, cost_tn, dict_transf, drop_tags=True):
     """
     Generate the first set of left and right environments (recycling the former)
     and save them in a list of tensor networks
     """
 
-    dict_envs = {}
+    dict_contr_envs = {"L": {}, "R": {}}
     
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
     L_init = cost_tn.select(tags="Uref0", which="all").tensors[0]
@@ -480,12 +483,14 @@ def build_first_sweep(n_qubits, cost_tn, dict_L_transf, dict_R_transf, drop_tags
     R_init = cost_tn.select(tags=f"Uref{n_qubits-1}", which="all").tensors[0]
     R_init.add_tag(tag=(f"R{n_qubits-2}"))
     
-    dict_envs[f"L1"] = L_init
-    dict_envs[f"R{n_qubits-2}"] = R_init
+    dict_contr_envs["L"][f"L1"] = L_init
+    dict_contr_envs["R"][f"R{n_qubits-2}"] = R_init
     L_next = L_init.copy(deep=True)
     R_next = R_init.copy(deep=True)
     
-    for counter, transf_tags in enumerate(zip(dict_L_transf.values(), dict_R_transf.values())):
+    for counter, transf_tags in enumerate(
+        zip(dict_transf["L"].values(), dict_transf["R"].values())
+        ):
         
         #print(counter, f"L{counter + 2}", f"R{n_qubits - 3 - counter}")
         L_next = L_next.copy(deep=True)
@@ -494,7 +499,7 @@ def build_first_sweep(n_qubits, cost_tn, dict_L_transf, dict_R_transf, drop_tags
         L_next = tensor_contract(*L_next.tensors, drop_tags=drop_tags)
         L_next.add_tag(tag=(f"L{counter + 2}"))
         
-        dict_envs[f"L{counter + 2}"] = L_next
+        dict_contr_envs["L"][f"L{counter + 2}"] = L_next
         
         R_next = R_next.copy(deep=True)
         R_transf_tn = cost_tn.select(tags=transf_tags[1], which="any")
@@ -502,32 +507,38 @@ def build_first_sweep(n_qubits, cost_tn, dict_L_transf, dict_R_transf, drop_tags
         R_next = tensor_contract(*R_next.tensors, drop_tags=drop_tags)
         R_next.add_tag(tag=(f"R{n_qubits - 3 - counter}"))
         
-        dict_envs[f"R{n_qubits - 3 - counter}"] = R_next
+        dict_contr_envs["R"][f"R{n_qubits - 3 - counter}"] = R_next
         
-    return dict_envs
+    return dict_contr_envs
 
 
-def build_local_cost_tn(n_qubits, x, dict_envs, cost_tn):
+def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
+    """
+        Build intermediate contractions S=L{x}-gates-R{x} 
+        Return ordered list of tags of gates to optimize
+    """
     
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
     tags_to_opt = get_tags(gates_to_opt)
     
     filtered_tags = []
-    for tag in tags_to_opt: 
-        if tag[0] == "G": # exclude "Uref"
+    for tag in tags_to_opt:
+        if tag[0] == "G":
             filtered_tags.append(tag)
     
     if x == 0:
-        local_cost_tn = gates_to_opt & dict_envs[f"R{x}"]
+        loc_cost_tn = gates_to_opt & dict_contr_envs["R"][f"R{x}"]
     elif x == n_qubits - 1:
-        local_cost_tn = dict_envs[f"L{x}"] & gates_to_opt
+        loc_cost_tn = dict_contr_envs["L"][f"L{x}"] & gates_to_opt
     else:
-        local_cost_tn = dict_envs[f"L{x}"] & gates_to_opt & dict_envs[f"R{x}"]
+        loc_cost_tn = dict_contr_envs["L"][f"L{x}"] & gates_to_opt & dict_contr_envs["R"][f"R{x}"]
 
-    return local_cost_tn, filtered_tags
+    gate_to_opt_tags = sorted(filtered_tags, key=lambda s: int(s.split("_")[1]))
+    
+    return loc_cost_tn, gate_to_opt_tags
 
 
-def PRC_local_cost_tn(loc_cost_tn, tags, hyperopt):
+def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     """
     Pop-Rehearse-Contract
     
@@ -539,6 +550,147 @@ def PRC_local_cost_tn(loc_cost_tn, tags, hyperopt):
     p_loc_cost_tn.delete(tags=tags)
     prc_contr_loc_cost_tn = p_loc_cost_tn.contract(optimize=hyperopt)
     
-    return prc_contr_loc_cost_tn, hyperopt
+    return prc_contr_loc_cost_tn
 
 
+""" 
+list_methods = ["sgu", "vgcu"]
+    dict_methods = {
+        "sgu": "single gate update",
+        "vgcu": "variational gate column update"
+        }
+    if method not in ["sgu", "vgcu"]:
+        raise ValueError(f"Available methods: ", list_methods)
+        """
+        
+        
+def update_cost_tn(cost_tn, list_opt_gate_tens):
+    
+    for tens in list_opt_gate_tens:
+        tag_tens = list(tens.tags)[0] # the first tag is "GATE_{n}" by construction
+        cost_tn.delete(tags=tag_tens) # delete the old tensor with same tags
+        cost_tn = cost_tn & tens # add the new tensor
+        
+    return cost_tn
+
+
+def update_dict_contr_envs(mode, list_opt_gate_tens, cost_tn, dict_transf, dict_contr_envs):
+    """
+    getting the x externally simplifies everything bc automatically know the column we are talking about
+    """
+    for tens in list_opt_gate_tens:
+        
+        list_tags = list(tens.tags)
+        tag_tens = list_tags[0] # the first tag is "GATE_{n}" by construction
+        n = int(re.search(r"\d+", list_tags[3]).group()) # number of the left site from tag
+        
+        if mode == "LR": # sweeping L to R only requires updating L's
+            
+            # the gate couples I{n} and I{n+1}
+            # affects transition L{n+1}_to_L{n+2}
+            # so update L{n+2}
+            #print(f"L{n+2}")
+            transf_tens = cost_tn.select(tags=dict_transf["L"][f"L{n+1}_to_L{n+2}"], which="any")
+            new_env = dict_contr_envs["L"][f"L{n+1}"].copy(deep=True) & transf_tens
+            dict_contr_envs["L"][f"L{n+2}"] = new_env.contract()
+                
+        if mode == "RL": # sweeping R to L only requires updating R's
+            
+            # the gate couples I{n} and I{n+1}
+            # affects transition R{n}_to_R{n-1}
+            # so update R{n-1}
+            #print(f"R{n-1}")
+            transf_tens = cost_tn.select(tags=dict_transf["R"][f"R{n}_to_R{n-1}"], which="any")
+            new_env = dict_contr_envs["R"][f"R{n}"].copy(deep=True) & transf_tens
+            dict_contr_envs["R"][f"R{n-1}"] = new_env.contract()
+
+    return dict_contr_envs
+
+
+def sgu_optimize_cost_tn(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs):
+    
+    """
+    receives the cost function and optimizes for n_sweeps
+    """
+    
+    # instantiate hypercontractor
+    hyperopt = ctg.ReusableHyperOptimizer(
+        # just do a few runs
+        max_repeats=32,
+        # only use the basic greedy optimizer ...
+        methods=["greedy"],
+        # ... but pair it with reconfiguration
+        reconf_opts={},
+        # just uniformly sample the space
+        optlib="random",
+        # terminate search if contraction is cheap
+        max_time="rate:1e9",
+        # account for both flops and write - usually wise for practical performance
+        minimize="combo",
+        parallel=False,
+    ) # different from hyperopt_env
+    
+    instruct = [("LR", list(range(0, n_qubits-2))), ("RL", list(reversed(range(2, n_qubits))))]
+    trange_counter = tqdm(list(range(n_sweeps)))
+    for _ in trange_counter: # set a progressbar and measure error
+        
+        for sweep in instruct:
+            for x in sweep[1]:
+                
+                # build local cost function for all gates at position "x"
+                loc_cost_tn, gate_to_opt_tags = build_loc_cost_tn(
+                    n_qubits,
+                    x=x,
+                    dict_contr_envs=dict_contr_envs,
+                    cost_tn=cost_tn,
+                    )
+                
+                # sweep through gate list (along column, from lower to higher depths)
+                for tag in gate_to_opt_tags:
+                    
+                    original_gate_tens = cost_tn.select(tags=tag).tensors[0]
+                    inds = original_gate_tens.inds
+                    
+                    # contract the local cost to a 4-legged non-unitary tensor
+                    # and rehearse the contraction for later sweeps
+                    prc_loc_cost_tens = PRC_loc_cost_tn(
+                        loc_cost_tn=loc_cost_tn,
+                        tags=tag,
+                        hyperopt=hyperopt,
+                        )
+                
+                    # do the SVD
+                    prc_loc_cost_UsVh = tensor_split(
+                        T = prc_loc_cost_tens,
+                        # recall index ordering in Gate class:
+                        # (OUT_LEFT, OUT_RIGHT, IN_LEFT, IN_RIGHT)
+                        left_inds=(inds[0], inds[1]),
+                        method="svd",
+                        absorb=None,
+                    )
+                    
+                    # retain isometries
+                    overlap = np.sum(prc_loc_cost_UsVh.tensors[1].data)
+                    trange_counter.set_description(f'overlap: {(overlap/pow(2,n_qubits)):.8f}')
+                    new_gate_tens = (prc_loc_cost_UsVh.tensors[0].conj() & prc_loc_cost_UsVh.tensors[2].conj()) ^ ...
+                    
+                    # ensure index order
+                    new_gate_tens.transpose(inds[2], inds[3], inds[0], inds[1])
+                    
+                    new_gate_tens.modify(
+                        tags=original_gate_tens.tags
+                        )
+                    
+                    # update the (local) cost tensor network
+                    cost_tn = update_cost_tn(cost_tn, list_opt_gate_tens=[new_gate_tens])
+                    loc_cost_tn = update_cost_tn(loc_cost_tn, list_opt_gate_tens=[new_gate_tens])
+                       
+                    # update transfer tensors and environments
+                    dict_contr_envs = update_dict_contr_envs(
+                        mode=sweep[0],
+                        list_opt_gate_tens=[original_gate_tens],
+                        cost_tn=cost_tn,
+                        dict_transf=dict_transf,
+                        dict_contr_envs=dict_contr_envs)
+    
+    return cost_tn, dict_contr_envs
