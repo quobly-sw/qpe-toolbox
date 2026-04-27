@@ -17,3 +17,6 @@ examples/example_output_*
 docs/build
 docs/source/autoapi
 docs/source/customapi/tutorials/figures/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
