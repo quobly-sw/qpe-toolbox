@@ -7,36 +7,37 @@ On Windows, QPE Toolbox is supported only through the Windows Subsystem for Linu
 ## Requirements
 QPE Toolbox is a pure python library and will run on any system as long as its dependencies support it. In practice, this means any 64-bit macOS or Linux distribution should work. Due to [PySCF restrictions](https://pyscf.org/user/install.html), Windows is only supported through the Windows Subsystem for Linux (WSL).
 
-## Installation
+## Install the python package
+Use the commands below to add `qpe-toolbox` to an exisiting python environment using your favorite packaging tool. They also install optional, recommended dependencies.
 
-**With `pip`**
+**with `pip`**
 
 ```bash
 pip install "qpe-toolbox[recommended]"
 ```
 
-**With `uv`**
+**with `uv`**
 
 ```bash
 uv add "qpe-toolbox[recommended]"
 ```
 
-**With `conda`**
+**with `conda`**
 
 ```bash
 conda install -c conda-forge qpe-toolbox
 pip install cotengrust kahypar  # add recommended optional dependencies (pypi-only)
 ```
 
-**With `pixi`**
+**with `pixi`**
 
 ```bash
 pixi add qpe-toolbox
 pixi add cotengrust kahypar  # add recommended optional dependencies
 ```
 
-## Installation from sources
-Installing from sources gives access to our [tutorials](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html) which contains detailed explanations on the Quantum Phase Estimation algorithm.
+## Run the examples / Install from sources
+Installing from sources gives access to our [tutorials](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/index.html) which contains detailed explanations on the Quantum Phase Estimation algorithm. To run our examples, follow the command below to start jupyter, then right-click on a given `.py` example and select "Open with > Notebook" or "Jupytext Notebook" to convert it to a notebook (see [Jupytext documentation](https://jupytext.readthedocs.io/en/latest/) for more details)
 
 ### with uv
 This is the recommended installation method. We provide a `uv.lock` file and use it to run our examples as part of our test suite, therefore this setup is expected to work on any supported platform.
@@ -44,7 +45,7 @@ This is the recommended installation method. We provide a `uv.lock` file and use
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
 
-# launch jupyter to run examples
+# start jupyter to run examples
 uv run --locked jupyter lab --notebook-dir=examples/
 ```
 
@@ -54,7 +55,7 @@ Installing with `pixi` allows to use the MKL as a backend for BLAS/LAPACK, which
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
 
-# launch jupyter to run examples
+# start jupyter to run examples
 pixi run --environment=dev jupyter lab --notebook-dir=examples/
 ```
 
@@ -77,6 +78,6 @@ pip install --upgrade pip
 # install the package and its dependencies
 pip install -e ".[recommended]" --group dev
 
-# launch jupyter to run examples
+# start jupyter to run examples
 jupyter lab --notebook-dir=examples/
 ```
