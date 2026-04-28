@@ -21,6 +21,8 @@ Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb),
   - **Postprocessing**: energy retrieval from phase measurement outcomes
 
 # Installation
+We provide a more detailed installation guide in our [documentation](https://quobly-sw.github.io/qpe-toolbox/customapi/installation/index.html).
+
 ## Requirements
 Our package is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](https://github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
 
@@ -65,22 +67,14 @@ pip install -e ".[recommended]" --group dev
 
 ### with uv
 ```bash
-# clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
-
-# Create a virtual environment and synchronize it with lock
 uv sync --locked
-
-# activate it
 source .venv/bin/activate
 ```
 
 ### with pixi
 ```bash
-# clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
-
-# Install all dependencies and activate the environment
 pixi shell --environment dev
 ```
 
