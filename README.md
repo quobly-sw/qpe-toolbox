@@ -24,6 +24,8 @@ Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb),
 ## Requirements
 Our package is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](https://github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
 
+`qpe-toolbox` is a pure Python library, however due to [PySCF restrictions](https://pyscf.org/user/install.html), Windows is only supported through the Windows Subsystem for Linux (WSL).
+
 ## Installation from pypi
 `qpe-toolbox` is available on [PyPI](https://pypi.org/project/qpe-toolbox):
 ```bash
