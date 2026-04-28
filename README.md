@@ -82,8 +82,6 @@ git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
 pixi shell --environment dev
 ```
 
-
-
 # Contents
 
 The package is divided in four modules:
@@ -136,7 +134,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
    - Exact time evolution or Trotterization, available as methods of the `Hamiltonian` class - see the tutorial on [`trotter_decomposition`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/trotter_decomposition.html).
    - Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries: [`qpe_with_lcu`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_lcu.html).
 
-4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, chose between:
+4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, choose between:
 
    - `make_circ` to create a Tensor Network representation of the circuit.
    - `make_circMPS` to store the state as an MPS and iteratively apply the gates.

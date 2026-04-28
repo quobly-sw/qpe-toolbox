@@ -8,7 +8,7 @@ On Windows, QPE Toolbox is supported only through the Windows Subsystem for Linu
 QPE Toolbox is a pure python library and will run on any system as long as its dependencies support it. In practice, this means any 64-bit macOS or Linux distribution should work. Due to [PySCF restrictions](https://pyscf.org/user/install.html), Windows is only supported through the Windows Subsystem for Linux (WSL).
 
 ## Install the python package
-Use the commands below to add `qpe-toolbox` to an exisiting python environment using your favorite packaging tool. They also install optional, recommended dependencies.
+Use the commands below to add `qpe-toolbox` to an existing python environment using your favorite packaging tool. They also install optional, recommended dependencies.
 
 **with `pip`**
 
@@ -26,7 +26,7 @@ uv add "qpe-toolbox[recommended]"
 
 ```bash
 conda install -c conda-forge qpe-toolbox
-pip install cotengrust kahypar  # add recommended optional dependencies (pypi-only)
+pip install cotengrust kahypar  # add recommended optional dependencies (only on pipy)
 ```
 
 **with `pixi`**
@@ -50,7 +50,7 @@ uv run --locked jupyter lab --notebook-dir=examples/
 ```
 
 ### with pixi
-Installing with `pixi` allows to use the MKL as a backend for BLAS/LAPACK, which may provides a speed-up compared to NumPy openblas default.
+Installing with `pixi` allows to use the MKL as a backend for BLAS/LAPACK, which may provide a speed-up compared to NumPy openblas default.
 ```bash
 # clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
