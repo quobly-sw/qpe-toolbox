@@ -540,7 +540,7 @@ def generate_brickwall_circuit_modified(
     return circ
 
 
-def init_cost_tn(unitary_mpo, depth, tol = 1e-1, factorize = False, closed = False):
+def init_cost_tn(unitary_mpo, depth, tol = 1e-1, factorize = False, closed = False, seed=42):
     """
      by defect, "SU4" are fed unfactorized in the circuits,
      while others like "RZZ" are always split by defect.
