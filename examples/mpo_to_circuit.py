@@ -14,27 +14,19 @@
 
 # %%
 import os
+
 os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
-import cotengra as ctg
-import quimb as qu
-import quimb.tensor as qtn
-from quimb.tensor.tensor_core import TensorNetwork, tensor_contract, tensor_split, get_tags
-import re
 
-import numpy as np
-from scipy import linalg as spLA
 list_paulis = ["I", "X", "Y", "Z"]
 
-from pyscf import gto
-from qpe_toolbox.hamiltonian import Hamiltonian, chemistry_hamiltonian
+import copy
 
-from tqdm import tqdm
+from pyscf import gto
 
 from qpe_toolbox.circuit.mpo_circuit_transpilation import *
-
-import copy
+from qpe_toolbox.hamiltonian import Hamiltonian, chemistry_hamiltonian
 
 # %% [markdown]
 # ## next-nearest-neighbor Ising model
@@ -42,30 +34,29 @@ import copy
 # %%
 L = 13
 gx, gzz, gz1z = 0.2, 0.5, 0.1
-terms_NNIM = []*(3*L-3)
+terms_NNIM = [] * (3 * L - 3)
 for l in range(L):
-    terms_NNIM.append(
-        (gx, "x", [l])
-    )
-for l in range(L-1):
-    terms_NNIM.append(
-        (gzz, "zz", [l, l+1])
-    )
-for l in range(L-2):
-    terms_NNIM.append(
-        (gz1z, "zz", [l, l+2])
-    )
-    
+    terms_NNIM.append((gx, "x", [l]))
+for l in range(L - 1):
+    terms_NNIM.append((gzz, "zz", [l, l + 1]))
+for l in range(L - 2):
+    terms_NNIM.append((gz1z, "zz", [l, l + 2]))
+
 ham_NNIM = Hamiltonian(terms_NNIM, L)
 
 # %% [markdown]
 # in the following function: do we keep the verbose? if we keep it, do we change it?
 
 # %%
-trotter_mpo_ham_NNIM = trotter_approx_as_MPO(ham_NNIM.terms,
-                                            n_qubits=ham_NNIM.n_qubits,
-                                            order=4, dt=0.25, cutoff=1e-12, max_bond=128,
-                                            verbosity=1)
+trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
+    ham_NNIM.terms,
+    n_qubits=ham_NNIM.n_qubits,
+    order=4,
+    dt=0.25,
+    cutoff=1e-12,
+    max_bond=128,
+    verbosity=1,
+)
 
 # %% [markdown]
 # in the following I initialize the cost function
@@ -76,41 +67,42 @@ depth = 3
 cost_tn_open = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
     depth=depth,
-    tol = 1e-1,
-    factorize = False,
-    closed = False,
-    )
+    tol=1e-1,
+    factorize=False,
+    closed=False,
+)
 cost_tn_open.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tags=False)
 
 cost_tn_closed = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
     depth=depth,
-    tol = 1e-1,
-    factorize = False,
-    closed = True,
-    )
-cost_tn_closed.draw([f"ROUND_{i}" for i in range(depth)], show_inds=False, show_tags=False)
+    tol=1e-1,
+    factorize=False,
+    closed=True,
+)
+cost_tn_closed.draw(
+    [f"ROUND_{i}" for i in range(depth)], show_inds=False, show_tags=False
+)
 
 # %%
 dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
 """
-for key, items in dict_transf["L"].items():
-    print(key)
-    cost_tn_closed.draw(items, show_inds=False, show_tags=False)
+For key, items in dict_transf["L"].items():
+
+print(key)
+cost_tn_closed.draw(items, show_inds=False, show_tags=False)
 """
 """
-for key, items in dict_transf["R"].items():
-    print(key)
-    cost_tn_closed.draw(items, show_inds=False, show_tags=False)
+For key, items in dict_transf["R"].items():
+
+print(key)
+cost_tn_closed.draw(items, show_inds=False, show_tags=False)
 """
 
 # %%
 dict_contr_envs = build_first_sweep(
-    n_qubits=L,
-    cost_tn=cost_tn_closed,
-    dict_transf=dict_transf,
-    drop_tags=True
-    )
+    n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
+)
 
 # %%
 # optimize for depth 3 (depth 6 in Causer et al. paper)
@@ -118,7 +110,6 @@ dict_contr_envs = build_first_sweep(
 list_n_sweeps = [10, 20, 50, 100]
 
 for n_sweeps in list_n_sweeps:
-
     cp_cost_tn_closed = cost_tn_closed.copy(deep=True)
     cp_dict_transf = copy.deepcopy(dict_transf)
     cp_dict_contr_envs = copy.deepcopy(dict_contr_envs)
@@ -129,44 +120,41 @@ for n_sweeps in list_n_sweeps:
         n_sweeps=n_sweeps,
         dict_transf=cp_dict_transf,
         dict_contr_envs=cp_dict_contr_envs,
-        )
+    )
 
 # %% [markdown]
 # In *Causer et al.* they find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
 
 # %%
 n_sweeps = 20
-depth=3
+depth = 3
 list_seeds = [1, 2, 3, 4, 5]
 for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_NNIM,
         depth=depth,
-        tol = 1e-1,
-        factorize = False,
-        closed = True,
-        seed=seed
-        )
-    
+        tol=1e-1,
+        factorize=False,
+        closed=True,
+        seed=seed,
+    )
+
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
 
     dict_contr_envs = build_first_sweep(
-    n_qubits=L,
-    cost_tn=cost_tn_closed,
-    dict_transf=dict_transf,
-    drop_tags=True
+        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
-    
+
     opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
         dict_transf=dict_transf,
         dict_contr_envs=dict_contr_envs,
-        )
+    )
 
 # %% [markdown]
-# The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second order Trotter expansion of the circuit, where some SWAPs are fixed and only a subset of gates needs to be fixed. 
+# The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second order Trotter expansion of the circuit, where some SWAPs are fixed and only a subset of gates needs to be fixed.
 #
 # We do not want to use model-specific optimizations so far, so we try with *2 site DMRG* and *AD*.
 
@@ -177,19 +165,13 @@ for seed in list_seeds:
 # cluster Ising model
 L = 11
 g = -0.75
-terms_CIM = []*(3*L-3)
+terms_CIM = [] * (3 * L - 3)
 for l in range(L):
-    terms_CIM.append(
-        (-(1+g)**2, "x", [l])
-    )
-for l in range(L-1):
-    terms_CIM.append(
-        (-2*(1-g**2), "zz", [l, l+1])
-    )
-for l in range(L-2):
-    terms_CIM.append(
-        ((g-1)**2, "zxz", [l, l+1, l+2])
-    )
+    terms_CIM.append((-((1 + g) ** 2), "x", [l]))
+for l in range(L - 1):
+    terms_CIM.append((-2 * (1 - g**2), "zz", [l, l + 1]))
+for l in range(L - 2):
+    terms_CIM.append(((g - 1) ** 2, "zxz", [l, l + 1, l + 2]))
 
 ham_CIM = Hamiltonian(terms_CIM, L)
 
@@ -199,81 +181,80 @@ max_bond = 128
 T = 0.5
 n_steps = 10
 
-trotter_mpo_ham_CIM_step = trotter_approx_as_MPO(ham_CIM.terms,
-                                            n_qubits=ham_CIM.n_qubits,
-                                            order=4, dt=T/10, cutoff=cutoff, max_bond=max_bond)
+trotter_mpo_ham_CIM_step = trotter_approx_as_MPO(
+    ham_CIM.terms,
+    n_qubits=ham_CIM.n_qubits,
+    order=4,
+    dt=T / 10,
+    cutoff=cutoff,
+    max_bond=max_bond,
+)
 
 trotter_mpo_ham_CIM = trotter_mpo_ham_CIM_step.copy(deep=True)
-for _ in range(n_steps-1):
+for _ in range(n_steps - 1):
     trotter_mpo_ham_CIM = trotter_mpo_ham_CIM.apply(
-                trotter_mpo_ham_CIM_step, compress=True, cutoff=cutoff, max_bond=max_bond
-                )
+        trotter_mpo_ham_CIM_step, compress=True, cutoff=cutoff, max_bond=max_bond
+    )
     print(trotter_mpo_ham_CIM.max_bond())
 
 # %%
 n_sweeps = 20
-depth=3
+depth = 3
 list_seeds = [1, 2, 3]
 for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_CIM,
         depth=depth,
-        tol = 1e-1,
-        factorize = False,
-        closed = True,
-        seed=seed
-        )
-    
+        tol=1e-1,
+        factorize=False,
+        closed=True,
+        seed=seed,
+    )
+
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
 
     dict_contr_envs = build_first_sweep(
-    n_qubits=L,
-    cost_tn=cost_tn_closed,
-    dict_transf=dict_transf,
-    drop_tags=True
+        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
-    
+
     opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
         dict_transf=dict_transf,
         dict_contr_envs=dict_contr_envs,
-        )
+    )
 
 # %% [markdown]
 # In this model we also detect dependence on the initial Ansatz. We can either change the seed or the tolerance:
 
 # %%
 n_sweeps = 20
-depth=3
+depth = 3
 list_seeds = [1, 2, 3]
 for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_CIM,
         depth=depth,
-        tol = 1.,
-        factorize = False,
-        closed = True,
-        seed=seed
-        )
-    
+        tol=1.0,
+        factorize=False,
+        closed=True,
+        seed=seed,
+    )
+
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
 
     dict_contr_envs = build_first_sweep(
-    n_qubits=L,
-    cost_tn=cost_tn_closed,
-    dict_transf=dict_transf,
-    drop_tags=True
+        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
-    
+
     opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
         dict_transf=dict_transf,
         dict_contr_envs=dict_contr_envs,
-        )
+    )
 
 # %% [markdown]
 # ## dihydrogen
@@ -287,10 +268,10 @@ mol = gto.M(
 )
 
 ham_h2 = chemistry_hamiltonian(mol, "rhf", do_fci=True, do_ccsd=True)
-
 """
-mol = gto.M(
+Mol = gto.M(
     atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.735))],
+
     basis="sto-3g",
 )
 
@@ -302,47 +283,49 @@ max_bond = 128
 T = 0.2
 n_steps = 2
 
-trotter_mpo_ham_h2_step = trotter_approx_as_MPO(ham_h2.terms,
-                                            n_qubits=ham_h2.n_qubits,
-                                            order=2, dt=T/10, cutoff=cutoff, max_bond=max_bond)
+trotter_mpo_ham_h2_step = trotter_approx_as_MPO(
+    ham_h2.terms,
+    n_qubits=ham_h2.n_qubits,
+    order=2,
+    dt=T / 10,
+    cutoff=cutoff,
+    max_bond=max_bond,
+)
 
 trotter_mpo_ham_h2 = trotter_mpo_ham_h2_step.copy(deep=True)
-for _ in range(n_steps-1):
+for _ in range(n_steps - 1):
     trotter_mpo_ham_h2 = trotter_mpo_ham_h2.apply(
-                trotter_mpo_ham_h2_step, compress=True, cutoff=cutoff, max_bond=max_bond
-                )
+        trotter_mpo_ham_h2_step, compress=True, cutoff=cutoff, max_bond=max_bond
+    )
     print(trotter_mpo_ham_h2.max_bond())
 
 # %%
 n_sweeps = 20
-depth=1
+depth = 1
 list_seeds = [1, 2, 3]
 for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_h2,
         depth=depth,
-        tol = 1e-1,
-        factorize = False,
-        closed = True,
-        seed=seed
-        )
-    
+        tol=1e-1,
+        factorize=False,
+        closed=True,
+        seed=seed,
+    )
+
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
 
     dict_contr_envs = build_first_sweep(
-    n_qubits=L,
-    cost_tn=cost_tn_closed,
-    dict_transf=dict_transf,
-    drop_tags=True
+        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
-    
+
     opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
         dict_transf=dict_transf,
         dict_contr_envs=dict_contr_envs,
-        )
+    )
 
 # %% [markdown]
 # As one could expect, we see that equal seeds yield different fidelities when varying the tolerance (prefactor of parameters when initializing the SU4 gates)

@@ -1,22 +1,23 @@
 import re
 
-import numpy as np
-from scipy import linalg as spLA
-
-from tqdm import tqdm
-
 import cotengra as ctg
+import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
-from quimb.tensor.tensor_core import TensorNetwork, tensor_contract, tensor_split, get_tags
+from quimb.tensor.tensor_core import (
+    TensorNetwork,
+    get_tags,
+    tensor_contract,
+    tensor_split,
+)
+from tqdm import tqdm
 
-from pyscf import gto
-from qpe_toolbox.hamiltonian import Hamiltonian, chemistry_hamiltonian
-from qpe_toolbox.circuit.parametrized_circuits import * # do PR to generalize nn_layer so just import that function
+from qpe_toolbox.circuit.parametrized_circuits import *  # do PR to generalize nn_layer so just import that function
 
 list_paulis = ["I", "X", "Y", "Z"]
 
-#--------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------
 def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     r"""
     Construct the MPO representation of the unitary exponential of a Pauli string.
@@ -44,7 +45,7 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     ----------
     ham_term : tuple
         A tuple ``(coeff, pauli_string, active_qubits)`` where:
-        
+
         - ``coeff`` (float): Scalar coefficient multiplying the Pauli string.
         - ``pauli_string`` (str): String of Pauli operators (e.g. ``"ZYXXZ"``).
         - ``active_qubits`` (list[int]): Indices of qubits where the Pauli
@@ -85,12 +86,12 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     >>> mpo
     <MatrixProductOperator ...>
     """
-    
+
     string_coeff = ham_term[0]
     pauli_string = ham_term[1]
     active_qubits = ham_term[2]
     id4 = qu.identity(2).reshape(1, 1, 2, 2)
-    
+
     pauli_string_tensors = []
     pauli_weight = 0
     for qubit in range(n_qubits):
@@ -113,12 +114,13 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
 
     exp_pauli_string_mpo = id_mpo.add_MPO(string_mpo)
     exp_pauli_string_mpo.compress(cutoff=1e-6, max_bond=2)
-    
+
     return exp_pauli_string_mpo
 
 
-def trotter1_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, reverse_order=False):
-
+def trotter1_approx_as_MPO(
+    ham_terms, n_qubits, *, dt, cutoff, max_bond, reverse_order=False
+):
     r"""
     Construct the first-order Trotter-Suzuki approximation as a Matrix
     Product Operator (MPO).
@@ -171,38 +173,28 @@ def trotter1_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, reverse
     trotter4_approx_as_MPO
     exp_Pauli_string_as_MPO
     """
-    
+
     if reverse_order:
-        init_term = len(ham_terms)-1
-        trange_counter = tqdm(list(reversed(range(0, len(ham_terms)-1))))
+        init_term = len(ham_terms) - 1
+        trange_counter = tqdm(list(reversed(range(len(ham_terms) - 1))))
     else:
         init_term = 0
         trange_counter = tqdm(list(range(1, len(ham_terms))))
-    
-    U_trotter1_mpo = exp_Pauli_string_as_MPO(
-        ham_terms[init_term],
-        n_qubits,
-        theta=-dt
-        )
+
+    U_trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], n_qubits, theta=-dt)
     for i in trange_counter:
-        new_factor_mpo = exp_Pauli_string_as_MPO(
-            ham_terms[i],
-            n_qubits,
-            theta=-dt
-            )
+        new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], n_qubits, theta=-dt)
         U_trotter1_mpo = U_trotter1_mpo.apply(
-            new_factor_mpo,
-            compress=True,
-            cutoff=cutoff,
-            max_bond=max_bond
-            )
-        trange_counter.set_description(f'{"": <8}bond dimension: {U_trotter1_mpo.max_bond()}')
-        
+            new_factor_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
+        )
+        trange_counter.set_description(
+            f"{'': <8}bond dimension: {U_trotter1_mpo.max_bond()}"
+        )
+
     return U_trotter1_mpo
 
 
-def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity = 0):
-    
+def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity=0):
     r"""
     Construct the second-order symmetric Trotter-Suzuki approximation as an MPO.
 
@@ -248,42 +240,50 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     trotter1_approx_as_MPO
     trotter4_approx_as_MPO
     """
-    
+
     if verbosity == 1:
-        print(f'{"": <4}The 2nd order Trotter approximant consists on two subsequent 1st order approximants:', '\n')
-        print(f'{"": <8}Computing the first 1st order approximant for a time step {{0.5}}dt')
-        
+        print(
+            f"{'': <4}The 2nd order Trotter approximant consists on two subsequent 1st order approximants:",
+            "\n",
+        )
+        print(
+            f"{'': <8}Computing the first 1st order approximant for a time step {{0.5}}dt"
+        )
+
     layer1_mpo = trotter1_approx_as_MPO(
         ham_terms,
         n_qubits,
-        dt = dt / 2,
-        cutoff = cutoff,
-        max_bond = max_bond,
-        )
-    
+        dt=dt / 2,
+        cutoff=cutoff,
+        max_bond=max_bond,
+    )
+
     if verbosity == 1:
-        print('\n')
-        print(rf'{"": <8}Computing the second 1st order approximant for a time step {{0.5}}dt')
-        
+        print("\n")
+        print(
+            rf"{'': <8}Computing the second 1st order approximant for a time step {{0.5}}dt"
+        )
+
     layer2_mpo = trotter1_approx_as_MPO(
         ham_terms,
         n_qubits,
-        dt = dt / 2,
-        cutoff = cutoff,
-        max_bond = max_bond,
-        reverse_order=True
-        )
-    
+        dt=dt / 2,
+        cutoff=cutoff,
+        max_bond=max_bond,
+        reverse_order=True,
+    )
+
     if verbosity == 1:
-        print('\n')
-        
-    U_trotter2_mpo = layer1_mpo.apply(layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
-    
+        print("\n")
+
+    U_trotter2_mpo = layer1_mpo.apply(
+        layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
+    )
+
     return U_trotter2_mpo
 
 
-def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity = 0):
-
+def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity=0):
     r"""
     Construct the fourth-order Trotter-Suzuki approximation as an MPO.
 
@@ -339,51 +339,65 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     trotter2_approx_as_MPO
     """
 
-    sym_factor = 1./( 2.-2**(1./3.) )
-    
+    sym_factor = 1.0 / (2.0 - 2 ** (1.0 / 3.0))
+
     if verbosity == 1:
-        print('The 4th order Trotter approximant consists on three subsequent 2nd order approximants:', '\n')
-        print(rf'{"": <4}Computing the first 2nd order approximant for a time step s$_{{sym}}$dt')
-        #display(Math(r'\quad \text{Computing the second 2nd order approximant for a time step } (1-2s_{\mathrm{sym}})\,dt'))
-        
+        print(
+            "The 4th order Trotter approximant consists on three subsequent 2nd order approximants:",
+            "\n",
+        )
+        print(
+            rf"{'': <4}Computing the first 2nd order approximant for a time step s$_{{sym}}$dt"
+        )
+        # display(Math(r'\quad \text{Computing the second 2nd order approximant for a time step } (1-2s_{\mathrm{sym}})\,dt'))
+
     layer1_3_mpo = trotter2_approx_as_MPO(
         ham_terms,
         n_qubits,
-        dt = dt * sym_factor,
-        cutoff = cutoff,
-        max_bond = max_bond,
+        dt=dt * sym_factor,
+        cutoff=cutoff,
+        max_bond=max_bond,
         verbosity=verbosity,
-        )
-    
+    )
+
     if verbosity == 1:
-        print(rf'{"": <4}Computing U_2(s\,dt)\$')
-        
+        print(rf"{'': <4}Computing U_2(s\,dt)\$")
+
     layer2_mpo = trotter2_approx_as_MPO(
         ham_terms,
         n_qubits,
-        dt = dt * (1 - 2 * sym_factor),
-        cutoff = cutoff,
-        max_bond = max_bond,
+        dt=dt * (1 - 2 * sym_factor),
+        cutoff=cutoff,
+        max_bond=max_bond,
         verbosity=verbosity,
-        )
-    
-    if verbosity == 1:
-        print(f'{"": <4}Multiplying first and second MPOs', '\n')
-    
-    U_trotter4_mpo = layer1_3_mpo.apply(layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
-    if verbosity == 1:
-        print(f'{"": <4}Intermediate bond dimension:', U_trotter4_mpo.max_bond(), '\n')
-        print(f'{"": <4}Multiplying intermediate and third MPOs', '\n')
-    U_trotter4_mpo = U_trotter4_mpo.apply(layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
-    if verbosity == 1:
-        print(f'{"": <4}Final bond dimension:', U_trotter4_mpo.max_bond())
-    
-    return U_trotter4_mpo
-#--------------------------------------------------------------------------
+    )
 
-def trotter_approx_as_MPO(ham_terms, n_qubits, *, dt, order, cutoff, max_bond, verbosity = 0):
-    
-    #list_bondims = []
+    if verbosity == 1:
+        print(f"{'': <4}Multiplying first and second MPOs", "\n")
+
+    U_trotter4_mpo = layer1_3_mpo.apply(
+        layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
+    )
+    if verbosity == 1:
+        print(f"{'': <4}Intermediate bond dimension:", U_trotter4_mpo.max_bond(), "\n")
+        print(f"{'': <4}Multiplying intermediate and third MPOs", "\n")
+    U_trotter4_mpo = U_trotter4_mpo.apply(
+        layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
+    )
+    if verbosity == 1:
+        print(f"{'': <4}Final bond dimension:", U_trotter4_mpo.max_bond())
+
+    return U_trotter4_mpo
+
+
+# --------------------------------------------------------------------------
+
+
+def trotter_approx_as_MPO(
+    ham_terms, n_qubits, *, dt, order, cutoff, max_bond, verbosity=0
+):
+
+    # list_bondims = []
     if order == 1:
         U_trotter_mpo = trotter1_approx_as_MPO(
             ham_terms,
@@ -391,8 +405,8 @@ def trotter_approx_as_MPO(ham_terms, n_qubits, *, dt, order, cutoff, max_bond, v
             dt=dt,
             cutoff=cutoff,
             max_bond=max_bond,
-            )
-            
+        )
+
     elif order == 2:
         U_trotter_mpo = trotter2_approx_as_MPO(
             ham_terms,
@@ -401,8 +415,8 @@ def trotter_approx_as_MPO(ham_terms, n_qubits, *, dt, order, cutoff, max_bond, v
             cutoff=cutoff,
             max_bond=max_bond,
             verbosity=verbosity,
-            )
-        
+        )
+
     elif order == 4:
         U_trotter_mpo = trotter4_approx_as_MPO(
             ham_terms,
@@ -411,11 +425,11 @@ def trotter_approx_as_MPO(ham_terms, n_qubits, *, dt, order, cutoff, max_bond, v
             cutoff=cutoff,
             max_bond=max_bond,
             verbosity=verbosity,
-            )
+        )
     else:
         ValueError(f"order {order} not implemented")
-        
-    #print(*(U_trotter_mpo[i].shape for i in range(n_qubits)), sep="\n")
+
+    # print(*(U_trotter_mpo[i].shape for i in range(n_qubits)), sep="\n")
     return U_trotter_mpo
 
 
@@ -426,7 +440,7 @@ def generate_brickwall_circuit_modified(
     two_qubit_gate_label,
     *,
     start_ent=False,
-    purely_ent=False, # whether or not to do 1-spin rotations
+    purely_ent=False,  # whether or not to do 1-spin rotations
     param_scaling=1.0,
     rng=None,
 ):
@@ -540,82 +554,92 @@ def generate_brickwall_circuit_modified(
     return circ
 
 
-def init_cost_tn(unitary_mpo, depth, tol = 1e-1, factorize = False, closed = False, seed=42):
+def init_cost_tn(unitary_mpo, depth, tol=1e-1, factorize=False, closed=False, seed=42):
     """
-     by defect, "SU4" are fed unfactorized in the circuits,
-     while others like "RZZ" are always split by defect.
-     Since we choose "SU4" as a starting point,
-     we give the option of splitting
+    By defect, "SU4" are fed unfactorized in the circuits,
+    while others like "RZZ" are always split by defect.
+
+    Since we choose "SU4" as a starting point,
+    we give the option of splitting
     """
-    
+
     n_qubits = unitary_mpo.num_tensors
     rng = np.random.default_rng()
     TN = TensorNetwork()
-    
-    #-----------------------------------------
+
+    # -----------------------------------------
     # Define the Ansatz as a brickwall circuit
-    
+
     bw_circ = generate_brickwall_circuit_modified(
         n_qubits=n_qubits,
         depth=depth,
-        one_qubit_gate_label="U1", # it is irrelevant (purely_ent cancels its effect)
+        one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
         two_qubit_gate_label="SU4",
         start_ent=True,
-        purely_ent=True, # whether or not to do 1-spin rotations
-        param_scaling=tol, # initialize close to identity
+        purely_ent=True,  # whether or not to do 1-spin rotations
+        param_scaling=tol,  # initialize close to identity
         rng=rng,
     )
 
     bw_unitary_tn = bw_circ.get_uni()
-    
+
     if factorize:
-        n_gates = int(re.search(r"\d+", list(bw_unitary_tn.tensors[-1].tags)[0]).group())
-        
-        for n in range(1, n_gates+1):
+        n_gates = int(
+            re.search(r"\d+", list(bw_unitary_tn.tensors[-1].tags)[0]).group()
+        )
+
+        for n in range(1, n_gates + 1):
             gate_tens = bw_unitary_tn.select(tags=(f"GATE_{n}"), which="any").tensors
-            #bw_unitary_tn.contract_between(tags1=gate_tens[0].tags, tags2=gate_tens[1].tags) # contract (if RZZ)
+            # bw_unitary_tn.contract_between(tags1=gate_tens[0].tags, tags2=gate_tens[1].tags) # contract (if RZZ)
             # # do the same but splitting!
 
     TN = TN & bw_unitary_tn
-    
-    #-----------------------------------
-    # Add the MPO unitary in the network 
-    
-    new_ket_ind = "B" # by defect leave the (B)ra open
+
+    # -----------------------------------
+    # Add the MPO unitary in the network
+
+    new_ket_ind = "B"  # by defect leave the (B)ra open
     if closed:
-        new_ket_ind = "k" # execute the trace by contracting the (k)et
-        
+        new_ket_ind = "k"  # execute the trace by contracting the (k)et
+
     for x, tensor in enumerate(unitary_mpo):
-        
         reind_tens = tensor.copy(deep=True)
         old_inds = reind_tens.inds
 
-        if (x == 0 or x == n_qubits - 1):
+        if x == 0 or x == n_qubits - 1:
             inds = (list(old_inds)[0], new_ket_ind + str(x), f"b{x}")
         else:
             inds = (list(old_inds)[0], list(old_inds)[1], new_ket_ind + str(x), f"b{x}")
-            
-        reind_tens.modify(inds = inds, tags = (f"I{x}", f"Uref{x}", "MPO"))
-        
+
+        reind_tens.modify(inds=inds, tags=(f"I{x}", f"Uref{x}", "MPO"))
+
         TN = TN & reind_tens
-        
+
     return TN
 
 
-def get_envs_tns(n_qubits, x, cost_tn, draw_env = False):
-    
+def get_envs_tns(n_qubits, x, cost_tn, draw_env=False):
+
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
-    
+
     left_tags = [f"I{x}" for x in range(x)]
-    right_tags = [f"I{x}" for x in range(x+1, n_qubits)]
-        
+    right_tags = [f"I{x}" for x in range(x + 1, n_qubits)]
+
     if draw_env:
-        
         copy_tn = cost_tn.copy(deep=True)
-        copy_tn.select(tags=[f"I{x}"], which="!any").select(tags=left_tags, which="any")#.add_tag(f"L{x}")
-        copy_tn.select(tags=[f"I{x}"], which="!any").select(tags=right_tags, which="any")#.add_tag(f"R{x}")
-        copy_tn.draw((f"L{x}", f"R{x}", f"Uref{x}"), layout="kamada_kawai", show_inds=False, show_tags=False)
-    
+        copy_tn.select(tags=[f"I{x}"], which="!any").select(
+            tags=left_tags, which="any"
+        )  # .add_tag(f"L{x}")
+        copy_tn.select(tags=[f"I{x}"], which="!any").select(
+            tags=right_tags, which="any"
+        )  # .add_tag(f"R{x}")
+        copy_tn.draw(
+            (f"L{x}", f"R{x}", f"Uref{x}"),
+            layout="kamada_kawai",
+            show_inds=False,
+            show_tags=False,
+        )
+
     list_envs_tns = []
     if x > 0:
         list_envs_tns.append(env_tn.select(tags=left_tags, which="any"))
@@ -626,122 +650,118 @@ def get_envs_tns(n_qubits, x, cost_tn, draw_env = False):
 
 
 def find_transfer_structure(n_qubits, cost_tn):
-    
+
     dict_uncontr_envs = {"L": {}, "R": {}}
     for x in range(n_qubits):
         list_envs_tns = get_envs_tns(n_qubits, x, cost_tn)
-        
+
         if x == 0:
             dict_uncontr_envs["R"][f"I{x}"] = list_envs_tns[0]
-        elif x == n_qubits-1:
+        elif x == n_qubits - 1:
             dict_uncontr_envs["L"][f"I{x}"] = list_envs_tns[0]
         else:
             dict_uncontr_envs["L"][f"I{x}"] = list_envs_tns[0]
             dict_uncontr_envs["R"][f"I{x}"] = list_envs_tns[1]
-    
+
     dict_transf = {"L": {}, "R": {}}
     for x in range(1, n_qubits - 1):
-        
         # left transfer
         transf_tn = dict_uncontr_envs["L"][f"I{x + 1}"].select(
-            tags=(f"I{x}"),
-            which="any"
-            )
+            tags=(f"I{x}"), which="any"
+        )
         transf_tags = get_tags(transf_tn)
         filtered_tags = []
         for tag in transf_tags:
             if tag[0] == "G" or tag[0] == "U":
                 filtered_tags.append(tag)
         dict_transf["L"][f"L{x}_to_L{x + 1}"] = filtered_tags
-        
+
         # right transfer
         transf_tn = dict_uncontr_envs["R"][f"I{n_qubits - 2 - x}"].select(
-            tags=(f"I{n_qubits - 1 - x}"),
-            which="any"
-            )
+            tags=(f"I{n_qubits - 1 - x}"), which="any"
+        )
         transf_tags = get_tags(transf_tn)
         filtered_tags = []
         for tag in transf_tags:
             if tag[0] == "G" or tag[0] == "U":
                 filtered_tags.append(tag)
         dict_transf["R"][f"R{n_qubits - 1 - x}_to_R{n_qubits - 2 - x}"] = filtered_tags
-        
+
     return dict_transf
 
 
 def build_first_sweep(n_qubits, cost_tn, dict_transf, drop_tags=True):
-    """
-    Generate the first set of left and right environments (recycling the former)
-    and save them in a list of tensor networks
+    """Generate the first set of left and right environments (recycling the former)
+    and save them in a list of tensor networks.
     """
 
     dict_contr_envs = {"L": {}, "R": {}}
-    
+
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
     L_init = cost_tn.select(tags="Uref0", which="all").tensors[0]
     L_init.add_tag(tag=("L1"))
-    R_init = cost_tn.select(tags=f"Uref{n_qubits-1}", which="all").tensors[0]
-    R_init.add_tag(tag=(f"R{n_qubits-2}"))
-    
-    dict_contr_envs["L"][f"L1"] = L_init
-    dict_contr_envs["R"][f"R{n_qubits-2}"] = R_init
+    R_init = cost_tn.select(tags=f"Uref{n_qubits - 1}", which="all").tensors[0]
+    R_init.add_tag(tag=(f"R{n_qubits - 2}"))
+
+    dict_contr_envs["L"]["L1"] = L_init
+    dict_contr_envs["R"][f"R{n_qubits - 2}"] = R_init
     L_next = L_init.copy(deep=True)
     R_next = R_init.copy(deep=True)
-    
+
     for counter, transf_tags in enumerate(
         zip(dict_transf["L"].values(), dict_transf["R"].values())
-        ):
-        
-        #print(counter, f"L{counter + 2}", f"R{n_qubits - 3 - counter}")
+    ):
+        # print(counter, f"L{counter + 2}", f"R{n_qubits - 3 - counter}")
         L_next = L_next.copy(deep=True)
         L_transf_tn = cost_tn.select(tags=transf_tags[0], which="any")
         L_next = L_next & L_transf_tn
         L_next = tensor_contract(*L_next.tensors, drop_tags=drop_tags)
         L_next.add_tag(tag=(f"L{counter + 2}"))
-        
+
         dict_contr_envs["L"][f"L{counter + 2}"] = L_next
-        
+
         R_next = R_next.copy(deep=True)
         R_transf_tn = cost_tn.select(tags=transf_tags[1], which="any")
         R_next = R_next & R_transf_tn
         R_next = tensor_contract(*R_next.tensors, drop_tags=drop_tags)
         R_next.add_tag(tag=(f"R{n_qubits - 3 - counter}"))
-        
+
         dict_contr_envs["R"][f"R{n_qubits - 3 - counter}"] = R_next
-        
+
     return dict_contr_envs
 
 
 def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
+    """Build intermediate contractions S=L{x}-gates-R{x}
+    Return ordered list of tags of gates to optimize.
     """
-        Build intermediate contractions S=L{x}-gates-R{x} 
-        Return ordered list of tags of gates to optimize
-    """
-    
+
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
     tags_to_opt = get_tags(gates_to_opt)
-    
+
     filtered_tags = []
     for tag in tags_to_opt:
         if tag[0] == "G":
             filtered_tags.append(tag)
-    
+
     if x == 0:
         loc_cost_tn = gates_to_opt & dict_contr_envs["R"][f"R{x}"]
     elif x == n_qubits - 1:
         loc_cost_tn = dict_contr_envs["L"][f"L{x}"] & gates_to_opt
     else:
-        loc_cost_tn = dict_contr_envs["L"][f"L{x}"] & gates_to_opt & dict_contr_envs["R"][f"R{x}"]
+        loc_cost_tn = (
+            dict_contr_envs["L"][f"L{x}"] & gates_to_opt & dict_contr_envs["R"][f"R{x}"]
+        )
 
     gate_to_opt_tags = sorted(filtered_tags, key=lambda s: int(s.split("_")[1]))
-    
+
     return loc_cost_tn, gate_to_opt_tags
 
 
 def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     """
-    Pop-Rehearse-Contract
-    
+    Pop-Rehearse-Contract.
+
     this will be called from sweep, and will only rehearse on the first sweep;
     can pop more than one gate!
     """
@@ -749,11 +769,11 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     p_loc_cost_tn = loc_cost_tn.copy(deep=True)
     p_loc_cost_tn.delete(tags=tags)
     prc_contr_loc_cost_tn = p_loc_cost_tn.contract(optimize=hyperopt)
-    
+
     return prc_contr_loc_cost_tn
 
 
-""" 
+"""
 list_methods = ["sgu", "vgcu"]
     dict_methods = {
         "sgu": "single gate update",
@@ -762,62 +782,63 @@ list_methods = ["sgu", "vgcu"]
     if method not in ["sgu", "vgcu"]:
         raise ValueError(f"Available methods: ", list_methods)
         """
-        
-        
+
+
 def update_cost_tn(cost_tn, list_opt_gate_tens):
-    
+
     for tens in list_opt_gate_tens:
-        tag_tens = list(tens.tags)[0] # the first tag is "GATE_{n}" by construction
-        cost_tn.delete(tags=tag_tens) # delete the old tensor with same tags
-        cost_tn = cost_tn & tens # add the new tensor
-        
+        tag_tens = list(tens.tags)[0]  # the first tag is "GATE_{n}" by construction
+        cost_tn.delete(tags=tag_tens)  # delete the old tensor with same tags
+        cost_tn = cost_tn & tens  # add the new tensor
+
     return cost_tn
 
 
-def update_dict_contr_envs(mode, list_opt_gate_tens, cost_tn, dict_transf, dict_contr_envs):
-    """
-    getting the x externally simplifies everything bc automatically know the column we are talking about
-    """
+def update_dict_contr_envs(
+    mode, list_opt_gate_tens, cost_tn, dict_transf, dict_contr_envs
+):
+    """Getting the x externally simplifies everything bc automatically know the column we are talking about."""
     for tens in list_opt_gate_tens:
-        
         list_tags = list(tens.tags)
-        tag_tens = list_tags[0] # the first tag is "GATE_{n}" by construction
-        n = int(re.search(r"\d+", list_tags[3]).group()) # number of the left site from tag
-        
-        if mode == "LR": # sweeping L to R only requires updating L's
-            
+        tag_tens = list_tags[0]  # the first tag is "GATE_{n}" by construction
+        n = int(
+            re.search(r"\d+", list_tags[3]).group()
+        )  # number of the left site from tag
+
+        if mode == "LR":  # sweeping L to R only requires updating L's
             # the gate couples I{n} and I{n+1}
             # affects transition L{n+1}_to_L{n+2}
             # so update L{n+2}
-            #print(f"L{n+2}")
-            transf_tens = cost_tn.select(tags=dict_transf["L"][f"L{n+1}_to_L{n+2}"], which="any")
-            new_env = dict_contr_envs["L"][f"L{n+1}"].copy(deep=True) & transf_tens
-            dict_contr_envs["L"][f"L{n+2}"] = new_env.contract()
-                
-        if mode == "RL": # sweeping R to L only requires updating R's
-            
+            # print(f"L{n+2}")
+            transf_tens = cost_tn.select(
+                tags=dict_transf["L"][f"L{n + 1}_to_L{n + 2}"], which="any"
+            )
+            new_env = dict_contr_envs["L"][f"L{n + 1}"].copy(deep=True) & transf_tens
+            dict_contr_envs["L"][f"L{n + 2}"] = new_env.contract()
+
+        if mode == "RL":  # sweeping R to L only requires updating R's
             # the gate couples I{n} and I{n+1}
             # affects transition R{n}_to_R{n-1}
             # so update R{n-1}
-            #print(f"R{n-1}")
-            transf_tens = cost_tn.select(tags=dict_transf["R"][f"R{n}_to_R{n-1}"], which="any")
+            # print(f"R{n-1}")
+            transf_tens = cost_tn.select(
+                tags=dict_transf["R"][f"R{n}_to_R{n - 1}"], which="any"
+            )
             new_env = dict_contr_envs["R"][f"R{n}"].copy(deep=True) & transf_tens
-            dict_contr_envs["R"][f"R{n-1}"] = new_env.contract()
+            dict_contr_envs["R"][f"R{n - 1}"] = new_env.contract()
 
     return dict_contr_envs
 
 
 def sgu_optimize_cost_tn(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs):
-    
     """
-    receives the cost function and optimizes for n_sweeps
-
+    Receives the cost function and optimizes for n_sweeps.
 
     notes: the sum of singular values after doing the SVD of the environment contraction around a gate
     coincides with the value of the cost function -> sanity check (already did it): contraction of cost_tn
     and contraction of local_cost_tn yields the same value as the sum of singular values
     """
-    
+
     # instantiate hypercontractor
     hyperopt = ctg.ReusableHyperOptimizer(
         # just do a few runs
@@ -833,69 +854,77 @@ def sgu_optimize_cost_tn(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_en
         # account for both flops and write - usually wise for practical performance
         minimize="combo",
         parallel=False,
-    ) # different from hyperopt_env
-    
-    instruct = [("LR", list(range(0, n_qubits-2))), ("RL", list(reversed(range(2, n_qubits))))]
+    )  # different from hyperopt_env
+
+    instruct = [
+        ("LR", list(range(n_qubits - 2))),
+        ("RL", list(reversed(range(2, n_qubits)))),
+    ]
     trange_counter = tqdm(list(range(n_sweeps)))
-    for _ in trange_counter: # set a progressbar and measure error
-        
+    for _ in trange_counter:  # set a progressbar and measure error
         for sweep in instruct:
             for x in sweep[1]:
-                
                 # build local cost function for all gates at position "x"
                 loc_cost_tn, gate_to_opt_tags = build_loc_cost_tn(
                     n_qubits,
                     x=x,
                     dict_contr_envs=dict_contr_envs,
                     cost_tn=cost_tn,
-                    )
-                
+                )
+
                 # sweep through gate list (along column, from lower to higher depths)
                 for tag in gate_to_opt_tags:
-                    
                     original_gate_tens = cost_tn.select(tags=tag).tensors[0]
                     inds = original_gate_tens.inds
-                    
+
                     # contract the local cost to a 4-legged non-unitary tensor
                     # and rehearse the contraction for later sweeps
                     prc_loc_cost_tens = PRC_loc_cost_tn(
                         loc_cost_tn=loc_cost_tn,
                         tags=tag,
                         hyperopt=hyperopt,
-                        )
-                
+                    )
+
                     # do the SVD
                     prc_loc_cost_UsVh = tensor_split(
-                        T = prc_loc_cost_tens,
+                        T=prc_loc_cost_tens,
                         # recall index ordering in Gate class:
                         # (OUT_LEFT, OUT_RIGHT, IN_LEFT, IN_RIGHT)
                         left_inds=(inds[0], inds[1]),
                         method="svd",
                         absorb=None,
                     )
-                    
+
                     # retain isometries
                     overlap = np.sum(prc_loc_cost_UsVh.tensors[1].data)
-                    trange_counter.set_description(f'overlap: {(overlap/pow(2,n_qubits)):.8f}')
-                    new_gate_tens = (prc_loc_cost_UsVh.tensors[0].conj() & prc_loc_cost_UsVh.tensors[2].conj()) ^ ...
-                    
+                    trange_counter.set_description(
+                        f"overlap: {(overlap / pow(2, n_qubits)):.8f}"
+                    )
+                    new_gate_tens = (
+                        prc_loc_cost_UsVh.tensors[0].conj()
+                        & prc_loc_cost_UsVh.tensors[2].conj()
+                    ) ^ ...
+
                     # ensure index order
                     new_gate_tens.transpose(inds[2], inds[3], inds[0], inds[1])
-                    
-                    new_gate_tens.modify(
-                        tags=original_gate_tens.tags
-                        )
-                    
+
+                    new_gate_tens.modify(tags=original_gate_tens.tags)
+
                     # update the (local) cost tensor network
-                    cost_tn = update_cost_tn(cost_tn, list_opt_gate_tens=[new_gate_tens])
-                    loc_cost_tn = update_cost_tn(loc_cost_tn, list_opt_gate_tens=[new_gate_tens])
-                       
+                    cost_tn = update_cost_tn(
+                        cost_tn, list_opt_gate_tens=[new_gate_tens]
+                    )
+                    loc_cost_tn = update_cost_tn(
+                        loc_cost_tn, list_opt_gate_tens=[new_gate_tens]
+                    )
+
                     # update transfer tensors and environments
                     dict_contr_envs = update_dict_contr_envs(
                         mode=sweep[0],
                         list_opt_gate_tens=[original_gate_tens],
                         cost_tn=cost_tn,
                         dict_transf=dict_transf,
-                        dict_contr_envs=dict_contr_envs)
-    
+                        dict_contr_envs=dict_contr_envs,
+                    )
+
     return cost_tn, dict_contr_envs
