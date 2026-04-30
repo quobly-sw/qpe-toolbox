@@ -16,44 +16,79 @@ from qpe_toolbox.circuit.parametrized_circuits import * # do PR to generalize nn
 
 list_paulis = ["I", "X", "Y", "Z"]
 
+#--------------------------------------------------------------------------
 def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
-    """EXAMPLE
-    Construct the Kronecker (tensor) product of two MPS objects.
+    r"""
+    Construct the MPO representation of the unitary exponential of a Pauli string.
 
-    This returns an MPS representing :math:`\\mathrm{MPS}_1 \\otimes \\mathrm{MPS}_2`,
-    with tensors arranged in the left, right, physical index ordering.
+    Given a Hamiltonian term of the form:
+
+        H = c * P
+
+    where ``c`` is a scalar coefficient and ``P`` is a tensor product of Pauli
+    operators acting on a subset of qubits, this function builds the Matrix
+    Product Operator (MPO) corresponding to:
+
+        exp(i * theta * c * P)
+
+    using the identity:
+
+        exp(i α P) = cos(α) I + i sin(α) P
+
+    where ``P^2 = I``.
+
+    The Pauli string is expanded to the full system size by inserting identity
+    operators on inactive qubits.
 
     Parameters
     ----------
-    mps1 : :quimb-api:`MatrixProductState`
-        First MPS operand.
-    mps2 : :quimb-api:`MatrixProductState`
-        Second MPS operand.
-    verbosity : int, default ``0``
-        If ``> 0``, print the shapes of the resulting tensors.
+    ham_term : tuple
+        A tuple ``(coeff, pauli_string, active_qubits)`` where:
+        
+        - ``coeff`` (float): Scalar coefficient multiplying the Pauli string.
+        - ``pauli_string`` (str): String of Pauli operators (e.g. ``"ZYXXZ"``).
+        - ``active_qubits`` (list[int]): Indices of qubits where the Pauli
+          operators act. The length must match ``pauli_string``.
+
+    n_qubits : int
+        Total number of qubits in the system.
+
+    theta : float
+        Evolution parameter (e.g. time or rotation angle).
 
     Returns
     -------
-    :quimb-api:`MatrixProductState`
-        The Kronecker product MPS on the combined physical register.
+    qtn.MatrixProductOperator
+        MPO representing the operator:
+
+            exp(i * theta * coeff * P)
+
+        where ``P`` is the full Pauli string embedded in the ``n_qubits`` system.
+
+    Notes
+    -----
+    - The MPO is constructed in left-right-up-down index ordering.
+    - The Pauli string MPO has bond dimension 1 before summation.
+    - After combining the identity and Pauli MPOs, the result should not
+      exceed a maximum bond dimension of 2.
 
     Raises
     ------
     ValueError
-        If the tensor shapes of either MPS are not compatible with the expected
-        MPS boundary conventions.
+        If the length of ``pauli_string`` does not match the number of
+        ``active_qubits``.
+
+    Examples
+    --------
+    >>> ham_term = (-0.345, "ZYXXZ", [0, 2, 3, 6, 9])
+    >>> mpo = exp_Pauli_string_as_MPO(ham_term, n_qubits=10, theta=0.1)
+    >>> mpo
+    <MatrixProductOperator ...>
     """
-    """WHAT IT NEEDS TO EXPLAIN
-    receives coupling, string and position. transforms the string to an mpo using Hamilt class
-    then defines also an identity mpo on the same number of sites. multiply each one by cos theta 
-    and sin theta and adds them
     
-    lrud
-    """
-    
-    string_coeff = ham_term[0] # e.g. -0.345
-    pauli_string = ham_term[1] # e.g. 'ZYXXZ'
-    active_qubits = ham_term[2] # e.g. [0, 2, 3, 6, 9]
+    string_coeff = ham_term[0]
+    pauli_string = ham_term[1]
+    active_qubits = ham_term[2]
     id4 = qu.identity(2).reshape(1, 1, 2, 2)
     
     pauli_string_tensors = []
@@ -83,27 +118,136 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
 
 
 def trotter1_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, reverse_order=False):
-    
-    #list_bondims = []
 
-    U_trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[0], n_qubits, theta=-dt)
+    r"""
+    Construct the first-order Trotter-Suzuki approximation as a Matrix
+    Product Operator (MPO).
+
+    This function builds an MPO representation of the first-order product
+    formula for the time-evolution operator
+
+    .. math::
+
+        U(dt) \approx \prod_j e^{-dt\, H_j},
+
+    where ``ham_terms = [H_0, H_1, ..., H_{m-1}]`` is a decomposition of the
+    Hamiltonian into terms that can each be exponentiated individually as MPOs.
+
+    Each exponential factor is generated with
+    :func:`exp_Pauli_string_as_MPO`, and factors are successively multiplied
+    together using MPO compression.
+
+    Parameters
+    ----------
+    ham_terms : sequence
+        Sequence of Hamiltonian terms. Each element must be compatible with
+        :func:`exp_Pauli_string_as_MPO`.
+    n_qubits : int
+        Number of qubits (sites) in the system.
+    dt : float
+        Time step used in the Trotter approximation.
+    cutoff : float
+        Singular value truncation threshold used during MPO compression.
+    max_bond : int
+        Maximum allowed bond dimension during MPO compression.
+    reverse_order : bool, optional
+        If ``False`` (default), terms are applied in forward order.
+        after the first term. If ``True``, terms are applied in reverse index order.
+
+    Returns
+    -------
+    MPO
+        MPO representation of the first-order Trotter approximation.
+
+    Notes
+    -----
+    The resulting MPO is built iteratively using compressed MPO products via
+    ``apply(..., compress=True)``. Truncation errors may accumulate depending
+    on ``cutoff`` and ``max_bond``.
+
+    See Also
+    --------
+    trotter2_approx_as_MPO
+    trotter4_approx_as_MPO
+    exp_Pauli_string_as_MPO
+    """
     
     if reverse_order:
-        trange_counter = tqdm(list(range(1, len(ham_terms))))
+        init_term = len(ham_terms)-1
+        trange_counter = tqdm(list(reversed(range(0, len(ham_terms)-1))))
     else:
-        trange_counter = tqdm(list(reversed(range(1, len(ham_terms)))))
+        init_term = 0
+        trange_counter = tqdm(list(range(1, len(ham_terms))))
     
+    U_trotter1_mpo = exp_Pauli_string_as_MPO(
+        ham_terms[init_term],
+        n_qubits,
+        theta=-dt
+        )
     for i in trange_counter:
-        new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], n_qubits, theta=-dt)
-        U_trotter1_mpo = U_trotter1_mpo.apply(new_factor_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
+        new_factor_mpo = exp_Pauli_string_as_MPO(
+            ham_terms[i],
+            n_qubits,
+            theta=-dt
+            )
+        U_trotter1_mpo = U_trotter1_mpo.apply(
+            new_factor_mpo,
+            compress=True,
+            cutoff=cutoff,
+            max_bond=max_bond
+            )
         trange_counter.set_description(f'{"": <8}bond dimension: {U_trotter1_mpo.max_bond()}')
-        #list_bondims.append(U_trotter1_mpo.max_bond())
-        #print(ham_terms[i], ' new chi=', list_bondims[-1])
         
     return U_trotter1_mpo
 
 
 def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity = 0):
+    
+    r"""
+    Construct the second-order symmetric Trotter-Suzuki approximation as an MPO.
+
+    This function builds the second-order product formula
+
+    .. math::
+
+        U(dt) \approx U_1(dt/2)\,U_1^{\mathrm{rev}}(dt/2),
+
+    where :math:`U_1` is the first-order Trotter approximation and
+    :math:`U_1^{\mathrm{rev}}` uses the reverse operator ordering.
+
+    The approximation is accurate to second order in ``dt``.
+
+    Parameters
+    ----------
+    ham_terms : sequence
+        Sequence of Hamiltonian terms. Each term must be compatible with
+        :func:`exp_Pauli_string_as_MPO`.
+    n_qubits : int
+        Number of qubits (sites) in the system.
+    dt : float or complex
+        Time step used in the Trotter approximation.
+    cutoff : float
+        Singular value truncation threshold used during MPO compression.
+    max_bond : int
+        Maximum allowed bond dimension during MPO compression.
+    verbosity : int, optional
+        If set to ``1``, prints progress information. Default is ``0``.
+
+    Returns
+    -------
+    MPO
+        MPO representation of the second-order Trotter approximation.
+
+    Notes
+    -----
+    Two first-order MPO approximants with half time step are constructed and
+    then multiplied together using compression.
+
+    See Also
+    --------
+    trotter1_approx_as_MPO
+    trotter4_approx_as_MPO
+    """
     
     if verbosity == 1:
         print(f'{"": <4}The 2nd order Trotter approximant consists on two subsequent 1st order approximants:', '\n')
@@ -140,11 +284,67 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
 def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity = 0):
 
+    r"""
+    Construct the fourth-order Trotter-Suzuki approximation as an MPO.
+
+    This function implements the standard symmetric fourth-order composition
+
+    .. math::
+
+        U_4(dt) =
+        U_2(s\,dt)\,
+        U_2((1 - 2s)\,dt)\,
+        U_2(s\,dt),
+
+    where :math:`U_2` is the second-order Trotter approximation and
+
+    .. math::
+
+        s = \frac{1}{2 - 2^{1/3}}
+
+    is the symmetry factor.
+
+    This approximation is accurate to fourth order in ``dt``.
+
+    Parameters
+    ----------
+    ham_terms : sequence
+        Sequence of Hamiltonian terms. Each term must be compatible with
+        :func:`exp_Pauli_string_as_MPO`.
+    n_qubits : int
+        Number of qubits (sites) in the system.
+    dt : float
+        Time step used in the Trotter approximation.
+    cutoff : float
+        Singular value truncation threshold used during MPO compression.
+    max_bond : int
+        Maximum allowed bond dimension during MPO compression.
+    verbosity : int, optional
+        If set to ``1``, prints progress information. Default is ``0``.
+
+    Returns
+    -------
+    MPO
+        MPO representation of the fourth-order Trotter approximation.
+
+    Notes
+    -----
+    The method constructs three second-order MPO approximants and combines
+    them through compressed MPO multiplication. Intermediate bond dimensions
+    may grow significantly depending on the system and truncation parameters.
+
+    See Also
+    --------
+    trotter1_approx_as_MPO
+    trotter2_approx_as_MPO
+    """
+
     sym_factor = 1./( 2.-2**(1./3.) )
     
     if verbosity == 1:
         print('The 4th order Trotter approximant consists on three subsequent 2nd order approximants:', '\n')
         print(rf'{"": <4}Computing the first 2nd order approximant for a time step s$_{{sym}}$dt')
+        #display(Math(r'\quad \text{Computing the second 2nd order approximant for a time step } (1-2s_{\mathrm{sym}})\,dt'))
         
     layer1_3_mpo = trotter2_approx_as_MPO(
         ham_terms,
@@ -156,7 +356,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         )
     
     if verbosity == 1:
-        print(rf'{"": <4}Computing the second 2nd order approximant for a time step $(1-2s_{{sym}})*dt$')
+        print(rf'{"": <4}Computing U_2(s\,dt)\$')
         
     layer2_mpo = trotter2_approx_as_MPO(
         ham_terms,
@@ -179,7 +379,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         print(f'{"": <4}Final bond dimension:', U_trotter4_mpo.max_bond())
     
     return U_trotter4_mpo
-
+#--------------------------------------------------------------------------
 
 def trotter_approx_as_MPO(ham_terms, n_qubits, *, dt, order, cutoff, max_bond, verbosity = 0):
     
@@ -611,6 +811,11 @@ def sgu_optimize_cost_tn(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_en
     
     """
     receives the cost function and optimizes for n_sweeps
+
+
+    notes: the sum of singular values after doing the SVD of the environment contraction around a gate
+    coincides with the value of the cost function -> sanity check (already did it): contraction of cost_tn
+    and contraction of local_cost_tn yields the same value as the sum of singular values
     """
     
     # instantiate hypercontractor
