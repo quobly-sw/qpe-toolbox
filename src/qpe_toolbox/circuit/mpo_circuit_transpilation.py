@@ -12,7 +12,10 @@ from quimb.tensor.tensor_core import (
 )
 from tqdm import tqdm
 
-from qpe_toolbox.circuit.parametrized_circuits import *  # do PR to generalize nn_layer so just import that function
+from qpe_toolbox.circuit.parametrized_circuits import (
+    one_qubit_layer,
+    two_qubit_nn_layer,
+)  # do PR to generalize nn_layer so just import that function
 
 list_paulis = ["I", "X", "Y", "Z"]
 
@@ -427,12 +430,13 @@ def trotter_approx_as_MPO(
             verbosity=verbosity,
         )
     else:
-        ValueError(f"order {order} not implemented")
+        raise ValueError(f"order {order} not implemented")
 
     # print(*(U_trotter_mpo[i].shape for i in range(n_qubits)), sep="\n")
     return U_trotter_mpo
 
 
+# THIS IS TO BE MERGED IN A SMALL PR WITH THE EXISTING FUNCTION
 def generate_brickwall_circuit_modified(
     n_qubits,
     depth,
@@ -536,10 +540,10 @@ def generate_brickwall_circuit_modified(
                     gate_round=k,
                     rng=rng,
                 )
-            if purely_ent == False:
+            if not purely_ent:
                 one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
         else:
-            if purely_ent == False:
+            if not purely_ent:
                 one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
             for start in range(2):
                 two_qubit_nn_layer(
@@ -554,7 +558,7 @@ def generate_brickwall_circuit_modified(
     return circ
 
 
-def init_cost_tn(unitary_mpo, depth, tol=1e-1, factorize=False, closed=False, seed=42):
+def init_cost_tn(unitary_mpo, depth, *, tol=1e-1, factorize=False, closed=False, seed=42):
     """
     By defect, "SU4" are fed unfactorized in the circuits,
     while others like "RZZ" are always split by defect.
@@ -585,7 +589,7 @@ def init_cost_tn(unitary_mpo, depth, tol=1e-1, factorize=False, closed=False, se
 
     if factorize:
         n_gates = int(
-            re.search(r"\d+", list(bw_unitary_tn.tensors[-1].tags)[0]).group()
+            re.search(r"\d+", next(iter(bw_unitary_tn.tensors[-1].tags))).group()
         )
 
         for n in range(1, n_gates + 1):
@@ -607,9 +611,9 @@ def init_cost_tn(unitary_mpo, depth, tol=1e-1, factorize=False, closed=False, se
         old_inds = reind_tens.inds
 
         if x == 0 or x == n_qubits - 1:
-            inds = (list(old_inds)[0], new_ket_ind + str(x), f"b{x}")
+            inds = (next(iter(old_inds)), new_ket_ind + str(x), f"b{x}")
         else:
-            inds = (list(old_inds)[0], list(old_inds)[1], new_ket_ind + str(x), f"b{x}")
+            inds = (next(iter(old_inds)), list(old_inds)[1], new_ket_ind + str(x), f"b{x}")
 
         reind_tens.modify(inds=inds, tags=(f"I{x}", f"Uref{x}", "MPO"))
 
@@ -618,7 +622,7 @@ def init_cost_tn(unitary_mpo, depth, tol=1e-1, factorize=False, closed=False, se
     return TN
 
 
-def get_envs_tns(n_qubits, x, cost_tn, draw_env=False):
+def get_envs_tns(n_qubits, x, cost_tn, *, draw_env=False):
 
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
 
@@ -690,7 +694,7 @@ def find_transfer_structure(n_qubits, cost_tn):
     return dict_transf
 
 
-def build_first_sweep(n_qubits, cost_tn, dict_transf, drop_tags=True):
+def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
     """Generate the first set of left and right environments (recycling the former)
     and save them in a list of tensor networks.
     """
@@ -709,7 +713,7 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, drop_tags=True):
     R_next = R_init.copy(deep=True)
 
     for counter, transf_tags in enumerate(
-        zip(dict_transf["L"].values(), dict_transf["R"].values())
+        zip(dict_transf["L"].values(), dict_transf["R"].values(), strict=True)
     ):
         # print(counter, f"L{counter + 2}", f"R{n_qubits - 3 - counter}")
         L_next = L_next.copy(deep=True)
@@ -768,9 +772,8 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
 
     p_loc_cost_tn = loc_cost_tn.copy(deep=True)
     p_loc_cost_tn.delete(tags=tags)
-    prc_contr_loc_cost_tn = p_loc_cost_tn.contract(optimize=hyperopt)
 
-    return prc_contr_loc_cost_tn
+    return p_loc_cost_tn.contract(optimize=hyperopt)
 
 
 """
@@ -787,7 +790,7 @@ list_methods = ["sgu", "vgcu"]
 def update_cost_tn(cost_tn, list_opt_gate_tens):
 
     for tens in list_opt_gate_tens:
-        tag_tens = list(tens.tags)[0]  # the first tag is "GATE_{n}" by construction
+        tag_tens = next(iter(tens.tags)) #list(tens.tags)[0]  # the first tag is "GATE_{n}" by construction
         cost_tn.delete(tags=tag_tens)  # delete the old tensor with same tags
         cost_tn = cost_tn & tens  # add the new tensor
 
@@ -800,7 +803,7 @@ def update_dict_contr_envs(
     """Getting the x externally simplifies everything bc automatically know the column we are talking about."""
     for tens in list_opt_gate_tens:
         list_tags = list(tens.tags)
-        tag_tens = list_tags[0]  # the first tag is "GATE_{n}" by construction
+        #tag_tens = list_tags[0]  # the first tag is "GATE_{n}" by construction
         n = int(
             re.search(r"\d+", list_tags[3]).group()
         )  # number of the left site from tag

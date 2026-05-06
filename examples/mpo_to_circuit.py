@@ -19,17 +19,16 @@ os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
+import copy
+from qpe_toolbox.circuit.mpo_circuit_transpilation import (
+
+)
+from qpe_toolbox.hamiltonian import Hamiltonian
+
 list_paulis = ["I", "X", "Y", "Z"]
 
-import copy
-
-from pyscf import gto
-
-from qpe_toolbox.circuit.mpo_circuit_transpilation import *
-from qpe_toolbox.hamiltonian import Hamiltonian, chemistry_hamiltonian
-
 # %% [markdown]
-# ## next-nearest-neighbor Ising model
+# next-nearest-neighbor Ising model
 
 # %%
 L = 13
@@ -159,7 +158,7 @@ for seed in list_seeds:
 # We do not want to use model-specific optimizations so far, so we try with *2 site DMRG* and *AD*.
 
 # %% [markdown]
-# ## cluster Ising model
+# cluster Ising model
 
 # %%
 # cluster Ising model
