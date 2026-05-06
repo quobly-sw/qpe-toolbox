@@ -626,27 +626,12 @@ def init_cost_tn(
     return TN
 
 
-def get_envs_tns(n_qubits, x, cost_tn, *, draw_env=False):
+def get_envs_tns(n_qubits, x, cost_tn):
 
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
 
     left_tags = [f"I{x}" for x in range(x)]
     right_tags = [f"I{x}" for x in range(x + 1, n_qubits)]
-
-    if draw_env:
-        copy_tn = cost_tn.copy(deep=True)
-        copy_tn.select(tags=[f"I{x}"], which="!any").select(
-            tags=left_tags, which="any"
-        )  # .add_tag(f"L{x}")
-        copy_tn.select(tags=[f"I{x}"], which="!any").select(
-            tags=right_tags, which="any"
-        )  # .add_tag(f"R{x}")
-        copy_tn.draw(
-            (f"L{x}", f"R{x}", f"Uref{x}"),
-            layout="kamada_kawai",
-            show_inds=False,
-            show_tags=False,
-        )
 
     list_envs_tns = []
     if x > 0:
