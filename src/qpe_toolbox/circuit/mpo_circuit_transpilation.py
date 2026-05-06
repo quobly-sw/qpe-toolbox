@@ -133,7 +133,7 @@ def trotter1_approx_as_MPO(
 
     .. math::
 
-        U(dt) \approx \prod_j e^{-dt\, H_j},
+        U(dt) \approx \prod_j e^{-i dt \, H_j},
 
     where ``ham_terms = [H_0, H_1, ..., H_{m-1}]`` is a decomposition of the
     Hamiltonian into terms that can each be exponentiated individually as MPOs.
