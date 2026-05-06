@@ -12,6 +12,9 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # MPO to circuit transpilation
+
 # %%
 import os
 
@@ -20,8 +23,13 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
 import copy
-from qpe_toolbox.circuit.mpo_circuit_transpilation import (
 
+from qpe_toolbox.circuit.mpo_circuit_transpilation import (
+    build_first_sweep,
+    find_transfer_structure,
+    init_cost_tn,
+    sgu_optimize_cost_tn,
+    trotter_approx_as_MPO,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian
 
@@ -34,12 +42,12 @@ list_paulis = ["I", "X", "Y", "Z"]
 L = 13
 gx, gzz, gz1z = 0.2, 0.5, 0.1
 terms_NNIM = [] * (3 * L - 3)
-for l in range(L):
-    terms_NNIM.append((gx, "x", [l]))
-for l in range(L - 1):
-    terms_NNIM.append((gzz, "zz", [l, l + 1]))
-for l in range(L - 2):
-    terms_NNIM.append((gz1z, "zz", [l, l + 2]))
+for x in range(L):
+    terms_NNIM.append((gx, "x", [x]))
+for x in range(L - 1):
+    terms_NNIM.append((gzz, "zz", [x, x + 1]))
+for x in range(L - 2):
+    terms_NNIM.append((gz1z, "zz", [x, x + 2]))
 
 ham_NNIM = Hamiltonian(terms_NNIM, L)
 
@@ -165,12 +173,12 @@ for seed in list_seeds:
 L = 11
 g = -0.75
 terms_CIM = [] * (3 * L - 3)
-for l in range(L):
-    terms_CIM.append((-((1 + g) ** 2), "x", [l]))
-for l in range(L - 1):
-    terms_CIM.append((-2 * (1 - g**2), "zz", [l, l + 1]))
-for l in range(L - 2):
-    terms_CIM.append(((g - 1) ** 2, "zxz", [l, l + 1, l + 2]))
+for x in range(L):
+    terms_CIM.append((-((1 + g) ** 2), "x", [x]))
+for x in range(L - 1):
+    terms_CIM.append((-2 * (1 - g**2), "zz", [x, x + 1]))
+for x in range(L - 2):
+    terms_CIM.append(((g - 1) ** 2, "zxz", [x, x + 1, x + 2]))
 
 ham_CIM = Hamiltonian(terms_CIM, L)
 

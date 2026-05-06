@@ -279,11 +279,7 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     if verbosity == 1:
         print("\n")
 
-    U_trotter2_mpo = layer1_mpo.apply(
-        layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
-    )
-
-    return U_trotter2_mpo
+    return layer1_mpo.apply(layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
 
 
 def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity=0):
@@ -558,7 +554,9 @@ def generate_brickwall_circuit_modified(
     return circ
 
 
-def init_cost_tn(unitary_mpo, depth, *, tol=1e-1, factorize=False, closed=False, seed=42):
+def init_cost_tn(
+    unitary_mpo, depth, *, tol=1e-1, factorize=False, closed=False, seed=42
+):
     """
     By defect, "SU4" are fed unfactorized in the circuits,
     while others like "RZZ" are always split by defect.
@@ -586,16 +584,17 @@ def init_cost_tn(unitary_mpo, depth, *, tol=1e-1, factorize=False, closed=False,
     )
 
     bw_unitary_tn = bw_circ.get_uni()
-
+    r"""
     if factorize:
         n_gates = int(
             re.search(r"\d+", next(iter(bw_unitary_tn.tensors[-1].tags))).group()
         )
 
-        for n in range(1, n_gates + 1):
-            gate_tens = bw_unitary_tn.select(tags=(f"GATE_{n}"), which="any").tensors
+        #for n in range(1, n_gates + 1):
+        #    gate_tens = bw_unitary_tn.select(tags=(f"GATE_{n}"), which="any").tensors
             # bw_unitary_tn.contract_between(tags1=gate_tens[0].tags, tags2=gate_tens[1].tags) # contract (if RZZ)
             # # do the same but splitting!
+    """
 
     TN = TN & bw_unitary_tn
 
@@ -613,7 +612,12 @@ def init_cost_tn(unitary_mpo, depth, *, tol=1e-1, factorize=False, closed=False,
         if x == 0 or x == n_qubits - 1:
             inds = (next(iter(old_inds)), new_ket_ind + str(x), f"b{x}")
         else:
-            inds = (next(iter(old_inds)), list(old_inds)[1], new_ket_ind + str(x), f"b{x}")
+            inds = (
+                next(iter(old_inds)),
+                list(old_inds)[1],
+                new_ket_ind + str(x),
+                f"b{x}",
+            )
 
         reind_tens.modify(inds=inds, tags=(f"I{x}", f"Uref{x}", "MPO"))
 
@@ -790,7 +794,9 @@ list_methods = ["sgu", "vgcu"]
 def update_cost_tn(cost_tn, list_opt_gate_tens):
 
     for tens in list_opt_gate_tens:
-        tag_tens = next(iter(tens.tags)) #list(tens.tags)[0]  # the first tag is "GATE_{n}" by construction
+        tag_tens = next(
+            iter(tens.tags)
+        )  # list(tens.tags)[0]  # the first tag is "GATE_{n}" by construction
         cost_tn.delete(tags=tag_tens)  # delete the old tensor with same tags
         cost_tn = cost_tn & tens  # add the new tensor
 
@@ -803,7 +809,7 @@ def update_dict_contr_envs(
     """Getting the x externally simplifies everything bc automatically know the column we are talking about."""
     for tens in list_opt_gate_tens:
         list_tags = list(tens.tags)
-        #tag_tens = list_tags[0]  # the first tag is "GATE_{n}" by construction
+        # tag_tens = list_tags[0]  # the first tag is "GATE_{n}" by construction
         n = int(
             re.search(r"\d+", list_tags[3]).group()
         )  # number of the left site from tag
