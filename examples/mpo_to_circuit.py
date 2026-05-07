@@ -7,7 +7,7 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: qpe-toolbox (3.12.3)
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -39,7 +39,7 @@ list_paulis = ["I", "X", "Y", "Z"]
 # next-nearest-neighbor Ising model
 
 # %%
-L = 13
+L = 11
 gx, gzz, gz1z = 0.2, 0.5, 0.1
 terms_NNIM = [] * (3 * L - 3)
 for x in range(L):
@@ -59,9 +59,9 @@ trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
     ham_NNIM.terms,
     n_qubits=ham_NNIM.n_qubits,
     order=4,
-    dt=0.25,
+    dt=0.5,
     cutoff=1e-12,
-    max_bond=128,
+    max_bond=64,
     verbosity=1,
 )
 
@@ -69,7 +69,7 @@ trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
 # in the following I initialize the cost function
 
 # %%
-depth = 3
+depth = 5
 
 cost_tn_open = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
@@ -93,6 +93,8 @@ cost_tn_closed.draw(
 
 # %%
 dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
+
+
 """
 For key, items in dict_transf["L"].items():
 
@@ -112,7 +114,7 @@ dict_contr_envs = build_first_sweep(
 )
 
 # %%
-# optimize for depth 3 (depth 6 in Causer et al. paper)
+# optimize for "depth" ("2*depth" in Causer et al. paper)
 
 list_n_sweeps = [10, 20, 50, 100]
 
@@ -133,8 +135,8 @@ for n_sweeps in list_n_sweeps:
 # In *Causer et al.* they find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
 
 # %%
-n_sweeps = 20
-depth = 3
+n_sweeps = 50
+depth = 2
 list_seeds = [1, 2, 3, 4, 5]
 for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
