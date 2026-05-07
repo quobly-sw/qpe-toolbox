@@ -704,7 +704,6 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
     for counter, transf_tags in enumerate(
         zip(dict_transf["L"].values(), dict_transf["R"].values(), strict=True)
     ):
-        # print(counter, f"L{counter + 2}", f"R{n_qubits - 3 - counter}")
         L_next = L_next.copy(deep=True)
         L_transf_tn = cost_tn.select(tags=transf_tags[0], which="any")
         L_next = L_next & L_transf_tn
