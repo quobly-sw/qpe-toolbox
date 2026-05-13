@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml)
 [![PyPI](https://img.shields.io/pypi/v/qpe-toolbox?color=teal)](https://pypi.org/project/qpe-toolbox)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/qpe-toolbox)](https://anaconda.org/conda-forge/qpe-toolbox)
 
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source
 Python package for compiling and simulating Quantum Phase Estimation (QPE)
