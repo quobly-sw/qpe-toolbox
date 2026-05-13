@@ -32,7 +32,7 @@
 # %% [markdown]
 # In order to translate the circuit that best reproduces the action of the unitary MPO, we maximize the overlap between the two unitaries. If this cost function is maximized, then $U_{\mathrm{bw}}$ will act on another state or operator in the same way as $U^\dagger_{\mathrm{ref}}$ does. 
 #
-# In this case, the cost function is a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the formerly introduced ansatz circuit is:
+# In this case, the cost function can be computed as a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the formerly introduced ansatz circuit is:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_cost.svg" align="center">
