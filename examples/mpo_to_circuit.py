@@ -18,7 +18,7 @@
 # other teams built on top of it adding some variants and state preparation in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616)
 
 # %% [markdown]
-# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($U_{\mathrm{ref}}$ representing the time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brick-wall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
+# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($U_{\mathrm{ref}}$ representing the time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brickwall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Uref.svg" align="center">
