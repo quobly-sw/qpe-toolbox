@@ -17,6 +17,34 @@
 # based on [original paper](https://arxiv.org/abs/2312.14245) which at the same time uses the method from [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions)
 # other teams built on top of it adding some variants and state preparation in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616)
 
+# %% [markdown]
+# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($U_{\mathrm{ref}}$ representing the time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brick-wall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
+
+# %% [markdown]
+# <img src="./figures/transpil_Uref.svg" align="center">
+
+# %% [markdown]
+# An Ansatz circuit could be that made out of three rows of entangling gates on even-odd-even links. Note that in some references the prescription for increasing the depth/layer counting is just a row of even or an odd entangling gates, while other references consider than two consecutive rows even-odd constitute a layer
+
+# %% [markdown]
+# <img src="./figures/transpil_Ubw.svg" align="center">
+
+# %% [markdown]
+# In order to translate the circuit that best reproduces the action of the unitary MPO, we maximize the overlap between the two unitaries. If this cost function is maximized, then $U_{\mathrm{bw}}$ will match $U^\dagger_{\mathrm{ref}}$. 
+#
+# In this case, the cost function is a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the formerly introduced ansatz circuit is:
+
+# %% [markdown]
+# <img src="./figures/transpil_cost.svg" align="center">
+
+# %% [markdown]
+# With the same cost function we can target also the problem of transpiling an initial state in the form of an MPO into a preparation circuit applied on the empty quantum register. To do this, one just needs to build $U_{\mathrm{ref}}$ such that each tensor is an outer product of the local tensor of the MPS encoding the state $\Psi_{\mathrm{ref}}$ and a qubit initialized at $|0\rangle$.
+#
+# Note that in this case, the the cost function will unfold into a simple square tensor network, since the outer product used to build the reference MPO is just an encoding of the tensors.
+
+# %% [markdown]
+# <img src="./figures/transpil_state_prep.svg" align="center">
+
 # %%
 import os
 
@@ -30,7 +58,7 @@ from qpe_toolbox.circuit.mpo_circuit_transpilation import (
     build_first_sweep,
     find_transfer_structure,
     init_cost_tn,
-    sgu_optimize_cost_tn,
+    optimize_single_gate_update,
     trotter_approx_as_MPO,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian
@@ -38,19 +66,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 list_paulis = ["I", "X", "Y", "Z"]
 
 # %% [markdown]
-# <img src="./figures/transpil_Uref.svg" align="center">
-
-# %% [markdown]
-# <img src="./figures/transpil_Ubw.svg" align="center">
-
-# %% [markdown]
-# <img src="./figures/transpil_cost.svg" align="center">
-
-# %% [markdown]
-# <img src="./figures/transpil_state_prep.svg" align="center">
-
-# %% [markdown]
-# next-nearest-neighbor Ising model
+# **NEXT-NEAREST-NEIGHBOR ISING MODEL**
 
 # %%
 L = 11
@@ -70,8 +86,7 @@ ham_NNIM = Hamiltonian(terms_NNIM, L)
 
 # %%
 trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
-    ham_NNIM.terms,
-    n_qubits=ham_NNIM.n_qubits,
+    ham_NNIM,
     order=4,
     dt=0.5,
     cutoff=1e-12,
@@ -88,7 +103,7 @@ depth = 5
 cost_tn_open = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
     depth=depth,
-    tol=1e-1,
+    param_scaling=1e-1,
     factorize=False,
     closed=False,
 )
@@ -97,7 +112,7 @@ cost_tn_open.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tag
 cost_tn_closed = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
     depth=depth,
-    tol=1e-1,
+    param_scaling=1e-1,
     factorize=False,
     closed=True,
 )
@@ -137,7 +152,7 @@ for n_sweeps in list_n_sweeps:
     cp_dict_transf = copy.deepcopy(dict_transf)
     cp_dict_contr_envs = copy.deepcopy(dict_contr_envs)
 
-    opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
+    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
         cost_tn=cp_cost_tn_closed,
         n_sweeps=n_sweeps,
@@ -156,7 +171,7 @@ for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_NNIM,
         depth=depth,
-        tol=1e-1,
+        param_scaling=1e-1,
         factorize=False,
         closed=True,
         seed=seed,
@@ -168,7 +183,7 @@ for seed in list_seeds:
         n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
 
-    opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
+    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
@@ -182,7 +197,7 @@ for seed in list_seeds:
 # We do not want to use model-specific optimizations so far, so we try with *2 site DMRG* and *AD*.
 
 # %% [markdown]
-# cluster Ising model
+# **CLUSTER ISING MODEL**
 
 # %%
 # cluster Ising model
@@ -205,8 +220,7 @@ T = 0.5
 n_steps = 10
 
 trotter_mpo_ham_CIM_step = trotter_approx_as_MPO(
-    ham_CIM.terms,
-    n_qubits=ham_CIM.n_qubits,
+    ham_CIM,
     order=4,
     dt=T / 10,
     cutoff=cutoff,
@@ -228,7 +242,7 @@ for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_CIM,
         depth=depth,
-        tol=1e-1,
+        param_scaling=1e-1,
         factorize=False,
         closed=True,
         seed=seed,
@@ -240,7 +254,7 @@ for seed in list_seeds:
         n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
 
-    opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
+    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
@@ -249,7 +263,7 @@ for seed in list_seeds:
     )
 
 # %% [markdown]
-# In this model we also detect dependence on the initial Ansatz. We can either change the seed or the tolerance:
+# In this model we also detect dependence on the initial Ansatz. We can either change the seed or the amplitude of the random initialization of the angles:
 
 # %%
 n_sweeps = 20
@@ -259,7 +273,7 @@ for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_CIM,
         depth=depth,
-        tol=1.0,
+        param_scaling=1.0,
         factorize=False,
         closed=True,
         seed=seed,
@@ -271,7 +285,7 @@ for seed in list_seeds:
         n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
 
-    opt_cost_tn, opt_dict_contr_envs = sgu_optimize_cost_tn(
+    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
         cost_tn=cost_tn_closed,
         n_sweeps=n_sweeps,
