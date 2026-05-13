@@ -24,7 +24,7 @@
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Uref.svg" align="center">
 
 # %% [markdown]
-# An Ansatz circuit could be that made out of three rows of entangling gates on even-odd-even links. Note that in some references the prescription for increasing the depth/layer counting is just a row of even or an odd entangling gates, while other references consider than two consecutive rows even-odd constitute a layer
+# We impose an Ansatz circuit made out of three rows of entangling gates on even-odd-even links. Note that in some references the prescription for increasing the depth/layer counting is just a row of even or of odd entangling gates, while other references consider than two consecutive rows even-odd constitute a layer
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Ubw.svg" align="center">
