@@ -14,6 +14,8 @@
 
 # %% [markdown]
 # # MPO to circuit transpilation
+# based on [original paper](https://arxiv.org/abs/2312.14245) which at the same time uses the method from [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions)
+# other teams built on top of it adding some variants and state preparation in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616)
 
 # %%
 import os
@@ -34,6 +36,18 @@ from qpe_toolbox.circuit.mpo_circuit_transpilation import (
 from qpe_toolbox.hamiltonian import Hamiltonian
 
 list_paulis = ["I", "X", "Y", "Z"]
+
+# %% [markdown]
+# <img src="./figures/transpil_Uref.svg" align="center">
+
+# %% [markdown]
+# <img src="./figures/transpil_Ubw.svg" align="center">
+
+# %% [markdown]
+# <img src="./figures/transpil_cost.svg" align="center">
+
+# %% [markdown]
+# <img src="./figures/transpil_state_prep.svg" align="center">
 
 # %% [markdown]
 # next-nearest-neighbor Ising model
