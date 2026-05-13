@@ -123,13 +123,13 @@ cost_tn_closed.draw(
 # %% [markdown]
 # Now we optimize the overlap as suggested in the context of [algorithms for entanglement renormalization](https://arxiv.org/abs/0707.1454v1): to solve the *Constrained Linear* problem where the isometry to be found decomposes in a given circuit structure, we solve a series of *Unconstrained Linear* problems for each of the gates forming the circuit. The later is known to have an analytical solution.
 #
-# The procedure goes as follows: we fix ourselves on some qubit position (say, site 0) and target the optimization of all the gates exposed to that qubit. In the following picture we highlight in yellow the set of gates we are referring to:
+# The procedure goes as follows: first, we select a given qubit (say, site 0) and target the optimization of all the gates exposed to that qubit. In the following picture we highlight in yellow the set of gates we are referring to:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_opt_pos0.svg" align="center">
 
 # %% [markdown]
-# Now we need to contract all the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built at the same time from the right environment of qubit 1, $R_1$, and so un until the last qubit:
+# Second, we contract the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built at the same time from the right environment of qubit 1, $R_1$, and so until the last qubit:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_build_Rs_1st_sweep.svg" align="center">
