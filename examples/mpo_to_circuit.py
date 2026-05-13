@@ -40,7 +40,7 @@
 # %% [markdown]
 # With the same cost function we can target also the problem of transpiling an initial state in the form of an MPO into a preparation circuit applied on the empty quantum register. To do this, one just needs to build $U_{\mathrm{ref}}$ such that each tensor is an outer product of the local tensor of the MPS encoding the state $\Psi_{\mathrm{ref}}$ and a qubit initialized at $|0\rangle$.
 #
-# Note that in this case, the the cost function will unfold into a simple square tensor network, since the outer product used to build the reference MPO is just an encoding of the tensors.
+# Note that in this case, the the cost function will unfold into a square tensor network with open boundary conditions, since the outer product used to build the reference MPO is just an encoding of the tensors.
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_state_prep.svg" align="center">
