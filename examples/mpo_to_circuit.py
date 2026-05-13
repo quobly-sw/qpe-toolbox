@@ -41,7 +41,7 @@ list_paulis = ["I", "X", "Y", "Z"]
 # %%
 L = 11
 gx, gzz, gz1z = 0.2, 0.5, 0.1
-terms_NNIM = [] * (3 * L - 3)
+terms_NNIM = []
 for x in range(L):
     terms_NNIM.append((gx, "x", [x]))
 for x in range(L - 1):

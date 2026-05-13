@@ -393,8 +393,11 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
 
 def trotter_approx_as_MPO(
-    ham_terms, n_qubits, *, dt, order, cutoff, max_bond, verbosity=0
+    hamiltonian, *, dt, order, cutoff, max_bond, verbosity=0
 ):
+
+    ham_terms = hamiltonian.terms
+    n_qubits = hamiltonian.n_qubits
 
     # list_bondims = []
     if order == 1:
@@ -555,7 +558,7 @@ def generate_brickwall_circuit_modified(
 
 
 def init_cost_tn(
-    unitary_mpo, depth, *, tol=1e-1, factorize=False, closed=False, seed=42
+    unitary_mpo, depth, *, param_scaling=1e-1, factorize=False, closed=False, seed=42
 ):
     """
     By defect, "SU4" are fed unfactorized in the circuits,
@@ -579,7 +582,7 @@ def init_cost_tn(
         two_qubit_gate_label="SU4",
         start_ent=True,
         purely_ent=True,  # whether or not to do 1-spin rotations
-        param_scaling=tol,  # initialize close to identity
+        param_scaling=param_scaling,  # initialize close to identity
         rng=rng,
     )
 
@@ -823,7 +826,7 @@ def update_dict_contr_envs(
     return dict_contr_envs
 
 
-def sgu_optimize_cost_tn(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs):
+def optimize_single_gate_update(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs):
     """
     Receives the cost function and optimizes for n_sweeps.
 
