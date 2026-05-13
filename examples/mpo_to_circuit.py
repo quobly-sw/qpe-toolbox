@@ -21,13 +21,13 @@
 # The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($U_{\mathrm{ref}}$ representing the time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brick-wall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
 
 # %% [markdown]
-# <img src="./figures/transpil_Uref.svg" align="center">
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_Uref.svg" align="center">
 
 # %% [markdown]
 # An Ansatz circuit could be that made out of three rows of entangling gates on even-odd-even links. Note that in some references the prescription for increasing the depth/layer counting is just a row of even or an odd entangling gates, while other references consider than two consecutive rows even-odd constitute a layer
 
 # %% [markdown]
-# <img src="./figures/transpil_Ubw.svg" align="center">
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_Ubw.svg" align="center">
 
 # %% [markdown]
 # In order to translate the circuit that best reproduces the action of the unitary MPO, we maximize the overlap between the two unitaries. If this cost function is maximized, then $U_{\mathrm{bw}}$ will match $U^\dagger_{\mathrm{ref}}$. 
@@ -35,7 +35,7 @@
 # In this case, the cost function is a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the formerly introduced ansatz circuit is:
 
 # %% [markdown]
-# <img src="./figures/transpil_cost.svg" align="center">
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_cost.svg" align="center">
 
 # %% [markdown]
 # With the same cost function we can target also the problem of transpiling an initial state in the form of an MPO into a preparation circuit applied on the empty quantum register. To do this, one just needs to build $U_{\mathrm{ref}}$ such that each tensor is an outer product of the local tensor of the MPS encoding the state $\Psi_{\mathrm{ref}}$ and a qubit initialized at $|0\rangle$.
@@ -43,7 +43,7 @@
 # Note that in this case, the the cost function will unfold into a simple square tensor network, since the outer product used to build the reference MPO is just an encoding of the tensors.
 
 # %% [markdown]
-# <img src="./figures/transpil_state_prep.svg" align="center">
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_state_prep.svg" align="center">
 
 # %%
 import os
@@ -120,27 +120,42 @@ cost_tn_closed.draw(
     [f"ROUND_{i}" for i in range(depth)], show_inds=False, show_tags=False
 )
 
+# %% [markdown]
+# Now we optimize the overlap as suggested in the context of [algorithms for entanglement renormalization](https://arxiv.org/abs/0707.1454v1): to solve the *Constrained Linear* problem where the isometry to be found decomposes in a given circuit structure, we solve a series of *Unconstrained Linear* problems for each of the gates forming the circuit. The later is known to have an analytical solution.
+#
+# The procedure goes as follows: we fix ourselves on some qubit position (say, site 0) and target the optimization of all the gates exposed to that qubit. In the following picture we highlight in yellow the set of gates we are referring to:
+
+# %% [markdown]
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_opt_pos0.svg" align="center">
+
+# %% [markdown]
+# Now we need to contract all the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built at the same time from the right environment of qubit 1, $R_1$, and so un until the last qubit:
+
+# %% [markdown]
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_build_Rs_1st_sweep.svg" align="center">
+
+# %% [markdown]
+# By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $U_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Conversely, this can be done for left environments:
+
 # %%
 dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
-
-
-"""
-For key, items in dict_transf["L"].items():
-
-print(key)
-cost_tn_closed.draw(items, show_inds=False, show_tags=False)
-"""
-"""
-For key, items in dict_transf["R"].items():
-
-print(key)
-cost_tn_closed.draw(items, show_inds=False, show_tags=False)
-"""
 
 # %%
 dict_contr_envs = build_first_sweep(
     n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
 )
+
+# %% [markdown]
+# Once the environment structure is found, we need to find the optimal gate to update a particular two-qubit unitary. To do so, we contract all the tensors around it. For example, say we want to update the first unitary at depth 0 between qubits 0 and 1, $U^{(0)}_{0,1}$; we contract all the tensors around it into its environment $E^{(0)}_{0,1}$ (this $E$ environment contains the $L$ and $R$ of each site, together with the corresponding tensor from the reference unitary at that site).
+
+# %% [markdown]
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu1.svg" align="center">
+
+# %% [markdown]
+# The environment $E$ is not necessarily a unitary object. To re-introduce unitarity, we can compute the SVD decomposition of it and remove the singular values. This substitution $E^{(0)}_{0,1} \longrightarrow U^{\dagger (0) \mathrm{opt}}_{0,1}=u v^\dagger$ is indeed the exact analytical solution of the *Unconstrained Linear* problem:
+
+# %% [markdown]
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu2.svg" align="center">
 
 # %%
 # optimize for "depth" ("2*depth" in Causer et al. paper)
