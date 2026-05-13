@@ -129,7 +129,7 @@ cost_tn_closed.draw(
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_opt_pos0.svg" align="center">
 
 # %% [markdown]
-# Now we need to contract all the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built at the same time from the right environment of qubit 1, $R_1$, and so un until the last qubit:
+# Second, we contract the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built at the same time from the right environment of qubit 1, $R_1$, and so until the last qubit:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_build_Rs_1st_sweep.svg" align="center">
