@@ -66,7 +66,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 list_paulis = ["I", "X", "Y", "Z"]
 
 # %% [markdown]
-# **NEXT-NEAREST-NEIGHBOR ISING MODEL**
+# # NEXT-NEAREST-NEIGHBOR ISING MODEL
 
 # %%
 L = 11
@@ -208,14 +208,12 @@ for seed in list_seeds:
 
 # %% [markdown]
 # The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second order Trotter expansion of the circuit, where some SWAPs are fixed and only a subset of gates needs to be fixed.
-#
-# We do not want to use model-specific optimizations so far, so we try with *2 site DMRG* and *AD*.
+
 
 # %% [markdown]
-# **CLUSTER ISING MODEL**
+# # CLUSTER ISING MODEL
 
 # %%
-# cluster Ising model
 L = 11
 g = -0.75
 terms_CIM = [] * (3 * L - 3)
