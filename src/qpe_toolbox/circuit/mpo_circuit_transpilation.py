@@ -431,7 +431,6 @@ def trotter_approx_as_MPO(
     else:
         raise ValueError(f"order {order} not implemented")
 
-    # print(*(U_trotter_mpo[i].shape for i in range(n_qubits)), sep="\n")
     return U_trotter_mpo
 
 
