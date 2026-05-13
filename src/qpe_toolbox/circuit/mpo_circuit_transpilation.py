@@ -15,7 +15,8 @@ from tqdm import tqdm
 from qpe_toolbox.circuit.parametrized_circuits import (
     one_qubit_layer,
     two_qubit_nn_layer,
-)  # do PR to generalize nn_layer so just import that function
+    generate_brickwall_circuit,
+)
 
 list_paulis = ["I", "X", "Y", "Z"]
 
@@ -434,128 +435,6 @@ def trotter_approx_as_MPO(
     return U_trotter_mpo
 
 
-# THIS IS TO BE MERGED IN A SMALL PR WITH THE EXISTING FUNCTION
-def generate_brickwall_circuit_modified(
-    n_qubits,
-    depth,
-    one_qubit_gate_label,
-    two_qubit_gate_label,
-    *,
-    start_ent=False,
-    purely_ent=False,  # whether or not to do 1-spin rotations
-    param_scaling=1.0,
-    rng=None,
-):
-    """
-    Generate a brickwall-structured ``quimb`` :quimb-api:`Circuit`.
-
-    This function constructs a quantum circuit composed of alternating
-    single-body layers and nearest-neighbor two-body entangling layers
-    arranged in a brickwall pattern. Each circuit layer is assigned a
-    distinct circuit round.
-
-    Circuit structure (one layer, ``start_ent=False``)::
-
-        q0 ──[]───●───────
-                  │
-        q1 ──[]───●───●───
-                      │
-        q2 ──[]───●───●───
-                  |
-        q3 ──[]───●───●───
-                      |
-        q4 ──[]───●───●───
-                  |
-        q5 ──[]───●───────
-          <─────────────>
-            first layer
-
-    where::
-
-        []     = single-body gate
-        ●─●    = nearest-neighbor entangling gate
-
-    Parameters
-    ----------
-    n_qubits : int
-        Number of qubits in the circuit.
-
-    depth : int
-        Number of circuit layers (identified here with the gate rounds).
-
-    one_qubit_gate_label : str
-        Label identifying the single-body gate.
-
-    two_qubit_gate_label : str
-        Label identifying the two-body entangling gate.
-
-    start_ent : bool, optional
-        If ``True``, each layer starts with the brickwall entangling layer.
-        Otherwise (default ``False``), the single-body layer is applied first.
-
-    param_scaling : float, default ``1.0``
-        Scaling factor for randomly initialized parameters.
-
-    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
-        Random number generator used to generate gate parameters.
-        If ``None``, a default generator is created.
-
-    Returns
-    -------
-    circ : :quimb-api:`Circuit`
-        The generated brickwall quantum circuit.
-
-    Raises
-    ------
-    ValueError
-        If ``one_qubit_gate_label`` does not correspond to a valid single-body gate,
-        or if ``two_qubit_gate_label`` is not a valid two-body gate.
-
-    Notes
-    -----
-    - Separate random number generators are used for single-body and
-      two-body gate parameters to ensure reproducibility and decoupled
-      randomness.
-    - The same gate parameters are reused across all gates within a
-      given layer.
-    """
-    if one_qubit_gate_label.upper() not in qtn.circuit.ONE_QUBIT_GATES:
-        raise ValueError(f"Expected a single-body gate: {one_qubit_gate_label}")
-    if two_qubit_gate_label.upper() not in qtn.circuit.TWO_QUBIT_GATES:
-        raise ValueError(f"Expected a two-body gate: {two_qubit_gate_label}")
-    if rng is None:
-        rng = np.random.default_rng()
-
-    circ = qtn.Circuit(n_qubits)
-    for k in range(depth):
-        if start_ent:
-            for start in range(2):
-                two_qubit_nn_layer(
-                    circ,
-                    start,
-                    two_qubit_gate_label,
-                    param_scaling=param_scaling,
-                    gate_round=k,
-                    rng=rng,
-                )
-            if not purely_ent:
-                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-        else:
-            if not purely_ent:
-                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-            for start in range(2):
-                two_qubit_nn_layer(
-                    circ,
-                    start,
-                    two_qubit_gate_label,
-                    param_scaling=param_scaling,
-                    gate_round=k,
-                    rng=rng,
-                )
-
-    return circ
-
-
 def init_cost_tn(
     unitary_mpo, depth, *, param_scaling=1e-1, factorize=False, closed=False, seed=42
 ):
@@ -574,7 +453,7 @@ def init_cost_tn(
     # -----------------------------------------
     # Define the Ansatz as a brickwall circuit
 
-    bw_circ = generate_brickwall_circuit_modified(
+    bw_circ = generate_brickwall_circuit(
         n_qubits=n_qubits,
         depth=depth,
         one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
