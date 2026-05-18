@@ -68,18 +68,18 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
 
         where ``P`` is the full Pauli string embedded in the ``n_qubits`` system.
 
+    Raises
+    ------
+    ValueError
+        If the length of ``pauli_string`` does not match the number of
+        ``active_qubits``.
+
     Notes
     -----
     - The MPO is constructed in left-right-up-down index ordering.
     - The Pauli string MPO has bond dimension 1 before summation.
     - After combining the identity and Pauli MPOs, the result should not
       exceed a maximum bond dimension of 2.
-
-    Raises
-    ------
-    ValueError
-        If the length of ``pauli_string`` does not match the number of
-        ``active_qubits``.
 
     Examples
     --------
@@ -124,8 +124,7 @@ def trotter1_approx_as_MPO(
     ham_terms, n_qubits, *, dt, cutoff, max_bond, reverse_order=False
 ):
     r"""
-    Construct the first-order Trotter-Suzuki approximation as a Matrix
-    Product Operator (MPO).
+    Construct the first-order Trotter-Suzuki approximation as a Matrix Product Operator (MPO).
 
     This function builds an MPO representation of the first-order product
     formula for the time-evolution operator
@@ -168,12 +167,6 @@ def trotter1_approx_as_MPO(
     The resulting MPO is built iteratively using compressed MPO products via
     ``apply(..., compress=True)``. Truncation errors may accumulate depending
     on ``cutoff`` and ``max_bond``.
-
-    See Also
-    --------
-    trotter2_approx_as_MPO
-    trotter4_approx_as_MPO
-    exp_Pauli_string_as_MPO
     """
 
     if reverse_order:
@@ -236,11 +229,6 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     -----
     Two first-order MPO approximants with half time step are constructed and
     then multiplied together using compression.
-
-    See Also
-    --------
-    trotter1_approx_as_MPO
-    trotter4_approx_as_MPO
     """
 
     if verbosity == 1:
@@ -326,11 +314,6 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     The method constructs three second-order MPO approximants and combines
     them through compressed MPO multiplication. Intermediate bond dimensions
     may grow significantly depending on the system and truncation parameters.
-
-    See Also
-    --------
-    trotter1_approx_as_MPO
-    trotter2_approx_as_MPO
     """
 
     sym_factor = 1.0 / (2.0 - 2 ** (1.0 / 3.0))
@@ -380,8 +363,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
 def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity=0):
     r"""
-    Construct a Trotter-Suzuki approximation of a Hamiltonian evolution
-    operator as a Matrix Product Operator (MPO).
+    Construct a Trotter-Suzuki approximation of a Hamiltonian evolution operator as an MPO.
 
     This function dispatches to a specific Trotter-Suzuki decomposition
     according to the requested approximation order. The Hamiltonian is assumed
@@ -403,6 +385,7 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     Parameters
     ----------
     hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+        Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
     order : {1, 2, 4}
@@ -424,12 +407,6 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     ------
     ValueError
         If the requested ``order`` is not implemented.
-
-    See Also
-    --------
-    trotter1_approx_as_MPO
-    trotter2_approx_as_MPO
-    trotter4_approx_as_MPO
 
     Notes
     -----
@@ -475,16 +452,11 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     return U_trotter_mpo
 
 
-def init_cost_tn(
-    unitary_mpo,
-    depth,
-    *,
-    param_scaling=1e-1,
-    closed=False,
-    seed=42
-):
+def init_cost_tn(unitary_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     r"""
-    Initialize the tensor network used for optimization consisting of:
+    Initialize the tensor network used for optimization.
+
+    It represents a cost function obtained from contracting:
 
     1. A brickwall unitary circuit ansatz,
     2. A reference target unitary represented as an MPO.
@@ -515,7 +487,6 @@ def init_cost_tn(
     :quimb-api:`TensorNetwork`
         Tensor network containing both the variational circuit ansatz and
         the target MPO.
-
     """
 
     n_qubits = unitary_mpo.num_tensors
@@ -531,7 +502,7 @@ def init_cost_tn(
         one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
         two_qubit_gate_label="SU4",
         start_ent=True,
-        purely_ent=True,  # whether or not to do 1-spin rotations
+        include_1qubit_gates=False,  # whether or not to do 1-spin rotations
         param_scaling=param_scaling,  # initialize close to identity
         rng=rng,
     )
@@ -570,8 +541,7 @@ def init_cost_tn(
 
 def get_envs_tns(n_qubits, x, cost_tn):
     r"""
-    Extract the left and right environment tensor networks associated with
-    a given site in a cost tensor network.
+    Extract the left and right environment TNs associated to a given site.
 
     This function removes the tensors tagged with ``I{x}`` from the full
     cost tensor network and partitions the remaining network into left and/or
@@ -603,10 +573,6 @@ def get_envs_tns(n_qubits, x, cost_tn):
     - left environment: tensors tagged with ``I0`` through ``I{x-1}``,
     - right environment: tensors tagged with ``I{x+1}`` through
       ``I{n_qubits-1}``.
-
-    See Also
-    --------
-    find_transfer_structure
     """
 
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
@@ -625,8 +591,7 @@ def get_envs_tns(n_qubits, x, cost_tn):
 
 def find_transfer_structure(n_qubits, cost_tn):
     r"""
-    Determine the transfer structures connecting neighboring environments
-    in a cost tensor network.
+    Determine the transfer structures connecting neighboring environments in a cost TN.
 
     This function analyzes the left and right environment tensor networks
     associated with each site and identifies the tensor tags involved in
@@ -718,8 +683,7 @@ def find_transfer_structure(n_qubits, cost_tn):
 
 def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
     r"""
-    Construct the initial set of contracted left and right environments
-    for a sweeping tensor-network optimization procedure.
+    Construct the initial set of contracted left and right environments for a sweeping TN optimization.
 
     This function iteratively builds partially contracted environments by
     propagating contractions from the edges of the tensor network toward
@@ -772,11 +736,6 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
 
     These environments are typically reused during local optimization sweeps
     to avoid repeated large tensor contractions.
-
-    See Also
-    --------
-    find_transfer_structure
-    build_loc_cost_tn
     """
 
     dict_contr_envs = {"L": {}, "R": {}}
@@ -865,10 +824,6 @@ def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
 
     - for ``x = 0``, only the right environment is included,
     - for ``x = n_qubits - 1``, only the left environment is included.
-
-    See Also
-    --------
-    build_first_sweep
     """
 
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
@@ -919,10 +874,6 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     -------
     :quimb-api:`Tensor`
         Contracted tensor obtained after removing the specified tensors.
-
-    See Also
-    --------
-    build_loc_cost_tn
     """
 
     p_loc_cost_tn = loc_cost_tn.copy(deep=True)
@@ -949,10 +900,6 @@ def update_cost_tn(cost_tn, list_opt_gate_tens):
     -------
     :quimb-api:`TensorNetwork`
         Updated cost tensor network containing the optimized gate tensors.
-
-    See Also
-    --------
-    update_dict_contr_envs
     """
 
     for tens in list_opt_gate_tens:
@@ -1020,12 +967,6 @@ def update_dict_contr_envs(
 
     This local update strategy avoids rebuilding all environments from
     scratch after each optimization step.
-
-    See Also
-    --------
-    build_first_sweep
-    find_transfer_structure
-    update_cost_tn
     """
     for tens in list_opt_gate_tens:
         list_tags = list(tens.tags)
@@ -1052,8 +993,7 @@ def optimize_single_gate_update(
     n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs
 ):
     r"""
-    Optimize a variational tensor-network circuit using sequential
-    single-gate updates.
+    Optimize a TN ansatz circuit using sequential single-gate updates.
 
     This function performs alternating left-to-right and right-to-left
     sweeps over the variational gates of the cost tensor network. Each gate
@@ -1112,13 +1052,6 @@ def optimize_single_gate_update(
     - right-to-left (``"RL"``),
 
     in order to iteratively improve all variational gates.
-
-    See Also
-    --------
-    build_loc_cost_tn
-    PRC_loc_cost_tn
-    update_cost_tn
-    update_dict_contr_envs
     """
 
     hyperopt = ctg.ReusableHyperOptimizer(

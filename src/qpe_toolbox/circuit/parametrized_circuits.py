@@ -277,7 +277,7 @@ def generate_brickwall_circuit(
     two_qubit_gate_label,
     *,
     start_ent=False,
-    purely_ent=False,
+    include_1qubit_gates=True,
     param_scaling=1.0,
     rng=None,
 ):
@@ -378,10 +378,10 @@ def generate_brickwall_circuit(
                     gate_round=k,
                     rng=rng,
                 )
-            if not purely_ent:
+            if include_1qubit_gates:
                 one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
         else:
-            if not purely_ent:
+            if include_1qubit_gates:
                 one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
             for start in range(2):
                 two_qubit_nn_layer(
