@@ -192,7 +192,7 @@ def trotter1_approx_as_MPO(
             new_factor_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
         )
         trange_counter.set_description(
-            f"{'': <8}bond dimension: {U_trotter1_mpo.max_bond()}"
+            f"{'': <4}Bond dimension (Trotter 1): {U_trotter1_mpo.max_bond()}"
         )
 
     return U_trotter1_mpo
@@ -247,11 +247,11 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
     if verbosity == 1:
         print(
-            f"{'': <4}The 2nd order Trotter approximant consists on two subsequent 1st order approximants:",
+            f"{'': <2}Building 2nd order Trotter",
             "\n",
         )
         print(
-            f"{'': <8}Computing the first 1st order approximant for a time step {{0.5}}dt"
+            f"{'': <4}Building 1st order Trotter (1st half)"
         )
 
     layer1_mpo = trotter1_approx_as_MPO(
@@ -265,7 +265,7 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     if verbosity == 1:
         print("\n")
         print(
-            rf"{'': <8}Computing the second 1st order approximant for a time step {{0.5}}dt"
+            rf"{'': <4}Building 1st order Trotter (2nd half)"
         )
 
     layer2_mpo = trotter1_approx_as_MPO(
@@ -343,13 +343,12 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
     if verbosity == 1:
         print(
-            "The 4th order Trotter approximant consists on three subsequent 2nd order approximants:",
+            "Building 4th order Trotter",
             "\n",
         )
         print(
-            rf"{'': <4}Computing the first 2nd order approximant for a time step s$_{{sym}}$dt"
+            rf"{'': <2}Building 2nd order Trotter (1st and 3rd layers)"
         )
-        # display(Math(r'\quad \text{Computing the second 2nd order approximant for a time step } (1-2s_{\mathrm{sym}})\,dt'))
 
     layer1_3_mpo = trotter2_approx_as_MPO(
         ham_terms,
@@ -361,7 +360,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     )
 
     if verbosity == 1:
-        print(rf"{'': <4}Computing U_2(s\,dt)\$")
+        print(rf"{'': <2}Building 2nd order Trotter (2nd layer)")
 
     layer2_mpo = trotter2_approx_as_MPO(
         ham_terms,
@@ -373,14 +372,11 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     )
 
     if verbosity == 1:
-        print(f"{'': <4}Multiplying first and second MPOs", "\n")
+        print(f"{'': <2}Multiplying the 3 MPO layers", "\n")
 
     U_trotter4_mpo = layer1_3_mpo.apply(
         layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
-    if verbosity == 1:
-        print(f"{'': <4}Intermediate bond dimension:", U_trotter4_mpo.max_bond(), "\n")
-        print(f"{'': <4}Multiplying intermediate and third MPOs", "\n")
     U_trotter4_mpo = U_trotter4_mpo.apply(
         layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
@@ -390,12 +386,66 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     return U_trotter4_mpo
 
 
-# --------------------------------------------------------------------------
-
-
 def trotter_approx_as_MPO(
     hamiltonian, *, dt, order, cutoff, max_bond, verbosity=0
 ):
+    r"""
+    Construct a Trotter-Suzuki approximation of a Hamiltonian evolution
+    operator as a Matrix Product Operator (MPO).
+
+    This function dispatches to a specific Trotter-Suzuki decomposition
+    according to the requested approximation order. The Hamiltonian is assumed
+    to provide a decomposition into elementary terms through ``hamiltonian.terms``.
+
+    Depending on ``order``, the approximation is built using:
+
+    .. math::
+
+        U(dt) \approx
+        \begin{cases}
+            \text{1st-order product formula}, & \text{if } order = 1, \\
+            \text{2nd-order symmetric formula}, & \text{if } order = 2, \\
+            \text{4th-order Suzuki formula}, & \text{if } order = 4.
+        \end{cases}
+
+    The resulting operator is returned as a compressed MPO.
+
+    Parameters
+    ----------
+    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+    dt : float
+        Time step used in the Trotter approximation.
+    order : {1, 2, 4}
+        Order of the Trotter-Suzuki decomposition.
+    cutoff : float
+        Singular value truncation threshold used during MPO compression.
+    max_bond : int
+        Maximum allowed MPO bond dimension during compression.
+    verbosity : int, optional
+        Verbosity level forwarded to higher-order routines.
+        Default is ``0``.
+
+    Returns
+    -------
+    MPO
+        MPO representation of the Trotterized time-evolution operator.
+
+    Raises
+    ------
+    ValueError
+        If the requested ``order`` is not implemented.
+
+    See Also
+    --------
+    trotter1_approx_as_MPO
+    trotter2_approx_as_MPO
+    trotter4_approx_as_MPO
+
+    Notes
+    -----
+    Compression is performed during MPO manipulations, so the final accuracy
+    depends on the chosen ``cutoff`` and ``max_bond`` values.
+    """
 
     ham_terms = hamiltonian.terms
     n_qubits = hamiltonian.n_qubits
@@ -430,20 +480,45 @@ def trotter_approx_as_MPO(
             verbosity=verbosity,
         )
     else:
-        raise ValueError(f"order {order} not implemented")
+        raise ValueError(f"Order {order} not implemented")
 
     return U_trotter_mpo
 
 
 def init_cost_tn(
-    unitary_mpo, depth, *, param_scaling=1e-1, factorize=False, closed=False, seed=42
+    unitary_mpo, depth, *, param_scaling=1e-1, closed=False,
 ):
-    """
-    By defect, "SU4" are fed unfactorized in the circuits,
-    while others like "RZZ" are always split by defect.
+    r"""
+    Initialize the tensor network used for optimization consisting of:
 
-    Since we choose "SU4" as a starting point,
-    we give the option of splitting
+    1. A brickwall unitary circuit ansatz,
+    2. A reference target unitary represented as an MPO.
+
+    The ansatz is generated as a layered brickwall circuit of two-qubit
+    ``SU4`` gates initialized close to the identity. The resulting unitary
+    tensor network is then combined with the target MPO into a single tensor
+    network suitable for overlap evaluation.
+
+    Parameters
+    ----------
+    unitary_mpo : MPO
+        Target unitary represented as an MPO.
+    depth : int
+        Depth of the brickwall circuit ansatz (even and odd count as 1).
+    param_scaling : float, optional
+        Scale of the random initialization parameters for the gates.
+        Smaller values initialize the circuit closer to the identity.
+        Default is ``1e-1``.
+    closed : bool, optional
+        If ``False`` (default), the bra indices of the MPO remain open.
+        If ``True``, ket indices are contracted (trace contraction).
+    
+    Returns
+    -------
+    :quimb-api:`TensorNetwork`
+        Tensor network containing both the variational circuit ansatz and
+        the target MPO.
+
     """
 
     n_qubits = unitary_mpo.num_tensors
@@ -465,17 +540,6 @@ def init_cost_tn(
     )
 
     bw_unitary_tn = bw_circ.get_uni()
-    r"""
-    if factorize:
-        n_gates = int(
-            re.search(r"\d+", next(iter(bw_unitary_tn.tensors[-1].tags))).group()
-        )
-
-        #for n in range(1, n_gates + 1):
-        #    gate_tens = bw_unitary_tn.select(tags=(f"GATE_{n}"), which="any").tensors
-            # bw_unitary_tn.contract_between(tags1=gate_tens[0].tags, tags2=gate_tens[1].tags) # contract (if RZZ)
-            # # do the same but splitting!
-    """
 
     TN = TN & bw_unitary_tn
 
@@ -508,6 +572,45 @@ def init_cost_tn(
 
 
 def get_envs_tns(n_qubits, x, cost_tn):
+    r"""
+    Extract the left and right environment tensor networks associated with
+    a given site in a cost tensor network.
+
+    This function removes the tensors tagged with ``I{x}`` from the full
+    cost tensor network and partitions the remaining network into left and/or
+    right environments relative to site ``x``.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits (sites) in the tensor network.
+    x : int
+        Site index for which the environments are constructed.
+    cost_tn : :quimb-api:`TensorNetwork`
+        Full cost tensor network.
+
+    Returns
+    -------
+    list of :quimb-api:`TensorNetwork`
+        List containing the environment tensor networks.
+
+        - If ``x == 0``, only the right environment is returned.
+        - If ``x == n_qubits - 1``, only the left environment is returned.
+        - Otherwise, the list is ordered as ``[left_env, right_env]``.
+
+    Notes
+    -----
+    The environments are obtained by selecting tensors according to their
+    ``I{i}`` tags:
+
+    - left environment: tensors tagged with ``I0`` through ``I{x-1}``,
+    - right environment: tensors tagged with ``I{x+1}`` through
+      ``I{n_qubits-1}``.
+
+    See Also
+    --------
+    find_transfer_structure
+    """
 
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
 
@@ -524,6 +627,58 @@ def get_envs_tns(n_qubits, x, cost_tn):
 
 
 def find_transfer_structure(n_qubits, cost_tn):
+    r"""
+    Determine the transfer structures connecting neighboring environments
+    in a cost tensor network.
+
+    This function analyzes the left and right environment tensor networks
+    associated with each site and identifies the tensor tags involved in
+    transferring contractions between neighboring environments.
+
+    The resulting transfer structure is organized into dictionaries for
+    left-to-right and right-to-left propagation.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits (sites) in the tensor network.
+    cost_tn : TensorNetwork
+        Full cost tensor network.
+
+    Returns
+    -------
+    dict
+        Nested dictionary containing the transfer structures.
+
+        The returned dictionary has the form:
+
+        .. code-block:: python
+
+            {
+                "L": {
+                    "L1_to_L2": [...],
+                    ...
+                    "L{n_qubits-1}_to_L{n_qubits}": [...]
+                },
+                "R": {
+                    "R{n_qubits-2}_to_R{n_qubits-1}": [...],
+                    ...
+                    "R1_to_R0": [...]
+                }
+            }
+
+        where each value is a list of tensor tags participating in the
+        corresponding transfer operation.
+
+    Notes
+    -----
+    For each neighboring pair of environments, tensors are selected according
+    to their ``I{i}`` tags, and only tags beginning with ``"G"`` or ``"U"``
+    are retained in the transfer description.
+
+    The transfer structures can be used to optimize sequential contraction
+    strategies or environment updates in tensor-network algorithms.
+    """
 
     dict_uncontr_envs = {"L": {}, "R": {}}
     for x in range(n_qubits):
@@ -565,8 +720,66 @@ def find_transfer_structure(n_qubits, cost_tn):
 
 
 def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
-    """Generate the first set of left and right environments (recycling the former)
-    and save them in a list of tensor networks.
+    r"""
+    Construct the initial set of contracted left and right environments
+    for a sweeping tensor-network optimization procedure.
+
+    This function iteratively builds partially contracted environments by
+    propagating contractions from the edges of the tensor network toward
+    the center using the transfer structures generated by
+    :func:`find_transfer_structure`.
+
+    The resulting environments are stored as contracted tensors labeled
+    ``L{i}`` and ``R{i}``, corresponding to left and right effective
+    environments at each site.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits (sites) in the tensor network.
+    cost_tn : :quimb-api:`TensorNetwork`
+        Full cost tensor network.
+    dict_transf : dict
+        Transfer structure dictionary generated by
+        :func:`find_transfer_structure`.
+    drop_tags : bool, optional
+        Whether to drop tensor tags during contractions.
+        Passed to :func:`tensor_contract`.
+        Default is ``True``.
+
+    Returns
+    -------
+    dict
+        Nested dictionary containing contracted environments:
+
+        .. code-block:: python
+
+            {
+                "L": {
+                    "L1": :quimb-api:`Tensor`,
+                    ...
+                },
+                "R": {
+                    "R{n_qubits-2}": :quimb-api:`Tensor`,
+                    ...
+                }
+            }
+
+        Each entry corresponds to an effective contracted environment tensor.
+
+    Notes
+    -----
+    The contraction procedure starts from the MPO edge tensors tagged
+    ``"Uref0"`` and ``"Uref{n_qubits-1}"`` and recursively absorbs the
+    transfer tensor networks specified in ``dict_transf``.
+
+    These environments are typically reused during local optimization sweeps
+    to avoid repeated large tensor contractions.
+
+    See Also
+    --------
+    find_transfer_structure
+    build_loc_cost_tn
     """
 
     dict_contr_envs = {"L": {}, "R": {}}
@@ -605,8 +818,60 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
 
 
 def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
-    """Build intermediate contractions S=L{x}-gates-R{x}
-    Return ordered list of tags of gates to optimize.
+    r"""
+    Construct the local cost tensor network associated with a given site.
+
+    This function combines the local gate tensors acting on site ``x`` with
+    the corresponding contracted left and/or right environments to form
+    an effective local tensor network suitable for optimization.
+
+    It also returns the ordered list of gate tags corresponding to the
+    variational tensors to optimize.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits (sites) in the tensor network.
+    x : int
+        Site index for which the local cost tensor network is constructed.
+    dict_contr_envs : dict
+        Dictionary of contracted environments generated by
+        :func:`build_first_sweep`.
+    cost_tn : :quimb-api:`TensorNetwork`
+        Full cost tensor network.
+
+    Returns
+    -------
+    loc_cost_tn : :quimb-api:`TensorNetwork`
+        Local effective tensor network containing the relevant environments
+        and gate tensors for site ``x``.
+    gate_to_opt_tags : list of str
+        Ordered list of gate tensor tags to optimize.
+
+    Notes
+    -----
+    The local tensor network has the structure
+
+    .. math::
+
+        \mathcal{S}_x = L_x \; \text{- gates -} \; R_x,
+
+    where:
+
+    - ``L_x`` is the contracted left environment,
+    - ``R_x`` is the contracted right environment,
+    - ``gates`` are the tensors tagged with ``I{x}``.
+
+    Only tags beginning with ``"G"`` are considered optimization gate tags.
+
+    Boundary sites are treated separately:
+
+    - for ``x = 0``, only the right environment is included,
+    - for ``x = n_qubits - 1``, only the left environment is included.
+
+    See Also
+    --------
+    build_first_sweep
     """
 
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
@@ -632,11 +897,35 @@ def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
 
 
 def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
-    """
-    Pop-Rehearse-Contract.
+    r"""
+    Perform a Pop-Rehearse-Contract step on a local cost tensor network.
 
-    this will be called from sweep, and will only rehearse on the first sweep;
-    can pop more than one gate!
+    This function removes a set of tensors from a local cost tensor network
+    and contracts the remaining network using a specified contraction strategy.
+
+    The procedure is intended to support efficient repeated contractions during
+    sweeping optimization algorithms, where contraction paths may be rehearsed
+    and reused across iterations.
+
+    Parameters
+    ----------
+    loc_cost_tn : :quimb-api:`TensorNetwork`
+        Local cost tensor network.
+    tags : sequence of str
+        Tags identifying the tensors to remove before contraction.
+        Typically corresponds to the variational gates currently being optimized.
+    hyperopt : :cotengra-api:`ReusableHyperOptimizer`
+        Contraction optimization strategy passed to
+        :meth:`TensorNetwork.contract`.
+
+    Returns
+    -------
+    :quimb-api:`Tensor`
+        Contracted tensor obtained after removing the specified tensors.
+
+    See Also
+    --------
+    build_loc_cost_tn
     """
 
     p_loc_cost_tn = loc_cost_tn.copy(deep=True)
@@ -645,18 +934,29 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     return p_loc_cost_tn.contract(optimize=hyperopt)
 
 
-"""
-list_methods = ["sgu", "vgcu"]
-    dict_methods = {
-        "sgu": "single gate update",
-        "vgcu": "variational gate column update"
-        }
-    if method not in ["sgu", "vgcu"]:
-        raise ValueError(f"Available methods: ", list_methods)
-        """
-
-
 def update_cost_tn(cost_tn, list_opt_gate_tens):
+    r"""
+    Update a cost tensor network with newly optimized gate tensors.
+
+    This function replaces existing gate tensors in the cost tensor network
+    with updated optimized tensors having the same gate tags.
+
+    Parameters
+    ----------
+    cost_tn : :quimb-api:`TensorNetwork`
+        Full cost tensor network.
+    list_opt_gate_tens : sequence of :quimb-api:`Tensor`
+        Sequence of optimized gate tensors to insert into the network.
+
+    Returns
+    -------
+    :quimb-api:`TensorNetwork`
+        Updated cost tensor network containing the optimized gate tensors.
+
+    See Also
+    --------
+    update_dict_contr_envs
+    """
 
     for tens in list_opt_gate_tens:
         tag_tens = next(
@@ -671,19 +971,72 @@ def update_cost_tn(cost_tn, list_opt_gate_tens):
 def update_dict_contr_envs(
     mode, list_opt_gate_tens, cost_tn, dict_transf, dict_contr_envs
 ):
-    """Getting the x externally simplifies everything bc automatically know the column we are talking about."""
+    r"""
+    Update contracted environments after local gate optimization.
+
+    This function updates the cached contracted left or right environments
+    affected by newly optimized gate tensors during a sweeping optimization
+    procedure.
+
+    Depending on the sweep direction, only the environments influenced by
+    the updated gates are recomputed.
+
+    Parameters
+    ----------
+    mode : {"LR", "RL"}
+        Sweep direction.
+
+        - ``"LR"`` : left-to-right sweep,
+        - ``"RL"`` : right-to-left sweep.
+    list_opt_gate_tens : sequence of :quimb-api:`Tensor`
+        Sequence of optimized gate tensors.
+    cost_tn : :quimb-api:`TensorNetwork`
+        Full updated cost tensor network.
+    dict_transf : dict
+        Transfer structure dictionary generated by
+        :func:`find_transfer_structure`.
+    dict_contr_envs : dict
+        Updated dictionary of contracted environments initialized by
+        :func:`build_first_sweep`.
+
+    Returns
+    -------
+    dict
+        Updated dictionary of contracted environments.
+
+    Notes
+    -----
+    Each optimized gate acts on neighboring sites ``I{n}`` and ``I{n+1}``.
+    Consequently, only nearby environments need to be updated.
+
+    For a left-to-right sweep (``"LR"``):
+
+    .. math::
+
+        L_{n+2} \leftarrow L_{n+1} \cdot T_{n+1 \to n+2},
+
+    while for a right-to-left sweep (``"RL"``):
+
+    .. math::
+
+        R_{n-1} \leftarrow R_n \cdot T_{n \to n-1}.
+
+    This local update strategy avoids rebuilding all environments from
+    scratch after each optimization step.
+
+    See Also
+    --------
+    build_first_sweep
+    find_transfer_structure
+    update_cost_tn
+    """
     for tens in list_opt_gate_tens:
         list_tags = list(tens.tags)
-        # tag_tens = list_tags[0]  # the first tag is "GATE_{n}" by construction
         n = int(
             re.search(r"\d+", list_tags[3]).group()
-        )  # number of the left site from tag
+        )
 
         if mode == "LR":  # sweeping L to R only requires updating L's
-            # the gate couples I{n} and I{n+1}
-            # affects transition L{n+1}_to_L{n+2}
-            # so update L{n+2}
-            # print(f"L{n+2}")
             transf_tens = cost_tn.select(
                 tags=dict_transf["L"][f"L{n + 1}_to_L{n + 2}"], which="any"
             )
@@ -691,10 +1044,6 @@ def update_dict_contr_envs(
             dict_contr_envs["L"][f"L{n + 2}"] = new_env.contract()
 
         if mode == "RL":  # sweeping R to L only requires updating R's
-            # the gate couples I{n} and I{n+1}
-            # affects transition R{n}_to_R{n-1}
-            # so update R{n-1}
-            # print(f"R{n-1}")
             transf_tens = cost_tn.select(
                 tags=dict_transf["R"][f"R{n}_to_R{n - 1}"], which="any"
             )
@@ -705,39 +1054,95 @@ def update_dict_contr_envs(
 
 
 def optimize_single_gate_update(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs):
-    """
-    Receives the cost function and optimizes for n_sweeps.
+    r"""
+    Optimize a variational tensor-network circuit using sequential
+    single-gate updates.
 
-    notes: the sum of singular values after doing the SVD of the environment contraction around a gate
-    coincides with the value of the cost function -> sanity check (already did it): contraction of cost_tn
-    and contraction of local_cost_tn yields the same value as the sum of singular values
+    This function performs alternating left-to-right and right-to-left
+    sweeps over the variational gates of the cost tensor network. Each gate
+    is optimized individually by contracting its effective environment,
+    performing a singular value decomposition (SVD), and projecting the
+    result back onto the unitary manifold.
+
+    The optimization iteratively updates both the tensor network and the
+    cached contracted environments.
+
+    Parameters
+    ----------
+    n_qubits : int
+        Number of qubits (sites) in the tensor network.
+    cost_tn : :quimb-api:`TensorNetwork`
+        Full cost tensor network containing the variational circuit and
+        target MPO.
+    n_sweeps : int
+        Number of full optimization sweeps.
+    dict_transf : dict
+        Transfer structure dictionary generated by
+        :func:`find_transfer_structure`.
+    dict_contr_envs : dict
+        Dictionary of contracted environments generated by
+        :func:`build_first_sweep`.
+
+    Returns
+    -------
+    cost_tn : :quimb-api:`TensorNetwork`
+        Optimized cost tensor network.
+    dict_contr_envs : dict
+        Updated dictionary of contracted environments.
+
+    Notes
+    -----
+    The optimization proceeds as follows:
+
+    1. Construct a local effective tensor network around a gate,
+    2. Remove the gate tensor and contract the surrounding environment,
+    3. Perform an SVD of the resulting effective tensor,
+    4. Reconstruct the optimal unitary gate from the isometric factors,
+    5. Update the tensor network and cached environments.
+
+    The effective local contraction is computed using
+    :func:`PRC_loc_cost_tn`.
+
+    The gate update is obtained from an SVD decomposition.
+
+    The overlap displayed in the progress bar corresponds to the
+    cost-function value and can be verified independently from the singular
+    values of the effective environment tensor.
+
+    The sweeping schedule alternates between:
+
+    - left-to-right (``"LR"``),
+    - right-to-left (``"RL"``),
+
+    in order to iteratively improve all variational gates.
+
+    See Also
+    --------
+    build_loc_cost_tn
+    PRC_loc_cost_tn
+    update_cost_tn
+    update_dict_contr_envs
     """
 
-    # instantiate hypercontractor
     hyperopt = ctg.ReusableHyperOptimizer(
-        # just do a few runs
         max_repeats=32,
-        # only use the basic greedy optimizer ...
         methods=["greedy"],
-        # ... but pair it with reconfiguration
         reconf_opts={},
-        # just uniformly sample the space
         optlib="random",
-        # terminate search if contraction is cheap
         max_time="rate:1e9",
-        # account for both flops and write - usually wise for practical performance
         minimize="combo",
         parallel=False,
-    )  # different from hyperopt_env
+    )
 
     instruct = [
         ("LR", list(range(n_qubits - 2))),
         ("RL", list(reversed(range(2, n_qubits)))),
     ]
     trange_counter = tqdm(list(range(n_sweeps)))
-    for _ in trange_counter:  # set a progressbar and measure error
+    for _ in trange_counter:
         for sweep in instruct:
             for x in sweep[1]:
+
                 # build local cost function for all gates at position "x"
                 loc_cost_tn, gate_to_opt_tags = build_loc_cost_tn(
                     n_qubits,
