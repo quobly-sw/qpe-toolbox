@@ -330,7 +330,7 @@ def generate_brickwall_circuit(
 
     purely_ent : bool, optional
         If ``True``, each layer includes both single-body and entangling rotations.
-        Otherwise (default ``False``), the circuit will be purely constituted by 
+        Otherwise (default ``False``), the circuit will be purely constituted by
         even and odd layers of entangling rotations.
 
     param_scaling : float, default ``1.0``
