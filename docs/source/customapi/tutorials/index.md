@@ -1,6 +1,6 @@
 # Tutorials
 
-Here is a list of notebooks that introduce the basics of the package. They are also available in the `examples` directory as plain `.py` files using the `py:percent` format.
+Here is a list of notebooks that introduce the basics of the package. They are also available in the `examples` directory as plain `.py` files using the `py:percent` format. See our [installation guide](../installation/index.md) on how to run them on your own.
 
 ```{toctree}
 :numbered:

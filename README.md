@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Tests](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml/badge.svg)](https://github.com/quobly-sw/qpe-toolbox/actions/workflows/pytest_action.yaml)
 [![PyPI](https://img.shields.io/pypi/v/qpe-toolbox?color=teal)](https://pypi.org/project/qpe-toolbox)
+[![conda-forge](https://img.shields.io/conda/vn/conda-forge/qpe-toolbox)](https://anaconda.org/conda-forge/qpe-toolbox)
 
 [`qpe-toolbox`](https://github.com/quobly-sw/qpe-toolbox) is an open-source
 Python package for compiling and simulating Quantum Phase Estimation (QPE)
@@ -20,13 +21,27 @@ Built on the tensor-network library [`quimb`](https://github.com/jcmgray/quimb),
   - **Postprocessing**: energy retrieval from phase measurement outcomes
 
 # Installation
+We provide a more detailed installation guide in our [documentation](https://quobly-sw.github.io/qpe-toolbox/customapi/installation/index.html).
+
 ## Requirements
 Our package is built above [`numpy`](https://github.com/numpy/numpy)/[`scipy`](https://github.com/scipy/scipy)/[`matplotlib`](https://github.com/matplotlib/matplotlib),  [`openfermion`](https://github.com/quantumlib/OpenFermion), [`pyscf`](https://github.com/pyscf/pyscf) and [`quimb`](https://github.com/jcmgray/quimb) as core dependencies. We use [`jax`](https://github.com/jax-ml/jax) for variational circuit optimization. [`jupyterlab`](https://github.com/jupyterlab/jupyterlab) and [`jupytext`](https://github.com/mwouts/jupytext) are needed to run the examples as notebooks. The complete list of dependencies is in [pyproject.toml](https://github.com/quobly-sw/qpe-toolbox/raw/main/pyproject.toml).
 
+`qpe-toolbox` is a pure Python library, however due to [PySCF restrictions](https://pyscf.org/user/install.html), Windows is only supported through the Windows Subsystem for Linux (WSL).
+
 ## Installation from pypi
-`qpe-toolbox` is available on [pypi](https://pypi.org/project/qpe-toolbox). Install it with
+`qpe-toolbox` is available on [PyPI](https://pypi.org/project/qpe-toolbox):
 ```bash
 pip install qpe-toolbox
+```
+
+## Installation from conda-forge
+`qpe-toolbox` is available on [conda-forge](https://anaconda.org/conda-forge/qpe-toolbox). Install it with `conda`:
+```bash
+conda install -c conda-forge qpe-toolbox
+```
+or with `pixi`:
+```bash
+pixi add qpe-toolbox
 ```
 
 ## Installation from sources
@@ -43,23 +58,25 @@ python3 -m venv .venv --prompt qpe-toolbox
 # activate it
 source .venv/bin/activate
 
+# update pip to support dependency-groups (requires pip >= 25.1)
+pip install --upgrade pip
+
 # install the package and its dependencies
-pip install -e .[dev]
+pip install -e ".[recommended]" --group dev
 ```
 
 ### with uv
 ```bash
-# clone the project
 git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
-
-# Create a virtual environment and synchronize it with lock
 uv sync --locked
-
-# activate it
 source .venv/bin/activate
 ```
 
-
+### with pixi
+```bash
+git clone git@github.com:quobly-sw/qpe-toolbox.git && cd qpe-toolbox
+pixi shell --environment dev
+```
 
 # Contents
 
@@ -113,7 +130,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
    - Exact time evolution or Trotterization, available as methods of the `Hamiltonian` class - see the tutorial on [`trotter_decomposition`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/trotter_decomposition.html).
    - Block encoding functions from the `estimation` module - see the tutorial on Linear Combination of Unitaries: [`qpe_with_lcu`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/qpe_with_lcu.html).
 
-4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, chose between:
+4. Initialize a circuit with a physical register and a phase register. From the `circuit` module, choose between:
 
    - `make_circ` to create a Tensor Network representation of the circuit.
    - `make_circMPS` to store the state as an MPS and iteratively apply the gates.
