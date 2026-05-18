@@ -13,8 +13,6 @@ from quimb.tensor.tensor_core import (
 from tqdm import tqdm
 
 from qpe_toolbox.circuit.parametrized_circuits import (
-    one_qubit_layer,
-    two_qubit_nn_layer,
     generate_brickwall_circuit,
 )
 
@@ -250,9 +248,7 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
             f"{'': <2}Building 2nd order Trotter",
             "\n",
         )
-        print(
-            f"{'': <4}Building 1st order Trotter (1st half)"
-        )
+        print(f"{'': <4}Building 1st order Trotter (1st half)")
 
     layer1_mpo = trotter1_approx_as_MPO(
         ham_terms,
@@ -264,9 +260,7 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
     if verbosity == 1:
         print("\n")
-        print(
-            rf"{'': <4}Building 1st order Trotter (2nd half)"
-        )
+        print(rf"{'': <4}Building 1st order Trotter (2nd half)")
 
     layer2_mpo = trotter1_approx_as_MPO(
         ham_terms,
@@ -346,9 +340,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
             "Building 4th order Trotter",
             "\n",
         )
-        print(
-            rf"{'': <2}Building 2nd order Trotter (1st and 3rd layers)"
-        )
+        print(rf"{'': <2}Building 2nd order Trotter (1st and 3rd layers)")
 
     layer1_3_mpo = trotter2_approx_as_MPO(
         ham_terms,
@@ -386,9 +378,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     return U_trotter4_mpo
 
 
-def trotter_approx_as_MPO(
-    hamiltonian, *, dt, order, cutoff, max_bond, verbosity=0
-):
+def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity=0):
     r"""
     Construct a Trotter-Suzuki approximation of a Hamiltonian evolution
     operator as a Matrix Product Operator (MPO).
@@ -486,7 +476,11 @@ def trotter_approx_as_MPO(
 
 
 def init_cost_tn(
-    unitary_mpo, depth, *, param_scaling=1e-1, closed=False,
+    unitary_mpo,
+    depth,
+    *,
+    param_scaling=1e-1,
+    closed=False,
 ):
     r"""
     Initialize the tensor network used for optimization consisting of:
@@ -512,7 +506,7 @@ def init_cost_tn(
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
         If ``True``, ket indices are contracted (trace contraction).
-    
+
     Returns
     -------
     :quimb-api:`TensorNetwork`
@@ -1032,9 +1026,7 @@ def update_dict_contr_envs(
     """
     for tens in list_opt_gate_tens:
         list_tags = list(tens.tags)
-        n = int(
-            re.search(r"\d+", list_tags[3]).group()
-        )
+        n = int(re.search(r"\d+", list_tags[3]).group())
 
         if mode == "LR":  # sweeping L to R only requires updating L's
             transf_tens = cost_tn.select(
@@ -1053,7 +1045,9 @@ def update_dict_contr_envs(
     return dict_contr_envs
 
 
-def optimize_single_gate_update(n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs):
+def optimize_single_gate_update(
+    n_qubits, cost_tn, n_sweeps, dict_transf, dict_contr_envs
+):
     r"""
     Optimize a variational tensor-network circuit using sequential
     single-gate updates.
@@ -1142,7 +1136,6 @@ def optimize_single_gate_update(n_qubits, cost_tn, n_sweeps, dict_transf, dict_c
     for _ in trange_counter:
         for sweep in instruct:
             for x in sweep[1]:
-
                 # build local cost function for all gates at position "x"
                 loc_cost_tn, gate_to_opt_tags = build_loc_cost_tn(
                     n_qubits,
