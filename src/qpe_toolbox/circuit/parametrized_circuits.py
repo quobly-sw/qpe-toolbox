@@ -328,7 +328,7 @@ def generate_brickwall_circuit(
         If ``True``, each layer starts with the brickwall entangling layer.
         Otherwise (default ``False``), the single-body layer is applied first.
 
-    purely_ent : bool, optional
+    include_1qubit_gates : bool, optional
         If ``True``, each layer includes both single-body and entangling rotations.
         Otherwise (default ``False``), the circuit will be purely constituted by 
         even and odd layers of entangling rotations.
