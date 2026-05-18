@@ -66,7 +66,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 list_paulis = ["I", "X", "Y", "Z"]
 
 # %% [markdown]
-# # NEXT-NEAREST-NEIGHBOR ISING MODEL
+# ## NEXT-NEAREST-NEIGHBOR ISING MODEL
 
 # %%
 L = 11
@@ -208,7 +208,7 @@ for seed in list_seeds:
 
 
 # %% [markdown]
-# # CLUSTER ISING MODEL
+# ## CLUSTER ISING MODEL
 
 # %%
 L = 11

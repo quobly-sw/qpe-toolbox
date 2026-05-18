@@ -26,6 +26,8 @@ hyperoptimization.ipynb
 
 variational_circuit_preparation.ipynb
 
+mpo_to_circuit.ipynb
+
 
 
 
