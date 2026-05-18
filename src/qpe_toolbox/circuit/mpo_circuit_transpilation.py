@@ -481,6 +481,7 @@ def init_cost_tn(
     *,
     param_scaling=1e-1,
     closed=False,
+    seed=42
 ):
     r"""
     Initialize the tensor network used for optimization consisting of:
@@ -506,6 +507,8 @@ def init_cost_tn(
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
         If ``True``, ket indices are contracted (trace contraction).
+    seed : int
+        Guarantee reproducibility.
 
     Returns
     -------
@@ -516,7 +519,7 @@ def init_cost_tn(
     """
 
     n_qubits = unitary_mpo.num_tensors
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(seed=seed)
     TN = TensorNetwork()
 
     # -----------------------------------------
@@ -750,11 +753,11 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
 
             {
                 "L": {
-                    "L1": :quimb-api:`Tensor`,
+                    "L1": Tensor,
                     ...
                 },
                 "R": {
-                    "R{n_qubits-2}": :quimb-api:`Tensor`,
+                    "R{n_qubits-2}": Tensor,
                     ...
                 }
             }

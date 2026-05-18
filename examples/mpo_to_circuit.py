@@ -104,7 +104,6 @@ cost_tn_open = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
     depth=depth,
     param_scaling=1e-1,
-    factorize=False,
     closed=False,
 )
 cost_tn_open.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tags=False)
@@ -113,7 +112,6 @@ cost_tn_closed = init_cost_tn(
     unitary_mpo=trotter_mpo_ham_NNIM,
     depth=depth,
     param_scaling=1e-1,
-    factorize=False,
     closed=True,
 )
 cost_tn_closed.draw(
@@ -187,7 +185,6 @@ for seed in list_seeds:
         unitary_mpo=trotter_mpo_ham_NNIM,
         depth=depth,
         param_scaling=1e-1,
-        factorize=False,
         closed=True,
         seed=seed,
     )
@@ -256,7 +253,6 @@ for seed in list_seeds:
         unitary_mpo=trotter_mpo_ham_CIM,
         depth=depth,
         param_scaling=1e-1,
-        factorize=False,
         closed=True,
         seed=seed,
     )
@@ -287,7 +283,6 @@ for seed in list_seeds:
         unitary_mpo=trotter_mpo_ham_CIM,
         depth=depth,
         param_scaling=1.0,
-        factorize=False,
         closed=True,
         seed=seed,
     )
