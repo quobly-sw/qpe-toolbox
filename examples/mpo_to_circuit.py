@@ -101,25 +101,16 @@ trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
 # in the following I initialize the cost function
 
 # %%
-depth = 5
+depth = 3
 
-cost_tn_open = init_cost_tn(
-    unitary_mpo=trotter_mpo_ham_NNIM,
-    depth=depth,
-    param_scaling=1e-1,
-    closed=False,
-)
-cost_tn_open.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tags=False)
-
-cost_tn_closed = init_cost_tn(
-    unitary_mpo=trotter_mpo_ham_NNIM,
-    depth=depth,
-    param_scaling=1e-1,
-    closed=True,
-)
-cost_tn_closed.draw(
-    [f"ROUND_{i}" for i in range(depth)], show_inds=False, show_tags=False
-)
+for boundary_bool in [False, True]:
+    cost_tn = init_cost_tn(
+        ref_mpo=trotter_mpo_ham_NNIM,
+        depth=depth,
+        param_scaling=1e-1,
+        closed=boundary_bool,
+    )
+    cost_tn.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tags=False)
 
 # %% [markdown]
 # Now we optimize the overlap as suggested in the context of [algorithms for entanglement renormalization](https://arxiv.org/abs/0707.1454v1): to solve the *Constrained Linear* problem where the isometry to be found decomposes in a given circuit structure, we solve a series of *Unconstrained Linear* problems for each of the gates forming the circuit. The later is known to have an analytical solution.
@@ -139,11 +130,11 @@ cost_tn_closed.draw(
 # By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $U_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Conversely, this can be done for left environments:
 
 # %%
-dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
+dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
 
 # %%
 dict_contr_envs = build_first_sweep(
-    n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
+    n_qubits=L, cost_tn=cost_tn, dict_transf=dict_transf, drop_tags=True
 )
 
 # %% [markdown]
@@ -162,47 +153,47 @@ dict_contr_envs = build_first_sweep(
 # note that we optimize for an ansatz the
 # "depth" parameters is twice that of Causer et al.
 
-list_n_sweeps = [10, 20, 50, 100]
+rtol = 1e-6
+n_sweeps_max = int(1e2)
 
-for n_sweeps in list_n_sweeps:
-    cp_cost_tn_closed = cost_tn_closed.copy(deep=True)
-    cp_dict_transf = copy.deepcopy(dict_transf)
-    cp_dict_contr_envs = copy.deepcopy(dict_contr_envs)
+cp_cost_tn = cost_tn.copy(deep=True)
+cp_dict_transf = copy.deepcopy(dict_transf)
+cp_dict_contr_envs = copy.deepcopy(dict_contr_envs)
 
-    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
-        n_qubits=L,
-        cost_tn=cp_cost_tn_closed,
-        n_sweeps=n_sweeps,
-        dict_transf=cp_dict_transf,
-        dict_contr_envs=cp_dict_contr_envs,
-    )
+opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
+    n_qubits=L,
+    cost_tn=cp_cost_tn,
+    rtol=rtol,
+    n_sweeps_max=n_sweeps_max,
+    dict_transf=cp_dict_transf,
+    dict_contr_envs=cp_dict_contr_envs,
+)
 
 # %% [markdown]
 # In *Causer et al.* they find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
 
 # %%
-n_sweeps = 50
-depth = 2
 list_seeds = [1, 2, 3]
 for seed in list_seeds:
-    cost_tn_closed = init_cost_tn(
-        unitary_mpo=trotter_mpo_ham_NNIM,
+    cost_tn = init_cost_tn(
+        ref_mpo=trotter_mpo_ham_NNIM,
         depth=depth,
         param_scaling=1e-1,
         closed=True,
         seed=seed,
     )
 
-    dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
+    dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
 
     dict_contr_envs = build_first_sweep(
-        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
+        n_qubits=L, cost_tn=cost_tn, dict_transf=dict_transf, drop_tags=True
     )
 
     opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
-        cost_tn=cost_tn_closed,
-        n_sweeps=n_sweeps,
+        cost_tn=cost_tn,
+        rtol=rtol,
+        n_sweeps_max=n_sweeps_max,
         dict_transf=dict_transf,
         dict_contr_envs=dict_contr_envs,
     )
@@ -222,7 +213,8 @@ GS = dmrg.state
 
 GS_mpo = state_preparation_mpo(state_mps=GS)
 
-n_sweeps = 100
+n_sweeps_max = 1000
+rtol = 1e-6
 list_depths = [1, 2, 3, 4]
 for depth in list_depths:
     cost_tn_closed = init_cost_tn(
@@ -230,7 +222,7 @@ for depth in list_depths:
         depth=depth,
         param_scaling=1e-1,
         closed=True,
-        seed=seed,
+        seed=37,
     )
 
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
@@ -242,10 +234,8 @@ for depth in list_depths:
     opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
         cost_tn=cost_tn_closed,
-        n_sweeps=n_sweeps,
+        rtol=rtol,
+        n_sweeps_max=n_sweeps_max,
         dict_transf=dict_transf,
         dict_contr_envs=dict_contr_envs,
     )
-
-
-# %%
