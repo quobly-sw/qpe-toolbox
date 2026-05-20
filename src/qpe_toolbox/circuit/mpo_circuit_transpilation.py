@@ -454,7 +454,7 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
 
 def state_preparation_mpo(state_mps):
     r"""
-    Perform outer product between an MPS and the state |0>.
+    Perform outer product between an MPS and the state 0.
 
     Parameters
     ----------
