@@ -452,14 +452,58 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     return U_trotter_mpo
 
 
-def init_cost_tn(unitary_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
+def state_preparation_mpo(state_mps):
+    r"""
+    Perform outer product between an MPS and the state |0>.
+
+    Parameters
+    ----------
+    state_mps : :quimb-api:`MatrixProductState`
+        Target MPS to be reproduced by some circuit Ansatz.
+
+    Returns
+    -------
+    :quimb-api:`TensorNetwork`
+        Tensor network containing both the reference MPO
+        for some variational procedure.
+    """
+
+    n_qubits = state_mps.num_tensors
+    arrays = []
+    ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
+    for i in range(n_qubits):
+        array = state_mps.tensors[i].data
+        dims = np.shape(array)
+        # WARNING: it seems that dmrg spits a state with index order different from lrp or lrud
+        # print(dims, np.shape(np.outer(array, ket0)))
+        if i == 0:
+            # array had order pl then get plp' so transpose to lpp'
+            arrays.append(
+                np.outer(array, ket0).reshape(2, dims[1], 2).transpose(1, 0, 2)
+            )
+        elif i == n_qubits - 1:
+            # assume array had order rp then get rpp' so no transpose
+            arrays.append(np.outer(array, ket0).reshape(dims[0], 2, 2))
+
+        else:
+            # assume array had order lpr then get lprp' so transpose to lrpp'
+            arrays.append(
+                np.outer(array, ket0)
+                .reshape(dims[0], 2, dims[2], 2)
+                .transpose(0, 2, 1, 3)
+            )
+
+    return qtn.MatrixProductOperator(arrays=arrays)
+
+
+def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     r"""
     Initialize the tensor network used for optimization.
 
     It represents a cost function obtained from contracting:
 
     1. A brickwall unitary circuit ansatz,
-    2. A reference target unitary represented as an MPO.
+    2. A reference target unitary (or state x zero) register represented as an MPO.
 
     The ansatz is generated as a layered brickwall circuit of two-qubit
     ``SU4`` gates initialized close to the identity. The resulting unitary
@@ -468,8 +512,8 @@ def init_cost_tn(unitary_mpo, depth, *, param_scaling=1e-1, closed=False, seed=4
 
     Parameters
     ----------
-    unitary_mpo : MPO
-        Target unitary represented as an MPO.
+    ref_mpo : :quimb-api:`MatrixProductOperator`
+        Target MPO to be reproduced by the Ansatz.
     depth : int
         Depth of the brickwall circuit ansatz (even and odd count as 1).
     param_scaling : float, optional
@@ -489,7 +533,7 @@ def init_cost_tn(unitary_mpo, depth, *, param_scaling=1e-1, closed=False, seed=4
         the target MPO.
     """
 
-    n_qubits = unitary_mpo.num_tensors
+    n_qubits = ref_mpo.num_tensors
     rng = np.random.default_rng(seed=seed)
     TN = TensorNetwork()
 
@@ -512,13 +556,13 @@ def init_cost_tn(unitary_mpo, depth, *, param_scaling=1e-1, closed=False, seed=4
     TN = TN & bw_unitary_tn
 
     # -----------------------------------
-    # Add the MPO unitary in the network
+    # Add the MPO in the network
 
     new_ket_ind = "B"  # by defect leave the (B)ra open
     if closed:
         new_ket_ind = "k"  # execute the trace by contracting the (k)et
 
-    for x, tensor in enumerate(unitary_mpo):
+    for x, tensor in enumerate(ref_mpo):
         reind_tens = tensor.copy(deep=True)
         old_inds = reind_tens.inds
 

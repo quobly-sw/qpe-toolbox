@@ -54,11 +54,14 @@ os.environ["MKL_NUM_THREADS"] = "1"
 
 import copy
 
+from quimb.tensor import DMRG2
+
 from qpe_toolbox.circuit.mpo_circuit_transpilation import (
     build_first_sweep,
     find_transfer_structure,
     init_cost_tn,
     optimize_single_gate_update,
+    state_preparation_mpo,
     trotter_approx_as_MPO,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian
@@ -66,7 +69,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 list_paulis = ["I", "X", "Y", "Z"]
 
 # %% [markdown]
-# ## NEXT-NEAREST-NEIGHBOR ISING MODEL
+# ## Dynamics induced by the next-nearest-neighbor Ising model
 
 # %%
 L = 11
@@ -156,7 +159,8 @@ dict_contr_envs = build_first_sweep(
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu2.svg" align="center">
 
 # %%
-# optimize for "depth" ("2*depth" in Causer et al. paper)
+# note that we optimize for an ansatz the
+# "depth" parameters is twice that of Causer et al.
 
 list_n_sweeps = [10, 20, 50, 100]
 
@@ -179,7 +183,7 @@ for n_sweeps in list_n_sweeps:
 # %%
 n_sweeps = 50
 depth = 2
-list_seeds = [1, 2, 3, 4, 5]
+list_seeds = [1, 2, 3]
 for seed in list_seeds:
     cost_tn_closed = init_cost_tn(
         unitary_mpo=trotter_mpo_ham_NNIM,
@@ -208,49 +212,21 @@ for seed in list_seeds:
 
 
 # %% [markdown]
-# ## CLUSTER ISING MODEL
+# ## State Preparation
 
 # %%
-L = 11
-g = -0.75
-terms_CIM = [] * (3 * L - 3)
-for x in range(L):
-    terms_CIM.append((-((1 + g) ** 2), "x", [x]))
-for x in range(L - 1):
-    terms_CIM.append((-2 * (1 - g**2), "zz", [x, x + 1]))
-for x in range(L - 2):
-    terms_CIM.append(((g - 1) ** 2, "zxz", [x, x + 1, x + 2]))
+ham_NNIM_mpo = ham_NNIM.to_mpo()
+dmrg = DMRG2(ham_NNIM_mpo)
+dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12)
+GS = dmrg.state
 
-ham_CIM = Hamiltonian(terms_CIM, L)
+GS_mpo = state_preparation_mpo(state_mps=GS)
 
-
-cutoff = 1e-12
-max_bond = 128
-T = 0.5
-n_steps = 10
-
-trotter_mpo_ham_CIM_step = trotter_approx_as_MPO(
-    ham_CIM,
-    order=4,
-    dt=T / 10,
-    cutoff=cutoff,
-    max_bond=max_bond,
-)
-
-trotter_mpo_ham_CIM = trotter_mpo_ham_CIM_step.copy(deep=True)
-for _ in range(n_steps - 1):
-    trotter_mpo_ham_CIM = trotter_mpo_ham_CIM.apply(
-        trotter_mpo_ham_CIM_step, compress=True, cutoff=cutoff, max_bond=max_bond
-    )
-    print(trotter_mpo_ham_CIM.max_bond())
-
-# %%
-n_sweeps = 20
-depth = 3
-list_seeds = [1, 2, 3]
-for seed in list_seeds:
+n_sweeps = 100
+list_depths = [1, 2, 3, 4]
+for depth in list_depths:
     cost_tn_closed = init_cost_tn(
-        unitary_mpo=trotter_mpo_ham_CIM,
+        ref_mpo=GS_mpo,
         depth=depth,
         param_scaling=1e-1,
         closed=True,
@@ -262,7 +238,7 @@ for seed in list_seeds:
     dict_contr_envs = build_first_sweep(
         n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
     )
-
+    print(f"Best overlap for depth {depth}:")
     opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
         n_qubits=L,
         cost_tn=cost_tn_closed,
@@ -271,32 +247,5 @@ for seed in list_seeds:
         dict_contr_envs=dict_contr_envs,
     )
 
-# %% [markdown]
-# In this model we also detect dependence on the initial Ansatz. We can either change the seed or the amplitude of the random initialization of the angles:
 
 # %%
-n_sweeps = 20
-depth = 3
-list_seeds = [1, 2, 3]
-for seed in list_seeds:
-    cost_tn_closed = init_cost_tn(
-        unitary_mpo=trotter_mpo_ham_CIM,
-        depth=depth,
-        param_scaling=1.0,
-        closed=True,
-        seed=seed,
-    )
-
-    dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
-
-    dict_contr_envs = build_first_sweep(
-        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
-    )
-
-    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
-        n_qubits=L,
-        cost_tn=cost_tn_closed,
-        n_sweeps=n_sweeps,
-        dict_transf=dict_transf,
-        dict_contr_envs=dict_contr_envs,
-    )
