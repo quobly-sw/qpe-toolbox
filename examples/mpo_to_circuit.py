@@ -14,8 +14,12 @@
 
 # %% [markdown]
 # # MPO to circuit transpilation
-# based on [original paper](https://arxiv.org/abs/2312.14245) which at the same time uses the method from [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions)
-# other teams built on top of it adding some variants and state preparation in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616)
+#
+# The code executed in this notebook reproduces that of an [original paper](https://arxiv.org/abs/2312.14245), which at the same time uses the method from [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions and contains the appropriate information to follow the procedure).
+#
+# Other teams built on top of it adding some variants and state preparation in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616)
+#
+# ---
 
 # %% [markdown]
 # The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($U_{\mathrm{ref}}$ representing the time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brickwall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
@@ -168,6 +172,10 @@ opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
     dict_transf=cp_dict_transf,
     dict_contr_envs=cp_dict_contr_envs,
 )
+
+# retrieve the optimal circuit tensor network
+opt_circuit_tn = opt_cost_tn.copy(deep=True)
+opt_circuit_tn.delete(tags=("MPO"))
 
 # %% [markdown]
 # In *Causer et al.* they find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
