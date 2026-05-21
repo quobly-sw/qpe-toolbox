@@ -277,6 +277,7 @@ def generate_brickwall_circuit(
     two_qubit_gate_label,
     *,
     start_ent=False,
+    include_1qubit_gates=True,
     param_scaling=1.0,
     rng=None,
 ):
@@ -327,6 +328,11 @@ def generate_brickwall_circuit(
         If ``True``, each layer starts with the brickwall entangling layer.
         Otherwise (default ``False``), the single-body layer is applied first.
 
+    include_1qubit_gates : bool, optional
+        If ``True``, each layer includes both single-body and entangling rotations.
+        Otherwise (default ``False``), the circuit will be purely constituted by
+        even and odd layers of entangling rotations.
+
     param_scaling : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
@@ -372,9 +378,11 @@ def generate_brickwall_circuit(
                     gate_round=k,
                     rng=rng,
                 )
-            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
+            if include_1qubit_gates:
+                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
         else:
-            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
+            if include_1qubit_gates:
+                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
             for start in range(2):
                 two_qubit_nn_layer(
                     circ,
