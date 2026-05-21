@@ -22,7 +22,7 @@
 # ---
 
 # %% [markdown]
-# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($U_{\mathrm{ref}}$ representing the time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brickwall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
+# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($\mathrm{M}_{\mathrm{ref}}$ representing the unitary time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brickwall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Uref.svg" align="center">
@@ -34,20 +34,12 @@
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Ubw.svg" align="center">
 
 # %% [markdown]
-# In order to translate the circuit that best reproduces the action of the unitary MPO, we maximize the overlap between the two unitaries. If this cost function is maximized, then $U_{\mathrm{bw}}$ will act on another state or operator in the same way as $U^\dagger_{\mathrm{ref}}$ does.
+# In order to translate the circuit that best reproduces the action of the unitary MPO, we maximize the overlap between the two unitaries. If this cost function is maximized, then $U_{\mathrm{bw}}$ will act on another state or operator in the same way as $\mathrm{M}_{\mathrm{ref}}$ does.
 #
 # In this case, the cost function can be computed as a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the formerly introduced ansatz circuit is:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_cost.svg" align="center">
-
-# %% [markdown]
-# With the same cost function we can target also the problem of transpiling an initial state in the form of an MPO into a preparation circuit applied on the empty quantum register. To do this, one just needs to build $U_{\mathrm{ref}}$ such that each tensor is an outer product of the local tensor of the MPS encoding the state $\Psi_{\mathrm{ref}}$ and a qubit initialized at $|0\rangle$.
-#
-# Note that in this case, the the cost function will unfold into a square tensor network with open boundary conditions, since the outer product used to build the reference MPO is just an encoding of the tensors.
-
-# %% [markdown]
-# <img src="./figures/MPO_to_circuit_transpilation/transpil_state_prep.svg" align="center">
 
 # %%
 import os
@@ -131,7 +123,7 @@ for boundary_bool in [False, True]:
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_build_Rs_1st_sweep.svg" align="center">
 
 # %% [markdown]
-# By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $U_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Conversely, this can be done for left environments:
+# By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $\mathrm{M}_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Conversely, this can be done for left environments:
 
 # %%
 dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
@@ -213,14 +205,24 @@ for seed in list_seeds:
 # %% [markdown]
 # ## State Preparation
 
+# %% [markdown]
+# With the same cost function we can target also the problem of finding a good preparation circuit for some initial state in the form of an MPS. We just need to build $\text{M}_{\mathrm{ref}}$ to represent the transition from an empty quantum register into the target MPS $|0 \rangle^{\otimes L} \langle \Psi_{\mathrm{ref}} |$.
+#
+# Note that in this case, the the cost function will unfold into a square tensor network with open boundary conditions, since the outer product used to build the reference MPO is just an encoding of the tensors.
+#
+# <img src="./figures/MPO_to_circuit_transpilation/transpil_state_prep.svg" align="center">
+
 # %%
+# We pick a target state: the ground state of some local spin Hamiltonian in MPS form
 ham_NNIM_mpo = ham_NNIM.to_mpo()
 dmrg = DMRG2(ham_NNIM_mpo)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12)
 GS = dmrg.state
 
+# We build the transition MPO from the empty register to the target MPS
 GS_mpo = state_preparation_mpo(state_mps=GS)
 
+# We feed the new reference MPO into the same routine as above
 n_sweeps_max = 1000
 rtol = 1e-6
 list_depths = [1, 2, 3, 4]
