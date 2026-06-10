@@ -20,7 +20,7 @@
 #
 # First, let us briefly introduce the algorithm. For a more detailed introduction, we refer the reader to the famous book by Michael A. Nielsen and Isaac L. Chuang on *Quantum Computation and Quantum Information*, or to the [Quantum Phase Estimation algorithm Wikipedia page](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm).
 #
-# Consider a unitary operator $U$ and an eigenstate $\ket{u}$ of $U$: $U \ket{u} = e^{i \theta} \ket{u}$. We want to measure $\theta$ with $m$-bits precision.
+# Consider a unitary operator $U$ and an eigenstate $\ket{u}$ of $U$: $U \ket{u} = e^{i \theta} \ket{u}$. We want to measure $\theta$ with $m$-bit precision.
 #
 # The QPE circuit contains two registers: a physical register with $n$ qubits and a phase register with $m$ qubits.
 #
@@ -33,7 +33,7 @@
 #
 #    $U^{2^k}, k=0,1,...,m-1$ is applied to the physical register, conditioned on the $k$-th phase qubit.
 # 5. Finally to *decode* the phase, we apply the inverse Quantum Fourier Transform (QFT) on the phase register.
-# 6. We measure the phase register and find a $m$-bits approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
+# 6. We measure the phase register and find an $m$-bit approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
 # 7. After the measurement, the physical register has been projected onto $\ket{u}$.
 #
 # The notebook is organised as follows:
@@ -165,7 +165,7 @@ psi.draw(
 # %% [markdown]
 # If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
 # Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
-# When it is not the case, the most probable output gives the closest $m$-bits approximation to $\theta$.
+# When it is not the case, the most probable output gives the closest $m$-bit approximation to $\theta$.
 
 # %% [markdown]
 # ### Second stage: Inverse Quantum Fourier Transform
@@ -321,11 +321,11 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 # %% [markdown]
 # ### Error and success probability
 #
-# We have seen that when running QPE with $m$ phase qubits, the most probable output gives an estimate of $\theta$ with $m$-bits accuracy. A lower bound for this probability is $4/\pi^2$ (recall that the physical register is initialized in the ground state $\ket{\psi_0}$.)
+# We have seen that when running QPE with $m$ phase qubits, the most probable output gives an estimate of $\theta$ with $m$-bit accuracy. A lower bound for this probability is $4/\pi^2$ (recall that the physical register is initialized in the ground state $\ket{\psi_0}$.)
 #
 # In the following we investigate the probability of reaching a desired accuracy as a function of the number of phase qubits. We thus take the number of targeted bits of accuracy and the number of phase qubits to be different. Let us denote by $b$ the desired number of precision bits, and by $m$ the number of phase qubits. We assume $m \geq b$.
 #
-# As stated previously, if $\theta$ has an exact $b$-bits expression, then the QPE algorithm will return the exact $\theta$ with probability $1$ for any $m \geq b$.
+# As stated previously, if $\theta$ has an exact $b$-bit expression, then the QPE algorithm will return the exact $\theta$ with probability $1$ for any $m \geq b$.
 #
 #
 # Recall that in general, for a given number $m$ of phase qubits, $\theta$ reads
@@ -339,9 +339,9 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 #
 # $$ \theta = \frac{a}{2^m} + \frac{1}{2^{m+1}}. $$
 #
-# Note that this "worst-case scenario" for $m$ phase qubits corresponds to a $\theta$ with an exact $m+1$-bits expression.
+# Note that this "worst-case scenario" for $m$ phase qubits corresponds to a $\theta$ with an exact $(m+1)$-bit expression.
 #
-# Suppose we want to measure $\theta$ with $b=4$ bits precision.
+# Suppose we want to measure $\theta$ with $b=4$-bit precision.
 #
 # Let us take the "worst-case" scenario for $m=b=4$, i.e.
 #
@@ -408,7 +408,7 @@ print(f"\nBest guess = {energy} with proba {traces['prob']}")
 print(f"error = {E0 - energy}")
 
 # %% [markdown]
-# The output is an exact measure of $\theta$ with probability $1$, since $\theta$ has an exact $b+1=5$ bits expression.
+# The output is an exact measurement of $\theta$ with probability $1$, since $\theta$ has an exact $(b+1)=5$-bit expression.
 
 # %% [markdown]
 # ### General case
@@ -418,7 +418,7 @@ print(f"error = {E0 - energy}")
 #
 # $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
 #
-# In their derivation, they take $m > b + 1$ and introduce the best $m$-bits approximation to $\theta$: $\theta = a / 2^m + \delta,$ with $0 < \delta < 1/2^{m+1}$.
+# In their derivation, they take $m > b + 1$ and introduce the best $m$-bit approximation to $\theta$: $\theta = a / 2^m + \delta,$ with $0 < \delta < 1/2^{m+1}$.
 #
 # Let the QPE output be $r/2^m$, with $r$ an integer in the range between $0$ and $2^m-1$. Since $m>b$, $r$ might be $1/2^b$-close to $\theta$ even if $r \neq a, a+1$. Indeed, one can verify that if
 #
@@ -426,7 +426,7 @@ print(f"error = {E0 - energy}")
 # then
 #
 # $$ \left\vert \frac{r}{2^m} - \theta \right\vert \leq \frac{1}{2^{b}}. $$
-# Finally, they show that the probability for QPE to measure $\theta$ with $b$ bits precision is
+# Finally, they show that the probability for QPE to measure $\theta$ with $b$-bit precision is
 #
 # $$ 1 - P(| r - a | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
 #
@@ -511,7 +511,7 @@ for n_phase_bits in tqdm.tqdm(ms):
 # %%
 def minimal_number_phase_qubits(b, α):
     """Compute the minimal number of phase qubits required
-    to reach b-bits precision with probability 1-α.
+    to reach b-bit precision with probability 1-α.
     """
     return b + np.ceil(np.log2(2 + 1 / (2 * α)))
 
@@ -535,7 +535,7 @@ axs[1].plot(
     ms[b + ms[0] :],
     probs_success[b + ms[0] :],
     "-s",
-    label="Probability of reaching $b$-bits precision",
+    label="Probability of reaching $b$-bit precision",
 )
 axs[1].axvline(x=b, color="k", linestyle="dotted")
 axs[1].axvline(x=minimal_number_phase_qubits(b, α), color="k", linestyle="dotted")
