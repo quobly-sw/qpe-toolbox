@@ -234,7 +234,7 @@ plt.yticks([4 / np.pi**2, 0.45, 0.5], [r"$4/\pi^2$", "$0.45$", "$0.5$"])
 plt.ylabel(r"$P(a)$");
 
 # %% [markdown]
-# Thus with $m$ phase qubits, we obtain an estimate of $\theta$ with error $\varepsilon_\theta = 1/2^m$ with probability exceeding $40\%$. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
+# Thus with $m$ phase qubits, we obtain an estimate of $\theta$ with error $\varepsilon_\theta = 1/2^m$, with probability exceeding $40\%$. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
 #
 # Note that the error and depth of the circuit are independent of the number of "physical" qubits in the data register $n$, i.e. independent of the size of the physical system.
 
@@ -413,7 +413,7 @@ print(f"error = {E0 - energy}")
 # %% [markdown]
 # ### General case
 #
-# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ with $\alpha \in (0,1)$, we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
+# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ with $\alpha \in (0,1)$, we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ such that QPE measures $\theta$ with $b$-bit accuracy with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang (section 5.2.1.) find that
 #
 # $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
@@ -480,7 +480,7 @@ def qpe_with_prob_success(
 # %%
 # number of target precision bits
 b = 5
-# random choice for delta in [-0.5, 0.5[
+# random choice for delta in [-0.5, 0.5)
 rng = np.random.default_rng(seed=42)
 delta = rng.random() - 1 / 2
 size_interval = 2
@@ -550,7 +550,7 @@ axs[1].legend(loc="lower left");
 # ### Precision versus number of phase qubits
 #
 # In computational chemistry, the standard level for accuracy is the so-called chemical accuracy, set to $1$ mHa. In general, matrix elements of chemistry Hamiltonians are of the order of $1$ Ha.
-# In general, we will therefore aim for an error below $\simeq 10^{-3} E_{\rm target}$.
+# We will therefore aim for an error of order $10^{-3}$.
 # In this example we have fixed the energy unit $J=1$, hence we shall aim for an error of at most $10^{-3}$.
 #
 # Assuming that we start with an initial estimate of $E_0$ with error $0.1$, **what would be the cost in the number of phase qubits to lower the error down to $10^{-3}$?**
@@ -744,7 +744,7 @@ ax.legend();
 # %% [markdown]
 # ## Effect of initial state overlap
 #
-# So far we had initialized the circuit with $|\psi_0\rangle$. In practice, we don't have a priori access to the exact $|\psi_0\rangle$, but only an approximate state with some overlap $\Omega$.
+# So far we had initialized the circuit with $|\psi_0\rangle$. In practice, we do not have a priori access to the exact $|\psi_0\rangle$, but only an approximate state with some overlap $\Omega$.
 # The probability of success of QPE is then proportional to $\Omega$.
 #
 # For simplicity, let us consider the first excited state $\ket{\psi_1}$ only and initialize the physical register in the state
