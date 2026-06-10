@@ -176,7 +176,7 @@ psi.draw(
 # Now let us introduce the following expression for $\theta$:
 #
 # $$ \theta = \frac{a}{2^m} + \delta, $$
-# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit approximation to $\theta$, and $\delta$ is the corresponding deviation..
+# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit approximation to $\theta$, and $\delta$ is the corresponding deviation.
 #
 # The state in the phase register then reads
 #
@@ -212,7 +212,7 @@ plt.ylabel(r"$P(a)$");
 
 
 # %% [markdown]
-# We observe that $P(a)$ is minimal when the distance between $\theta$ and $a$ is maximal, i.e. for $\delta = \pm 1/2^{m+1}$.
+# We observe that $P(a)$ is minimal when the distance between $\theta$ and its best approximation $a/2^m$ is maximal, i.e. for $\delta = \pm 1/2^{m+1}$.
 #
 # As shown [here](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm), there is a lower bound for the outcome probability $P(a)$ when $\delta \neq 0$:
 #
