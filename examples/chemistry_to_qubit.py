@@ -56,7 +56,7 @@ print(f"n_qubits = {h2_ham_sto3g.n_qubits}")
 #
 # The FCI energy is given by exact diagonalization of the Hamiltonian. It is the best ground state energy estimate within this choice of basis set.
 # In chemistry, an energy estimate must reach the chemical accuracy standard, defined to be $1.6 \text{mHa} \approx 500 \text{K}$.
-# The HF energy differs from the FCI energy by $20 \text{mHa}$, while the CCSD energy is close within $10^{-6} \text{Ha}$.
+# The HF energy differs from the FCI energy by $20 \text{mHa}$, while the CCSD energy agrees to within $10^{-6} \text{Ha}$.
 #
 # However, the basis set itself only gives an approximate description of the true solutions to the Schrödinger equation. Indeed, note that with this small basis set, the FCI energy is $-1.13$ Ha, while reported values in the literature ([here](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.83.2541)) for $H_2$ are around $-1.16$ Ha. Even with exact diagonalization, the accuracy is at best $30 \text{mHa}$ in this basis.
 # Hence, reaching chemical accuracy will always mean using much larger basis sets.
@@ -83,7 +83,7 @@ h2_mpo = h2_ham.to_mpo()
 display(h2_mpo)
 
 # %% [markdown]
-# Here we use $\texttt{quimb}$'s solver directly to introduce the different settings of a DMRG calculation. Note that the `do_dmrg` function of the `hamiltonian` module performs a basic DMRG calculation with default settings.
+# The `do_dmrg` function of the `hamiltonian` module performs a basic DMRG calculation with default settings. Here we call $\texttt{quimb}$'s solver directly to specify the DMRG settings.
 #
 # In DMRG, the wavefunction is represented as an MPS. The energy is obtained as `(MPS.H) @ MPO @ MPS` where `@` indicates a contraction and `MPS.H` is the hermitian conjugate. The DMRG algorithm successively optimizes each tensor of the MPS to minimize the energy. Once all the tensors have been optimized in a forward pass, the pass is carried backward: this back-and-forth optimization constitutes a full DMRG sweep. The maximum number of sweeps can be set with `max_sweeps`. Compression is performed at each step, controlled by setting a maximal bond dimension and a cutoff. The `bond_dims` and `cutoffs` arguments take either a single value or a sequence of values (if one wants to assign different parameters to different sweeps).
 #
@@ -103,7 +103,7 @@ print(abs(h2_ham.e_fci - e_dmrg))
 # ## $O_2$
 #
 # Let us now consider a bigger molecule, dioxygen. We take the minimal STO-3G basis for simplicity.
-# Since $O_2$ is an open-shell molecule, we must run Hartree-Fock in unrestricted mode. We must also specify the spin of the molecule since it is non-trivial.
+# Since $O_2$ is an open-shell molecule, we must run Hartree-Fock in unrestricted mode. We must also specify the spin of the molecule since the ground state is not a spin singlet.
 
 # %%
 basis = "STO-3G"
@@ -118,7 +118,7 @@ o2_ham = chemistry_hamiltonian(mol, "uhf", do_fci=True, do_ccsd=True)
 print(f"n_qubits = {o2_ham.n_qubits}")
 
 # %% [markdown]
-# Let us build the Hamiltonian MPO representation and compress it to reduce its bond dimension (hence reducing the cost of running DMRG).
+# Let us build the Hamiltonian MPO representation. We will then compress it to reduce its bond dimension (hence reducing the cost of running DMRG).
 
 # %%
 o2_mpo_original = o2_ham.to_mpo()
