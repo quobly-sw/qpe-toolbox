@@ -255,7 +255,7 @@ plt.ylabel(r"$P(a)$");
 # If we know some approximation $E_{\rm target}$ of the exact energy $E_0$ up to an error $\Delta$, then by setting
 #
 # $$t =2\pi/\Delta \qquad \text{and} \qquad \phi = E_{\rm max} t,$$
-# then
+# we have
 #
 # $$ E_{\rm min} \leq E_0 \leq E_{\rm max} \implies 0 \leq -E_0 t + \phi \leq 2\pi.$$
 #
@@ -430,11 +430,11 @@ print(f"error = {E0 - energy}")
 #
 # $$ 1 - P(| r - a | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
 #
-# Thus, setting $\alpha = \frac{1}{2(2^{m - b} - 2)}$, one finds that to measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
+# Thus, setting $\alpha = \frac{1}{2(2^{m - b} - 2)}$, one finds that to measure $\theta$ with $b$-bit accuracy with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
 #
 # $$ m(b,\alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
 #
-# Let us now choose $E_{\rm target} - E_0$ randomly in $[-\Delta/2,\Delta/2)$ and see how the best guess error and best guess probability evolve with $m \geq b$.
+# Let us now choose $E_{\rm target} - E_0$ randomly in $[-\Delta/2,\Delta/2)$ and see how the best-guess error and best-guess probability evolve with $m \geq b$.
 #
 # - First, we slightly modify how we perform QPE in order to compute this probability
 #
@@ -550,8 +550,7 @@ axs[1].legend(loc="lower left");
 # ### Precision versus number of phase qubits
 #
 # In computational chemistry, the standard level for accuracy is the so-called chemical accuracy, set to $1$ mHa. In general, matrix elements of chemistry Hamiltonians are of the order of $1$ Ha.
-# We will therefore aim for an error of order $10^{-3}$.
-# In this example we have fixed the energy unit $J=1$, hence we shall aim for an error of at most $10^{-3}$.
+# In this example we have fixed the energy unit $J=1$, we will therefore aim for an error of order $10^{-3}$.
 #
 # Assuming that we start with an initial estimate of $E_0$ with error $0.1$, **what would be the cost in the number of phase qubits to lower the error down to $10^{-3}$?**
 #
@@ -611,7 +610,7 @@ axs[2].set_ylabel("duration (sec)");
 # %% [markdown]
 # ### Influence of system size
 #
-# In this section we will investigate the effect of the system size. Recall that the size of the data register is exactly the number of physical spin in the system. We go up to 10 spins, which corresponds to a Hilbert space of dimension $2^{10} = 1024$, still within reach of exact diagonalization in a few seconds computation time on a laptop.
+# In this section we will investigate the effect of the system size. Recall that the size of the data register is exactly the number of physical spins in the system. We go up to 10 spins, which corresponds to a Hilbert space of dimension $2^{10} = 1024$, still within reach of exact diagonalization in a few seconds computation time on a laptop.
 # The following cell may take a few minutes to run.
 
 # %%
@@ -703,7 +702,7 @@ axs[1].legend();
 # %% [markdown]
 # ### Influence of interval size and target energy
 #
-# Now we try to vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, errors are guaranteed, because $\exp(i 2\pi \theta)$ is $2\pi$-periodic and distinct energies outside $[E_0 - \Delta/2, E_0 + \Delta/2]$ map to the same phase.
+# We now vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, errors are guaranteed, because $\exp(i 2\pi \theta)$ is $2\pi$-periodic and distinct energies outside $[E_0 - \Delta/2, E_0 + \Delta/2]$ map to the same phase.
 
 # %%
 n_qubits = 4
@@ -815,7 +814,7 @@ fig.suptitle(
 );
 
 # %% [markdown]
-# * When $\Omega=1$ (resp. $\Omega=0$), the physical register is in $\ket{\psi_0}$ (resp. $\ket{\psi_1}$). The QPE energy is close but not equal to $E_0$ (resp. $E_1$) and the success probability is $<1$. Both the energy error and success probability depend on the number of phase qubits and on the search window parameters $E_{\rm target}$ and $\Delta$.
+# * When $\Omega=1$ (resp. $\Omega=0$), the physical register is in $\ket{\psi_0}$ (resp. $\ket{\psi_1}$). The QPE energy is close but not equal to $E_0$ (resp. $E_1$) and the success probability is $<1$. Both the energy error and the success probability depend on the number of phase qubits and on the search window parameters $E_{\rm target}$ and $\Delta$.
 #
 # * Starting from $\Omega=1$ and decreasing $\Omega$, the success probability decreases linearly: $p(\Omega) = p(\Omega = 1)\Omega,$ while the output energy remains constant and close to $E_0$.
 #
