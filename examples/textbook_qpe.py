@@ -16,7 +16,7 @@
 # %% [markdown]
 # # Textbook QPE
 #
-# We introduce the Quantum Phase Estimation algorithm and show how to compute the ground state energy of a Hamiltonian $H$. We consider a small system where the exponentiation of the Hamiltonian can be performed exactly to get the exact time evolution operator $U(t) = \exp(-iHt)$.
+# We introduce the Quantum Phase Estimation algorithm and show how to compute the ground state energy of a Hamiltonian $H$. We consider a small system where the exponentiation of the Hamiltonian can be performed exactly, yielding the exact time evolution operator $U(t) = \exp(-iHt)$.
 #
 # First, let us briefly introduce the algorithm. For a more detailed introduction, we refer the reader to the famous book by Michael A. Nielsen and Isaac L. Chuang on *Quantum Computation and Quantum Information*, or to the [Quantum Phase Estimation algorithm Wikipedia page](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm).
 #
@@ -31,7 +31,7 @@
 # 3. The circuit starts with a Hadamard wall to put the phase register into a superposition state.
 # 4. Then we *encode* the phase into the phase register via a sequence of controlled powers of $U$:
 #
-#    $U^{2^k}, k=0,1,...,m-1$ is applied to the physical register, conditioned on the $k$-th phase qubit.
+#    For $k=0,1,\ldots,m-1$, $U^{2^k}$ is applied to the physical register, conditioned on the $k$-th phase qubit.
 # 5. Finally to *decode* the phase, we apply the inverse Quantum Fourier Transform (QFT) on the phase register.
 # 6. We measure the phase register and find an $m$-bit approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
 # 7. After the measurement, the physical register has been projected onto $\ket{u}$.
@@ -118,11 +118,11 @@ print(
 # %% [markdown]
 # ### First stage of Quantum Phase Estimation
 #
-# See e.g. Nielsen and Chuang.
+# See, e.g., Nielsen and Chuang.
 # - First, initialize the phase register with a "Hadamard wall"
 # - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^k$ on the qubit-register conditioned on the $k$-th phase qubit.
 #
-#   Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary by hermiticity of $H$).
+#   Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary because $H$ is Hermitian).
 #
 #   The state of the phase register is then
 #
@@ -163,9 +163,9 @@ psi.draw(
 
 
 # %% [markdown]
-# If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ may exactly be expressed in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
+# If we suppose that $\theta = 0.\theta_1...\theta_m$, i.e. that $\theta$ can be expressed exactly in $m$ bits, then the previous expression for the state in the phase register corresponds exactly to the QFT of the product state $|\theta_1 ... \theta_m \rangle$.
 # Therefore, applying the inverse QFT and measuring in the computational basis gives $\theta$ exactly.
-# When it is not the case, the most probable output gives the closest $m$-bit approximation to $\theta$.
+# When this is not the case, the most probable output gives the closest $m$-bit approximation to $\theta$.
 
 # %% [markdown]
 # ### Second stage: Inverse Quantum Fourier Transform
@@ -234,7 +234,7 @@ plt.yticks([4 / np.pi**2, 0.45, 0.5], [r"$4/\pi^2$", "$0.45$", "$0.5$"])
 plt.ylabel(r"$P(a)$");
 
 # %% [markdown]
-# Thus with $m$ phase qubits, we get a measure of $\theta$ with error $\varepsilon_\theta = 1/2^m$ with more than $40 \%$ probability. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
+# Thus with $m$ phase qubits, we obtain an estimate of $\theta$ with error $\varepsilon_\theta = 1/2^m$ with probability exceeding $40\%$. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
 #
 # Note that the error and depth of the circuit are independent of the number of "physical" qubits in the data register $n$, i.e. independent of the size of the physical system.
 
@@ -271,7 +271,7 @@ plt.ylabel(r"$P(a)$");
 #
 # This bound is tight only in the worst case: if $\theta$ has an exact $m$-bit expression, QPE returns $E$ exactly for any number of phase qubits $m' \geq m$.
 #
-# When the initial guess is exact $E = E_{\rm target}$, the QPE output is $\theta = 1/2$. This case is pathological, since we precisely want to know $E$.
+# When the initial guess is exact $E = E_{\rm target}$, the QPE output is $\theta = 1/2$. This case is very unlikely, since we precisely want to know $E$.
 #
 
 # %% [markdown]
@@ -280,7 +280,7 @@ plt.ylabel(r"$P(a)$");
 # Throughout this section, we assume that the physical register is initialized in the ground state $\ket{\psi_0}$ and study the precision of the QPE estimate for $E_0$.
 #
 # ### An example
-# In this example we start with a target energy off by 0.2 : $E_{\rm target} = E_0 + 0.2$. Let us recall that our energy scale has been fixed by defining our Hamiltonian (using $J = 1$ in this example). Searching within an interval $\Delta=2$, measuring $E_0$ thus implies measuring
+# In this example we start with a target energy off by 0.2: $E_{\rm target} = E_0 + 0.2$. Let us recall that our energy scale has been fixed by defining our Hamiltonian (using $J = 1$ in this example). Searching within an interval $\Delta=2$, measuring $E_0$ thus implies measuring
 #
 # $$\theta=\frac{E_{\rm target} - E_0}{\Delta} + \frac{1}{2} = 0.6 .$$
 # To measure $\theta$ with an error less than $10^{-2}$ we require 5 phase qubits, since
@@ -311,7 +311,7 @@ print("theoretical error bound =", size_interval / 2**n_phase_bits)
 assert abs(E0 - energy) < size_interval / 2**n_phase_bits
 
 # %% [markdown]
-# Check that second best guess is also within an error $\Delta / 2^m$ off the exact value
+# Check that the second-best guess is also within an error $\Delta / 2^m$ of the exact value
 
 # %%
 energy_bis = -size_interval * 0.625 + E_target + size_interval / 2
@@ -332,7 +332,7 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 #
 # $$ \theta = \frac{a}{2^m} + \delta, $$
 #
-# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit estimate of $\theta$, while $\delta$ measures the distance (or error) to this $m$-bit estimate.
+# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit estimate of $\theta$, while $\delta$ measures the deviation from this $m$-bit estimate.
 # We want to estimate the probability that QPE measures $\theta$ with error $\leq 1/2^b$. This is of course the case if we measure $a$ (since $m \geq b$), but other outputs $a' \in \{0, 1, ...,2^m-1\}$ may provide an estimate within $1/2^b$ error.
 #
 # We have seen that the "worst case scenario" for a given number of phase qubits $m$ corresponds to a maximal $\delta$, e.g.
@@ -436,7 +436,7 @@ print(f"error = {E0 - energy}")
 #
 # Let us now choose $E_{\rm target} - E_0$ randomly in $[-\Delta/2,\Delta/2)$ and see how the best guess error and best guess probability evolve with $m \geq b$.
 #
-# - First we slightly modify the way we perform QPE in order to compute this probability
+# - First, we slightly modify how we perform QPE in order to compute this probability
 #
 
 # %%
@@ -551,9 +551,9 @@ axs[1].legend(loc="lower left");
 #
 # In computational chemistry, the standard level for accuracy is the so-called chemical accuracy, set to $1$ mHa. In general, matrix elements of chemistry Hamiltonians are of the order of $1$ Ha.
 # In general, we will therefore aim for an error below $\simeq 10^{-3} E_{\rm target}$.
-# In this example we have fixed the energy unit $J=1$, hence we shall aim for an error below or equal to $10^{-3}$.
+# In this example we have fixed the energy unit $J=1$, hence we shall aim for an error of at most $10^{-3}$.
 #
-# Assuming that we start with a first estimation of $E_0$ with error $0.1$, **which would be the cost in the number of phase qubits to lower the error down to $10^{-3}$?**
+# Assuming that we start with an initial estimate of $E_0$ with error $0.1$, **what would be the cost in the number of phase qubits to lower the error down to $10^{-3}$?**
 #
 # The answer is $\Delta / 2^{m} \leq 10^{-3}$, i.e. $ m \geq \log_2(10^3 \Delta)$.
 
@@ -703,7 +703,7 @@ axs[1].legend();
 # %% [markdown]
 # ### Influence of interval size and target energy
 #
-# Now we try to vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to find errors after executing the algorithm, because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
+# Now we try to vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, errors are guaranteed, because $\exp(i 2\pi \theta)$ is $2\pi$-periodic and distinct energies outside $[E_0 - \Delta/2, E_0 + \Delta/2]$ map to the same phase.
 
 # %%
 n_qubits = 4
