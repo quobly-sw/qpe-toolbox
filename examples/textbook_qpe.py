@@ -430,7 +430,7 @@ print(f"error = {E0 - energy}")
 #
 # $$ 1 - P(| r - a | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
 #
-# Thus, setting $\alpha = 1/2(2^{m - b} - 2)$, one finds that to measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
+# Thus, setting $\alpha = \frac{1}{2(2^{m - b} - 2)}$, one finds that to measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
 #
 # $$ m(b,\alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
 #
