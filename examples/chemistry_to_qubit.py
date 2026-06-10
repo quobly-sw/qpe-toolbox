@@ -60,7 +60,7 @@ print(f"n_qubits = {h2_ham_sto3g.n_qubits}")
 #
 # However, the basis set itself only gives an approximate description of the true solutions to the Schrödinger equation. Indeed, note that with this small basis set, the FCI energy is $-1.13$ Ha, while reported values in the literature ([here](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.83.2541)) for $H_2$ are around $-1.16$ Ha. Even with exact diagonalization, the accuracy is at best $30 \text{mHa}$ in this basis.
 # Hence, reaching chemical accuracy will always mean using much larger basis sets.
-# For a more detailed discussion of the importance of atomic orbital basis sets for the quality of energy estimates, see [E.V. Elfving et al., arXiv:2009.12472](https://arxiv.org/pdf/2009.12472).
+# For a more detailed discussion of the importance of atomic orbital basis sets for the quality of energy estimates, see [E.V. Elfving et al., arXiv:2009.12472](https://arxiv.org/abs/2009.12472).
 #
 # In the following, we consider the cc-pvdz basis set with $5$ orbitals per Hydrogen atom.
 
