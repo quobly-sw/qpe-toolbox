@@ -815,9 +815,9 @@ fig.suptitle(
 );
 
 # %% [markdown]
-# * When $\Omega=1$ (resp. $\Omega=0$), the physical register is in $\ket{\psi_0}$ (resp. $\ket{\psi_1}$). The energy is close but not equal to $E_0$ (resp. $E_1$) and the probability is $<1$. The energy error and finite probability depend on the number of phase qubits and on the search window parameters $E_{\rm target}$ and $\Delta$.
+# * When $\Omega=1$ (resp. $\Omega=0$), the physical register is in $\ket{\psi_0}$ (resp. $\ket{\psi_1}$). The QPE energy is close but not equal to $E_0$ (resp. $E_1$) and the success probability is $<1$. Both the energy error and success probability depend on the number of phase qubits and on the search window parameters $E_{\rm target}$ and $\Delta$.
 #
-# * Starting from $\Omega=1$ and decreasing $\Omega$, the probability decreases linearly: $p(\Omega) = p(\Omega = 1)\Omega,$ while the energy output remains constant and close to $E_0$. This corresponds to a decreasing overlap of the initial state with the ground state.
+# * Starting from $\Omega=1$ and decreasing $\Omega$, the success probability decreases linearly: $p(\Omega) = p(\Omega = 1)\Omega,$ while the output energy remains constant and close to $E_0$.
 #
 # * There is a crossover for $\Omega^* = p(0)/(p(0) + p(1)),$ where we switch from measuring $E_0$ to measuring $E_1$.
 #
