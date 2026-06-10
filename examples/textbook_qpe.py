@@ -59,7 +59,7 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
-# ## Quantum phase estimation basics
+# ## Quantum Phase Estimation basics
 #
 # First let us define a simple Hamiltonian which we can
 # - diagonalize exactly
@@ -184,7 +184,7 @@ psi.draw(
 #
 #
 #
-# ### Measure and outcome
+# ### Measurement and outcome
 #
 # At the last step of the QPE algorithm, we sample from the phase register. We measure $\ket{a} = \ket{[2^m \theta]}$ with probability
 #
@@ -279,7 +279,7 @@ plt.ylabel(r"$P(a)$");
 #
 # Throughout this section, we assume that the physical register is initialized in the ground state $\ket{\psi_0}$ and study the precision of the QPE estimate for $E_0$.
 #
-# ### An example
+# ### Precision for a fixed target energy
 # In this example we start with a target energy off by 0.2: $E_{\rm target} = E_0 + 0.2$. Let us recall that our energy scale has been fixed by defining our Hamiltonian (using $J = 1$ in this example). With a search interval $\Delta=2$, recovering $E_0$ amounts to measuring
 #
 # $$\theta=\frac{E_{\rm target} - E_0}{\Delta} + \frac{1}{2} = 0.6 .$$
@@ -411,7 +411,7 @@ print(f"error = {E0 - energy}")
 # The output is an exact measurement of $\theta$ with probability $1$, since $\theta$ has an exact $(b+1)=5$-bit expression.
 
 # %% [markdown]
-# ### General case
+# ### Trading phase qubits for success probability
 #
 # The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ with $\alpha \in (0,1)$, we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ such that QPE measures $\theta$ with $b$-bit accuracy with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang (section 5.2.1.) find that
@@ -609,9 +609,9 @@ axs[2].set_xlabel("phase qubits number")
 axs[2].set_ylabel("duration (sec)");
 
 # %% [markdown]
-# ### Influence of system size (number of spins / physical qubits in the data register)
+# ### Influence of system size
 #
-# We go up to 10 spins, which corresponds to a Hilbert space of dimension $2^{10} = 1024$, still within reach of exact diagonalization in a few seconds computation time on a laptop.
+# In this section we will investigate the effect of the system size. Recall that the size of the data register is exactly the number of physical spin in the system. We go up to 10 spins, which corresponds to a Hilbert space of dimension $2^{10} = 1024$, still within reach of exact diagonalization in a few seconds computation time on a laptop.
 # The following cell may take a few minutes to run.
 
 # %%
