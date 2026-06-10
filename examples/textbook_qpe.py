@@ -59,8 +59,7 @@ from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
-# ## Quantum phase estimation
-# ### Example : 1D Heisenberg Hamiltonian
+# ## Quantum phase estimation basics
 #
 # First let us define a simple Hamiltonian which we can
 # - diagonalize exactly
@@ -73,7 +72,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # We take $J=1$ in the following, such that all energies are expressed in units of $J$.
 #
-# #### 1. Hamiltonian definition, circuit initialization
+# ### Spin Hamiltonian construction
 
 # %% [markdown]
 # Let us define the Hamiltonian and perform exact diagonalization
@@ -102,6 +101,7 @@ F = abs(psi0_mps.H @ MatrixProductState.from_dense(psi0)) ** 2
 print(f"1 - |<psi_DMRG|psi_ED>|^2 = {abs(1 - F):.4g}")
 
 # %% [markdown]
+# ### Circuit initialization
 # We now initialize the QPE circuit with a data register containing $|\psi_0\rangle$, and a phase register with $m=4$ phase qubits; then measure the energy from the circuit
 
 # %%
@@ -116,7 +116,7 @@ print(
 )
 
 # %% [markdown]
-# #### First stage of Quantum Phase Estimation Algorithm
+# ### First stage of Quantum Phase Estimation
 #
 # See e.g. Nielsen and Chuang.
 # - First, initialize the phase register with a "Hadamard wall"
@@ -168,7 +168,7 @@ psi.draw(
 # When it is not the case, the most probable output gives the closest $m$-bits approximation to $\theta$.
 
 # %% [markdown]
-# #### Second stage: Inverse Quantum Fourier Transform
+# ### Second stage: Inverse Quantum Fourier Transform
 #
 # The state of the phase register after the inverse QFT reads:
 #
@@ -184,7 +184,7 @@ psi.draw(
 #
 #
 #
-# #### Measure and outcome
+# ### Measure and outcome
 #
 # At the last step of the QPE algorithm, we sample from the phase register. We measure $\ket{a} = \ket{[2^m \theta]}$ with probability
 #
@@ -239,7 +239,7 @@ plt.ylabel(r"$P(a)$");
 # Note that the error and depth of the circuit is independent of the number of "physical" qubits in the data register $n$, i.e. independent of the size of the physical system.
 
 # %% [markdown]
-# #### A note on the evolution time and global phase
+# ### Evolution time and global phase
 #
 # $|\psi_0 \rangle$ is an eigenstate of $U$ with eigenvalue $\exp(i 2\pi \theta)$ and an eigenstate of $H$ with eigenvalue $E_0$.
 #
@@ -742,12 +742,12 @@ ax.legend();
 # Note that the smallest the size $\Delta$ of the search window, the smallest the error, provided $E_0 \in [E_{\rm target}-\Delta/2, E_{\rm target}+\Delta/2]$.
 
 # %% [markdown]
-# ## Overlap
+# ## Effect of initial state overlap
 #
 # So far we had initialized the circuit with $|\psi_0\rangle$. In practice, we don't have a priori access to the exact $|\psi_0\rangle$, but only an approximate state with some overlap $\Omega$.
 # The probability of success of QPE is then proportional to $\Omega$.
 #
-# For example, we consider the first excited state $\ket{\psi_1}$ and initialize the physical register in state in
+# For simplicity, let us consider the first excited state $\ket{\psi_1}$ only and initialize the physical register in state in
 #
 # $$   \sqrt{\Omega} \ket{\psi_0} +\sqrt{1-\Omega} \ket{\psi_1} .$$
 
