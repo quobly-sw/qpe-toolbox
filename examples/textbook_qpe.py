@@ -65,7 +65,7 @@ plt.rcParams.update({"font.size": 12})
 # - diagonalize exactly
 # - encode as a quantum circuit
 #
-# Consider the nearest-neighbor Heisenberg Hamiltonian on a 1D chain wih open boundary conditions
+# Consider the nearest-neighbor Heisenberg Hamiltonian on a 1D chain with open boundary conditions
 #
 # $$ H = J \sum_{k=0}^{L-1} \vec{S}_k \cdot \vec{S}_{k+1} $$
 # where $\vec{S}_k  = \vec{\sigma}_k /2 \;$ are the spin-1/2 generators of SU(2) acting on site $k$, with $\vec{\sigma} = (\sigma^x, \sigma^y, \sigma^z)$ the Pauli matrices.
@@ -257,7 +257,7 @@ plt.ylabel(r"$P(a)$");
 # $$t =2\pi/\Delta \qquad \text{and} \qquad \phi = E_{\rm max} t,$$
 # then
 #
-# $$ E_{\rm min} \leq E_0 \leq E_{\rm max} \implies 0 \leq -E_0 t + 2\phi \leq 2\pi.$$
+# $$ E_{\rm min} \leq E_0 \leq E_{\rm max} \implies 0 \leq -E_0 t + \phi \leq 2\pi.$$
 #
 # where $E_{\rm max/min} = E_{\rm target} \pm \Delta/2$.
 #
@@ -413,14 +413,14 @@ print(f"error = {E0 - energy}")
 # %% [markdown]
 # ### General case
 #
-# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ ($\alpha \in ]0,1[$) we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
+# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ with $\alpha \in ]0,1[$, we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang (section 5.2.1.) find that
 #
 # $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
 #
 # In their derivation, they take $m > b + 1$ and introduce the best $m$-bits approximation to $\theta$: $\theta = a / 2^m + \delta,$ with $0 < \delta < 1/2^{m+1}$.
 #
-# Let the QPE output be $r/2^m$, with $r$ an integer in the range between $0$ and $2^{m-1}$. Since $m>b$, $r$ might be $1/2^b$-close to $\theta$ even if $r \neq a, a+1$. Indeed, one can verify that if
+# Let the QPE output be $r/2^m$, with $r$ an integer in the range between $0$ and $2^m-1$. Since $m>b$, $r$ might be $1/2^b$-close to $\theta$ even if $r \neq a, a+1$. Indeed, one can verify that if
 #
 # $$ |r - a| < 2^{m - b} - 1, $$
 # then
@@ -428,7 +428,7 @@ print(f"error = {E0 - energy}")
 # $$ \left\vert \frac{r}{2^m} - \theta \right\vert \leq \frac{1}{2^{b}}. $$
 # Finally, they show that the probability for QPE to measure $\theta$ with $b$ bits precision is
 #
-# $$ 1 - P(| r - b | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
+# $$ 1 - P(| r - a | >  2^{m - b} - 1) > 1 - \frac{1}{2(2^{m - b} - 2)}. $$
 #
 # Thus, setting $\alpha = 1/2(2^{m - b} - 2)$, one finds that to measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$, one needs a number of phase qubits
 #
@@ -703,7 +703,7 @@ axs[1].legend();
 # %% [markdown]
 # ### Influence of interval size and target energy
 #
-# Now we try to vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure ti find errors after executing the algorithm, because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
+# Now we try to vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, we are sure to find errors after executing the algorithm, because $\forall~k \in \mathbb{Z}$, $\forall~\theta \in [0,1]$, $\exp(i 2\pi \theta + i2 k \pi) = \exp(i 2\pi \theta)$.
 
 # %%
 n_qubits = 4
@@ -747,7 +747,7 @@ ax.legend();
 # So far we had initialized the circuit with $|\psi_0\rangle$. In practice, we don't have a priori access to the exact $|\psi_0\rangle$, but only an approximate state with some overlap $\Omega$.
 # The probability of success of QPE is then proportional to $\Omega$.
 #
-# For simplicity, let us consider the first excited state $\ket{\psi_1}$ only and initialize the physical register in state in
+# For simplicity, let us consider the first excited state $\ket{\psi_1}$ only and initialize the physical register in the state
 #
 # $$   \sqrt{\Omega} \ket{\psi_0} +\sqrt{1-\Omega} \ket{\psi_1} .$$
 
