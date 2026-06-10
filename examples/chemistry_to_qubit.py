@@ -20,7 +20,7 @@
 #
 # Here we show how to use $\texttt{quimb}$ to find the ground state energy with a classical algorithm: the Density-Matrix Renormalization Group (DMRG). In the other tutorials we encode the Hamiltonian spectrum into unitary operators using Trotterization or Block Encoding, and compute the energy with a quantum algorithm: the Quantum Phase Estimation algorithm, using $\texttt{quimb}$'s quantum circuit simulation mode.
 #
-# This notebook assumes the reader is already familiar with basic concepts of DMRG and Matrix Product States (MPS). For a review, we refer to e.g. [Schollwöck, The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477)
+# This notebook assumes the reader is already familiar with basic concepts of DMRG and Matrix Product States (MPS). For a review, we refer to e.g. [Schollwöck, The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477).
 
 # %%
 import numpy as np
@@ -31,7 +31,7 @@ from quimb.tensor import DMRG2
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian
 
 # %% [markdown]
-# The `chemistry_hamiltonian` function is built on the `Hamiltonian` class. It takes a molecule described with a [`Mole`](https://pyscf.org/user/gto.html) object from $\texttt{pyscf}$, performs the Hartree-Fock calculation and converts the molecular Hamiltonian into a `Hamiltonian` object describing the qubit Hamiltonian.
+# The `chemistry_hamiltonian` function takes a molecule as a [`Mole`](https://pyscf.org/user/gto.html) object from $\texttt{pyscf}$, performs the Hartree-Fock calculation and converts the molecular Hamiltonian into a `Hamiltonian` object describing the qubit Hamiltonian.
 
 # %% [markdown]
 # ## $H_2$
