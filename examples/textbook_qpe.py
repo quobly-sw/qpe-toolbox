@@ -120,7 +120,7 @@ print(
 #
 # See, e.g., Nielsen and Chuang.
 # - First, initialize the phase register with a "Hadamard wall"
-# - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^k$ on the qubit-register conditioned on the $k$-th phase qubit.
+# - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^{2^k}$ on the physical register conditioned on the $k$-th phase qubit.
 #
 #   Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary because $H$ is Hermitian).
 #
@@ -176,7 +176,7 @@ psi.draw(
 # Now let us introduce the following expression for $\theta$:
 #
 # $$ \theta = \frac{a}{2^m} + \delta, $$
-# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit estimate of $\theta$, and $\delta$ a deviation from it.
+# where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit approximation to $\theta$, and $\delta$ is the corresponding deviation..
 #
 # The state in the phase register then reads
 #
@@ -248,7 +248,7 @@ plt.ylabel(r"$P(a)$");
 #
 # $$E t = 2\pi\theta~\mathrm{mod}~2 \pi.$$
 #
-# Following the lines of the [myQLM](https://myqlm.github.io/) implementation of QPE, we can fix a "gauge choice" for $\theta$ by introducing a global phase $\phi$ in $U$: this is done by setting $U = \exp( - i H t + i \phi)$ and the evolution time $t$ such that we exactly have
+# Following the approach of the [myQLM](https://myqlm.github.io/) implementation of QPE, we can fix a "gauge choice" for $\theta$ by introducing a global phase $\phi$ in $U$, setting $U = \exp( - i H t + i \phi)$ and choosing the evolution time $t$ such that we exactly have
 #
 #  $$ - E t + \phi = 2 \pi \theta. $$
 #
@@ -280,7 +280,7 @@ plt.ylabel(r"$P(a)$");
 # Throughout this section, we assume that the physical register is initialized in the ground state $\ket{\psi_0}$ and study the precision of the QPE estimate for $E_0$.
 #
 # ### An example
-# In this example we start with a target energy off by 0.2: $E_{\rm target} = E_0 + 0.2$. Let us recall that our energy scale has been fixed by defining our Hamiltonian (using $J = 1$ in this example). Searching within an interval $\Delta=2$, measuring $E_0$ thus implies measuring
+# In this example we start with a target energy off by 0.2: $E_{\rm target} = E_0 + 0.2$. Let us recall that our energy scale has been fixed by defining our Hamiltonian (using $J = 1$ in this example). With a search interval $\Delta=2$, recovering $E_0$ amounts to measuring
 #
 # $$\theta=\frac{E_{\rm target} - E_0}{\Delta} + \frac{1}{2} = 0.6 .$$
 # To measure $\theta$ with an error less than $10^{-2}$ we require 5 phase qubits, since
