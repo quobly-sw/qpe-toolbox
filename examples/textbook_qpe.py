@@ -34,7 +34,7 @@
 #    $U^{2^k}, k=0,1,...,m-1$ is applied to the physical register, conditioned on the $k$-th phase qubit.
 # 5. Finally to *decode* the phase, we apply the inverse Quantum Fourier Transform (QFT) on the phase register.
 # 6. We measure the phase register and find a $m$-bits approximation to $\theta$ with probability $\propto \Omega$ (at least $4\Omega/\pi^2$, see below).
-# 7. After the measure, the physical register has been projected onto $\ket{u}$.
+# 7. After the measurement, the physical register has been projected onto $\ket{u}$.
 #
 # The notebook is organised as follows:
 # In the first section, we illustrate and detail the different parts of the algorithm on a small 1D Heisenberg Hamiltonian.
@@ -236,7 +236,7 @@ plt.ylabel(r"$P(a)$");
 # %% [markdown]
 # Thus with $m$ phase qubits, we get a measure of $\theta$ with error $\varepsilon_\theta = 1/2^m$ with more than $40 \%$ probability. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
 #
-# Note that the error and depth of the circuit is independent of the number of "physical" qubits in the data register $n$, i.e. independent of the size of the physical system.
+# Note that the error and depth of the circuit are independent of the number of "physical" qubits in the data register $n$, i.e. independent of the size of the physical system.
 
 # %% [markdown]
 # ### Evolution time and global phase
@@ -267,7 +267,7 @@ plt.ylabel(r"$P(a)$");
 #
 # $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2}.$$
 #
-# From the previous equation, we also get an upper bound on the energy error: if we measure $\theta$ with $m$ bits of precision, the precision on the energy is at most $\Delta / 2^m$.
+# From the previous equation, we also get an upper bound on the energy error: if we measure $\theta$ with $m$ bits of precision, the energy precision is at most $\Delta / 2^m$.
 #
 # This is a lower bound; if $\theta$ has an exact $m$ bits expression, the QPE algorithm will return $E$ exactly for any number of phase qubits $m' \geq m$.
 #
@@ -323,7 +323,7 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 #
 # We have seen that when running QPE with $m$ phase qubits, the most probable output gives an estimate of $\theta$ with $m$-bits accuracy. A lower bound for this probability is $4/\pi^2$ (recall that the physical register is initialized in the ground state $\ket{\psi_0}$.)
 #
-# In the following we investigate the probability of reaching a desired accuracy as a function of the number of phase qubits. We thus take the number of targeted bits of accuracy and the number of phase qubits to be different. Let us note $b$ the desired number of precision bits, and $m$ the number of phase qubits. We assume $m \geq b$.
+# In the following we investigate the probability of reaching a desired accuracy as a function of the number of phase qubits. We thus take the number of targeted bits of accuracy and the number of phase qubits to be different. Let us denote by $b$ the desired number of precision bits, and by $m$ the number of phase qubits. We assume $m \geq b$.
 #
 # As stated previously, if $\theta$ has an exact $b$-bits expression, then the QPE algorithm will return the exact $\theta$ with probability $1$ for any $m \geq b$.
 #
@@ -333,7 +333,7 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 # $$ \theta = \frac{a}{2^m} + \delta, $$
 #
 # where $a$ is an integer between $0$ and $2^m-1$ and $\delta \in [-1/2^{m+1}, 1/2^{m+1}]$. $a/2^m$ is the best $m$-bit estimate of $\theta$, while $\delta$ measures the distance (or error) to this $m$-bit estimate.
-# We want to estimate the probability of QPE to measure $\theta$ with error $\leq 1/2^b$. This is of course the case if we measure $a$ (since $m \geq b$), but other outputs $a' \in \{0, 1, ...,2^m-1\}$ may provide an estimate within $1/2^b$ error.
+# We want to estimate the probability that QPE measures $\theta$ with error $\leq 1/2^b$. This is of course the case if we measure $a$ (since $m \geq b$), but other outputs $a' \in \{0, 1, ...,2^m-1\}$ may provide an estimate within $1/2^b$ error.
 #
 # We have seen that the "worst case scenario" for a given number of phase qubits $m$ corresponds to a maximal $\delta$, e.g.
 #
@@ -413,7 +413,7 @@ print(f"error = {E0 - energy}")
 # %% [markdown]
 # ### General case
 #
-# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ with $\alpha \in ]0,1[$, we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
+# The goal is to measure $\theta$ with $b$-bit precision. For a given "confidence level" $1-\alpha$ with $\alpha \in (0,1)$, we are looking for the minimal number of phase qubits $m(b,\alpha) \geq b$ so that we measure $\theta$ accurate to $b$ bits with a probability of success at least $1 - \alpha$.
 # Nielsen and Chuang (section 5.2.1.) find that
 #
 # $$ m(b, \alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil. $$
@@ -434,7 +434,7 @@ print(f"error = {E0 - energy}")
 #
 # $$ m(b,\alpha) = b + \left\lceil \mathrm{log}_2 \left( 2 + \frac{1}{2\alpha} \right) \right\rceil $$
 #
-# Let us now choose $E_{\rm target} - E_0$ randomly in $[-\Delta/2,\Delta/2[$ and see how the best guess error and best guess probability evolve with $m \geq b$.
+# Let us now choose $E_{\rm target} - E_0$ randomly in $[-\Delta/2,\Delta/2)$ and see how the best guess error and best guess probability evolve with $m \geq b$.
 #
 # - First we slightly modify the way we perform QPE in order to compute this probability
 #
@@ -739,7 +739,7 @@ fig.suptitle(f"{n_phase_bits} phase qubits")
 ax.legend();
 
 # %% [markdown]
-# Note that the smallest the size $\Delta$ of the search window, the smallest the error, provided $E_0 \in [E_{\rm target}-\Delta/2, E_{\rm target}+\Delta/2]$.
+# Note that the smaller the size $\Delta$ of the search window, the smaller the error, provided $E_0 \in [E_{\rm target}-\Delta/2, E_{\rm target}+\Delta/2]$.
 
 # %% [markdown]
 # ## Effect of initial state overlap
