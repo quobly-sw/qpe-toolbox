@@ -48,7 +48,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # where $H_\ell^2 = \mathbb{1}$ expresses the condition that $H_\ell$ is Hermitian and unitary.
 #
-# Spin-$1/2$ Hamiltonians are natively written in this form since Pauli matrices are hermitian and unitary. For fermionic Hamiltonians, this decomposition can be done e.g. via the Jordan-Wigner transformation.
+# Spin-$1/2$ Hamiltonians are natively written in this form since Pauli matrices are Hermitian and unitary. For fermionic Hamiltonians, this decomposition can be done e.g. via the Jordan-Wigner transformation.
 #
 # The weights $w_\ell$ are defined to be positive (if needed the phase of $w_\ell$ can always be absorbed by a re-definition of the unitary $H_\ell$.)
 #
@@ -66,7 +66,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # $$ w_\ell = 0,~H_\ell = \mathbb{1} \qquad \mathrm{for}~ L \leq \ell < 2^{m_L}.$$
 #
-# We consider the 1D Heisenberg model with 4 spins
+# We consider the 1D Heisenberg model with 4 spins.
 
 # %%
 n_qubits = 4
@@ -90,7 +90,7 @@ print(f"DMRG energy: E0 = {E0_dmrg:.3f}")
 #
 # $$ \mathrm{PREPARE} \equiv \sum_{\ell=0}^{L-1} \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}\bra{0} $$
 #
-# The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as an MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
+# The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in the introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as an MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
 
 # %%
 prepare_mpo = qpe.build_lcu_prepare_mpo(H)
@@ -105,7 +105,7 @@ zero_mps = qtn.MPS_computational_state("0" * m_L)
 L_mps = prepare_mpo.apply(zero_mps)
 
 # %% [markdown]
-# Alternatively, the $\ket{\mathcal{L}}$ state can be built directly by calling the `build_lcu_prepare_state_mps` function
+# Alternatively, the $\ket{\mathcal{L}}$ state can be built directly by calling the `build_lcu_prepare_state_mps` function.
 
 # %%
 print(
@@ -131,13 +131,13 @@ select_gates = qpe.lcu_select_gates(H)
 
 
 # %% [markdown]
-# In our simple example of a spin Hamiltonian, the unitaries $H_\ell$ are Pauli strings ($XX, YY, ZZ$). Note that for LCU of chemistry Hamiltonians, more advanced schemes like Single Factorization, Double Factorization, Tensor Hyper Contraction... are introduced where the unitaries $H_\ell$ do not coincide anymore with Pauli strings (see e.g. [this work](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.030305) on Tensor Hyper Contraction for a discussion).
+# In our simple example of a spin Hamiltonian, the unitaries $H_\ell$ are Pauli strings ($XX, YY, ZZ$). Note that for LCU of chemistry Hamiltonians, more advanced schemes like Single Factorization, Double Factorization, Tensor Hyper Contraction... are introduced where the unitaries $H_\ell$ no longer coincide with Pauli strings (see e.g. [this work](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.030305) on Tensor Hyper Contraction for a discussion).
 
 # %%
 print(*select_gates[:10], sep="\n")
 
 # %% [markdown]
-# The first gates correspond to $\ket{0}\bra{0} \otimes X_0 X_1$ in "Hamiltonian" notation, where $X_i$ represents the $X$ Pauli matrix acting on the $i-$th spin of the Heisenberg model, or $i$-th physical qubit.
+# The first gates correspond to $\ket{0}\bra{0} \otimes X_0 X_1$ in "Hamiltonian" notation, where $X_i$ represents the $X$ Pauli matrix acting on the $i$-th spin of the Heisenberg model, or $i$-th physical qubit.
 # Since the physical register indexing is shifted by $m_L=4$ to avoid confusion with the auxiliary $\ell$-register, the first and second qubits of the physical register (index $0$ and $1$ in the physical register "local" indexing) correspond to qubit $4$ and $5$ in the total register.
 #
 # We start by projecting $\ket{0}^{\otimes m_L}$ onto $\ket{1}^{\otimes m_L}$ (apply $X$ on qubits $0$ to $3$), then apply a controlled-$X$ on qubit $4$ and $5$, then apply the reversed projection $\ket{0}^{\otimes m_L} \bra{1}^{\otimes m_L}$.
@@ -145,7 +145,7 @@ print(*select_gates[:10], sep="\n")
 # Note that qubits in the $\ell$-register are indexed from $0$ to $m_L-1$. Qubits in the physical register are indexed from $m_L$ to $m_L + n - 1$.
 
 # %% [markdown]
-# Applying the SELECT oracle on $\ket{\mathcal{L}}\ket{\psi_0}$, and projecting onto the same state, we get a measure of the ground state energy:
+# Applying the SELECT oracle on $\ket{\mathcal{L}}\ket{\psi_0}$, and projecting onto the same state, we obtain an estimate of the ground state energy:
 #
 # $$ \bra{\psi_0} \bra{\mathcal{L}} \mathrm{SELECT} \ket{\mathcal{L}} \ket{\psi_0} = \frac{E_0}{\lambda}. $$
 
@@ -170,15 +170,15 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 #
 # $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv 2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} $$
 #
-# First we define $\mathcal{R}_L$ as an MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by an MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$; circuits with non-trivial subroutines that are beyond the scope of this introduction.
+# First we define $\mathcal{R}_L$ as an MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by an MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$. The implementation of these oracles as quantum circuits is complex and beyond the scope of this introduction.
 #
 # ### Reflection as an MPO
 #
-# The PREPARE oracle is key to build a reflection operator:
+# The PREPARE oracle is key to building a reflection operator:
 #
 # $$\mathcal{R}_{L} = 2 \ket{\mathcal{L}}\bra{\mathcal{L}}\otimes\mathbb{1} - \mathbb{1} $$
 #
-# that will enter in the definition of the Walk operator.
+# that appears in the definition of the Walk operator.
 #
 # Here, we build this reflection as an MPO.
 
@@ -191,7 +191,7 @@ display(R_L)
 # ### Walk operator
 
 # %% [markdown]
-# Let us apply SELECT on the $\ket{\mathcal{L}}\ket{\psi}$ state
+# Let us apply SELECT on the $\ket{\mathcal{L}}\ket{\psi}$ state.
 
 # %%
 circ = qtn.CircuitMPS(psi0=Lpsi_mps)
@@ -268,7 +268,7 @@ assert np.isclose(
 # ## QPE on Walk operator
 
 # %% [markdown]
-# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the Walk operator using the different functions we have previously introduced and runs the "textbook" QPE circuit on $\mathcal{W}$.
+# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the Walk operator using the functions introduced above and runs the "textbook" QPE circuit on $\mathcal{W}$.
 
 # %%
 n_phase_qubits = 4
@@ -376,7 +376,7 @@ plt.xlabel("number of phase qubits");
 
 # %% [markdown]
 # The computation is much longer, although the comparison is not completely fair.
-# Indeed, in the LCU-based QPE we apply the REFLECT oracle as an MPO, which translates into much less gates to apply and less operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
+# Indeed, in the LCU-based QPE we apply the REFLECT oracle as an MPO, which translates into fewer gates to apply and fewer operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
 
 # %%
 plt.plot(n_phase_bits_list, res_ttr["durations"], "-s")
