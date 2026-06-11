@@ -168,7 +168,7 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 # ## Walk operator
 # We are now ready to build the Walk operator, defined by
 #
-# $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv \left(2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} \right) $$
+# $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv 2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} $$
 #
 # First we define $\mathcal{R}_L$ as an MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by an MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$; circuits with non-trivial subroutines that are beyond the scope of this introduction.
 #
