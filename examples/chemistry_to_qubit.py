@@ -173,7 +173,7 @@ print(f"{basis} UCCSD energy = {o2_ham.e_ccsd}")
 # %% [markdown]
 # ## $H_2O$
 #
-# We are of course not restricted to molecules with a single atomic element. The physical parameters for many molecules (including geometry, spin, charge, and symmetry parameters) can be found online or already included in a chemistry scientific library such as [ASE](https://ase-lib.org/). We are only limited by computational power. In the following, we take the water molecule in the minimal STO-3G basis.
+# We are of course not restricted to molecules with a single atomic element. The physical parameters for many molecules (including geometry, spin, charge, and symmetry group) can be found online or already included in a chemistry scientific library such as [ASE](https://ase-lib.org/). We are only limited by computational power. In the following, we take the water molecule in the minimal STO-3G basis.
 
 # %%
 basis = "STO-3G"
