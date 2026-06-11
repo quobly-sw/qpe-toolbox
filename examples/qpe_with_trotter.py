@@ -327,17 +327,15 @@ n_trotter_steps_resource = 4
 
 entangling_gates = []
 for n_phase_bits in nphase_list_resource:
-    initial_circ = make_circ(n_phase_bits, psi0_mps)
     dt = evolution_time_resource / n_trotter_steps_resource
 
-    traces_resource, res_resource = qpe.qpe_sample(
+    traces_resource, res_resource = qpe.qpe_gate_list(
         h_spin,
-        initial_circ,
+        n_phase_bits,
         evolution_time_resource,
         dt,
         global_phase_resource,
         trotter_order=2,
-        run_simulation=False,
     )
     count_qb = count_gates_by_qb(traces_resource["gates_count"])
     entangling_gates.append(count_qb["2qb"] + count_qb["3+qb"])
@@ -351,7 +349,7 @@ fig.suptitle(
     f"QPE Heisenberg {n_qubits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
 );
 # %% [markdown]
-# In the resource analysis mode (when 'run_simulation=False') the output is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.
+# The output of `qpe_gate_list` is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.
 
 # %%
 print("(label, params, qubits, controls)")

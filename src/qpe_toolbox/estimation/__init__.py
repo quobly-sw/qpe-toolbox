@@ -21,11 +21,20 @@ from .lcu_walk_operator import (
     run_qpe_lcu_walk_operator,
 )
 from .qft import iqft, iqft_swapped
+from .qpe_circuit import (
+    qpe_circuit,
+    qpe_first_stage_circuit,
+    qpe_first_stage_gates,
+    qpe_gates,
+)
 from .quantum_phase_estimation import (
+    exact_evolution_powers,
     qpe_energy,
     qpe_first_stage,
+    qpe_gate_list,
     qpe_sample,
     set_search_window,
+    trotter_evolution_powers,
 )
 from .robust_phase_estimation import (
     robust_phase_estimation,

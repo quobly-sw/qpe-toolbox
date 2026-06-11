@@ -9,6 +9,36 @@
 """Routines for quimb circuits and/or gates."""
 
 
+def add_gate_controls(gates, controls):
+    """
+    Add control qubits to a list of gates.
+
+    Parameters
+    ----------
+    gates : iterable of :quimb-api:`Gate`
+        Gates to control.
+    controls : sequence of int
+        Control qubits, appended to the existing controls of each gate.
+
+    Returns
+    -------
+    controlled_gates : list of :quimb-api:`Gate`
+        New list of gate objects with the additional controls.
+
+    Notes
+    -----
+    - Qubit indices are not modified; use ``shift_control_gates`` to also shift
+      gates past an auxiliary register.
+    - The original gate objects are not modified.
+    """
+    controls = tuple(controls)
+    controlled_gates = []
+    for g in gates:
+        new_controls = controls if g.controls is None else (*g.controls, *controls)
+        controlled_gates.append(g.copy_with(controls=new_controls))
+    return controlled_gates
+
+
 def shift_control_gates(gates, m_aux, k_ctrl):
     """
     Shift gate targets and controls to account for an auxiliary qubit register.
@@ -48,15 +78,11 @@ def shift_control_gates(gates, m_aux, k_ctrl):
     """
     if not 0 <= k_ctrl < m_aux:
         raise ValueError(
-            f"control qubit k_ctrl={k_ctrl} outside of auxiliary register [0,{m_aux}["
+            f"control qubit k_ctrl={k_ctrl} outside of auxiliary register [0, {m_aux})"
         )
-    controlled_gates = []
+    shifted_gates = []
     for g in gates:
         qubits = tuple(k + m_aux for k in g.qubits)
-        controls = (
-            (k_ctrl,)
-            if g.controls is None
-            else (*(k + m_aux for k in g.controls), k_ctrl)
-        )
-        controlled_gates.append(g.copy_with(qubits=qubits, controls=controls))
-    return controlled_gates
+        controls = None if g.controls is None else tuple(k + m_aux for k in g.controls)
+        shifted_gates.append(g.copy_with(qubits=qubits, controls=controls))
+    return add_gate_controls(shifted_gates, (k_ctrl,))
