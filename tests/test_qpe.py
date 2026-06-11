@@ -40,7 +40,7 @@ def _run_resource_analysis():
     n_phase_bits = 5
     circ = make_circMPS(n_phase_bits, psi0)
 
-    E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
+    E_shift, evolution_time, global_phase = qpe.set_search_window(
         ham, E_target, size_interval
     )
     n_steps = 4
@@ -78,8 +78,7 @@ def _run_resource_analysis():
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
-    energy = Emax - 2 * np.pi * theta / evolution_time
-    energy -= E_const
+    energy = E_shift - 2 * np.pi * theta / evolution_time
 
     assert np.isclose(energy, -0.7375)
 
