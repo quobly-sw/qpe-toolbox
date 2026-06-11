@@ -5,7 +5,7 @@ import quimb as qu
 import quimb.tensor as qtn
 from pyscf import gto
 
-from qpe_toolbox.estimation import build_hadamard_test_circuit
+from qpe_toolbox.estimation import build_hadamard_test_circuit, trotter_evolution_gates
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian, heisenberg_hamiltonian
 
 h_str = """Hamiltonian(n_qubits=2, n_terms=3) with terms:
@@ -93,8 +93,8 @@ def test_U():
     assert np.isclose(dmrg.energy, eigvals[0], atol=tol)
     psi0_mps = dmrg.state
 
-    data_reg = list(range(1, n_qubits + 1))
-    U_gate = H.get_U_exact(t, data_reg, controls=[0])
+    data_reg = list(range(n_qubits))
+    U_gate = [H.get_U_exact(t, data_reg)]
     Z = []
     for theta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)
@@ -105,7 +105,7 @@ def test_U():
 
     r = 1
     dt = t / r
-    U_gate = [H.get_trotter_step(dt, data_reg, trotter_order=2)] * r
+    U_gate = list(trotter_evolution_gates(H, t, dt, trotter_order=2))
     Z = []
     for theta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)

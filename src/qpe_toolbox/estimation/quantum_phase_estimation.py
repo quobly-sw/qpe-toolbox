@@ -357,9 +357,50 @@ def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
     """
     data_reg = list(range(hamiltonian.n_qubits))
     return [
-        [hamiltonian.get_U_exact(evolution_time * 2**k, data_reg, controls=None)]
+        [hamiltonian.get_U_exact(evolution_time * 2**k, data_reg)]
         for k in range(n_phase_bits)
     ]
+
+
+def trotter_evolution_gates(hamiltonian, evolution_time, dt, *, trotter_order=1):
+    """
+    Build the gate sequence of one Trotterized evolution :math:`U(t)`.
+
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Evolution time ``t``.
+    dt : float
+        Trotter step size, must be real > 0.
+    trotter_order : int, default ``1``
+        Order of the Trotter decomposition.
+
+    Returns
+    -------
+    generator of :quimb-api:`Gate`
+        Lazily yields the gates of the Trotterized :math:`U(t)` on
+        data-register-local qubits, without controls, as expected by
+        ``qpe_circuit``, ``qpe_gates`` and the Hadamard test. The generator
+        is one-shot: it can be consumed only once.
+
+    Notes
+    -----
+    - The number of Trotter steps is ``round(evolution_time / dt)``; a warning
+      is raised when ``dt`` exceeds ``evolution_time``.
+    """
+    if not (np.isscalar(dt) and np.isreal(dt) and dt > 0):
+        raise ValueError(f"dt must be real > 0, got {dt}")
+    if dt > evolution_time:
+        warnings.warn(
+            f"dt={dt:.3f} > evolution_time={evolution_time:.3f}",
+            stacklevel=2,
+        )
+    data_reg = list(range(hamiltonian.n_qubits))
+    trotter_slice = hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
+    n_steps = int(evolution_time / dt + 1 / 2)
+    return _repeat_gates(trotter_slice, n_steps)
 
 
 def trotter_evolution_powers(
@@ -393,21 +434,12 @@ def trotter_evolution_powers(
     -----
     - A warning is raised when ``dt`` exceeds the evolution time of a power.
     """
-    if not (np.isscalar(dt) and np.isreal(dt) and dt > 0):
-        raise ValueError(f"dt must be real > 0, got {dt}")
-
-    data_reg = list(range(hamiltonian.n_qubits))
-    trotter_slice = hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
-    unitaries = []
-    for k in range(n_phase_bits):
-        if dt > evolution_time * 2**k:
-            warnings.warn(
-                f"k={k}, dt={dt:.3f} > t*2**k={evolution_time * 2**k:.3f} -> dt set to t*2**k",
-                stacklevel=2,
-            )
-        n_steps = int(evolution_time * 2**k / dt + 1 / 2)
-        unitaries.append(_repeat_gates(trotter_slice, n_steps))
-    return unitaries
+    return [
+        trotter_evolution_gates(
+            hamiltonian, evolution_time * 2**k, dt, trotter_order=trotter_order
+        )
+        for k in range(n_phase_bits)
+    ]
 
 
 def _repeat_gates(gate_ids, n_steps):

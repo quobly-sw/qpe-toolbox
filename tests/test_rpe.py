@@ -17,5 +17,18 @@ def test_rpe():
     assert abs(rpe_distance(E0, theta_list[-1])) < epsilon
 
 
+def test_rpe_trotter():
+    n_qubits = 2
+    H = heisenberg_hamiltonian(n_qubits)
+    E0, psi0 = do_dmrg(H)
+    epsilon = 0.05
+
+    theta_list = robust_phase_estimation(
+        H, psi0, epsilon, sign_E0=-1, n_steps=8, n_shots=EXACT, verbosity=0
+    )
+    assert abs(rpe_distance(E0, theta_list[-1])) < epsilon
+
+
 if __name__ == "__main__":
     test_rpe()
+    test_rpe_trotter()

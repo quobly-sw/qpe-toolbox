@@ -9,19 +9,22 @@
 
 from collections import Counter
 
-import quimb.tensor as qtn
-
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import make_circMPS
 
+from .qpe_circuit import qpe_circuit
 
-def build_hadamard_test_circuit(init_mps, U_gate, theta):
+
+def build_hadamard_test_circuit(init_mps, unitary, theta):
     r"""
     Construct the quantum circuit implementing the Hadamard test.
 
-    The circuit prepares an ancilla qubit, applies a controlled unitary
-    :math:`U`, applies a phase rotation on the ancilla, and measures the
-    ancilla in the X basis.
+    The circuit prepares an ancilla qubit, applies a phase rotation and a
+    controlled unitary :math:`U`, and measures the ancilla in the X basis.
+    It is the single-phase-qubit Quantum Phase Estimation circuit, built with
+    ``qpe_circuit``. The phase rotation is applied before the controlled
+    unitary; both commute, so the output is identical to the textbook
+    ordering where the rotation comes after.
 
     This circuit can be used to estimate the real or imaginary part of
     :math:`\bra{\psi} U \ket{\psi}` by choosing appropriate
@@ -31,12 +34,11 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
     ----------
     init_mps : :quimb-api:`MatrixProductState`
         Initial state :math:`\ket{\psi}` of the data register.
-    U_gate : :quimb-api:`Gate` or list
-        Unitary operator to be tested.
-        If a ``Gate`` instance is provided, it must act on all data qubits
-        and be controlled by the ancilla qubit.
-        If a list is provided, it is interpreted as a sequence of Trotter
-        slices, each slice being a list of gate specifications.
+    unitary : iterable of :quimb-api:`Gate`
+        Gate decomposition of the unitary :math:`U`, acting on
+        data-register-local qubit indices ``[0, n_data)`` without controls
+        (same convention as in ``qpe_circuit``). May be a one-shot generator,
+        consumed exactly once.
     theta : float
         Phase angle applied to the ancilla qubit.
         Typical values:
@@ -48,29 +50,12 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
     circ : :quimb-api:`CircuitMPS`
         Circuit implementing the Hadamard test.
     """
-    n_qubits = init_mps.L
-    circ = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
-    data_reg = list(range(1, n_qubits + 1))
-
-    circ.apply_gate("H", 0)
-
-    if isinstance(U_gate, qtn.circuit.Gate):
-        if (U_gate.controls != (0,)) or (U_gate.qubits != tuple(data_reg)):
-            raise ValueError("Invalid U_gate")
-        circ.apply_gate(U_gate)
-    elif isinstance(U_gate, list):
-        for trotter_slice in U_gate:
-            for gate in trotter_slice:
-                circ.apply_gate(*gate, controls=[0])
-    else:
-        raise TypeError("Invalid U_gate type")
-
-    circ.apply_gate("PHASE", theta, 0)
-    circ.apply_gate("H", 0)
+    circ0 = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
+    _, circ = qpe_circuit(circ0, [unitary], global_phases=[theta])
     return circ
 
 
-def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
+def run_hadamard_test(init_mps, unitary, theta, n_shots, *, seed=None):
     r"""
     Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
 
@@ -88,9 +73,10 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
     ----------
     init_mps : :quimb-api:`MatrixProductState`
         Initial state :math:`\ket{\psi}` of the data register.
-    U_gate : :quimb-api:`Gate` or list
-        Unitary operator used in the Hadamard test.
-        See ``build_circuit`` method for accepted formats.
+    unitary : iterable of :quimb-api:`Gate`
+        Gate decomposition of the unitary :math:`U` used in the Hadamard test.
+        See ``build_hadamard_test_circuit`` for the convention. A one-shot
+        generator is consumed by this call; build a fresh one per call.
     theta : float
         Phase angle applied to the ancilla qubit.
     n_shots : int or qpe_toolbox.EXACT
@@ -104,7 +90,7 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
     Z : float
         Estimated value of :math:`Z(\theta) = P(0) - P(1)`.
     """
-    circ = build_hadamard_test_circuit(init_mps, U_gate, theta)
+    circ = build_hadamard_test_circuit(init_mps, unitary, theta)
     aux_ind = 0
     if n_shots is EXACT:
         probs = circ.compute_marginal(where=[aux_ind])

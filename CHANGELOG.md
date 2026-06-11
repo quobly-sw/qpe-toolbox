@@ -12,11 +12,14 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - Generic QPE circuit construction from arbitrary per-phase-qubit unitaries: `qpe_circuit`, `qpe_first_stage_circuit`, `qpe_gates` and `qpe_first_stage_gates` in the `estimation` module. Each power `U^(2^k)` is supplied as an independent gate list (possibly lazy), enabling non-squaring implementations such as Shor's algorithm.
 - `exact_evolution_powers` and `trotter_evolution_powers` to build the controlled unitaries from a `Hamiltonian`.
 - `qpe_gate_list` to build the QPE gate list without simulation, for resource analysis and serialization.
+- `trotter_evolution_gates` to build the gate sequence of a single Trotterized evolution `U(t)`.
 - `add_gate_controls` in the `circuit` module.
 
 ### Changed
 
 - **Breaking:** `qpe_first_stage` and `qpe_sample` no longer accept `run_simulation`; use `qpe_gate_list` for the gate-tracking mode.
+- **Breaking:** the Hadamard test (`build_hadamard_test_circuit`, `run_hadamard_test`) is now built on `qpe_circuit` and takes the unitary in the framework convention: an iterable of uncontrolled gates on data-register-local qubit indices.
+- `controls` is now an optional argument of `Hamiltonian.get_U_exact`, defaulting to `None` (uncontrolled gate).
 
 ## [1.1.0] - 2026-04-02
 

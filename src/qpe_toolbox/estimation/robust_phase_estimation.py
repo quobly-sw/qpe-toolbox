@@ -14,6 +14,7 @@ import numpy as np
 from qpe_toolbox import EXACT
 
 from .hadamard_test import run_hadamard_test
+from .quantum_phase_estimation import trotter_evolution_gates
 
 
 def robust_phase_estimation(
@@ -119,18 +120,29 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     phi_m : float
         Estimated phase angle in radians.
     """
-    n_qubits = H.n_qubits
-    phys_reg = list(range(1, n_qubits + 1))
+    phys_reg = list(range(H.n_qubits))
     evolution_time = 2**m
     if n_steps is EXACT:
-        U_m = H.get_U_exact(evolution_time, phys_reg, controls=(0,))
+        U_m = [H.get_U_exact(evolution_time, phys_reg)]
+        X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
+        Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
     else:
         if not (n_steps > 0):
             raise ValueError("Can only evolve for strictly positive n_steps")
         dt = evolution_time / n_steps
-        U_m = [H.get_trotter_step(dt, phys_reg, trotter_order)] * n_steps
-    X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
-    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
+        # the gate generators are one-shot: build one per Hadamard test
+        X_m = run_hadamard_test(
+            psi0,
+            trotter_evolution_gates(H, evolution_time, dt, trotter_order=trotter_order),
+            0,
+            n_shots,
+        )
+        Y_m = run_hadamard_test(
+            psi0,
+            trotter_evolution_gates(H, evolution_time, dt, trotter_order=trotter_order),
+            -np.pi / 2,
+            n_shots,
+        )
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)
 

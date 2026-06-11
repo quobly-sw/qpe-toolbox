@@ -121,8 +121,8 @@ E0, psi0 = do_dmrg(H)
 # %%
 rng = np.random.default_rng(seed=42)
 t = rng.random()
-data_reg = list(range(1, n_qubits + 1))
-U = H.get_U_exact(t, data_reg, controls=(0,))
+data_reg = list(range(n_qubits))
+U = [H.get_U_exact(t, data_reg)]
 
 n_shots = EXACT  # exact computation (no sampling)
 

@@ -172,7 +172,7 @@ class Hamiltonian:
         """
         return self.to_builder().build_mpo()
 
-    def get_U_exact(self, evolution_time, data_reg, controls):
+    def get_U_exact(self, evolution_time, data_reg, *, controls=None):
         """
         Construct the exact time-evolution operator as a quantum gate.
 
@@ -189,8 +189,8 @@ class Hamiltonian:
             Evolution time.
         data_reg : sequence of int
             Qubit register on which the Hamiltonian acts.
-        controls : sequence of int or None
-            Control qubits for the gate.
+        controls : sequence of int or None, default ``None``
+            Control qubits for the gate. If ``None``, the gate is uncontrolled.
 
         Returns
         -------
