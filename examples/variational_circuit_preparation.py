@@ -306,9 +306,7 @@ for gate in optimal_circuit.gates:
 # %%
 E_target = circ_optimizer.loss
 size_interval = 3
-E_const, Emax, evolution_time, global_phase = set_search_window(
-    hamilt, E_target, size_interval
-)
+_, evolution_time, global_phase = set_search_window(hamilt, E_target, size_interval)
 
 # %% [markdown]
 # and the Trotter parameters

@@ -84,7 +84,7 @@ def qpe_energy(
       where :math:`\\theta` corresponds to the phase of the most probable state.
     - Supports both Trotterized and exact evolution.
     """
-    E_const, Emax, evolution_time, global_phase = set_search_window(
+    E_shift, evolution_time, global_phase = set_search_window(
         hamiltonian, E_target, size_interval
     )
 
@@ -124,9 +124,7 @@ def qpe_energy(
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
 
-    energy = Emax - 2 * np.pi * theta / evolution_time
-    energy -= E_const
-
+    energy = E_shift - 2 * np.pi * theta / evolution_time
     return traces, energy
 
 
@@ -389,10 +387,8 @@ def set_search_window(hamiltonian, E_target, size_interval):
 
     Returns
     -------
-    E_const : float
-        Constant energy offset of the Hamiltonian (``hamiltonian.e_const`` or 0.0).
-    Emax : float
-        Upper edge of the energy interval for phase encoding.
+    E_shift : float
+        Constant energy offset of QPE energy.
     evolution_time : float
         Total evolution time corresponding to the search interval.
     global_phase : float
@@ -401,7 +397,6 @@ def set_search_window(hamiltonian, E_target, size_interval):
     Notes
     -----
     - Evolution time is chosen as ``2 * pi / size_interval`` to map the interval to [0, 2π].
-    - ``global_phase`` is added to ensure the phase encoding is centered around the target energy.
     """
     if not (size_interval > 0):
         raise ValueError(f"Invalid size_interval: {size_interval}")
@@ -410,4 +405,5 @@ def set_search_window(hamiltonian, E_target, size_interval):
     evolution_time = 2 * np.pi / size_interval
     global_phase = Emax * evolution_time
 
-    return E_const, Emax, evolution_time, global_phase
+    E_shift = E_target + size_interval / 2
+    return E_shift, evolution_time, global_phase
