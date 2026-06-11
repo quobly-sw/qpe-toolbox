@@ -85,7 +85,7 @@ print(f"DMRG energy: E0 = {E0_dmrg:.3f}")
 # The LCU scheme involves two oracles: PREPARE and SELECT, which we introduce below.
 
 # %% [markdown]
-# ## l-register and PREPARE oracle
+# ## $\ell$-register and PREPARE oracle
 # The PREPARE oracle acts on the $m_L$ qubits of the auxiliary $\ell$-register to prepare a superposition state related to the LCU decomposition:
 #
 # $$ \mathrm{PREPARE} \equiv \sum_{\ell=0}^{L-1} \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}\bra{0} $$
