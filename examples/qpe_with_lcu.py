@@ -18,7 +18,7 @@
 # %% [markdown]
 # In this notebook, we introduce advanced techniques for encoding the Hamiltonian into a unitary: Linear Combination of Unitaries and Qubitization. These techniques were first introduced in the context of Hamiltonian simulation and later applied to phase estimation.
 #
-# We mainly take inspiration from [Lin Lin's lecture notes on Quantum Algorithms for Scientific Computation](https://math.berkeley.edu/~linlin/qasc/) and from the paper [Encoding Electronic Spectra in Quantum Circuits with Linear T Complexity, Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015). The interested reader can read these works and references therein for the original papers where the techniques were developed.
+# We mainly take inspiration from [Lin Lin's lecture notes on Quantum Algorithms for Scientific Computation](https://math.berkeley.edu/~linlin/qasc/) and from the paper [Encoding Electronic Spectra in Quantum Circuits with Linear T Complexity, Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015). The interested reader is referred to these works and references therein for the original derivations.
 
 # %%
 import time
@@ -46,7 +46,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # $$ H = \sum_{\ell=0}^{L-1} w_\ell H_\ell \qquad \mathrm{s.t.} \qquad w_\ell \geq 0, \qquad H_\ell^2 = \mathbb{1}, $$
 #
-# where $H_\ell^2 = \mathbb{1}$ expresses the condition that $H_\ell$ is hermitian and unitary.
+# where $H_\ell^2 = \mathbb{1}$ expresses the condition that $H_\ell$ is Hermitian and unitary.
 #
 # Spin-$1/2$ Hamiltonians are natively written in this form since Pauli matrices are hermitian and unitary. For fermionic Hamiltonians, this decomposition can be done e.g. via the Jordan-Wigner transformation.
 #
@@ -58,7 +58,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # Note that the cost of Quantum Phase Estimation scales with the 1-norm $\lambda$. There is a lot of research activity devoted to compressing the Hamiltonian and reducing $\lambda$, see e.g. [this work](https://pubs.acs.org/doi/10.1021/acs.jctc.3c00912) and [this more recent work](https://journals.aps.org/prx/abstract/10.1103/pb2g-j9cw) and references therein. These advanced LCU techniques are beyond the scope of this simple introduction, where we consider a naive LCU based on the Pauli decomposition of $H$.
 #
-# We then introduce an empty ancilla register of size $m_L$
+# We then introduce an empty ancilla register of size $m_L$.
 #
 # $$ m_L \equiv \lceil{ \mathrm{log}_2 (L) \rceil}$$
 #
@@ -82,7 +82,7 @@ E0_dmrg, psi0_mps = do_dmrg(H)
 print(f"DMRG energy: E0 = {E0_dmrg:.3f}")
 
 # %% [markdown]
-# The LCU scheme involves two oracles: PREPARE and SELECT, that we introduce in the following.
+# The LCU scheme involves two oracles: PREPARE and SELECT, which we introduce below.
 
 # %% [markdown]
 # ## l-register and PREPARE oracle
@@ -90,7 +90,7 @@ print(f"DMRG energy: E0 = {E0_dmrg:.3f}")
 #
 # $$ \mathrm{PREPARE} \equiv \sum_{\ell=0}^{L-1} \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}\bra{0} $$
 #
-# The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as a MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
+# The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as an MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
 
 # %%
 prepare_mpo = qpe.build_lcu_prepare_mpo(H)
@@ -105,7 +105,7 @@ zero_mps = qtn.MPS_computational_state("0" * m_L)
 L_mps = prepare_mpo.apply(zero_mps)
 
 # %% [markdown]
-# Alernatively, the $\ket{\mathcal{L}}$ state can be directly build calling the `build_lcu_prepare_state_mps` function
+# Alternatively, the $\ket{\mathcal{L}}$ state can be built directly by calling the `build_lcu_prepare_state_mps` function
 
 # %%
 print(
@@ -124,7 +124,7 @@ print(
 # Note that for any $\ket{\psi}$ we have:
 #
 # $$ \bra{\psi}\bra{\mathcal{L}} \mathrm{SELECT} \ket{\mathcal{L}}\ket{\psi} = \bra{\psi}\frac{H}{\lambda}\ket{\psi} $$
-# i.e. the combination of SELECT and PREPARE gives an encoding of the Hamiltonian. This property allows to construct a unitary operator: $\mathcal{W}$, the walk operator,  that gives an exact encoding of the spectrum of $H$ via a technique called qubitization.
+# i.e. the combination of SELECT and PREPARE gives an encoding of the Hamiltonian. This property allows us to construct a unitary operator: $\mathcal{W}$, the walk operator, that gives an exact encoding of the spectrum of $H$ via a technique called qubitization.
 
 # %%
 select_gates = qpe.lcu_select_gates(H)
@@ -170,9 +170,9 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 #
 # $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv \left(2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} \right) $$
 #
-# First we define $\mathcal{R}_L$ as a MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by a MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$; circuits with non trivial subroutines that are beyond the scope of this introduction.
+# First we define $\mathcal{R}_L$ as an MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by an MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$; circuits with non-trivial subroutines that are beyond the scope of this introduction.
 #
-# ### Reflection as a MPO
+# ### Reflection as an MPO
 #
 # The PREPARE oracle is key to build a reflection operator:
 #
@@ -180,7 +180,7 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 #
 # that will enter in the definition of the Walk operator.
 #
-# Here, we build this reflection as a MPO.
+# Here, we build this reflection as an MPO.
 
 # %%
 R_L = qpe.build_lcu_reflection_mpo(H)
@@ -278,14 +278,14 @@ traces, theta = qpe.run_qpe_lcu_walk_operator(H, psi0_mps, n_phase_qubits, verbo
 # %% [markdown]
 # Now we compute the energy from the eigenphase of $\mathcal{W}$:
 #
-# $$ 2 \pi \theta = \pm \arccos(E_0/\lambda) \implies E_0 = \cos(2 \pi \theta) * \lambda $$
+# $$ 2 \pi \theta = \pm \arccos(E_0/\lambda) \implies E_0 = \lambda \cos(2 \pi \theta) $$
 
 # %%
 energy = qpe.get_energy_from_lcu_walk_phase(theta, λ)
 print(f"energy = {energy:.4f}")
 
 # %% [markdown]
-# The QPE circuit returns a measure of $\theta$ with precision of order $\Delta\theta = 1/2^{m}$ where $m$ is the number of phase qubits (in reality you need a little bit more than $m$ phase qubits to reach this precision with guarantees, see the tutorial on [Texbook QPE](./textbook_qpe.ipynb).)
+# The QPE circuit returns a measurement of $\theta$ with precision of order $\Delta\theta = 1/2^{m}$ where $m$ is the number of phase qubits (in reality one needs slightly more than $m$ phase qubits to reach this precision with guarantees, see the tutorial on [Textbook QPE](./textbook_qpe.ipynb).)
 # The precision on $E$ is then
 #
 # $$ \Delta E = \lambda \frac{2\pi}{2^m} \sqrt{1 - \left(\frac{E_0}{\lambda}\right)^2}  $$
@@ -376,7 +376,7 @@ plt.xlabel("number of phase qubits");
 
 # %% [markdown]
 # The computation is much longer, although the comparison is not completely fair.
-# Indeed, in the LCU-based QPE we apply the REFLECT oracle as a MPO, which translates into much less gates to apply and less operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
+# Indeed, in the LCU-based QPE we apply the REFLECT oracle as an MPO, which translates into much less gates to apply and less operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
 
 # %%
 plt.plot(n_phase_bits_list, res_ttr["durations"], "-s")
