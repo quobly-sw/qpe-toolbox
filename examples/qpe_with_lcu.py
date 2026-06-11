@@ -316,7 +316,7 @@ for m_ph in tqdm.tqdm(n_phase_bits_list):
 # %%
 delta_es = [qpe.estimate_lcu_error(m_ph, E0_dmrg, λ) for m_ph in n_phase_bits_list]
 
-plt.plot(n_phase_bits_list, energies, "-o", label="QPE")
+plt.plot(n_phase_bits_list, energies, "-o", label="LCU")
 plt.axhline(y=E0_dmrg, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
     n_phase_bits_list,
@@ -326,13 +326,16 @@ plt.fill_between(
     label="error bound",
 )
 plt.legend()
+plt.xticks(n_phase_bits_list)
 plt.title(f"Heisenberg {H.n_qubits} spins - LCU")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 
 # %%
-plt.plot(n_phase_bits_list, durations, "-o")
+plt.plot(n_phase_bits_list, durations, "-o", label="LCU")
+plt.legend()
 plt.ylabel("duration (seconds)")
+plt.xticks(n_phase_bits_list)
 plt.xlabel("number of phase qubits");
 
 # %% [markdown]
@@ -360,7 +363,8 @@ for m_ph in tqdm.tqdm(n_phase_bits_list):
 # We visualize the convergence of the energy with the number of phase qubits
 
 # %%
-plt.plot(n_phase_bits_list, res_ttr["energies"], "-s")
+plt.plot(n_phase_bits_list, energies, "-o", label="LCU")
+plt.plot(n_phase_bits_list, res_ttr["energies"], "-s", label="Trotter")
 plt.axhline(y=E0_dmrg, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
     n_phase_bits_list,
@@ -372,6 +376,7 @@ plt.fill_between(
 plt.legend()
 plt.title(f"Heisenberg {H.n_qubits} spins - 2nd order Trotter {n_steps} steps")
 plt.ylabel("energy")
+plt.xticks(n_phase_bits_list)
 plt.xlabel("number of phase qubits");
 
 # %% [markdown]
@@ -379,7 +384,10 @@ plt.xlabel("number of phase qubits");
 # Indeed, in the LCU-based QPE we apply the REFLECT oracle as an MPO, which translates into fewer gates to apply and fewer operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
 
 # %%
-plt.plot(n_phase_bits_list, res_ttr["durations"], "-s")
+plt.plot(n_phase_bits_list, durations, "-o", label="LCU")
+plt.plot(n_phase_bits_list, res_ttr["durations"], "-s", label="Trotter")
+plt.legend()
+plt.xticks(n_phase_bits_list)
 plt.ylabel("duration (seconds)")
 plt.xlabel("number of phase qubits");
 
@@ -426,19 +434,19 @@ print(f"error bound = {delta_e:.4f}")
 # %%
 thetas = []
 n_phase_bits_list = list(range(2, 6))
-durations = []
-energies = []
+durations_H2 = []
+energies_H2 = []
 for m_ph in tqdm.tqdm(n_phase_bits_list):
     st = time.time()
     traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph)
     thetas.append(theta)
-    durations.append(time.time() - st)
-    energies.append(qpe.get_energy_from_lcu_walk_phase(theta, λ_H2))
+    durations_H2.append(time.time() - st)
+    energies_H2.append(qpe.get_energy_from_lcu_walk_phase(theta, λ_H2))
 
 # %%
 delta_es = [qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_list]
 
-plt.plot(n_phase_bits_list, energies, "-o", label="QPE")
+plt.plot(n_phase_bits_list, energies_H2, "-o", label="QPE")
 plt.axhline(y=E0_H2, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
     n_phase_bits_list,
@@ -448,13 +456,15 @@ plt.fill_between(
     label="error bound",
 )
 plt.legend()
-plt.title(f"H2 STO-3 basis ({H_H2.n_qubits} qubits) - LCU")
+plt.xticks(n_phase_bits_list)
+plt.title(f"$H_2$ STO-3G basis ({H_H2.n_qubits} qubits) - LCU")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 
 # %%
-plt.plot(n_phase_bits_list, durations, "-o")
+plt.plot(n_phase_bits_list, durations_H2, "-o")
 plt.ylabel("duration (seconds)")
+plt.xticks(n_phase_bits_list)
 plt.xlabel("number of phase qubits");
 
 # %%
