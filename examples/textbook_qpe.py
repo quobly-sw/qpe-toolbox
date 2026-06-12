@@ -341,7 +341,7 @@ assert abs(E0 - energy_bis < size_interval / 2**n_phase_bits)
 #
 # Note that this "worst-case scenario" for $m$ phase qubits corresponds to a $\theta$ with an exact $(m+1)$-bit expression.
 #
-# Suppose we want to measure $\theta$ with $b=4$-bit precision.
+# Suppose we want to measure $\theta$ with $b=4$ bits of precision.
 #
 # Let us take the "worst-case" scenario for $m=b=4$, i.e.
 #
@@ -408,7 +408,7 @@ print(f"\nBest guess = {energy} with proba {traces['prob']}")
 print(f"error = {E0 - energy}")
 
 # %% [markdown]
-# The output is an exact measurement of $\theta$ with probability $1$, since $\theta$ has an exact $(b+1)=5$-bit expression.
+# The output is an exact measurement of $\theta$ with probability $1$, since $\theta$ has an exact expression on $b+1=5$ bits.
 
 # %% [markdown]
 # ### Trading phase qubits for success probability
