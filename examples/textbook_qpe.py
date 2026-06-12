@@ -269,7 +269,7 @@ plt.ylabel(r"$P(a)$");
 #
 # From the previous equation, if we measure $\theta$ with $m$ bits of precision, the energy error is at most $\Delta / 2^m$.
 #
-# This bound is tight only in the worst case: if $\theta$ has an exact $m$-bit expression, QPE returns $E$ exactly for any number of phase qubits $m' \geq m$.
+# This bound is tight only in the worst case. On the other hand, if $\theta$ has an exact $m$-bit expression, QPE returns $E$ exactly for any number of phase qubits $m' \geq m$.
 #
 # When the initial guess is exact $E = E_{\rm target}$, the QPE output is $\theta = 1/2$. This case is very unlikely, since we precisely want to know $E$.
 #
