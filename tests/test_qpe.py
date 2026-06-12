@@ -17,6 +17,11 @@ E0, psi0 = do_dmrg(ham)
 E_target = E0 + 0.2
 size_interval = 2
 
+e_const_shifted = 5.0
+ham_shifted = heisenberg_hamiltonian(2)
+ham_shifted.e_const = e_const_shifted
+E_target_shifted = E0 + e_const_shifted + 0.2
+
 
 def test_qpe():
     circ = make_circMPS(5, psi0)
@@ -24,6 +29,16 @@ def test_qpe():
     _, energy = qpe.qpe_energy(ham, circ, EXACT, E_target, size_interval)
 
     assert np.isclose(energy, -0.7375)
+
+
+def test_qpe_with_e_const():
+    circ = make_circMPS(5, psi0)
+
+    _, energy = qpe.qpe_energy(
+        ham_shifted, circ, EXACT, E_target_shifted, size_interval
+    )
+
+    assert np.isclose(energy, -0.7375 + e_const_shifted)
 
 
 def test_resource_analysis():

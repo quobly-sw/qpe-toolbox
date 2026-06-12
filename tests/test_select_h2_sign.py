@@ -36,7 +36,8 @@ def test_select():
 
     psi1 = circ.psi.copy()
 
-    assert abs(Lpsi_mps.overlap(psi1) - E0_dmrg / lmb) < 1e-10
+    E0_pauli = E0_dmrg - H.e_const
+    assert abs(Lpsi_mps.overlap(psi1) - E0_pauli / lmb) < 1e-10
 
 
 if __name__ == "__main__":
