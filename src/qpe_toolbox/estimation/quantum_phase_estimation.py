@@ -51,7 +51,8 @@ def qpe_energy(
         Number of time steps for Trotterized evolution, or ``EXACT`` for exact
         evolution.
     E_target : float
-        Central target energy for the search window.
+        Central target energy for the search window, in physical energy units
+        (i.e. including ``hamiltonian.e_const`` if present).
     size_interval : float
         Width of the energy search interval.
     trotter_order : int, default ``1``
@@ -70,7 +71,8 @@ def qpe_energy(
         Dictionary with computation information, including timing, bond dimensions,
         gate counts, and highest probability phase values.
     energy : float
-        Estimated energy eigenvalue from the phase estimation.
+        Estimated energy eigenvalue in physical units (Pauli eigenvalue
+        plus ``hamiltonian.e_const`` if present).
 
     Notes
     -----
@@ -383,7 +385,8 @@ def set_search_window(hamiltonian, E_target, size_interval):
     hamiltonian : Hamiltonian
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     E_target : float
-        Central target energy around which to search.
+        Central target energy around which to search, in physical energy
+        units (i.e. including ``hamiltonian.e_const`` if present).
     size_interval : float
         Width of the energy interval (must be > 0).
 
