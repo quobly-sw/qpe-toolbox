@@ -124,25 +124,16 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     evolution_time = 2**m
     if n_steps is EXACT:
         U_m = [H.get_U_exact(evolution_time, phys_reg)]
-        X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
-        Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
     else:
         if not (n_steps > 0):
             raise ValueError("Can only evolve for strictly positive n_steps")
         dt = evolution_time / n_steps
-        # the gate generators are one-shot: build one per Hadamard test
-        X_m = run_hadamard_test(
-            psi0,
-            trotter_evolution_gates(H, evolution_time, dt, trotter_order=trotter_order),
-            0,
-            n_shots,
+        # materialize the one-shot generator to reuse it in both Hadamard tests
+        U_m = list(
+            trotter_evolution_gates(H, evolution_time, dt, trotter_order=trotter_order)
         )
-        Y_m = run_hadamard_test(
-            psi0,
-            trotter_evolution_gates(H, evolution_time, dt, trotter_order=trotter_order),
-            -np.pi / 2,
-            n_shots,
-        )
+    X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
+    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)
 
