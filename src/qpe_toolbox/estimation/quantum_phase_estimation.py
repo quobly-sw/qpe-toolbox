@@ -79,9 +79,11 @@ def qpe_energy(
 
       .. math::
 
-         E = E_\\mathrm{max} - \\frac{2 \\pi \\theta}{t_\\mathrm{evol}} - E_\\mathrm{const}
+         E = E_\\mathrm{shift} - \\frac{2 \\pi \\theta}{t_\\mathrm{evol}}
 
-      where :math:`\\theta` corresponds to the phase of the most probable state.
+      where :math:`\\theta` is the phase of the most probable state and
+      :math:`E_\\mathrm{shift} = E_\\mathrm{target} + \\Delta/2` (see
+      :func:`set_search_window`).
     - Supports both Trotterized and exact evolution.
     """
     E_shift, evolution_time, global_phase = set_search_window(
@@ -388,11 +390,14 @@ def set_search_window(hamiltonian, E_target, size_interval):
     Returns
     -------
     E_shift : float
-        Constant energy offset of QPE energy.
+        Upper bound of the search window in physical energy units:
+        ``E_target + size_interval / 2``. This is the :math:`E_\\mathrm{max}`
+        of the QPE derivation.
     evolution_time : float
         Total evolution time corresponding to the search interval.
     global_phase : float
-        Phase corresponding to ``Emax * evolution_time``.
+        Global phase applied to the circuit:
+        ``(E_shift - e_const) * evolution_time``.
 
     Notes
     -----
@@ -401,9 +406,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
     if not (size_interval > 0):
         raise ValueError(f"Invalid size_interval: {size_interval}")
     E_const = getattr(hamiltonian, "e_const", 0.0)
-    Emax = E_target - E_const + size_interval / 2
-    evolution_time = 2 * np.pi / size_interval
-    global_phase = Emax * evolution_time
-
     E_shift = E_target + size_interval / 2
+    evolution_time = 2 * np.pi / size_interval
+    global_phase = (E_shift - E_const) * evolution_time
     return E_shift, evolution_time, global_phase
