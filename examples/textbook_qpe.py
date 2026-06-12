@@ -102,7 +102,7 @@ print(f"1 - |<psi_DMRG|psi_ED>|^2 = {abs(1 - F):.4g}")
 
 # %% [markdown]
 # ### Circuit initialization
-# We now initialize the QPE circuit with a data register containing $|\psi_0\rangle$, and a phase register with $m=4$ phase qubits; then measure the energy from the circuit
+# We now initialize the QPE circuit with a physical register containing $|\psi_0\rangle$, and a phase register with $m=4$ phase qubits; then measure the energy from the circuit
 
 # %%
 n_phase_bits = 4
@@ -127,7 +127,7 @@ print(
 #   The state of the phase register is then
 #
 # $$ \frac{1}{\sqrt{2^m}} \sum_{q=0}^{2^m-1} e^{i2\pi \theta q} |q \rangle ,$$
-# (the data register stays in the state $|\psi_0\rangle$)
+# (the physical register stays in the state $|\psi_0\rangle$)
 
 # %%
 E_target = E0 + 0.2
@@ -236,7 +236,7 @@ plt.ylabel(r"$P(a)$");
 # %% [markdown]
 # Thus with $m$ phase qubits, we obtain an estimate of $\theta$ with error $\varepsilon_\theta = 1/2^m$, with probability exceeding $40\%$. As we will see below, adding extra qubits will increase the probability of reaching the same precision.
 #
-# Note that the error and depth of the circuit are independent of the number of "physical" qubits in the data register $n$, i.e. independent of the size of the physical system.
+# Note that the error and depth of the circuit are independent of the number of "physical" qubits in the physical register $n$, i.e. independent of the size of the physical system.
 
 # %% [markdown]
 # ### Evolution time and global phase
@@ -610,7 +610,7 @@ axs[2].set_ylabel("duration (sec)");
 # %% [markdown]
 # ### Influence of system size
 #
-# In this section we will investigate the effect of the system size. Recall that the size of the data register is exactly the number of physical spins in the system. We go up to 10 spins, which corresponds to a Hilbert space of dimension $2^{10} = 1024$, still within reach of exact diagonalization in a few seconds computation time on a laptop.
+# In this section we will investigate the effect of the system size. Recall that the size of the physical register is exactly the number of physical spins in the system. We go up to 10 spins, which corresponds to a Hilbert space of dimension $2^{10} = 1024$, still within reach of exact diagonalization in a few seconds computation time on a laptop.
 # The following cell may take a few minutes to run.
 
 # %%
