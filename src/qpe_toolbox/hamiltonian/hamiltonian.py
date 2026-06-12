@@ -62,16 +62,14 @@ def do_dmrg(hamiltonian):
     Returns
     -------
     E0 : float
-        Ground-state energy in physical units, including the constant shift
-        ``hamiltonian.e_const`` if present (e.g. nuclear repulsion for chemistry
-        Hamiltonians).
+        Ground-state energy.
     psi0 : :quimb-api:`MatrixProductState`
         Ground-state wavefunction as a Matrix Product State.
     """
     mpo = hamiltonian.to_mpo()
     dmrg = qtn.DMRG2(mpo)
     dmrg.solve()
-    E0 = np.real(dmrg.energy) + getattr(hamiltonian, "e_const", 0.0)
+    E0 = np.real(dmrg.energy)
     psi0 = dmrg.state
     psi0.permute_arrays("lrp")
 
