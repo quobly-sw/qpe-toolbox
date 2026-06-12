@@ -20,7 +20,7 @@
 #
 # First, let us briefly introduce the algorithm. For a more detailed introduction, we refer the reader to the famous book by Michael A. Nielsen and Isaac L. Chuang on *Quantum Computation and Quantum Information*, or to the [Quantum Phase Estimation algorithm Wikipedia page](https://en.wikipedia.org/wiki/Quantum_phase_estimation_algorithm).
 #
-# Consider a unitary operator $U$ and an eigenstate $\ket{u}$ of $U$: $U \ket{u} = e^{i \theta} \ket{u}$. We want to measure $\theta$ with $m$-bit precision.
+# Consider a unitary operator $U$ and an eigenstate $\ket{u}$ of $U$: $U \ket{u} = e^{i2\pi \theta} \ket{u}$. We want to measure $\theta$ with $m$-bit precision.
 #
 # The QPE circuit contains two registers: a physical register with $n$ qubits and a phase register with $m$ qubits.
 #
@@ -122,7 +122,7 @@ print(
 # - First, initialize the phase register with a "Hadamard wall"
 # - Then build the operator $U = \exp(-i H t)$ for a given evolution time $t$ and apply a sequence of gates ctrl-$U^{2^k}$ on the physical register conditioned on the $k$-th phase qubit.
 #
-#   Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(-i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary because $H$ is Hermitian).
+#   Since $|\psi_0 \rangle$ is an eigenstate of $H$, we have $U |\psi_0 \rangle = \exp(i2\pi \theta) |\psi_0 \rangle$ with $0 \leq \theta \leq 1$ ($U$ is unitary because $H$ is Hermitian).
 #
 #   The state of the phase register is then
 #
@@ -246,7 +246,7 @@ plt.ylabel(r"$P(a)$");
 # Therefore
 # $\exp(i2\pi\theta ) = \exp( - i E t)$; this implies
 #
-# $$E t = 2\pi\theta~\mathrm{mod}~2 \pi.$$
+# $$-E t = 2\pi\theta~\mathrm{mod}~2 \pi.$$
 #
 # Following the approach of the [myQLM](https://myqlm.github.io/) implementation of QPE, we can fix a "gauge choice" for $\theta$ by introducing a global phase $\phi$ in $U$, setting $U = \exp( - i H t + i \phi)$ and choosing the evolution time $t$ such that we exactly have
 #
@@ -702,7 +702,7 @@ axs[1].legend();
 # %% [markdown]
 # ### Influence of interval size and target energy
 #
-# We now vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, errors are guaranteed, because $\exp(i 2\pi \theta)$ is $2\pi$-periodic and distinct energies outside $[E_0 - \Delta/2, E_0 + \Delta/2]$ map to the same phase.
+# We now vary the energy interval $\Delta$ and the target energy $E_{target}$ within an interval $[E_0 - \Delta / 2, E_0 + \Delta/2]$. Outside of this range, errors are guaranteed, because $\exp(i\phi)$ is $2\pi$-periodic and distinct energies outside $[E_0 - \Delta/2, E_0 + \Delta/2]$ map to the same phase.
 
 # %%
 n_qubits = 4
