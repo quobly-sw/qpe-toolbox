@@ -36,7 +36,7 @@ from qpe_toolbox.hamiltonian import chemistry_hamiltonian
 # %% [markdown]
 # ## $H_2$
 #
-# Let us start with the $H_2$ molecule in the minimal atomic orbital basis set STO-3G. We give the geometry and basis set as keyword arguments to the function `pyscf.gto.M` to initialize the molecular structure object (spin and charge can also be specified, see below $O_2$).
+# Let us start with the $H_2$ molecule in the minimal atomic orbital basis set STO-3G. We give the geometry and basis set as keyword arguments to the function `pyscf.gto.M` to initialize the molecular structure object (spin and charge can also be specified, see $O_2$ case below).
 # Then we call the `chemistry_hamiltonian`.
 #
 # * The `hf_mode` parameter describes how spin is assigned to the spatial molecular orbitals in the Hartree-Fock calculations. Restricted Hartree-Fock (`"rhf"`) uses the same molecular orbital twice, one for each state in the spin doublet, while [Unrestricted Hartree-Fock](https://en.wikipedia.org/wiki/Unrestricted_Hartree%E2%80%93Fock) (`"uhf"`) uses different molecular orbitals for the different eigenstates of $S_z$. Unrestricted Hartree-Fock is mostly used for open-shell molecules.
@@ -87,7 +87,7 @@ display(h2_mpo)
 #
 # In DMRG, the wavefunction is represented as an MPS. The energy is obtained as `(MPS.H) @ MPO @ MPS` where `@` indicates a contraction and `MPS.H` is the hermitian conjugate. The DMRG algorithm successively optimizes each tensor of the MPS to minimize the energy. Once all the tensors have been optimized in a forward pass, the pass is carried backward: this back-and-forth optimization constitutes a full DMRG sweep. The maximum number of sweeps can be set with `max_sweeps`. Compression is performed at each step, controlled by setting a maximal bond dimension and a cutoff. The `bond_dims` and `cutoffs` arguments take either a single value or a sequence of values (if one wants to assign different parameters to different sweeps).
 #
-# For an introduction on DMRG, see [this presentation](https://tensornetwork.org/mps/algorithms/dmrg/) and references therein.
+# For an introduction to DMRG, see [this presentation](https://tensornetwork.org/mps/algorithms/dmrg/) and references therein.
 
 # %%
 # %%time
@@ -125,7 +125,7 @@ o2_mpo_original = o2_ham.to_mpo()
 display(o2_mpo_original)
 
 # %% [markdown]
-# To make sure that we don't lose physical information when compressing, we measure the MPO norm.
+# To make sure that we do not lose physical information when compressing, we measure the MPO norm.
 
 # %%
 norm = o2_mpo_original.norm()
@@ -173,7 +173,7 @@ print(f"{basis} UCCSD energy = {o2_ham.e_ccsd}")
 # %% [markdown]
 # ## $H_2O$
 #
-# We are of course not restricted to molecules with a single atomic element. The physical parameters for many molecules (including geometry, spin, charge, and symmetry group) can be found online or already included in a chemistry scientific library such as [ASE](https://ase-lib.org/). We are only limited by computational power. In the following, we take the water molecule in the minimal STO-3G basis.
+# We are of course not restricted to molecules with a single atomic element. The physical parameters for many molecules (including geometry, spin, charge, and symmetry group) can be found online or in a computational chemistry library such as [ASE](https://ase-lib.org/). We are only limited by computational power. In the following, we take the water molecule in the minimal STO-3G basis.
 
 # %%
 basis = "STO-3G"
