@@ -67,13 +67,10 @@ def robust_phase_estimation(
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(M + 1):
-        if n_steps is EXACT:
-            phi_m = rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots)
-        else:
-            phi_m = rpe_get_hadamard_output(
-                H, psi0, m, n_steps * 2**m, n_shots, trotter_order=trotter_order
-            )
-
+        n_steps_m = EXACT if n_steps is EXACT else n_steps * 2**m
+        phi_m = rpe_get_hadamard_output(
+            H, psi0, m, n_steps_m, n_shots, trotter_order=trotter_order
+        )
         if m == 0:
             theta_m = phi_m
         else:
@@ -113,7 +110,7 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
     trotter_order : int, default ``2``
-        Order of the Trotter-Suzuki decomposition.
+        Order of the Trotter-Suzuki decomposition. Ignored when ``n_steps=EXACT``.
 
     Returns
     -------
