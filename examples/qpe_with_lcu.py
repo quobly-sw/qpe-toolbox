@@ -165,7 +165,7 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 
 # %% [markdown]
 # ## Walk operator
-# We are now ready to build the Walk operator, defined by
+# We are now ready to build the walk operator, defined by
 #
 # $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv 2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} $$
 #
@@ -177,7 +177,7 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 #
 # $$\mathcal{R}_{L} = 2 \ket{\mathcal{L}}\bra{\mathcal{L}}\otimes\mathbb{1} - \mathbb{1} $$
 #
-# that appears in the definition of the Walk operator.
+# that appears in the definition of the walk operator.
 #
 # Here, we build this reflection as an MPO.
 
@@ -234,7 +234,7 @@ assert np.isclose(Lpsi_mps.H @ psi_final, E0_dmrg / λ)
 assert np.isclose(phi.H @ psi_final, -np.sqrt(1 - (E0_dmrg / λ) ** 2))
 
 # %% [markdown]
-# In the basis $\{ \ket{\mathcal{L}}\ket{\psi_k},  \ket{\phi_k} \}$, the Walk operator reads
+# In the basis $\{ \ket{\mathcal{L}}\ket{\psi_k},  \ket{\phi_k} \}$, the walk operator reads
 #
 # $$ \mathcal{W} = e^{i \arccos\left({E_k/\lambda}\right) Y} $$
 # where we have introduced the $Y$ Pauli matrix.
@@ -264,10 +264,10 @@ assert np.isclose(
 # Thus, the action of $\mathcal{W}$ on $\ket{\mathcal{L}}\ket{\psi_k}$ spans a two-dimensional space in which its eigenphases are exact functions of the energy $E_k$. We can therefore apply the QPE algorithm on $\mathcal{W}$ to find $E_k$.
 
 # %% [markdown]
-# ## QPE on Walk operator
+# ## QPE on walk operator
 
 # %% [markdown]
-# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the Walk operator using the functions introduced above and runs the "textbook" QPE circuit on $\mathcal{W}$.
+# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the walk operator using the functions introduced above and runs the "textbook" QPE circuit on $\mathcal{W}$.
 
 # %%
 n_phase_qubits = 4
@@ -421,7 +421,7 @@ print(f"L={L_H2} terms in the LCU decomposition \nLCU 1-norm λ = {λ_H2:.4f}")
 # %%
 m_ph = 4  # number of phase qubits
 
-# QPE on Walk operator
+# QPE on walk operator
 traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph, verbosity=1)
 # Get the energy
 energy = qpe.get_energy_from_lcu_walk_phase(theta, λ_H2)
