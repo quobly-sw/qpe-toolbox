@@ -15,10 +15,7 @@ from quimb.tensor.circuit import parse_to_gate
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates
-from qpe_toolbox.circuit.serialize_circuits import (
-    serialize_from_quimb_Circuit,
-    serialize_from_quimb_gates,
-)
+from qpe_toolbox.circuit.serialize_circuits import serialize_from_quimb_gates
 
 from .qpe_circuit import qpe_circuit, qpe_first_stage_circuit, qpe_gates
 
@@ -31,7 +28,6 @@ def qpe_energy(
     size_interval,
     *,
     trotter_order=1,
-    write_gates=False,
     optimize="auto-hq",
     verbosity=0,
 ):
@@ -56,8 +52,6 @@ def qpe_energy(
         Width of the energy search interval.
     trotter_order : int, default ``1``
         Order of the Trotter decomposition.
-    write_gates : bool, default ``False``
-        If True, writes the gate sequence to a text file.
     optimize : str, default ``"auto-hq"``
         Optimization strategy when computing marginals with tensor networks.
     verbosity : int, default ``0``
@@ -99,7 +93,6 @@ def qpe_energy(
         dt,
         global_phase,
         trotter_order=trotter_order,
-        write_gates=write_gates,
         optimize=optimize,
         verbosity=verbosity - 1,
     )
@@ -138,7 +131,6 @@ def qpe_sample(
     global_phase,
     *,
     trotter_order=1,
-    write_gates=False,
     rehearse=False,
     optimize="auto-hq",
     verbosity=0,
@@ -160,8 +152,6 @@ def qpe_sample(
         Global phase added to the controlled-U operations.
     trotter_order : int, default ``1``
         Order of Trotter decomposition for time evolution.
-    write_gates : bool, default ``False``
-        If True, saves the gates to a text file.
     rehearse : bool, default ``False``
         If True, precomputes marginals without measurement.
     optimize : str, default ``"auto-hq"``
@@ -195,14 +185,6 @@ def qpe_sample(
         initial_circ, unitaries, global_phases=global_phases, verbosity=verbosity
     )
     traces["gates_count"] = count_gates(circ)
-
-    if write_gates:
-        filename = _qpe_gates_filename(
-            hamiltonian, evolution_time, dt, trotter_order, n_phase_bits
-        )
-        gate_dict = serialize_from_quimb_Circuit(circ)
-        with open(filename + ".json", "w") as outfile:
-            json.dump(gate_dict, outfile)
 
     traces["circuit"] = circ.copy()
     if verbosity > 0:
