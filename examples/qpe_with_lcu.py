@@ -38,7 +38,7 @@ from qpe_toolbox.hamiltonian import (
 )
 from qpe_toolbox.tensor import apply_gate_from_mpo, kron_mps
 
-cutoff = 1e-10
+# %%
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
@@ -352,7 +352,7 @@ n_steps = 6
 for m_ph in tqdm.tqdm(n_phase_bits_arr):
     zeros_mph = qtn.MPS_computational_state("0" * m_ph)
     psi_init = kron_mps(zeros_mph, psi0_mps)
-    init_circ = qtn.CircuitMPS(psi0=psi_init, cutoff=cutoff)
+    init_circ = qtn.CircuitMPS(psi0=psi_init, cutoff=1e-10)
     traces, energy = qpe.qpe_energy(
         H, init_circ, n_steps, E_target, size_interval, trotter_order=trotter_order
     )
