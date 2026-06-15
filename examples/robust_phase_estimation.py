@@ -122,12 +122,12 @@ E0, psi0 = do_dmrg(H)
 rng = np.random.default_rng(seed=42)
 t = rng.random()
 data_reg = list(range(n_qubits))
-U = [H.get_U_exact(t, data_reg)]
+exact_unitary = H.get_U_exact(t, data_reg)
 
 n_shots = EXACT  # exact computation (no sampling)
 
-X = qpe.run_hadamard_test(psi0, U, 0, n_shots)
-Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots)
+X = qpe.run_hadamard_test(psi0, exact_unitary, 0, n_shots)
+Y = qpe.run_hadamard_test(psi0, exact_unitary, -np.pi / 2, n_shots)
 Z = X + 1j * Y
 
 print(f"error = {abs(np.angle(Z) / t + E0):.2g}")
@@ -163,8 +163,8 @@ durations = []
 
 for n_shots in tqdm.tqdm(shots_list):
     st = time.time()
-    X = qpe.run_hadamard_test(psi0, U, 0, n_shots=n_shots)
-    Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots=n_shots)
+    X = qpe.run_hadamard_test(psi0, exact_unitary, 0, n_shots=n_shots)
+    Y = qpe.run_hadamard_test(psi0, exact_unitary, -np.pi / 2, n_shots=n_shots)
     et = time.time() - st
 
     Z = X + 1j * Y

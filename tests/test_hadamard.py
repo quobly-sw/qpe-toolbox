@@ -21,6 +21,18 @@ def test_hadamard_test_phase_gate():
     assert np.isclose(X + 1j * Y, np.exp(1j * phi))
 
 
+def test_hadamard_test_single_gate():
+    # a bare Gate and its single-element-list wrapping must give the same result
+    phi = np.pi / 6
+    psi = qtn.MPS_computational_state("1")
+    gate = qtn.Gate("PHASE", params=[phi], qubits=[0])
+
+    for theta in [0, -np.pi / 2]:
+        z_gate = run_hadamard_test(psi, gate, theta, EXACT)
+        z_list = run_hadamard_test(psi, [gate], theta, EXACT)
+        assert np.isclose(z_gate, z_list)
+
+
 def test_hadamard_test_shots():
     phi = np.pi / 6
     psi = qtn.MPS_computational_state("1")
@@ -35,4 +47,5 @@ def test_hadamard_test_shots():
 
 if __name__ == "__main__":
     test_hadamard_test_phase_gate()
+    test_hadamard_test_single_gate()
     test_hadamard_test_shots()

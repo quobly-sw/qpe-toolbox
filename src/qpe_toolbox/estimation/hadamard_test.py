@@ -9,6 +9,8 @@
 
 from collections import Counter
 
+from quimb.tensor import Gate
+
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import make_circMPS
 
@@ -34,11 +36,13 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
     ----------
     init_mps : :quimb-api:`MatrixProductState`
         Initial state :math:`\ket{\psi}` of the data register.
-    unitary : iterable of :quimb-api:`Gate`
-        Gate decomposition of the unitary :math:`U`, acting on
-        data-register-local qubit indices ``[0, n_data)`` without controls
-        (same convention as in ``qpe_circuit``). May be a one-shot generator,
-        consumed exactly once.
+    unitary : :quimb-api:`Gate` or iterable of :quimb-api:`Gate`
+        The unitary :math:`U`, acting on data-register-local qubit indices
+        ``[0, n_data)`` without controls (same convention as in
+        ``qpe_circuit``). Either a single gate (e.g. an exact :math:`U`) or its
+        gate decomposition as an iterable of gates (e.g. a Trotterized
+        :math:`U`). An iterable may be a one-shot generator, consumed exactly
+        once.
     theta : float
         Phase angle applied to the ancilla qubit.
         Typical values:
@@ -50,8 +54,9 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
     circ : :quimb-api:`CircuitMPS`
         Circuit implementing the Hadamard test.
     """
+    unitary_gates = [unitary] if isinstance(unitary, Gate) else unitary
     circ0 = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
-    _, circ = qpe_circuit(circ0, [unitary], global_phases=[theta])
+    _, circ = qpe_circuit(circ0, [unitary_gates], global_phases=[theta])
     return circ
 
 
@@ -73,9 +78,11 @@ def run_hadamard_test(init_mps, unitary, theta, n_shots, *, seed=None):
     ----------
     init_mps : :quimb-api:`MatrixProductState`
         Initial state :math:`\ket{\psi}` of the data register.
-    unitary : iterable of :quimb-api:`Gate`
-        Gate decomposition of the unitary :math:`U` used in the Hadamard test.
-        See ``build_hadamard_test_circuit`` for the convention. A one-shot
+    unitary : :quimb-api:`Gate` or iterable of :quimb-api:`Gate`
+        The unitary :math:`U` used in the Hadamard test, either a single gate
+        (e.g. an exact :math:`U`) or its gate decomposition as an iterable of
+        gates (e.g. a Trotterized :math:`U`). See
+        ``build_hadamard_test_circuit`` for the convention. A one-shot
         generator is consumed by this call; build a fresh one per call.
     theta : float
         Phase angle applied to the ancilla qubit.

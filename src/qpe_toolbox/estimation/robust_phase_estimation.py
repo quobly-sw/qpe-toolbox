@@ -123,7 +123,7 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     phys_reg = list(range(H.n_qubits))
     evolution_time = 2**m
     if n_steps is EXACT:
-        U_m = [H.get_U_exact(evolution_time, phys_reg)]
+        U_m = H.get_U_exact(evolution_time, phys_reg)
     else:
         if not (n_steps > 0):
             raise ValueError("Can only evolve for strictly positive n_steps")

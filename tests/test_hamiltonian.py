@@ -94,7 +94,7 @@ def test_U():
     psi0_mps = dmrg.state
 
     data_reg = list(range(n_qubits))
-    U_gate = [H.get_U_exact(t, data_reg)]
+    U_gate = H.get_U_exact(t, data_reg)
     Z = []
     for theta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)
