@@ -49,15 +49,50 @@ def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, round
         yield cgate.copy_with(round=next(rounds))
 
 
-def _first_stage_gates_iter(unitaries, global_phase):
+def _qpe_stages(unitaries, global_phase, *, with_iqft):
+    """
+    Yield the textbook QPE circuit as a sequence of stages.
+
+    Each stage is an iterable of :quimb-api:`Gate` objects: the Hadamard wall,
+    then one controlled unitary per phase qubit, then (when ``with_iqft``) the
+    inverse QFT on the phase register. Gate rounds are shared across stages so
+    the flattened sequence matches the applied circuit gate-for-gate.
+    """
     n_phase_bits = len(unitaries)
-    for k in range(n_phase_bits):
-        yield parse_to_gate("H", k, gate_round=0)
+    yield [parse_to_gate("H", k, gate_round=0) for k in range(n_phase_bits)]
     rounds = itertools.count(1)
     for k in range(n_phase_bits):
-        yield from _controlled_unitary_gates(
+        yield _controlled_unitary_gates(
             unitaries[k], n_phase_bits, k, global_phase, rounds
         )
+    if with_iqft:
+        yield (
+            parse_to_gate(*gate_id, gate_round=next(rounds))
+            for gate_id in iqft_swapped(list(range(n_phase_bits)))
+        )
+
+
+def _apply_stages(initial_circ, stages, verbosity):
+    """
+    Apply QPE ``stages`` to a copy of ``initial_circ``, recording per-stage traces.
+
+    Returns the ``traces`` dict (per-stage computation times and bond
+    dimensions, including the initial bond dimension) and the updated circuit.
+    """
+    st = time.time()
+    circ = initial_circ.copy()
+    bd_list = [circ.psi.max_bond()]
+    ctimes = []
+    for i, stage in enumerate(stages):
+        for gate in stage:
+            circ.apply_gate(gate)
+        bd_list.append(circ.psi.max_bond())
+        ctimes.append(time.time() - st)
+        if verbosity >= 1:
+            print(
+                f"Done w/ stage {i}, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}"
+            )
+    return {"ctimes": ctimes, "bond_dims": bd_list}, circ
 
 
 def qpe_gates(unitaries, *, global_phase=0):
@@ -86,14 +121,8 @@ def qpe_gates(unitaries, *, global_phase=0):
     generator of :quimb-api:`Gate`
         Lazy gate sequence of the full QPE circuit.
     """
-    c_round = 0
-    for gate in _first_stage_gates_iter(unitaries, global_phase):
-        c_round = gate.round
-        yield gate
-    phase_reg = list(range(len(unitaries)))
-    for gate_id in iqft_swapped(phase_reg):
-        c_round += 1
-        yield parse_to_gate(*gate_id, gate_round=c_round)
+    for stage in _qpe_stages(unitaries, global_phase, with_iqft=True):
+        yield from stage
 
 
 def qpe_first_stage_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
@@ -115,41 +144,12 @@ def qpe_first_stage_circuit(initial_circ, unitaries, *, global_phase=0, verbosit
     Returns
     -------
     traces : dict
-        Contains computation times, bond dimensions and the next gate round.
+        Contains per-stage computation times and bond dimensions.
     circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Copy of ``initial_circ`` with the first stage applied.
     """
-    n_phase_bits = len(unitaries)
-    st = time.time()
-    ctimes = []
-    circ = initial_circ.copy()
-    bd_list = [circ.psi.max_bond()]
-
-    # Hadamard wall
-    for k in range(n_phase_bits):
-        circ.apply_gate("H", k, gate_round=0)
-    bd_list.append(circ.psi.max_bond())
-    ctimes.append(time.time() - st)
-
-    if verbosity >= 1:
-        print(f"Start C-Us, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}")
-
-    # Controlled unitaries
-    rounds = itertools.count(1)
-    for k in range(n_phase_bits):
-        for gate in _controlled_unitary_gates(
-            unitaries[k], n_phase_bits, k, global_phase, rounds
-        ):
-            circ.apply_gate(gate)
-        bd_list.append(circ.psi.max_bond())
-        ctimes.append(time.time() - st)
-        if verbosity >= 1:
-            print(
-                f"Done w/ {k}-th C-U, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}"
-            )
-
-    traces = {"ctimes": ctimes, "bond_dims": bd_list, "gate_round": next(rounds)}
-    return traces, circ
+    stages = _qpe_stages(unitaries, global_phase, with_iqft=False)
+    return _apply_stages(initial_circ, stages, verbosity)
 
 
 def qpe_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
@@ -176,24 +176,11 @@ def qpe_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
     Returns
     -------
     traces : dict
-        Contains computation times, bond dimensions and the next gate round.
+        Contains per-stage computation times and bond dimensions.
     circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Copy of ``initial_circ`` with the QPE circuit applied. Phase
         probabilities can be obtained with
         ``circ.compute_marginal(where=range(len(unitaries)))``.
     """
-    st = time.time()
-    traces, circ = qpe_first_stage_circuit(
-        initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
-    )
-
-    phase_reg = list(range(len(unitaries)))
-    c_round = traces["gate_round"]
-    for gate_id in iqft_swapped(phase_reg):
-        circ.apply_gate(*gate_id, gate_round=c_round)
-        c_round += 1
-    traces["gate_round"] = c_round
-    traces["bond_dims"].append(circ.psi.max_bond())
-    traces["ctimes"].append(time.time() - st)
-
-    return traces, circ
+    stages = _qpe_stages(unitaries, global_phase, with_iqft=True)
+    return _apply_stages(initial_circ, stages, verbosity)
