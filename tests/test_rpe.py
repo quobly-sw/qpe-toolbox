@@ -12,7 +12,7 @@ def test_rpe():
     epsilon = 0.01
 
     theta_list = robust_phase_estimation(
-        H, psi0, epsilon, sign_E0=-1, n_steps=EXACT, n_shots=EXACT, verbosity=0
+        H, psi0, epsilon, sign_E0=-1, n_trotter_steps=EXACT, n_shots=EXACT, verbosity=0
     )
     assert abs(rpe_distance(E0, theta_list[-1])) < epsilon
 
@@ -24,7 +24,7 @@ def test_rpe_trotter():
     epsilon = 0.05
 
     theta_list = robust_phase_estimation(
-        H, psi0, epsilon, sign_E0=-1, n_steps=8, n_shots=EXACT, verbosity=0
+        H, psi0, epsilon, sign_E0=-1, n_trotter_steps=8, n_shots=EXACT, verbosity=0
     )
     assert abs(rpe_distance(E0, theta_list[-1])) < epsilon
 

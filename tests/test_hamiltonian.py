@@ -103,9 +103,8 @@ def test_U():
     phi_ref = -np.angle(Z[0] + 1j * Z[1])
     assert np.isclose(phi_ref, t * dmrg.energy, atol=tol)
 
-    r = 1
-    dt = t / r
-    U_gate = list(trotter_evolution_gates(H, t, dt, trotter_order=2))
+    n_steps = 1
+    U_gate = list(trotter_evolution_gates(H, t, n_steps, trotter_order=2))
     Z = []
     for theta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)

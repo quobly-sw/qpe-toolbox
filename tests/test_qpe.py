@@ -47,7 +47,6 @@ def _run_resource_analysis():
         ham, E_target, size_interval
     )
     n_steps = 4
-    dt = evolution_time / n_steps
     trotter_order = 2
 
     filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
@@ -55,7 +54,7 @@ def _run_resource_analysis():
         ham,
         n_phase_bits,
         evolution_time,
-        dt,
+        n_steps,
         global_phase,
         trotter_order=trotter_order,
         savefile=filename,
@@ -94,11 +93,11 @@ def test_gate_list_matches_circuit():
     _, _, evolution_time, global_phase = qpe.set_search_window(
         ham, E_target, size_interval
     )
-    dt = evolution_time / 2
+    n_steps = 2
 
-    traces, _ = qpe.qpe_sample(ham, circ, evolution_time, dt, global_phase)
+    traces, _ = qpe.qpe_sample(ham, circ, evolution_time, n_steps, global_phase)
     _, gates_list = qpe.qpe_gate_list(
-        ham, n_phase_bits, evolution_time, dt, global_phase
+        ham, n_phase_bits, evolution_time, n_steps, global_phase
     )
 
     circuit_dict = serialize_from_quimb_Circuit(traces["circuit"])

@@ -18,7 +18,7 @@ from .quantum_phase_estimation import trotter_evolution_gates
 
 
 def robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, *, trotter_order=2, verbosity=0
+    H, psi0, epsilon, sign_E0, n_trotter_steps, n_shots, *, trotter_order=2, verbosity=0
 ):
     r"""
     Perform the Robust Phase Estimation (RPE) algorithm.
@@ -40,8 +40,9 @@ def robust_phase_estimation(
         Target precision for the phase estimate.
     sign_E0 : float
         Sign of the target energy eigenvalue.
-    n_steps : int or qpe_toolbox.EXACT
-        Number of Trotter steps used to approximate the time evolution.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``m=0`` evolution; multiplied by
+        ``2**m`` at each iteration to keep the Trotter step size constant.
         Use ``EXACT`` for exact time evolution.
     n_shots : int or EXACT
         Number of measurement shots used in the Hadamard test.
@@ -67,9 +68,11 @@ def robust_phase_estimation(
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(M + 1):
-        n_steps_m = EXACT if n_steps is EXACT else n_steps * 2**m
+        n_trotter_steps_m = (
+            EXACT if n_trotter_steps is EXACT else n_trotter_steps * 2**m
+        )
         phi_m = rpe_get_hadamard_output(
-            H, psi0, m, n_steps_m, n_shots, trotter_order=trotter_order
+            H, psi0, m, n_trotter_steps_m, n_shots, trotter_order=trotter_order
         )
         if m == 0:
             theta_m = phi_m
@@ -88,7 +91,7 @@ def robust_phase_estimation(
     return theta_list
 
 
-def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
+def rpe_get_hadamard_output(H, psi0, m, n_trotter_steps, n_shots, *, trotter_order=2):
     r"""
     Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
 
@@ -104,13 +107,14 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
         Initial quantum state :math:`\ket{\psi_0}`.
     m : int
         Iteration index corresponding to evolution time ``2**m``.
-    n_steps : int or qpe_toolbox.EXACT
+    n_trotter_steps : int or qpe_toolbox.EXACT
         Number of Trotter steps. Use ``EXACT`` for exact time evolution.
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
     trotter_order : int, default ``2``
-        Order of the Trotter-Suzuki decomposition. Ignored when ``n_steps=EXACT``.
+        Order of the Trotter-Suzuki decomposition. Ignored when
+        ``n_trotter_steps=EXACT``.
 
     Returns
     -------
@@ -119,15 +123,14 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
     """
     phys_reg = list(range(H.n_qubits))
     evolution_time = 2**m
-    if n_steps is EXACT:
+    if n_trotter_steps is EXACT:
         U_m = H.get_U_exact(evolution_time, phys_reg)
     else:
-        if not (n_steps > 0):
-            raise ValueError("Can only evolve for strictly positive n_steps")
-        dt = evolution_time / n_steps
         # materialize the one-shot generator to reuse it in both Hadamard tests
         U_m = list(
-            trotter_evolution_gates(H, evolution_time, dt, trotter_order=trotter_order)
+            trotter_evolution_gates(
+                H, evolution_time, n_trotter_steps, trotter_order=trotter_order
+            )
         )
     X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
     Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)

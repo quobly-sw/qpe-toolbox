@@ -81,9 +81,13 @@ trotter_order0 = 1
 # - [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) represents the QPE circuit as a tensor network:
 
 # %%
-dt = evolution_time / n_trotter_steps0
 _, circ = qpe.qpe_first_stage(
-    h_spin, circuit0, evolution_time, dt, global_phase, trotter_order=trotter_order0
+    h_spin,
+    circuit0,
+    evolution_time,
+    n_trotter_steps0,
+    global_phase,
+    trotter_order=trotter_order0,
 )
 
 phase_reg = list(range(n_phase_bits0))
@@ -327,13 +331,11 @@ n_trotter_steps_resource = 4
 
 entangling_gates = []
 for n_phase_bits in nphase_list_resource:
-    dt = evolution_time_resource / n_trotter_steps_resource
-
     traces_resource, res_resource = qpe.qpe_gate_list(
         h_spin,
         n_phase_bits,
         evolution_time_resource,
-        dt,
+        n_trotter_steps_resource,
         global_phase_resource,
         trotter_order=2,
     )

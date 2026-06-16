@@ -8,7 +8,6 @@
 # --------------------------------------------------------------------------------------
 import json
 import time
-import warnings
 
 import numpy as np
 from quimb.tensor.circuit import parse_to_gate
@@ -23,7 +22,7 @@ from .qpe_circuit import qpe_circuit, qpe_first_stage_circuit, qpe_gates
 def qpe_energy(
     hamiltonian,
     initial_circ,
-    n_steps,
+    n_trotter_steps,
     E_target,
     size_interval,
     *,
@@ -43,9 +42,9 @@ def qpe_energy(
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Initial circuit preparing the trial state in the data register.
-    n_steps : int or qpe_toolbox.EXACT
-        Number of time steps for Trotterized evolution, or ``EXACT`` for exact
-        evolution.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution, or ``EXACT`` for
+        exact evolution.
     E_target : float
         Central target energy for the search window.
     size_interval : float
@@ -85,12 +84,11 @@ def qpe_energy(
     # First stage: phase encoding
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
 
-    dt = EXACT if n_steps is EXACT else evolution_time / n_steps
     traces, probs = qpe_sample(
         hamiltonian,
         initial_circ,
         evolution_time,
-        dt,
+        n_trotter_steps,
         global_phase,
         trotter_order=trotter_order,
         optimize=optimize,
@@ -123,7 +121,7 @@ def qpe_sample(
     hamiltonian,
     initial_circ,
     evolution_time,
-    dt,
+    n_trotter_steps,
     global_phase,
     *,
     trotter_order=1,
@@ -142,8 +140,9 @@ def qpe_sample(
         Circuit preparing the trial state.
     evolution_time : float
         Total evolution time for the controlled-U operations.
-    dt : float or qpe_toolbox.EXACT
-        Trotter step size; if ``EXACT``, evolution is exact.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; if ``EXACT``,
+        evolution is exact.
     global_phase : float
         Global phase added to the controlled-U operations.
     trotter_order : int, default ``1``
@@ -174,7 +173,7 @@ def qpe_sample(
     st = time.time()
 
     unitaries = _evolution_powers(
-        hamiltonian, evolution_time, dt, n_phase_bits, trotter_order
+        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
     global_phases = [global_phase * 2**k for k in range(n_phase_bits)]
     traces, circ = qpe_circuit(
@@ -199,7 +198,7 @@ def qpe_gate_list(
     hamiltonian,
     n_phase_bits,
     evolution_time,
-    dt,
+    n_trotter_steps,
     global_phase,
     *,
     trotter_order=1,
@@ -219,15 +218,16 @@ def qpe_gate_list(
         Number of phase estimation qubits.
     evolution_time : float
         Total evolution time for the controlled-U operations.
-    dt : float or qpe_toolbox.EXACT
-        Trotter step size; if ``EXACT``, evolution is exact.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; if ``EXACT``,
+        evolution is exact.
     global_phase : float
         Global phase added to the controlled-U operations.
     trotter_order : int, default ``1``
         Order of Trotter decomposition for time evolution.
     savefile : str or os.PathLike or None, default ``None``
         If not ``None``, path to which the serialized gates are written as JSON.
-        Not supported for exact time evolution (``dt=EXACT``).
+        Not supported for exact time evolution (``n_trotter_steps=EXACT``).
 
     Returns
     -------
@@ -240,17 +240,17 @@ def qpe_gate_list(
     ------
     ValueError
         If ``savefile`` is given together with exact time evolution
-        (``dt=EXACT``).
+        (``n_trotter_steps=EXACT``).
     """
     unitaries = _evolution_powers(
-        hamiltonian, evolution_time, dt, n_phase_bits, trotter_order
+        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
     global_phases = [global_phase * 2**k for k in range(n_phase_bits)]
     gates_list = list(qpe_gates(unitaries, global_phases=global_phases))
     traces = {"gates_count": count_gates(gates_list)}
 
     if savefile is not None:
-        if dt is EXACT:
+        if n_trotter_steps is EXACT:
             raise ValueError("Cannot write gates for exact time evolution")
         gate_dict = serialize_from_quimb_gates(
             n_phase_bits + hamiltonian.n_qubits, gates_list
@@ -265,7 +265,7 @@ def qpe_first_stage(
     hamiltonian,
     initial_circ,
     evolution_time,
-    dt,
+    n_trotter_steps,
     global_phase,
     *,
     trotter_order=1,
@@ -288,8 +288,9 @@ def qpe_first_stage(
         Initial state of the system.
     evolution_time : float
         Total evolution time.
-    dt : float or qpe_toolbox.EXACT
-        Time step for Trotter decomposition; ``EXACT`` for exact evolution.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; ``EXACT`` for exact
+        evolution.
     global_phase : float
         Global phase applied to controlled-U operations.
     trotter_order : int, default ``1``
@@ -307,11 +308,10 @@ def qpe_first_stage(
     Notes
     -----
     - The phase register size is inferred from ``initial_circ.N - hamiltonian.n_qubits``.
-    - Warnings are raised if the Trotter step size exceeds the required evolution time.
     """
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
     unitaries = _evolution_powers(
-        hamiltonian, evolution_time, dt, n_phase_bits, trotter_order
+        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
     global_phases = [global_phase * 2**k for k in range(n_phase_bits)]
     return qpe_first_stage_circuit(
@@ -346,7 +346,9 @@ def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
     ]
 
 
-def trotter_evolution_gates(hamiltonian, evolution_time, dt, *, trotter_order=1):
+def trotter_evolution_gates(
+    hamiltonian, evolution_time, n_trotter_steps, *, trotter_order=1
+):
     """
     Build the gate sequence of one Trotterized evolution :math:`U(t)`.
 
@@ -356,8 +358,9 @@ def trotter_evolution_gates(hamiltonian, evolution_time, dt, *, trotter_order=1)
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     evolution_time : float
         Evolution time ``t``.
-    dt : float
-        Trotter step size, must be real > 0.
+    n_trotter_steps : int
+        Number of Trotter steps, a positive integer. The Trotter step size is
+        ``dt = evolution_time / n_trotter_steps``.
     trotter_order : int, default ``1``
         Order of the Trotter decomposition.
 
@@ -368,30 +371,25 @@ def trotter_evolution_gates(hamiltonian, evolution_time, dt, *, trotter_order=1)
         data-register-local qubits, without controls, as expected by
         ``qpe_circuit``, ``qpe_gates`` and the Hadamard test. The generator
         is one-shot: it can be consumed only once.
-
-    Notes
-    -----
-    - The number of Trotter steps is ``round(evolution_time / dt)``; a warning
-      is raised when ``dt`` exceeds ``evolution_time``.
     """
-    if not (np.isscalar(dt) and np.isreal(dt) and dt > 0):
-        raise ValueError(f"dt must be real > 0, got {dt}")
-    if dt > evolution_time:
-        warnings.warn(
-            f"dt={dt:.3f} > evolution_time={evolution_time:.3f}",
-            stacklevel=2,
+    if not (isinstance(n_trotter_steps, (int, np.integer)) and n_trotter_steps > 0):
+        raise ValueError(
+            f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
         )
+    dt = evolution_time / n_trotter_steps
     data_reg = list(range(hamiltonian.n_qubits))
     trotter_slice = hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
-    n_steps = int(evolution_time / dt + 1 / 2)
-    return _repeat_gates(trotter_slice, n_steps)
+    return _repeat_gates(trotter_slice, n_trotter_steps)
 
 
 def trotter_evolution_powers(
-    hamiltonian, evolution_time, dt, n_phase_bits, *, trotter_order=1
+    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, *, trotter_order=1
 ):
     """
     Build the Trotterized evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
+
+    The Trotter step size ``dt = evolution_time / n_trotter_steps`` is kept
+    constant across powers: power ``k`` uses ``n_trotter_steps * 2**k`` steps.
 
     Parameters
     ----------
@@ -399,8 +397,8 @@ def trotter_evolution_powers(
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     evolution_time : float
         Total evolution time ``t``.
-    dt : float
-        Trotter step size, must be real > 0.
+    n_trotter_steps : int
+        Number of Trotter steps for the ``U(t)`` evolution, a positive integer.
     n_phase_bits : int
         Number of phase estimation qubits.
     trotter_order : int, default ``1``
@@ -413,34 +411,37 @@ def trotter_evolution_powers(
         :math:`U(t \\, 2^k)` on data-register-local qubits, without controls,
         as expected by ``qpe_circuit`` and ``qpe_gates``. Each generator is
         one-shot: it can be consumed only once.
-
-    Notes
-    -----
-    - A warning is raised when ``dt`` exceeds the evolution time of a power.
     """
     return [
         trotter_evolution_gates(
-            hamiltonian, evolution_time * 2**k, dt, trotter_order=trotter_order
+            hamiltonian,
+            evolution_time * 2**k,
+            n_trotter_steps * 2**k,
+            trotter_order=trotter_order,
         )
         for k in range(n_phase_bits)
     ]
 
 
-def _repeat_gates(gate_ids, n_steps):
-    """Lazily yield the gates of ``n_steps`` repetitions of a gate instruction list."""
-    for _ in range(n_steps):
+def _repeat_gates(gate_ids, n_trotter_steps):
+    """Lazily yield the gates of ``n_trotter_steps`` repetitions of an instruction list."""
+    for _ in range(n_trotter_steps):
         for gate_id in gate_ids:
             yield parse_to_gate(*gate_id)
 
 
-def _evolution_powers(hamiltonian, evolution_time, dt, n_phase_bits, trotter_order):
+def _evolution_powers(
+    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+):
     """Dispatch between exact and Trotterized evolution unitaries."""
-    if dt is EXACT:
+    if n_trotter_steps is EXACT:
         return exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits)
-    if not (np.isscalar(dt) and np.isreal(dt) and dt > 0):
-        raise ValueError(f"dt must be EXACT or real > 0, got {dt}")
     return trotter_evolution_powers(
-        hamiltonian, evolution_time, dt, n_phase_bits, trotter_order=trotter_order
+        hamiltonian,
+        evolution_time,
+        n_trotter_steps,
+        n_phase_bits,
+        trotter_order=trotter_order,
     )
 
 
