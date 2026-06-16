@@ -97,26 +97,22 @@ def qpe_energy(
         verbosity=verbosity - 1,
     )
 
-    traces["prob"] = float(np.max(probs))  # float here is for JSON
-    thetas_probs_list = np.ravel(probs).astype(float)
-    thetas_probs_list = sorted(
-        enumerate(thetas_probs_list), key=lambda x: x[1], reverse=True
-    )
-    traces["first_thetas"] = thetas_probs_list[:5]
+    probs_flat = np.ravel(probs).astype(float)
+    first_thetas = [(i, probs_flat[i]) for i in probs_flat.argsort()[::-1][:5]]
+    highest_prob_state, highest_prob = first_thetas[0]
+    traces["first_thetas"] = first_thetas
+    traces["prob"] = float(highest_prob)  # float here is for JSON
 
     if verbosity >= 1:
-        for x in thetas_probs_list[:5]:
+        for m, p in first_thetas:
             print(
-                f"{x[0]:b}".zfill(n_phase_bits),
-                f"|{x[0]}>",
-                f"{x[0] / 2**n_phase_bits:<{n_phase_bits + 2}}",
-                f"{x[1]:<6.4f}",
-                flush=True,
+                f"{m:b}".zfill(n_phase_bits),
+                f"|{m}>",
+                f"{m / 2**n_phase_bits:<{n_phase_bits + 2}}",
+                f"{p:<6.4f}",
             )
 
-    max_prob_state_int = np.argmax(probs)
-    theta = max_prob_state_int / 2**n_phase_bits
-
+    theta = highest_prob_state / 2**n_phase_bits
     energy = Emax - 2 * np.pi * theta / evolution_time
     energy -= E_const
 
