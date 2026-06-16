@@ -30,42 +30,37 @@ from qpe_toolbox.circuit import shift_control_gates
 from .qft import iqft_swapped
 
 
-def _check_global_phases(global_phases, n_phase_bits):
-    if global_phases is not None and len(global_phases) != n_phase_bits:
-        raise ValueError(
-            f"global_phases must have length {n_phase_bits}, got {len(global_phases)}"
-        )
-
-
 def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, rounds):
     """
     Generate the gates of one controlled-unitary stage of QPE.
 
     Yields the optional phase correction on phase qubit ``k_ctrl``, then the
     gates of ``unitary`` shifted past the phase register and controlled by
-    ``k_ctrl``. Gate rounds are drawn from the shared ``rounds`` counter.
+    ``k_ctrl``. The phase correction is ``global_phase * 2 ** k_ctrl`` (the
+    global phase of :math:`U^{2^k}`), omitted when ``global_phase`` is zero.
+    Gate rounds are drawn from the shared ``rounds`` counter.
     """
-    if global_phase is not None:
-        yield parse_to_gate("PHASE", global_phase, k_ctrl, gate_round=next(rounds))
+    if global_phase:
+        yield parse_to_gate(
+            "PHASE", global_phase * 2**k_ctrl, k_ctrl, gate_round=next(rounds)
+        )
     for gate in unitary:
         (cgate,) = shift_control_gates((gate,), n_phase_bits, k_ctrl)
         yield cgate.copy_with(round=next(rounds))
 
 
-def _first_stage_gates_iter(unitaries, global_phases):
+def _first_stage_gates_iter(unitaries, global_phase):
     n_phase_bits = len(unitaries)
-    if global_phases is None:
-        global_phases = [None] * n_phase_bits
     for k in range(n_phase_bits):
         yield parse_to_gate("H", k, gate_round=0)
     rounds = itertools.count(1)
     for k in range(n_phase_bits):
         yield from _controlled_unitary_gates(
-            unitaries[k], n_phase_bits, k, global_phases[k], rounds
+            unitaries[k], n_phase_bits, k, global_phase, rounds
         )
 
 
-def qpe_gates(unitaries, *, global_phases=None):
+def qpe_gates(unitaries, *, global_phase=0):
     """
     Generate the full textbook QPE gate sequence without simulating it.
 
@@ -80,25 +75,19 @@ def qpe_gates(unitaries, *, global_phases=None):
         phase qubit ``k`` (in textbook QPE, :math:`U^{2^k}`), acting on
         data-register-local qubit indices ``[0, n_data)`` without controls.
         Entries may be one-shot generators; each is consumed exactly once.
-    global_phases : sequence of float or None, default ``None``
-        Phase correction applied to phase qubit ``k`` before the k-th
-        controlled unitary, equivalent to controlling a global phase
-        :math:`e^{i \\phi_k}` of the unitary. Must have the same length as
-        ``unitaries``.
+    global_phase : float, default ``0``
+        Global phase :math:`\\phi` of the unitary :math:`U`. The phase
+        correction applied before the k-th controlled unitary is
+        :math:`\\phi \\, 2^k` (the global phase of :math:`U^{2^k}`), and the
+        whole correction is omitted when ``global_phase`` is zero.
 
     Returns
     -------
     generator of :quimb-api:`Gate`
         Lazy gate sequence of the full QPE circuit.
     """
-    n_phase_bits = len(unitaries)
-    _check_global_phases(global_phases, n_phase_bits)
-    return _qpe_gates_iter(unitaries, global_phases)
-
-
-def _qpe_gates_iter(unitaries, global_phases):
     c_round = 0
-    for gate in _first_stage_gates_iter(unitaries, global_phases):
+    for gate in _first_stage_gates_iter(unitaries, global_phase):
         c_round = gate.round
         yield gate
     phase_reg = list(range(len(unitaries)))
@@ -107,9 +96,7 @@ def _qpe_gates_iter(unitaries, global_phases):
         yield parse_to_gate(*gate_id, gate_round=c_round)
 
 
-def qpe_first_stage_circuit(
-    initial_circ, unitaries, *, global_phases=None, verbosity=0
-):
+def qpe_first_stage_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
     """
     Apply the QPE first stage (Hadamard wall and controlled unitaries) to a circuit.
 
@@ -120,7 +107,7 @@ def qpe_first_stage_circuit(
         ``[0, len(unitaries))``, the data register the remaining qubits.
     unitaries : sequence of iterable of :quimb-api:`Gate`
         Same convention as in ``qpe_gates``.
-    global_phases : sequence of float or None, default ``None``
+    global_phase : float, default ``0``
         Same convention as in ``qpe_gates``.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress and bond dimension information.
@@ -133,10 +120,6 @@ def qpe_first_stage_circuit(
         Copy of ``initial_circ`` with the first stage applied.
     """
     n_phase_bits = len(unitaries)
-    if global_phases is None:
-        global_phases = [None] * n_phase_bits
-
-    _check_global_phases(global_phases, n_phase_bits)
     st = time.time()
     ctimes = []
     circ = initial_circ.copy()
@@ -155,7 +138,7 @@ def qpe_first_stage_circuit(
     rounds = itertools.count(1)
     for k in range(n_phase_bits):
         for gate in _controlled_unitary_gates(
-            unitaries[k], n_phase_bits, k, global_phases[k], rounds
+            unitaries[k], n_phase_bits, k, global_phase, rounds
         ):
             circ.apply_gate(gate)
         bd_list.append(circ.psi.max_bond())
@@ -169,7 +152,7 @@ def qpe_first_stage_circuit(
     return traces, circ
 
 
-def qpe_circuit(initial_circ, unitaries, *, global_phases=None, verbosity=0):
+def qpe_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
     """
     Apply the full textbook QPE circuit to an initial circuit.
 
@@ -185,7 +168,7 @@ def qpe_circuit(initial_circ, unitaries, *, global_phases=None, verbosity=0):
         ``[0, len(unitaries))``, the data register the remaining qubits.
     unitaries : sequence of iterable of :quimb-api:`Gate`
         Same convention as in ``qpe_gates``.
-    global_phases : sequence of float or None, default ``None``
+    global_phase : float, default ``0``
         Same convention as in ``qpe_gates``.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress and bond dimension information.
@@ -201,7 +184,7 @@ def qpe_circuit(initial_circ, unitaries, *, global_phases=None, verbosity=0):
     """
     st = time.time()
     traces, circ = qpe_first_stage_circuit(
-        initial_circ, unitaries, global_phases=global_phases, verbosity=verbosity
+        initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
     )
 
     phase_reg = list(range(len(unitaries)))

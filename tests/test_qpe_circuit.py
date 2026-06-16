@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import numpy as np
-import pytest
 import quimb.tensor as qtn
 
 from qpe_toolbox.circuit import add_gate_controls
@@ -38,16 +37,15 @@ def test_qpe_circuit_phase_gate():
     assert len(circ0.gates) == 0
 
 
-def test_qpe_circuit_global_phases():
-    # a phase correction on phase qubit k shifts the measured phase
+def test_qpe_circuit_global_phase():
+    # the global phase correction (phi * 2**k on phase qubit k) shifts the measured phase
     m = 3
     theta = 5 / 8
     shift = 2 / 8
 
     circ0 = _one_data_qubit_circ(m)
-    global_phases = [2 * np.pi * shift * 2**k for k in range(m)]
     _, circ = qpe_circuit(
-        circ0, _phase_gate_powers(theta, m), global_phases=global_phases
+        circ0, _phase_gate_powers(theta, m), global_phase=2 * np.pi * shift
     )
     probs = np.ravel(circ.compute_marginal(where=list(range(m))))
 
@@ -95,14 +93,6 @@ def test_qpe_gates_lazy():
     assert all(g.round is not None for g in gates)
 
 
-def test_qpe_gates_invalid_global_phases():
-    unitaries = _phase_gate_powers(1 / 2, 2)
-    with pytest.raises(ValueError):
-        qpe_gates(unitaries, global_phases=[0.0])
-    with pytest.raises(ValueError):
-        qpe_circuit(_one_data_qubit_circ(2), unitaries, global_phases=[0.0, 0.0, 0.0])
-
-
 def test_add_gate_controls():
     g = qtn.Gate("X", params=[], qubits=[2])
     (cg,) = add_gate_controls([g], [0])
@@ -119,8 +109,7 @@ def test_add_gate_controls():
 
 if __name__ == "__main__":
     test_qpe_circuit_phase_gate()
-    test_qpe_circuit_global_phases()
+    test_qpe_circuit_global_phase()
     test_qpe_circuit_non_squaring()
     test_qpe_gates_lazy()
-    test_qpe_gates_invalid_global_phases()
     test_add_gate_controls()

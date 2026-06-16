@@ -175,9 +175,8 @@ def qpe_sample(
     unitaries = _evolution_powers(
         hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
-    global_phases = [global_phase * 2**k for k in range(n_phase_bits)]
     traces, circ = qpe_circuit(
-        initial_circ, unitaries, global_phases=global_phases, verbosity=verbosity
+        initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
     )
     traces["gates_count"] = count_gates(circ)
 
@@ -245,8 +244,7 @@ def qpe_gate_list(
     unitaries = _evolution_powers(
         hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
-    global_phases = [global_phase * 2**k for k in range(n_phase_bits)]
-    gates_list = list(qpe_gates(unitaries, global_phases=global_phases))
+    gates_list = list(qpe_gates(unitaries, global_phase=global_phase))
     traces = {"gates_count": count_gates(gates_list)}
 
     if savefile is not None:
@@ -313,9 +311,8 @@ def qpe_first_stage(
     unitaries = _evolution_powers(
         hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
-    global_phases = [global_phase * 2**k for k in range(n_phase_bits)]
     return qpe_first_stage_circuit(
-        initial_circ, unitaries, global_phases=global_phases, verbosity=verbosity
+        initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
     )
 
 

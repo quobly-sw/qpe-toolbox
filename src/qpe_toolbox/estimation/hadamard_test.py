@@ -56,7 +56,7 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
     """
     unitary_gates = [unitary] if isinstance(unitary, Gate) else unitary
     circ0 = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
-    _, circ = qpe_circuit(circ0, [unitary_gates], global_phases=[theta])
+    _, circ = qpe_circuit(circ0, [unitary_gates], global_phase=theta)
     return circ
 
 
