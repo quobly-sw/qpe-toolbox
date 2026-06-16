@@ -52,35 +52,6 @@ def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, round
         yield cgate.copy_with(round=next(rounds))
 
 
-def qpe_first_stage_gates(unitaries, *, global_phases=None):
-    """
-    Generate the gates of the QPE first stage: Hadamard wall and controlled unitaries.
-
-    Parameters
-    ----------
-    unitaries : sequence of iterable of :quimb-api:`Gate`
-        ``unitaries[k]`` is the gate decomposition of the unitary controlled by
-        phase qubit ``k`` (in textbook QPE, :math:`U^{2^k}`), acting on
-        data-register-local qubit indices ``[0, n_data)`` without controls.
-        Entries may be one-shot generators; each is consumed exactly once.
-    global_phases : sequence of float or None, default ``None``
-        Phase correction applied to phase qubit ``k`` before the k-th
-        controlled unitary, equivalent to controlling a global phase
-        :math:`e^{i \\phi_k}` of the unitary. Must have the same length as
-        ``unitaries``.
-
-    Returns
-    -------
-    generator of :quimb-api:`Gate`
-        Lazy gate sequence: Hadamard wall on the phase register
-        ``[0, n_phase_bits)``, then for each ``k`` the optional phase
-        correction followed by the controlled unitary.
-    """
-    n_phase_bits = len(unitaries)
-    _check_global_phases(global_phases, n_phase_bits)
-    return _first_stage_gates_iter(unitaries, global_phases)
-
-
 def _first_stage_gates_iter(unitaries, global_phases):
     n_phase_bits = len(unitaries)
     if global_phases is None:
@@ -98,16 +69,22 @@ def qpe_gates(unitaries, *, global_phases=None):
     """
     Generate the full textbook QPE gate sequence without simulating it.
 
-    The sequence is the QPE first stage (see ``qpe_first_stage_gates``)
-    followed by the inverse QFT on the phase register. Suitable for resource
-    analysis and serialization.
+    The sequence is the QPE first stage (Hadamard wall and controlled
+    unitaries) followed by the inverse QFT on the phase register. Suitable for
+    resource analysis and serialization.
 
     Parameters
     ----------
     unitaries : sequence of iterable of :quimb-api:`Gate`
-        Same convention as in ``qpe_first_stage_gates``.
+        ``unitaries[k]`` is the gate decomposition of the unitary controlled by
+        phase qubit ``k`` (in textbook QPE, :math:`U^{2^k}`), acting on
+        data-register-local qubit indices ``[0, n_data)`` without controls.
+        Entries may be one-shot generators; each is consumed exactly once.
     global_phases : sequence of float or None, default ``None``
-        Same convention as in ``qpe_first_stage_gates``.
+        Phase correction applied to phase qubit ``k`` before the k-th
+        controlled unitary, equivalent to controlling a global phase
+        :math:`e^{i \\phi_k}` of the unitary. Must have the same length as
+        ``unitaries``.
 
     Returns
     -------
@@ -142,9 +119,9 @@ def qpe_first_stage_circuit(
         Circuit preparing the trial state. The phase register occupies qubits
         ``[0, len(unitaries))``, the data register the remaining qubits.
     unitaries : sequence of iterable of :quimb-api:`Gate`
-        Same convention as in ``qpe_first_stage_gates``.
+        Same convention as in ``qpe_gates``.
     global_phases : sequence of float or None, default ``None``
-        Same convention as in ``qpe_first_stage_gates``.
+        Same convention as in ``qpe_gates``.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress and bond dimension information.
 
@@ -207,9 +184,9 @@ def qpe_circuit(initial_circ, unitaries, *, global_phases=None, verbosity=0):
         Circuit preparing the trial state. The phase register occupies qubits
         ``[0, len(unitaries))``, the data register the remaining qubits.
     unitaries : sequence of iterable of :quimb-api:`Gate`
-        Same convention as in ``qpe_first_stage_gates``.
+        Same convention as in ``qpe_gates``.
     global_phases : sequence of float or None, default ``None``
-        Same convention as in ``qpe_first_stage_gates``.
+        Same convention as in ``qpe_gates``.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress and bond dimension information.
 

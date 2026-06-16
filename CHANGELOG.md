@@ -9,7 +9,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ### Added
 
-- Generic QPE circuit construction from arbitrary per-phase-qubit unitaries: `qpe_circuit`, `qpe_first_stage_circuit`, `qpe_gates` and `qpe_first_stage_gates` in the `estimation` module. Each power `U^(2^k)` is supplied as an independent gate list (possibly lazy), enabling non-squaring implementations such as Shor's algorithm.
+- Generic QPE circuit construction from arbitrary per-phase-qubit unitaries: `qpe_circuit`, `qpe_first_stage_circuit` and `qpe_gates` in the `estimation` module. Each power `U^(2^k)` is supplied as an independent gate list (possibly lazy), enabling non-squaring implementations such as Shor's algorithm.
 - `exact_evolution_powers` and `trotter_evolution_powers` to build the controlled unitaries from a `Hamiltonian`.
 - `qpe_gate_list` to build the QPE gate list without simulation, for resource analysis and serialization.
 - `trotter_evolution_gates` to build the gate sequence of a single Trotterized evolution `U(t)`.
