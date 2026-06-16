@@ -50,6 +50,7 @@ def _run_resource_analysis():
     dt = evolution_time / n_steps
     trotter_order = 2
 
+    filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
     traces, gates_list = qpe.qpe_gate_list(
         ham,
         n_phase_bits,
@@ -57,7 +58,7 @@ def _run_resource_analysis():
         dt,
         global_phase,
         trotter_order=trotter_order,
-        write_gates=True,
+        savefile=filename,
     )
 
     assert len(gates_list) == 4241
@@ -67,7 +68,6 @@ def _run_resource_analysis():
 
     psi_init = kron_mps(qtn.MPS_computational_state("0" * n_phase_bits), psi0)
 
-    filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
     assert os.path.exists(filename)
     with open(filename) as infile:
         gate_dict = json.load(infile)

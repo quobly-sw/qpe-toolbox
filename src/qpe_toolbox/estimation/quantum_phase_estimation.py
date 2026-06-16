@@ -207,7 +207,7 @@ def qpe_gate_list(
     global_phase,
     *,
     trotter_order=1,
-    write_gates=False,
+    savefile=None,
 ):
     """
     Build the QPE gate list for a Hamiltonian evolution without simulating it.
@@ -229,8 +229,9 @@ def qpe_gate_list(
         Global phase added to the controlled-U operations.
     trotter_order : int, default ``1``
         Order of Trotter decomposition for time evolution.
-    write_gates : bool, default ``False``
-        If True, saves the gates to a JSON file.
+    savefile : str or os.PathLike or None, default ``None``
+        If not ``None``, path to which the serialized gates are written as JSON.
+        Not supported for exact time evolution (``dt=EXACT``).
 
     Returns
     -------
@@ -238,6 +239,12 @@ def qpe_gate_list(
         Dictionary containing the gate counts.
     gates_list : list of :quimb-api:`Gate`
         Gate sequence of the full QPE circuit.
+
+    Raises
+    ------
+    ValueError
+        If ``savefile`` is given together with exact time evolution
+        (``dt=EXACT``).
     """
     unitaries = _evolution_powers(
         hamiltonian, evolution_time, dt, n_phase_bits, trotter_order
@@ -246,14 +253,13 @@ def qpe_gate_list(
     gates_list = list(qpe_gates(unitaries, global_phases=global_phases))
     traces = {"gates_count": count_gates(gates_list)}
 
-    if write_gates:
-        filename = _qpe_gates_filename(
-            hamiltonian, evolution_time, dt, trotter_order, n_phase_bits
-        )
+    if savefile is not None:
+        if dt is EXACT:
+            raise ValueError("Cannot write gates for exact time evolution")
         gate_dict = serialize_from_quimb_gates(
             n_phase_bits + hamiltonian.n_qubits, gates_list
         )
-        with open(filename + ".json", "w") as outfile:
+        with open(savefile, "w") as outfile:
             json.dump(gate_dict, outfile)
 
     return traces, gates_list
@@ -440,14 +446,6 @@ def _evolution_powers(hamiltonian, evolution_time, dt, n_phase_bits, trotter_ord
     return trotter_evolution_powers(
         hamiltonian, evolution_time, dt, n_phase_bits, trotter_order=trotter_order
     )
-
-
-def _qpe_gates_filename(hamiltonian, evolution_time, dt, trotter_order, n_phase_bits):
-    """Build the file name for QPE gate serialization."""
-    if dt is EXACT:
-        raise ValueError("Cannot write gates for exact time evolution")
-    n_steps = int(evolution_time / dt)
-    return f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qubits_{n_phase_bits}phbits"
 
 
 def set_search_window(hamiltonian, E_target, size_interval):
