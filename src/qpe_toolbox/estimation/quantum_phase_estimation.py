@@ -372,13 +372,9 @@ def trotter_evolution_gates(
         ``qpe_circuit``, ``qpe_gates`` and the Hadamard test. The generator
         is one-shot: it can be consumed only once.
     """
-    if not (isinstance(n_trotter_steps, (int, np.integer)) and n_trotter_steps > 0):
-        raise ValueError(
-            f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
-        )
-    dt = evolution_time / n_trotter_steps
-    data_reg = list(range(hamiltonian.n_qubits))
-    trotter_slice = hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
+    trotter_slice = _trotter_slice(
+        hamiltonian, evolution_time, n_trotter_steps, trotter_order
+    )
     return _repeat_gates(trotter_slice, n_trotter_steps)
 
 
@@ -412,15 +408,26 @@ def trotter_evolution_powers(
         as expected by ``qpe_circuit`` and ``qpe_gates``. Each generator is
         one-shot: it can be consumed only once.
     """
+    # dt = evolution_time / n_trotter_steps is constant across powers, so the
+    # Trotter step is built once and reused for every power.
+    trotter_slice = _trotter_slice(
+        hamiltonian, evolution_time, n_trotter_steps, trotter_order
+    )
     return [
-        trotter_evolution_gates(
-            hamiltonian,
-            evolution_time * 2**k,
-            n_trotter_steps * 2**k,
-            trotter_order=trotter_order,
-        )
+        _repeat_gates(trotter_slice, n_trotter_steps * 2**k)
         for k in range(n_phase_bits)
     ]
+
+
+def _trotter_slice(hamiltonian, evolution_time, n_trotter_steps, trotter_order):
+    """Build one Trotter step's gate-id list for ``dt = evolution_time / n_trotter_steps``."""
+    if not (isinstance(n_trotter_steps, (int, np.integer)) and n_trotter_steps > 0):
+        raise ValueError(
+            f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
+        )
+    dt = evolution_time / n_trotter_steps
+    data_reg = list(range(hamiltonian.n_qubits))
+    return hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
 
 
 def _repeat_gates(gate_ids, n_trotter_steps):
