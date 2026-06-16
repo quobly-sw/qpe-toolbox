@@ -83,13 +83,14 @@ def qpe_first_stage_gates(unitaries, *, global_phases=None):
 
 def _first_stage_gates_iter(unitaries, global_phases):
     n_phase_bits = len(unitaries)
+    if global_phases is None:
+        global_phases = [None] * n_phase_bits
     for k in range(n_phase_bits):
         yield parse_to_gate("H", k, gate_round=0)
     rounds = itertools.count(1)
     for k in range(n_phase_bits):
-        global_phase = None if global_phases is None else global_phases[k]
         yield from _controlled_unitary_gates(
-            unitaries[k], n_phase_bits, k, global_phase, rounds
+            unitaries[k], n_phase_bits, k, global_phases[k], rounds
         )
 
 
@@ -155,6 +156,9 @@ def qpe_first_stage_circuit(
         Copy of ``initial_circ`` with the first stage applied.
     """
     n_phase_bits = len(unitaries)
+    if global_phases is None:
+        global_phases = [None] * n_phase_bits
+
     _check_global_phases(global_phases, n_phase_bits)
     st = time.time()
     ctimes = []
@@ -173,9 +177,8 @@ def qpe_first_stage_circuit(
     # Controlled unitaries
     rounds = itertools.count(1)
     for k in range(n_phase_bits):
-        global_phase = None if global_phases is None else global_phases[k]
         for gate in _controlled_unitary_gates(
-            unitaries[k], n_phase_bits, k, global_phase, rounds
+            unitaries[k], n_phase_bits, k, global_phases[k], rounds
         ):
             circ.apply_gate(gate)
         bd_list.append(circ.psi.max_bond())
