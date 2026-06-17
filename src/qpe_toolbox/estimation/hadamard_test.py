@@ -7,9 +7,9 @@
 #
 # --------------------------------------------------------------------------------------
 
-from collections import Counter
+import collections
 
-from quimb.tensor import Gate
+import quimb.tensor as qtn
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import make_circMPS
@@ -54,7 +54,7 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
     circ : :quimb-api:`CircuitMPS`
         Circuit implementing the Hadamard test.
     """
-    unitary_gates = [unitary] if isinstance(unitary, Gate) else unitary
+    unitary_gates = [unitary] if isinstance(unitary, qtn.Gate) else unitary
     circ0 = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
     _, circ = qpe_circuit(circ0, [unitary_gates], global_phase=theta)
     return circ
@@ -102,7 +102,7 @@ def run_hadamard_test(init_mps, unitary, theta, n_shots, *, seed=None):
     if n_shots is EXACT:
         probs = circ.compute_marginal(where=[aux_ind])
     else:
-        count = Counter(circ.sample(C=n_shots, seed=seed))
+        count = collections.Counter(circ.sample(C=n_shots, seed=seed))
         probs = [0.0, 0.0]
         for b, c in count.items():
             probs[int(b[aux_ind])] += c / n_shots
