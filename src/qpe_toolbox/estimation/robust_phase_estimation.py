@@ -121,10 +121,9 @@ def rpe_get_hadamard_output(H, psi0, m, n_trotter_steps, n_shots, *, trotter_ord
     phi_m : float
         Estimated phase angle in radians.
     """
-    phys_reg = list(range(H.n_qubits))
     evolution_time = 2**m
     if n_trotter_steps is EXACT:
-        U_m = H.get_U_exact(evolution_time, phys_reg)
+        U_m = H.get_U_exact(evolution_time)
     else:
         # materialize the one-shot generator to reuse it in both Hadamard tests
         U_m = list(

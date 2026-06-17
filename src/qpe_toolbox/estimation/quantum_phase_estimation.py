@@ -6,6 +6,29 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
+"""
+Hamiltonian-driven Quantum Phase Estimation circuit construction.
+
+Build the controlled unitaries :math:`U^{2^k} = e^{-i H t 2^k}` from a
+Hamiltonian and feed them to the generic QPE circuit builder in ``qpe_circuit``.
+
+The assembled circuit places two contiguous registers, phase first:
+
+- **phase register** -- the ``n_phase_bits`` estimation qubits, at indices
+  ``[0, n_phase_bits)`` (``phase_reg``). Hadamard wall, controls, inverse QFT.
+- **data register** -- the qubits the controlled unitary acts on, at indices
+  ``[n_phase_bits, initial_circ.N)``. For textbook QPE (and RPE) this *is* the
+  physical register; the generic ``qpe_circuit`` layer works in data-register
+  local indices ``[0, n_data)`` and shifts them past the phase register.
+
+The Hamiltonian methods ``get_U_exact`` / ``get_trotter_step`` build gates on
+the **physical register** ``phys_reg`` -- the ``n_qubits`` qubits the
+Hamiltonian acts on. Here ``phys_reg`` coincides with the data register, so the
+default ``phys_reg = range(n_qubits)`` is used. The distinction only matters
+for block-encoded variants (e.g. LCU), where the data register additionally
+contains ancilla qubits and ``data_reg = ancilla_reg + phys_reg``.
+"""
+
 import json
 import time
 
@@ -340,10 +363,8 @@ def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
         :math:`U(t \\, 2^k) = e^{-i H t 2^k}` on data-register-local qubits,
         without controls, as expected by ``qpe_circuit`` and ``qpe_gates``.
     """
-    data_reg = list(range(hamiltonian.n_qubits))
     return [
-        [hamiltonian.get_U_exact(evolution_time * 2**k, data_reg)]
-        for k in range(n_phase_bits)
+        [hamiltonian.get_U_exact(evolution_time * 2**k)] for k in range(n_phase_bits)
     ]
 
 
@@ -427,8 +448,7 @@ def _trotter_slice(hamiltonian, evolution_time, n_trotter_steps, trotter_order):
             f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
         )
     dt = evolution_time / n_trotter_steps
-    data_reg = list(range(hamiltonian.n_qubits))
-    return hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
+    return hamiltonian.get_trotter_step(dt, trotter_order)
 
 
 def _repeat_gates(gate_ids, n_trotter_steps):
