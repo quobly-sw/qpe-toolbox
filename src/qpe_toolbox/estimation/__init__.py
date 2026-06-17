@@ -23,7 +23,6 @@ from .lcu_walk_operator import (
 from .qft import iqft, iqft_swapped
 from .qpe_circuit import (
     qpe_circuit,
-    qpe_first_stage_circuit,
     qpe_gates,
 )
 from .quantum_phase_estimation import (

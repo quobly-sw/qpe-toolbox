@@ -16,7 +16,7 @@ from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates
 from qpe_toolbox.circuit.serialize_circuits import serialize_from_quimb_gates
 
-from .qpe_circuit import qpe_circuit, qpe_first_stage_circuit, qpe_gates
+from .qpe_circuit import qpe_circuit, qpe_gates
 
 
 def qpe_energy(
@@ -311,8 +311,12 @@ def qpe_first_stage(
     unitaries = _evolution_powers(
         hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
-    return qpe_first_stage_circuit(
-        initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
+    return qpe_circuit(
+        initial_circ,
+        unitaries,
+        global_phase=global_phase,
+        with_iqft=False,
+        verbosity=verbosity,
     )
 
 

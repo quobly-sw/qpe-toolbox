@@ -125,9 +125,15 @@ def qpe_gates(unitaries, *, global_phase=0):
         yield from stage
 
 
-def qpe_first_stage_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
+def qpe_circuit(
+    initial_circ, unitaries, *, global_phase=0, with_iqft=True, verbosity=0
+):
     """
-    Apply the QPE first stage (Hadamard wall and controlled unitaries) to a circuit.
+    Apply the textbook QPE circuit to an initial circuit.
+
+    The circuit is built from a Hadamard wall on the phase register and the
+    controlled unitaries (in textbook QPE, :math:`U^{2^k}` controlled by phase
+    qubit ``k``), optionally followed by the inverse QFT on the phase register.
 
     Parameters
     ----------
@@ -138,6 +144,10 @@ def qpe_first_stage_circuit(initial_circ, unitaries, *, global_phase=0, verbosit
         Same convention as in ``qpe_gates``.
     global_phase : float, default ``0``
         Same convention as in ``qpe_gates``.
+    with_iqft : bool, default ``True``
+        If ``True``, apply the inverse QFT on the phase register after the
+        controlled unitaries. If ``False``, stop after the controlled unitaries
+        (the QPE first stage), leaving the phase register in the Fourier basis.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress and bond dimension information.
 
@@ -146,41 +156,9 @@ def qpe_first_stage_circuit(initial_circ, unitaries, *, global_phase=0, verbosit
     traces : dict
         Contains per-stage computation times and bond dimensions.
     circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
-        Copy of ``initial_circ`` with the first stage applied.
-    """
-    stages = _qpe_stages(unitaries, global_phase, with_iqft=False)
-    return _apply_stages(initial_circ, stages, verbosity)
-
-
-def qpe_circuit(initial_circ, unitaries, *, global_phase=0, verbosity=0):
-    """
-    Apply the full textbook QPE circuit to an initial circuit.
-
-    The circuit is built from three components: a Hadamard wall on the phase
-    register, the controlled unitaries (in textbook QPE, :math:`U^{2^k}`
-    controlled by phase qubit ``k``), and the inverse QFT on the phase
-    register.
-
-    Parameters
-    ----------
-    initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
-        Circuit preparing the trial state. The phase register occupies qubits
-        ``[0, len(unitaries))``, the data register the remaining qubits.
-    unitaries : sequence of iterable of :quimb-api:`Gate`
-        Same convention as in ``qpe_gates``.
-    global_phase : float, default ``0``
-        Same convention as in ``qpe_gates``.
-    verbosity : int, default ``0``
-        Verbosity level. If >= 1, print progress and bond dimension information.
-
-    Returns
-    -------
-    traces : dict
-        Contains per-stage computation times and bond dimensions.
-    circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
-        Copy of ``initial_circ`` with the QPE circuit applied. Phase
-        probabilities can be obtained with
+        Copy of ``initial_circ`` with the QPE circuit applied. When
+        ``with_iqft`` is ``True``, phase probabilities can be obtained with
         ``circ.compute_marginal(where=range(len(unitaries)))``.
     """
-    stages = _qpe_stages(unitaries, global_phase, with_iqft=True)
+    stages = _qpe_stages(unitaries, global_phase, with_iqft=with_iqft)
     return _apply_stages(initial_circ, stages, verbosity)
