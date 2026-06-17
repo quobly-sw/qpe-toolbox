@@ -9,7 +9,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ### Added
 
-- Generic QPE circuit construction from arbitrary per-phase-qubit unitaries: `qpe_circuit`, `qpe_first_stage_circuit` and `qpe_gates` in the `estimation` module. Each power `U^(2^k)` is supplied as an independent gate list (possibly lazy), enabling non-squaring implementations such as Shor's algorithm.
+- Generic QPE circuit construction from arbitrary per-phase-qubit unitaries: `qpe_circuit` (with an optional `with_iqft` flag to stop after the controlled unitaries, i.e. the QPE first stage) and `qpe_gates` in the `estimation` module. Each power `U^(2^k)` is supplied as an independent gate list (possibly lazy), enabling non-squaring implementations such as Shor's algorithm.
 - `exact_evolution_powers` and `trotter_evolution_powers` to build the controlled unitaries from a `Hamiltonian`.
 - `qpe_gate_list` to build the QPE gate list without simulation, for resource analysis and serialization.
 - `trotter_evolution_gates` to build the gate sequence of a single Trotterized evolution `U(t)`.
@@ -22,7 +22,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - **Breaking:** `qpe_sample` and `qpe_energy` no longer accept `write_gates`; use `qpe_gate_list` to serialize the gate sequence.
 - **Breaking:** `qpe_gate_list` replaces its `write_gates` flag with a `savefile` argument; gates are written only when `savefile` is not `None`.
 - **Breaking:** the Hadamard test (`build_hadamard_test_circuit`, `run_hadamard_test`) is now built on `qpe_circuit` and takes the unitary in the framework convention: either a single gate or an iterable of uncontrolled gates on data-register-local qubit indices.
-- `controls` is now an optional argument of `Hamiltonian.get_U_exact`, defaulting to `None` (uncontrolled gate).
+- **Breaking:** `Hamiltonian.get_U_exact` and `Hamiltonian.get_trotter_step` now take the physical register as a keyword-only `phys_reg` argument (renamed from `data_reg`), defaulting to `range(n_qubits)`. `get_trotter_step` takes `trotter_order` before the keyword-only arguments (`get_trotter_step(dt, trotter_order, *, phys_reg=None)`), and `get_U_exact`'s `controls` is now optional (`get_U_exact(evolution_time, *, phys_reg=None, controls=None)`).
 
 ## [1.1.0] - 2026-04-02
 
