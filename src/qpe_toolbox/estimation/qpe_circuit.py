@@ -169,6 +169,23 @@ def qpe_circuit(
         Copy of ``initial_circ`` with the QPE circuit applied. When
         ``with_iqft`` is ``True``, phase probabilities can be obtained with
         ``circ.compute_marginal(where=range(len(unitaries)))``.
+
+    Notes
+    -----
+    Whether the circuit is contracted lazily or eagerly is governed by the
+    *class* of ``initial_circ``, not by any argument here:
+
+    - With a :quimb-api:`Circuit`, gates accumulate lazily into an uncontracted
+      tensor network (no truncation). The returned ``circ.psi`` is that network;
+      the contraction strategy is deferred to post-processing, e.g.
+      ``circ.compute_marginal(..., optimize=..., rehearse=...)`` or handing
+      ``circ.psi`` to a contraction-path optimizer.
+    - With a :quimb-api:`CircuitMPS`, each gate is applied eagerly to the MPS
+      with SVD truncation (controlled by the ``CircuitMPS`` ``max_bond`` /
+      ``cutoff``), i.e. the circuit is simulated as it is built.
+
+    In both cases the per-stage ``bond_dims`` trace is read from
+    ``circ.psi.max_bond()``, which is cheap and does not force a contraction.
     """
     stages = _qpe_stages(unitaries, global_phase, with_iqft=with_iqft)
     return _apply_stages(initial_circ, stages, verbosity)

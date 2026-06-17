@@ -171,7 +171,9 @@ def qpe_sample(
     trotter_order : int, default ``1``
         Order of Trotter decomposition for time evolution.
     rehearse : bool, default ``False``
-        If True, precomputes marginals without measurement.
+        If ``True``, the final ``compute_marginal`` is not run: it returns the
+        contraction rehearsal (tensor network, path, and cost estimates)
+        instead of the phase probabilities.
     optimize : str, default ``"auto-hq"``
         Optimization strategy for tensor network marginal computation.
     verbosity : int, default ``0``
@@ -180,16 +182,26 @@ def qpe_sample(
     Returns
     -------
     traces : dict
-        Dictionary containing bond dimensions, timing, and gate counts.
-    probs : array
-        Probability tensor of the phase qubits.
+        Dictionary containing bond dimensions, full QPE circuit, timing
+        and gate counts.
+    probs : array or dict
+        Probability tensor of the phase qubits, or the contraction rehearsal
+        when ``rehearse=True``.
 
     Notes
     -----
-    - Phase estimation is performed using a Hadamard wall followed by controlled-U operations.
-    - IQFT is applied on the phase register to extract probabilities.
     - To obtain the gate list without simulating the circuit (resource
       analysis), use ``qpe_gate_list``.
+    - The QPE quantum circuit can be recovered as ``traces["circuit"]``.
+    - Whether the circuit is contracted lazily or eagerly is set by the *class*
+      of ``initial_circ``: a :quimb-api:`Circuit` accumulates an uncontracted
+      tensor network that the final ``compute_marginal`` contracts exactly
+      (steered by ``optimize`` / ``rehearse``), while a :quimb-api:`CircuitMPS`
+      is simulated eagerly with SVD truncation. Either way the marginal over the
+      phase register is returned, unless ``rehearse`` is ``True``.
+    - With ``rehearse=True`` no contraction is performed: ``compute_marginal``
+      returns the contraction rehearsal instead of the probabilities. Combined
+      with a :quimb-api:`Circuit`, evaluation is then completely lazy.
     """
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
     phase_reg = list(range(n_phase_bits))
