@@ -315,7 +315,7 @@ E_const, Emax, evolution_time, global_phase = set_search_window(
 
 # %%
 trotter_order = 2
-n_steps = 4
+n_trotter_steps = 4
 
 # %% [markdown]
 # then run textbook QPE (this can take a minute or two). Since `n_qubits` is small, for faster execution you can always use exact time evolution instead of a Trotterization.
@@ -323,7 +323,12 @@ n_steps = 4
 # %%
 # %%time
 traces, res = qpe_sample(
-    hamilt, circ_qpe, evolution_time, n_steps, global_phase, trotter_order=trotter_order
+    hamilt,
+    circ_qpe,
+    evolution_time,
+    n_trotter_steps,
+    global_phase,
+    trotter_order=trotter_order,
 )
 
 # %% [markdown]

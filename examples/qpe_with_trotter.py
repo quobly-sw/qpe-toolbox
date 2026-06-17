@@ -57,7 +57,7 @@ exact_energy, psi0_mps = do_dmrg(h_spin)
 # %% [markdown]
 # - Then we set the different parameters to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$ (see the example on [Textbook QPE](./textbook_qpe.ipynb) ).
 #
-# - Note that the number of Trotter steps (which we denote by `n_trotter_steps` or `n_steps`) gives the number of Trotter steps to decompose the time interval $t$ (`evolution_time`) i.e. it sets the number of substeps for the first controlled time evolution. Along the circuit, we apply time evolution over an exponentially growing time $2^k t$ conditioned on the $k$-th circuit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
+# - `n_trotter_steps` sets the number of Trotter steps decomposing the time interval $t$ (`evolution_time`), i.e. the number of substeps for the first controlled time evolution. Along the circuit, we apply time evolution over an exponentially growing time $2^k t$ conditioned on the $k$-th circuit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
 
 # %%
 E_target = exact_energy + 0.2

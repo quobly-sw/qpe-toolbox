@@ -344,14 +344,19 @@ res_ttr = {"durations": [], "energies": []}
 E_target = E0_dmrg + 0.2
 size_interval = 2.0
 trotter_order = 2
-n_steps = 6
+n_trotter_steps = 6
 
 for m_ph in tqdm.tqdm(n_phase_bits_list):
     zeros_mph = qtn.MPS_computational_state("0" * m_ph)
     psi_init = kron_mps(zeros_mph, psi0_mps)
     init_circ = qtn.CircuitMPS(psi0=psi_init, cutoff=cutoff)
     traces, energy = qpe.qpe_energy(
-        H, init_circ, n_steps, E_target, size_interval, trotter_order=trotter_order
+        H,
+        init_circ,
+        n_trotter_steps,
+        E_target,
+        size_interval,
+        trotter_order=trotter_order,
     )
     res_ttr["durations"].append(traces["ctimes"][-1])
     res_ttr["energies"].append(energy)
@@ -370,7 +375,7 @@ plt.fill_between(
     label="error bound",
 )
 plt.legend()
-plt.title(f"Heisenberg {H.n_qubits} spins - 2nd order Trotter {n_steps} steps")
+plt.title(f"Heisenberg {H.n_qubits} spins - 2nd order Trotter {n_trotter_steps} steps")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 

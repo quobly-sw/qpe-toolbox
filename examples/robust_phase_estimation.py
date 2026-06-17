@@ -374,12 +374,12 @@ plt.title(rf"$\epsilon={epsilon},\; M={M}$");
 # %%time
 print(f"epsilon={epsilon}, M={M}")
 
-n_steps = 1
+n_trotter_steps = 1
 n_shots = 4
 thetas_ttr_list = []
 
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
+    H, psi0, epsilon, sign_E0, n_trotter_steps, n_shots, verbosity=1
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -388,7 +388,7 @@ thetas_ttr_list.append(thetas_ttr)
 plt.semilogy(
     [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[0][1:]],
     "-o",
-    label=f"$n_{{\\rm steps}}={n_steps}$",
+    label=f"$n_{{\\rm steps}}={n_trotter_steps}$",
 )
 plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
@@ -402,18 +402,18 @@ plt.ylabel("error");
 # %%
 # %%time
 
-n_steps = 2
+n_trotter_steps = 2
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
+    H, psi0, epsilon, sign_E0, n_trotter_steps, n_shots, verbosity=1
 )
 thetas_ttr_list.append(thetas_ttr)
 
 # %%
-for i, n_steps in enumerate([1, 2]):
+for i, n_trotter_steps in enumerate([1, 2]):
     plt.semilogy(
         [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[i][1:]],
         "-o",
-        label=f"$n_{{\\rm steps}}={n_steps}$",
+        label=f"$n_{{\\rm steps}}={n_trotter_steps}$",
     )
 
 plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
@@ -516,10 +516,10 @@ plt.ylabel("$d(\\theta_m, E)$");
 # %%
 # %%time
 n_shots = 2
-n_steps = 1
+n_trotter_steps = 1
 
 thetas_ttr = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, epsilon, sign_E0, n_steps, n_shots, verbosity=1
+    H_H2, psi0_H2, epsilon, sign_E0, n_trotter_steps, n_shots, verbosity=1
 )
 
 # %% [markdown]
@@ -529,7 +529,7 @@ thetas_ttr = qpe.robust_phase_estimation(
 plt.semilogy(
     [qpe.rpe_distance(theta, E0_H2) for theta in thetas_ttr_list[i][1:]],
     "-o",
-    label=f"$n_{{\\rm steps}}={n_steps}$",
+    label=f"$n_{{\\rm steps}}={n_trotter_steps}$",
 )
 
 plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
