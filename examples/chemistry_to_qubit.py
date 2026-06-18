@@ -18,7 +18,7 @@
 # This tutorial describes how to load a molecular Hamiltonian from [$\texttt{pyscf}$](https://pyscf.org/) and convert it to a qubit Hamiltonian object of the $\texttt{qpe-toolbox}$'s `Hamiltonian` class.
 # The `Hamiltonian` is designed to be compatible with $\texttt{quimb}$.
 #
-# Here we show how to use $\texttt{quimb}$ to find the ground state energy with a classical algorithm: the Density-Matrix Renormalization Group (DMRG). In the other tutorials we encode the Hamiltonian spectrum into unitary operators using Trotterization or Block Encoding, and compute the energy with a quantum algorithm: the Quantum Phase Estimation algorithm, using $\texttt{quimb}$'s quantum circuit simulation mode.
+# Here we show how to use $\texttt{quimb}$ to find the ground state energy with a classical algorithm: the Density-Matrix Renormalization Group (DMRG). In the other tutorials we encode the Hamiltonian spectrum into unitary operators using Trotterization or Block Encoding, and compute the energy with a quantum algorithm: the Quantum Phase Estimation algorithm, using $\texttt{quimb}$'s quantum circuit simulation mode. See the last sections of the [LCU notebook](./qpe_with_lcu.ipynb#quantum-chemistry-example-diatomic-hydrogen) and the [robust phase estimation notebook](./robust_phase_estimation.ipynb#quantum-chemistry-example-diatomic-hydrogen) for QPE applied to a quantum chemistry model.
 #
 # This notebook assumes the reader is already familiar with basic concepts of DMRG and Matrix Product States (MPS). For a review, we refer to e.g. [Schollwöck, The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477).
 
@@ -203,5 +203,8 @@ print(f"===== H2O -- {basis} =====")
 print(f"CCSD energy = {h2o_ham.e_ccsd:.10f}")
 print(f"FCI energy = {h2o_ham.e_fci:.10f}")
 print(f"DMRG energy = {np.real(dmrg.energy + h2o_ham.e_const):.10f}")
+
+# %% [markdown]
+# DMRG is the state of the art for _classical_ simulation of quantum chemistry. In the [LCU notebook](./qpe_with_lcu.ipynb#quantum-chemistry-example-diatomic-hydrogen) and the [robust phase estimation notebook](./robust_phase_estimation.ipynb#quantum-chemistry-example-diatomic-hydrogen), we show how to use QPE for _quantum_ simulation.
 
 # %%
