@@ -97,6 +97,30 @@ def test_qpe_gates_lazy():
     assert gates[-1].round == m + 1
 
 
+def test_qpe_gates_matches_qpe_circuit():
+    # the resource gate list (qpe_gates) must stay in lock-step with the gates
+    # qpe_circuit applies, so qpe_gate_list estimates match the simulated circuit
+    m = 3
+    theta = 3 / 8
+    global_phase = 2 * np.pi / 8  # exercises the per-power PHASE correction
+
+    listed = list(qpe_gates(_phase_gate_powers(theta, m), global_phase=global_phase))
+
+    # a bare Circuit (no initial gates) records the applied gates verbatim
+    circ0 = qtn.Circuit(m + 1)
+    _, circ = qpe_circuit(
+        circ0, _phase_gate_powers(theta, m), global_phase=global_phase
+    )
+
+    assert len(circ.gates) == len(listed)
+    for g_applied, g_listed in zip(circ.gates, listed, strict=True):
+        assert g_applied.label == g_listed.label
+        assert g_applied.qubits == g_listed.qubits
+        assert g_applied.controls == g_listed.controls
+        assert g_applied.round == g_listed.round
+        assert tuple(g_applied.params) == tuple(g_listed.params)
+
+
 def test_add_gate_controls():
     g = qtn.Gate("X", params=[], qubits=[2])
     (cg,) = add_gate_controls([g], [0])
@@ -125,4 +149,5 @@ if __name__ == "__main__":
     test_qpe_circuit_global_phase()
     test_qpe_circuit_non_squaring()
     test_qpe_gates_lazy()
+    test_qpe_gates_matches_qpe_circuit()
     test_add_gate_controls()

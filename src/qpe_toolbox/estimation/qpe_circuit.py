@@ -29,16 +29,23 @@ from qpe_toolbox.circuit import shift_control_gates
 from .qft import iqft_swapped
 
 
-def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, gate_round):
+def _generate_hadamard_wall(n_phase_bits):
+    """Generate the Hadamard wall on the phase register (layer round 0)."""
+    for k in range(n_phase_bits):
+        yield qtn.circuit.parse_to_gate("H", k, gate_round=0)
+
+
+def _generate_controlled_unitary(unitary, n_phase_bits, k_ctrl, global_phase):
     """
-    Generate the gates of one controlled-unitary stage of QPE.
+    Generate the gates of the unitary controlled by phase qubit ``k_ctrl``.
 
     Yields the optional phase correction on phase qubit ``k_ctrl``, then the
     gates of ``unitary`` shifted past the phase register and controlled by
     ``k_ctrl``. The phase correction is ``global_phase * 2 ** k_ctrl`` (the
     global phase of :math:`U^{2^k}`), omitted when ``global_phase`` is zero.
-    All gates of the stage share the single layer index ``gate_round``.
+    All gates share the layer round ``k_ctrl + 1`` (the Hadamard wall is 0).
     """
+    gate_round = k_ctrl + 1
     if global_phase:
         yield qtn.circuit.parse_to_gate(
             "PHASE", global_phase * 2**k_ctrl, k_ctrl, gate_round=gate_round
@@ -46,60 +53,10 @@ def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, gate_
     yield from shift_control_gates(unitary, n_phase_bits, k_ctrl, gate_round=gate_round)
 
 
-def _qpe_stages(unitaries, global_phase, *, with_iqft):
-    """
-    Yield the textbook QPE circuit as a sequence of ``(label, gates)`` stages.
-
-    ``label`` is a short human-readable name for progress logging; ``gates`` is
-    an iterable of :quimb-api:`Gate` objects: the Hadamard wall, then one
-    controlled unitary per phase qubit, then (when ``with_iqft``) the inverse
-    QFT on the phase register. Each stage is one circuit layer (``gate_round``):
-    the Hadamard wall is round 0, the ``k``-th controlled unitary round ``k + 1``,
-    and the inverse QFT round ``n_phase_bits + 1``.
-    """
-    n_phase_bits = len(unitaries)
-    yield (
-        "Hadamard wall",
-        [qtn.circuit.parse_to_gate("H", k, gate_round=0) for k in range(n_phase_bits)],
-    )
-    for k in range(n_phase_bits):
-        yield (
-            f"{k}-th controlled-U",
-            _controlled_unitary_gates(
-                unitaries[k], n_phase_bits, k, global_phase, k + 1
-            ),
-        )
-    if with_iqft:
-        yield (
-            "inverse QFT",
-            (
-                qtn.circuit.parse_to_gate(*gate_id, gate_round=n_phase_bits + 1)
-                for gate_id in iqft_swapped(list(range(n_phase_bits)))
-            ),
-        )
-
-
-def _apply_stages(initial_circ, stages, verbosity):
-    """
-    Apply QPE ``stages`` to a copy of ``initial_circ``, recording per-stage traces.
-
-    Returns the ``traces`` dict (per-stage computation times and bond
-    dimensions, including the initial bond dimension) and the updated circuit.
-    """
-    st = time.time()
-    circ = initial_circ.copy()
-    bd_list = [circ.psi.max_bond()]
-    ctimes = []
-    for label, stage in stages:
-        for gate in stage:
-            circ.apply_gate(gate)
-        bd_list.append(circ.psi.max_bond())
-        ctimes.append(time.time() - st)
-        if verbosity >= 1:
-            print(
-                f"Done w/ {label}, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}"
-            )
-    return {"ctimes": ctimes, "bond_dims": bd_list}, circ
+def _generate_iqft(n_phase_bits):
+    """Generate the inverse QFT on the phase register (layer round n_phase_bits + 1)."""
+    for gate_id in iqft_swapped(list(range(n_phase_bits))):
+        yield qtn.circuit.parse_to_gate(*gate_id, gate_round=n_phase_bits + 1)
 
 
 def qpe_gates(unitaries, *, global_phase=0):
@@ -128,8 +85,13 @@ def qpe_gates(unitaries, *, global_phase=0):
     generator of :quimb-api:`Gate`
         Lazy gate sequence of the full QPE circuit.
     """
-    for _label, stage in _qpe_stages(unitaries, global_phase, with_iqft=True):
-        yield from stage
+    n_phase_bits = len(unitaries)
+    yield from _generate_hadamard_wall(n_phase_bits)
+    for k in range(n_phase_bits):
+        yield from _generate_controlled_unitary(
+            unitaries[k], n_phase_bits, k, global_phase
+        )
+    yield from _generate_iqft(n_phase_bits)
 
 
 def qpe_circuit(
@@ -184,5 +146,29 @@ def qpe_circuit(
     In both cases the per-stage ``bond_dims`` trace is read from
     ``circ.psi.max_bond()``, which is cheap and does not force a contraction.
     """
-    stages = _qpe_stages(unitaries, global_phase, with_iqft=with_iqft)
-    return _apply_stages(initial_circ, stages, verbosity)
+    n_phase_bits = len(unitaries)
+    st = time.time()
+    circ = initial_circ.copy()
+    bond_dims = [circ.psi.max_bond()]
+    ctimes = []
+
+    def apply_layer(label, gates):
+        for gate in gates:
+            circ.apply_gate(gate)
+        bond_dims.append(circ.psi.max_bond())
+        ctimes.append(time.time() - st)
+        if verbosity >= 1:
+            print(
+                f"Done w/ {label}, elapsed {ctimes[-1]:.2f} s, bond dim {bond_dims[-1]}"
+            )
+
+    apply_layer("Hadamard wall", _generate_hadamard_wall(n_phase_bits))
+    for k in range(n_phase_bits):
+        apply_layer(
+            f"{k}-th controlled-U",
+            _generate_controlled_unitary(unitaries[k], n_phase_bits, k, global_phase),
+        )
+    if with_iqft:
+        apply_layer("inverse QFT", _generate_iqft(n_phase_bits))
+
+    return {"ctimes": ctimes, "bond_dims": bond_dims}, circ
