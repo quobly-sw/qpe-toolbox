@@ -18,9 +18,9 @@
 # This tutorial describes how to load a molecular Hamiltonian from [$\texttt{pyscf}$](https://pyscf.org/) and convert it to a qubit Hamiltonian object of the $\texttt{qpe-toolbox}$'s `Hamiltonian` class.
 # The `Hamiltonian` is designed to be compatible with $\texttt{quimb}$.
 #
-# Here we show how to use $\texttt{quimb}$ to find the ground state energy with a classical algorithm: the Density-Matrix Renormalization Group (DMRG). In the other tutorials we encode the Hamiltonian spectrum into unitary operators using Trotterization or Block Encoding, and compute the energy with a quantum algorithm: the Quantum Phase Estimation algorithm, using $\texttt{quimb}$'s quantum circuit simulation mode.
+# Here we show how to use $\texttt{quimb}$ to find the ground state energy with a classical algorithm: the Density-Matrix Renormalization Group (DMRG). In the other tutorials we encode the Hamiltonian spectrum into unitary operators using Trotterization or Block Encoding, and compute the energy with a quantum algorithm: the Quantum Phase Estimation algorithm, using $\texttt{quimb}$'s quantum circuit simulation mode. See the last sections of the [LCU notebook](./qpe_with_lcu.ipynb#quantum-chemistry-example-diatomic-hydrogen) and the [robust phase estimation notebook](./robust_phase_estimation.ipynb#quantum-chemistry-example-diatomic-hydrogen) for QPE applied to a quantum chemistry model.
 #
-# This notebook assumes the reader is already familiar with basic concepts of DMRG and Matrix Product States (MPS). For a review, we refer to e.g. [Schollwöck, The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477)
+# This notebook assumes the reader is already familiar with basic concepts of DMRG and Matrix Product States (MPS). For a review, we refer to e.g. [Schollwöck, The density-matrix renormalization group in the age of matrix product states](https://arxiv.org/abs/1008.3477).
 
 # %%
 import numpy as np
@@ -31,15 +31,15 @@ from quimb.tensor import DMRG2
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian
 
 # %% [markdown]
-# The `chemistry_hamiltonian` function is built on the `Hamiltonian` class. It takes a molecule described with a [`Mole`](https://pyscf.org/user/gto.html) object from $\texttt{pyscf}$, performs the Hartree-Fock calculation and converts the molecular Hamiltonian into a `Hamiltonian` object describing the qubit Hamiltonian.
+# The `chemistry_hamiltonian` function takes a molecule as a [`Mole`](https://pyscf.org/user/gto.html) object from $\texttt{pyscf}$, performs the Hartree-Fock calculation and converts the molecular Hamiltonian into a `Hamiltonian` object describing the qubit Hamiltonian.
 
 # %% [markdown]
 # ## $H_2$
 #
-# Let us start with the $H_2$ molecule in the minimal atomic orbital basis set STO-3G. We give the geometry and basis set  as keyword arguments to the function `pyscf.gto.M` to initialize the molecular structure object (spin and charge can also be specified, see below $O_2$).
+# Let us start with the $H_2$ molecule in the minimal atomic orbital basis set STO-3G. We give the geometry and basis set as keyword arguments to the function `pyscf.gto.M` to initialize the molecular structure object (spin and charge can also be specified, see $O_2$ case below).
 # Then we call the `chemistry_hamiltonian`.
 #
-# * The `hf_mode` parameter describes how spin is assigned to the spatial molecular orbitals in the Hartree Fock calculations. Restricted Hartree-Fock (`"rhf"`) uses the same molecular orbital twice, one for each state in the spin doublet, while [Unrestricted Hartree-Fock](https://en.wikipedia.org/wiki/Unrestricted_Hartree%E2%80%93Fock) (`"uhf"`) uses different molecular orbitals for the different eigenstates of $S_z$. Unrestricted Hartree-Fock is mostly used for open-shell molecules.
+# * The `hf_mode` parameter describes how spin is assigned to the spatial molecular orbitals in the Hartree-Fock calculations. Restricted Hartree-Fock (`"rhf"`) uses the same molecular orbital twice, one for each state in the spin doublet, while [Unrestricted Hartree-Fock](https://en.wikipedia.org/wiki/Unrestricted_Hartree%E2%80%93Fock) (`"uhf"`) uses different molecular orbitals for the different eigenstates of $S_z$. Unrestricted Hartree-Fock is mostly used for open-shell molecules.
 # * Optionally, the FCI or CCSD energies can be computed.
 
 # %%
@@ -54,13 +54,13 @@ print(f"n_qubits = {h2_ham_sto3g.n_qubits}")
 # %% [markdown]
 # With this choice of atomic orbital basis set, the molecule is described with $2$ molecular orbitals (a single orbital per atom), giving $4$ qubits when spin is taken into account.
 #
-# The FCI energy is given by exact diagonalization of the Hamiltonian. It is the best ground state energy estimation within this choice of basis set.
-# In chemistry, an energy estimation must reach the chemical accuracy standard, defined to be $1.6 \text{mHa} \approx 500 \text{K}$.
-# The HF energy is far from the FCI energy by $20 \text{mHa}$, while the CCSD energy is close within $10^{-6} \text{Ha}$.
+# The FCI energy is given by exact diagonalization of the Hamiltonian. It is the best ground state energy estimate within this choice of basis set.
+# In chemistry, an energy estimate must reach the chemical accuracy standard, defined to be $1.6 \text{mHa} \approx 500 \text{K}$.
+# The HF energy differs from the FCI energy by $20 \text{mHa}$, while the CCSD energy agrees to within $10^{-6} \text{Ha}$.
 #
 # However, the basis set itself only gives an approximate description of the true solutions to the Schrödinger equation. Indeed, note that with this small basis set, the FCI energy is $-1.13$ Ha, while reported values in the literature ([here](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.83.2541)) for $H_2$ are around $-1.16$ Ha. Even with exact diagonalization, the accuracy is at best $30 \text{mHa}$ in this basis.
 # Hence, reaching chemical accuracy will always mean using much larger basis sets.
-# For a more precise discussion on the importance of atomic orbitals basis sets for the quality of energy estimation, see [E.V. Elfving et al., arXiv:2009.12472](https://arxiv.org/pdf/2009.12472).
+# For a more detailed discussion of the importance of atomic orbital basis sets for the quality of energy estimates, see [E.V. Elfving et al., arXiv:2009.12472](https://arxiv.org/abs/2009.12472).
 #
 # In the following, we consider the cc-pvdz basis set with $5$ orbitals per Hydrogen atom.
 
@@ -83,11 +83,11 @@ h2_mpo = h2_ham.to_mpo()
 display(h2_mpo)
 
 # %% [markdown]
-# Here we use directly $\texttt{quimb}$'s solver to introduce the different settings of a DMRG calculation. Note that the `do_dmrg` function of the `hamiltonian` module performs a basic DMRG calculation with default settings.
+# The `do_dmrg` function of the `hamiltonian` module performs a basic DMRG calculation with default settings. Here we call $\texttt{quimb}$'s solver directly to specify the DMRG settings.
 #
-# In DMRG, the wavefunction is represented as an MPS. The energy is obtained as `(MPS.H) @ MPO @ MPS` where `@` indicates a contraction and `MPS.H` is the hermitian conjugate. The DMRG algorithm optimizes successively the different tensors of the MPS so as to minimize the energy. Once all the tensors have been optimized in a forward pass, the pass is carried backward: this forth-and-back optimization constitutes a full DMRG sweep. The maximum number of sweeps can be set with `max_sweeps`. Compression is performed along the algorithm, controlled by setting a maximal bond dimension and a cutoff. The `bond_dims` and `cutoffs` arguments take either a single value or a sequence of values (if one wants to assign different parameters to different sweeps).
+# In DMRG, the wavefunction is represented as an MPS. The energy is obtained as `(MPS.H) @ MPO @ MPS` where `@` indicates a contraction and `MPS.H` is the hermitian conjugate. The DMRG algorithm successively optimizes each tensor of the MPS to minimize the energy. Once all the tensors have been optimized in a forward pass, the pass is carried backward: this back-and-forth optimization constitutes a full DMRG sweep. The maximum number of sweeps can be set with `max_sweeps`. Compression is performed at each step, controlled by setting a maximal bond dimension and a cutoff. The `bond_dims` and `cutoffs` arguments take either a single value or a sequence of values (if one wants to assign different parameters to different sweeps).
 #
-# For an introduction on DMRG, see [this presentation](https://tensornetwork.org/mps/algorithms/dmrg/) and references therein.
+# For an introduction to DMRG, see [this presentation](https://tensornetwork.org/mps/algorithms/dmrg/) and references therein.
 
 # %%
 # %%time
@@ -103,7 +103,7 @@ print(abs(h2_ham.e_fci - e_dmrg))
 # ## $O_2$
 #
 # Let us now consider a bigger molecule, dioxygen. We take the minimal STO-3G basis for simplicity.
-# Since $O_2$ is an open-shell molecule, we must run Hartree-Fock in unrestricted mode. We must also specify the spin of the molecule since it is non trivial.
+# Since $O_2$ is an open-shell molecule, we must run Hartree-Fock in unrestricted mode. We must also specify the spin of the molecule since the ground state is not a spin singlet.
 
 # %%
 basis = "STO-3G"
@@ -118,14 +118,14 @@ o2_ham = chemistry_hamiltonian(mol, "uhf", do_fci=True, do_ccsd=True)
 print(f"n_qubits = {o2_ham.n_qubits}")
 
 # %% [markdown]
-# Let us build the Hamiltonian MPO representation and compress it to reduce its bond dimension (hence reducing the cost of running DMRG).
+# Let us build the Hamiltonian MPO representation. We will then compress it to reduce its bond dimension (hence reducing the cost of running DMRG).
 
 # %%
 o2_mpo_original = o2_ham.to_mpo()
 display(o2_mpo_original)
 
 # %% [markdown]
-# To make sure that we don't lose physical information when compressing, we measure the MPO norm
+# To make sure that we do not lose physical information when compressing, we measure the MPO norm.
 
 # %%
 norm = o2_mpo_original.norm()
@@ -148,7 +148,7 @@ print(o2_mpo.norm() / norm)
 print(np.sqrt(o2_mpo.H @ o2_mpo_original) / norm)
 
 # %% [markdown]
-# We now run DMRG
+# We now run DMRG.
 
 # %%
 # %%time
@@ -173,7 +173,7 @@ print(f"{basis} UCCSD energy = {o2_ham.e_ccsd}")
 # %% [markdown]
 # ## $H_2O$
 #
-# We are of course not restricted to molecules with a single atomic element. A lot of molecules' descriptions including geometry, spin, charge, symmetry arguments compatible with $\texttt{pyscf}$ can be found on the internet. We are only limited by computational power. In the following we take the water molecule in the minimal STO-3G basis.
+# We are of course not restricted to molecules with a single atomic element. The physical parameters for many molecules (including geometry, spin, charge, and symmetry group) can be found online or in a computational chemistry library such as [ASE](https://ase-lib.org/). We are only limited by computational power. In the following, we take the water molecule in the minimal STO-3G basis.
 
 # %%
 basis = "STO-3G"
@@ -203,5 +203,8 @@ print(f"===== H2O -- {basis} =====")
 print(f"CCSD energy = {h2o_ham.e_ccsd:.10f}")
 print(f"FCI energy = {h2o_ham.e_fci:.10f}")
 print(f"DMRG energy = {np.real(dmrg.energy + h2o_ham.e_const):.10f}")
+
+# %% [markdown]
+# DMRG is the state of the art for _classical_ simulation of quantum chemistry. In the [LCU notebook](./qpe_with_lcu.ipynb#quantum-chemistry-example-diatomic-hydrogen) and the [robust phase estimation notebook](./robust_phase_estimation.ipynb#quantum-chemistry-example-diatomic-hydrogen), we show how to use QPE for _quantum_ simulation.
 
 # %%
