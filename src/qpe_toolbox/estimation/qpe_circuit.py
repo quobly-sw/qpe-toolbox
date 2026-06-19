@@ -45,8 +45,10 @@ def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, round
             "PHASE", global_phase * 2**k_ctrl, k_ctrl, gate_round=next(rounds)
         )
     for gate in unitary:
-        (cgate,) = shift_control_gates((gate,), n_phase_bits, k_ctrl)
-        yield cgate.copy_with(round=next(rounds))
+        (cgate,) = shift_control_gates(
+            (gate,), n_phase_bits, k_ctrl, gate_round=next(rounds)
+        )
+        yield cgate
 
 
 def _qpe_stages(unitaries, global_phase, *, with_iqft):

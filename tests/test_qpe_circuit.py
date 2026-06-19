@@ -106,6 +106,15 @@ def test_add_gate_controls():
     assert cg2.controls == (1, 0, 2)
     assert g2.controls == (1,)
 
+    # qubit_shift offsets targets and existing controls, but not the new ones;
+    # gate_round is set in the same single copy
+    g3 = qtn.Gate("X", params=[], qubits=[3], controls=[1])
+    (cg3,) = add_gate_controls([g3], [0], qubit_shift=2, gate_round=5)
+    assert cg3.qubits == (5,)
+    assert cg3.controls == (3, 0)
+    assert cg3.round == 5
+    assert g3.qubits == (3,) and g3.controls == (1,)
+
 
 if __name__ == "__main__":
     test_qpe_circuit_phase_gate()
