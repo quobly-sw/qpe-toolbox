@@ -454,20 +454,22 @@ def trotter_evolution_powers(
 
 
 def _trotter_slice(hamiltonian, evolution_time, n_trotter_steps, trotter_order):
-    """Build one Trotter step's gate-id list for ``dt = evolution_time / n_trotter_steps``."""
+    """Build one Trotter step's gates for ``dt = evolution_time / n_trotter_steps``."""
     if not (isinstance(n_trotter_steps, (int, np.integer)) and n_trotter_steps > 0):
         raise ValueError(
             f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
         )
     dt = evolution_time / n_trotter_steps
-    return hamiltonian.get_trotter_step(dt, trotter_order)
+    return [
+        parse_to_gate(*gate_id)
+        for gate_id in hamiltonian.get_trotter_step(dt, trotter_order)
+    ]
 
 
-def _repeat_gates(gate_ids, n_trotter_steps):
-    """Lazily yield the gates of ``n_trotter_steps`` repetitions of an instruction list."""
+def _repeat_gates(gates, n_trotter_steps):
+    """Lazily yield ``n_trotter_steps`` repetitions of a parsed gate sequence."""
     for _ in range(n_trotter_steps):
-        for gate_id in gate_ids:
-            yield parse_to_gate(*gate_id)
+        yield from gates
 
 
 def _evolution_powers(
