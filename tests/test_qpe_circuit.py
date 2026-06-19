@@ -89,8 +89,12 @@ def test_qpe_gates_lazy():
     assert gates[m].controls == (0,)
     assert gates[m + 1].qubits == (m,)
     assert gates[m + 1].controls == (1,)
-    # all gates carry an integer round, required for serialization
-    assert all(g.round is not None for g in gates)
+    # round is the QPE stage index: Hadamard wall 0, k-th controlled-U k+1,
+    # inverse QFT n_phase_bits+1 (all gates of a stage share one layer index)
+    assert gates[0].round == 0 and gates[1].round == 0
+    assert gates[m].round == 1
+    assert gates[m + 1].round == 2
+    assert gates[-1].round == m + 1
 
 
 def test_add_gate_controls():

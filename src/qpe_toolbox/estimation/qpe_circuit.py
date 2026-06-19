@@ -20,17 +20,16 @@ non-squaring implementations (e.g. modular exponentiation in Shor's algorithm)
 are supported.
 """
 
-import itertools
 import time
 
-from quimb.tensor.circuit import parse_to_gate
+import quimb.tensor as qtn
 
 from qpe_toolbox.circuit import shift_control_gates
 
 from .qft import iqft_swapped
 
 
-def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, rounds):
+def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, gate_round):
     """
     Generate the gates of one controlled-unitary stage of QPE.
 
@@ -38,17 +37,13 @@ def _controlled_unitary_gates(unitary, n_phase_bits, k_ctrl, global_phase, round
     gates of ``unitary`` shifted past the phase register and controlled by
     ``k_ctrl``. The phase correction is ``global_phase * 2 ** k_ctrl`` (the
     global phase of :math:`U^{2^k}`), omitted when ``global_phase`` is zero.
-    Gate rounds are drawn from the shared ``rounds`` counter.
+    All gates of the stage share the single layer index ``gate_round``.
     """
     if global_phase:
-        yield parse_to_gate(
-            "PHASE", global_phase * 2**k_ctrl, k_ctrl, gate_round=next(rounds)
+        yield qtn.circuit.parse_to_gate(
+            "PHASE", global_phase * 2**k_ctrl, k_ctrl, gate_round=gate_round
         )
-    for gate in unitary:
-        (cgate,) = shift_control_gates(
-            (gate,), n_phase_bits, k_ctrl, gate_round=next(rounds)
-        )
-        yield cgate
+    yield from shift_control_gates(unitary, n_phase_bits, k_ctrl, gate_round=gate_round)
 
 
 def _qpe_stages(unitaries, global_phase, *, with_iqft):
@@ -58,27 +53,27 @@ def _qpe_stages(unitaries, global_phase, *, with_iqft):
     ``label`` is a short human-readable name for progress logging; ``gates`` is
     an iterable of :quimb-api:`Gate` objects: the Hadamard wall, then one
     controlled unitary per phase qubit, then (when ``with_iqft``) the inverse
-    QFT on the phase register. Gate rounds are shared across stages so the
-    flattened sequence matches the applied circuit gate-for-gate.
+    QFT on the phase register. Each stage is one circuit layer (``gate_round``):
+    the Hadamard wall is round 0, the ``k``-th controlled unitary round ``k + 1``,
+    and the inverse QFT round ``n_phase_bits + 1``.
     """
     n_phase_bits = len(unitaries)
     yield (
         "Hadamard wall",
-        [parse_to_gate("H", k, gate_round=0) for k in range(n_phase_bits)],
+        [qtn.circuit.parse_to_gate("H", k, gate_round=0) for k in range(n_phase_bits)],
     )
-    rounds = itertools.count(1)
     for k in range(n_phase_bits):
         yield (
             f"{k}-th controlled-U",
             _controlled_unitary_gates(
-                unitaries[k], n_phase_bits, k, global_phase, rounds
+                unitaries[k], n_phase_bits, k, global_phase, k + 1
             ),
         )
     if with_iqft:
         yield (
             "inverse QFT",
             (
-                parse_to_gate(*gate_id, gate_round=next(rounds))
+                qtn.circuit.parse_to_gate(*gate_id, gate_round=n_phase_bits + 1)
                 for gate_id in iqft_swapped(list(range(n_phase_bits)))
             ),
         )

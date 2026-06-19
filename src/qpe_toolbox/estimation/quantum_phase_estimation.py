@@ -33,7 +33,7 @@ import json
 import time
 
 import numpy as np
-from quimb.tensor.circuit import parse_to_gate
+import quimb.tensor as qtn
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates
@@ -461,7 +461,7 @@ def _trotter_slice(hamiltonian, evolution_time, n_trotter_steps, trotter_order):
         )
     dt = evolution_time / n_trotter_steps
     return [
-        parse_to_gate(*gate_id)
+        qtn.circuit.parse_to_gate(*gate_id)
         for gate_id in hamiltonian.get_trotter_step(dt, trotter_order)
     ]
 
