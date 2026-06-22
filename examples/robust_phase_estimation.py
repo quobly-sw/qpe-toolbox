@@ -15,11 +15,11 @@
 # %% [markdown]
 # # Robust Phase Estimation
 #
-# This example introduces the Robust Phase Estimation algorithm; this QPE version requires only a single ancilla/phase qubit. The way the algorithm is implemented is inspired from J.Gunther et al., *Phase estimation with partially randomized time evolution* [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
+# This example introduces the Robust Phase Estimation algorithm; this QPE version requires only a single ancilla/phase qubit. Our implementation is inspired by J. Günther et al., *Phase estimation with partially randomized time evolution* [arxiv:2503.05647](https://arxiv.org/abs/2503.05647).
 #
 # In this notebook we explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
 #
-# We study the Trotter and statistical errors, and check that the RPE algorithm verifies Heisenberg scaling, i.e. the possibility to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
+# We study the Trotter and statistical errors, and check that the RPE algorithm satisfies Heisenberg scaling, i.e. the ability to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
 
 # %%
 import time
@@ -45,7 +45,7 @@ plt.rcParams.update({"font.size": 12})
 # ## Hadamard test
 # The Robust Phase Estimation algorithm relies on the Hadamard test procedure, which we introduce below. Our presentation takes inspiration from [Lin Lin's lecture notes](https://math.berkeley.edu/~linlin/qasc/) and the ["Hadamard test" Wikipedia page](https://en.wikipedia.org/wiki/Hadamard_test).
 #
-# The goal of the Hadamard test is to compute $\bra{\psi} U \ket{\psi}$ where $U$ is a unitary operator. Since $U$ is generally not Hermitian, it is not an observable, therefore the real and imaginary part of $\bra{\psi} U \ket{\psi}$ must be measured separately.
+# The goal of the Hadamard test is to compute $\bra{\psi} U \ket{\psi}$ where $U$ is a unitary operator. Since $U$ is generally not Hermitian, it is not an observable; therefore the real and imaginary parts of $\bra{\psi} U \ket{\psi}$ must be measured separately.
 #
 # The idea is to build a random variable whose expectation value gives the real (resp. imaginary) part of $\bra{\psi} U \ket{\psi}$.
 # Consider the following circuit:
@@ -54,10 +54,10 @@ plt.rcParams.update({"font.size": 12})
 #
 # *Taken from Günther et al. arXiv:2503.05647*.
 #
-# The Hadamard test uses a single auxiliary qubit initially in state $\ket{0}$ and a data register with $n$ qubits initialized in state $\ket{\psi}$.
-# We start by applying the the Hadamard gate $H$ to the auxiliary qubit to put it in a superposition state. Then we apply a controlled-$U$ gate to the data register conditioned on the auxiliary qubit, followed by a a rotation (PHASE) gate  $R(\theta)$ and finally another Hadamard gate on the control qubit.
+# The Hadamard test uses a single auxiliary qubit initially in state $\ket{0}$ and a physical register with $n$ qubits initialized in state $\ket{\psi}$.
+# We start by applying the Hadamard gate $H$ to the auxiliary qubit to put it in a superposition state. Then we apply a controlled-$U$ gate to the physical register conditioned on the auxiliary qubit, followed by a rotation (PHASE) gate  $R(\theta)$ and finally another Hadamard gate on the control qubit.
 #
-# At the end of the circuit we measure the control qubit and define a random variable $\textbf{Z}_\theta$: if the result of the measure is $\ket{0}$, we output $1$, if the result is $\ket{1}$ we output $-1$. The expectation value of $\textbf{Z}_\theta$ satisfies:
+# At the end of the circuit we measure the control qubit and define a random variable $\textbf{Z}_\theta$: if the result of the measurement is $\ket{0}$, we output $1$, if the result is $\ket{1}$, we output $-1$. The expectation value of $\textbf{Z}_\theta$ satisfies:
 #
 # $$ \mathbb{E}\textbf{Z}_\theta = P(0) - P(1) = \mathrm{Re} \left(e^{i\theta} \bra{\psi}U\ket{\psi}\right). $$
 #
@@ -114,7 +114,7 @@ E0, psi0 = do_dmrg(H)
 #
 # The function `run_hadamard_test` runs the Hadamard test and returns $\mathrm{Re}~e^{i\theta} \bra{\psi}U\ket{\psi}$.
 #
-# Below we estimate $E_0$ by running the Hadamard test for a time evolution during a random time $t$.
+# Below we estimate $E_0$ by running the Hadamard test for time evolution over a random time $t$.
 #
 # We first consider exact time evolution.
 
@@ -174,7 +174,7 @@ for n_shots in tqdm.tqdm(shots_list):
     durations.append(et)
 
 # %% [markdown]
-# The statistical error decreases as $1/\sqrt{N_{\rm shots}}$ while the computation time increases linearly with $N_{\rm shots}$
+# The statistical error decreases as $1/\sqrt{N_{\rm shots}}$ while the computation time increases linearly with $N_{\rm shots}$.
 
 # %%
 fig, (ax_e, ax_t) = plt.subplots(nrows=2)
@@ -209,7 +209,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # $$ g(2^m) = \mathbb{E}[Z(2^{m})] = \exp(-i 2^{m} E_0) $$
 #
-# for $m=0,1,..,M-1$. Each iteration gives a supplementary bit of precision on $E_0$.
+# for $m=0,1,..,M-1$. Each iteration gives an additional bit of precision in $E_0$.
 #
 # **Algorithm 1 (p.24)**
 #
@@ -224,7 +224,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 #     - From the outcome we compute $\phi_m = - \arg(\bar{Z}(2^m))$ using `numpy.angle`
 #
-#     - By definition $\phi_m \in ]-\pi, \pi]:~\phi_m~$  is an approximation of $2^mE_0$ modulo $2\pi$
+#     - By definition $\phi_m \in (-\pi, \pi]:~\phi_m~$  is an approximation of $2^mE_0$ modulo $2\pi$
 #
 #     - Given a previous guess $\theta_{m-1}$ for the ground state energy $E_0$, the new energy estimate $\theta_m$ is given by
 #
@@ -314,7 +314,7 @@ print(f"theta_0 = {theta_0:.4f}")
 print(f"theta_1 = {theta_1:.4f}")
 
 # %% [markdown]
-# ### Run RPE. Statistical precision
+# ### Running RPE: statistical precision
 #
 # We will now run the algorithm and see the influence of statistical noise. The `robust_phase_estimation` function returns the full list of $\theta_m$, $m=0,...,M-1$.
 #
@@ -343,7 +343,7 @@ plt.xlabel("iteration $m$")
 plt.ylabel("$d(\\theta_m, E)$");
 
 # %% [markdown]
-# We see that for such small systems, with exact time evolution, a single shot gives an estimate that converges. We now increase the number of shots to improve the precision
+# We see that for such small systems, with exact time evolution, a single shot gives an estimate that converges. We now increase the number of shots to improve the precision.
 
 # %%
 n_shot_list = [1, 2, 3, 4]
@@ -369,7 +369,7 @@ plt.title(rf"$\epsilon={epsilon},\; M={M}$");
 #
 # The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
 #
-# The computation will now take longer since the number of gates for the time evolution now grows like $2^m$.
+# The computation will now take longer since the number of gates for the time evolution grows like $2^m$.
 
 # %%
 # %%time
@@ -467,7 +467,7 @@ plt.legend();
 
 # %% [markdown]
 # Let us now consider a molecule: we take $H_2$ in the minimal atomic orbital basis STO-3G. The Hamiltonian in qubit form is obtained via a Jordan-Wigner transformation.
-# Contrary to the previous spin Hamiltonian, the molecular Hamiltonian is non-local: it couples qubits at long distance.
+# Unlike the previous spin Hamiltonian, the molecular Hamiltonian is non-local: it couples distant qubits.
 
 # %%
 mol = gto.M(
@@ -485,7 +485,7 @@ print(f"E_DMRG : {E0_H2 + H_H2.e_const:.10f}")
 # ### Exact time evolution
 
 # %% [markdown]
-# The system is small enough for exact exponentiation of the Hamiltonian matrix, and exact time evolution
+# The system is small enough for exact exponentiation of the Hamiltonian matrix, and exact time evolution.
 
 # %%
 epsilon = 0.02
@@ -545,7 +545,7 @@ plt.ylabel("error");
 # %% [markdown]
 # ### Chemical accuracy?
 #
-# The standard for chemical accuracy is $\varepsilon = 10^{-3}$ Ha. Hartrees are the default unit in `pyscf`. We can compute directly the number of iterations required for chemical accuracy:
+# The standard for chemical accuracy is $\varepsilon = 10^{-3}$ Ha. Hartrees are the default unit in `pyscf`. We can directly compute the number of iterations required for chemical accuracy:
 
 # %%
 epsilon = 0.001
@@ -554,7 +554,7 @@ print(f"Chemical accuracy eps={epsilon} requires M={M} iterations")
 
 # %% [markdown]
 # Reaching chemical accuracy requires at least ten iterations, and a sufficient number of shots and Trotter steps.
-# If you want to go further, you can first make an estimation of the runtime for $M=10$ and a given number of shots and Trotter steps,
+# If you want to go further, you can first estimate the runtime for $M=10$ and a given number of shots and Trotter steps,
 # then with some patience try to run the simulation.
 
 # %%
