@@ -267,7 +267,7 @@ assert np.isclose(
 # ## QPE on walk operator
 
 # %% [markdown]
-# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the walk operator using the functions introduced above and runs the "textbook" QPE circuit using $\mathcal{W}$ as the unitary. Here for simplicity we keep standard QPE circuit with unitaries controlled by the phase qubits. Crucially we do not apply the last optimization from [Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015), where only the SELECT circuits are controlled by the phase qubits (right pannel of Fig 1).
+# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the walk operator using the functions introduced above and runs the "textbook" QPE circuit using $\mathcal{W}$ as the unitary. For simplicity, we use the standard QPE circuit, in which the full walk operator $\mathcal{W}$ is controlled by the phase qubits. Crucially, we do not apply the last optimization from [Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015), where only the SELECT circuits are controlled by the phase qubits (right panel of Fig 1).
 
 # %%
 n_phase_qubits = 4
