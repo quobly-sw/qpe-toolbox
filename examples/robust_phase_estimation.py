@@ -269,7 +269,7 @@ plt.plot(
 plt.legend();
 
 # %% [markdown]
-# Let us now illustrate the first two steps of the algorithm for concreteness. We start with $N_{\rm shots}=2$ and $\epsilon = 0.2$. We also consider exact time evolution.
+# Let us now illustrate the first two steps of the algorithm for concreteness. We start with $N_{\rm shots}=2$ and $\epsilon = 0.02$. We also consider exact time evolution.
 
 # %%
 sign_E0 = np.sign(E0)
@@ -497,14 +497,12 @@ for n_shots in n_shot_list:
     theta_list = qpe.robust_phase_estimation(
         H_H2, psi0_H2, epsilon, sign_E0, EXACT, n_shots
     )
-    plt.semilogy(
-        [qpe.rpe_distance(theta, E0_H2) for theta in theta_list[1:]],
-        "-o",
-        label=f"$N_{{\\rm shots}}={n_shots}$",
-    )
+    distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list[1:]]
+    plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
-plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M + 1), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
+plt.title(r"$H_2$ STO-3G - exact time evolution")
 plt.xlabel("iteration $m$")
 plt.ylabel("$d(\\theta_m, E)$");
 
@@ -519,21 +517,17 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shots = 2
 n_steps = 1
 
-thetas_ttr = qpe.robust_phase_estimation(
+thetas_trotter_H2 = qpe.robust_phase_estimation(
     H_H2, psi0_H2, epsilon, sign_E0, n_steps, n_shots, verbosity=1
 )
+distances_trotter_H2 = [qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2]
 
 # %% [markdown]
 # ... and fails to get the desired precision
 
 # %%
-plt.semilogy(
-    [qpe.rpe_distance(theta, E0_H2) for theta in thetas_ttr_list[i][1:]],
-    "-o",
-    label=f"$n_{{\\rm steps}}={n_steps}$",
-)
-
-plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M + 1), "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_steps}$")
 plt.legend()
 plt.title(f"$N_{{\\rm shots}}={n_shots}$")
 plt.xlabel("iteration $m$")
