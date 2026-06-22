@@ -60,15 +60,15 @@ def robust_phase_estimation(
     Returns
     -------
     theta_list : list of float
-        List of phase estimates at each iteration.
-        The last element corresponds to the most accurate estimate.
+        Phase estimates :math:`\theta_0, \dots, \theta_{M-1}`, one per
+        iteration. The last element is the most accurate estimate.
     """
     if abs(abs(sign_E0) - 1.0) > 1e-12:
         raise ValueError("sign_E0 must be +-1")
 
     st = time.time()
 
-    theta_list = [0]
+    theta_list = []
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(n_repetitions):
@@ -80,10 +80,12 @@ def robust_phase_estimation(
             )
 
         if m == 0:
+            # initialization theta_{-1} = 0, hence theta_0 = phi_0
             theta_m = phi_m
         else:
+            # refine the previous guess theta_{m-1} = theta_list[m - 1]
             S_m = [(phi_m + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
-            theta_m, _d_min = rpe_update_theta(S_m, theta_list[m])
+            theta_m, _d_min = rpe_update_theta(S_m, theta_list[m - 1])
 
         if verbosity >= 1:
             et = time.time() - st

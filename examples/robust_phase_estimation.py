@@ -333,7 +333,7 @@ theta_list = qpe.robust_phase_estimation(
 
 # %%
 plt.semilogy(
-    [qpe.rpe_distance(theta, E0) for theta in theta_list[1:]],
+    [qpe.rpe_distance(theta, E0) for theta in theta_list],
     "-o",
     label=f"$N_{{\\rm shots}}={n_shots}$",
 )
@@ -351,7 +351,7 @@ n_shot_list = [1, 2, 3, 4]
 for n_shots in n_shot_list:
     theta_list = qpe.robust_phase_estimation(H, psi0, M, sign_E0, EXACT, n_shots)
     plt.semilogy(
-        [qpe.rpe_distance(theta, E0) for theta in theta_list[1:]],
+        [qpe.rpe_distance(theta, E0) for theta in theta_list],
         "-o",
         label=f"$N_{{\\rm shots}}={n_shots}$",
     )
@@ -387,7 +387,7 @@ thetas_ttr_list.append(thetas_ttr)
 
 # %%
 plt.semilogy(
-    [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[0][1:]],
+    [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[0]],
     "-o",
     label=f"$n_{{\\rm steps}}={n_steps}$",
 )
@@ -412,7 +412,7 @@ thetas_ttr_list.append(thetas_ttr)
 # %%
 for i, n_steps in enumerate([1, 2]):
     plt.semilogy(
-        [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[i][1:]],
+        [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[i]],
         "-o",
         label=f"$n_{{\\rm steps}}={n_steps}$",
     )
@@ -495,7 +495,7 @@ n_shot_list = [2, 3, 4]
 
 for n_shots in n_shot_list:
     theta_list = qpe.robust_phase_estimation(H_H2, psi0_H2, M, sign_E0, EXACT, n_shots)
-    distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list[1:]]
+    distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list]
     plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
@@ -518,9 +518,7 @@ n_steps = 1
 thetas_trotter_H2 = qpe.robust_phase_estimation(
     H_H2, psi0_H2, M, sign_E0, n_steps, n_shots, verbosity=1
 )
-distances_trotter_H2 = [
-    qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2[1:]
-]
+distances_trotter_H2 = [qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2]
 
 # %% [markdown]
 # ... and fails to get the desired precision
