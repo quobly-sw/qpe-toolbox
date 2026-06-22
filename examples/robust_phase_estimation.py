@@ -328,7 +328,7 @@ print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
 n_shots = 1
 
 theta_list = qpe.robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, EXACT, n_shots, verbosity=1
+    H, psi0, M, sign_E0, EXACT, n_shots, verbosity=1
 )
 
 # %%
@@ -337,7 +337,7 @@ plt.semilogy(
     "-o",
     label=f"$N_{{\\rm shots}}={n_shots}$",
 )
-plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
 plt.xlabel("iteration $m$")
 plt.ylabel("$d(\\theta_m, E)$");
@@ -349,14 +349,14 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shot_list = [1, 2, 3, 4]
 
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(H, psi0, epsilon, sign_E0, EXACT, n_shots)
+    theta_list = qpe.robust_phase_estimation(H, psi0, M, sign_E0, EXACT, n_shots)
     plt.semilogy(
         [qpe.rpe_distance(theta, E0) for theta in theta_list[1:]],
         "-o",
         label=f"$N_{{\\rm shots}}={n_shots}$",
     )
 
-plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
 plt.xlabel("iteration $m$")
 plt.ylabel("$d(\\theta_m, E)$")
@@ -380,7 +380,7 @@ n_shots = 4
 thetas_ttr_list = []
 
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
+    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -391,7 +391,7 @@ plt.semilogy(
     "-o",
     label=f"$n_{{\\rm steps}}={n_steps}$",
 )
-plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
 plt.title(r"$N_{\rm shots}=4$")
 plt.xlabel("iteration $m$")
@@ -405,7 +405,7 @@ plt.ylabel("error");
 
 n_steps = 2
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_steps, n_shots, verbosity=1
+    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1
 )
 thetas_ttr_list.append(thetas_ttr)
 
@@ -417,7 +417,7 @@ for i, n_steps in enumerate([1, 2]):
         label=f"$n_{{\\rm steps}}={n_steps}$",
     )
 
-plt.semilogy([np.pi / 3 / 2**i for i in range(M + 1)], "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
 plt.text(4.5, 0.3, "$N_{\\rm shots}=4$")
 plt.xlabel("iteration $m$")
@@ -426,10 +426,10 @@ plt.ylabel("error");
 # %% [markdown]
 # ## Heisenberg scaling
 #
-# The experimental time is proportional to $N_{\rm shots} \sum_{m=0}^M  2^m$, i.e. it scales like $2^M$. The RPE algorithm reaches a precision $\varepsilon$ in $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations.
+# The experimental time is proportional to $N_{\rm shots} \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. The RPE algorithm reaches a precision $\varepsilon$ in $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations.
 # Hence it achieves Heisenberg scaling: reaching a precision $\varepsilon$ in time $\mathcal{O}(2^M) = \mathcal{O}(1/\varepsilon)$.
 #
-# Let us illustrate that below: we run the RPE algorithm for various $\varepsilon$ and plot experimental time versus energy error. (We take exact time evolution for simplicity: in this case we consider that the experimental time is exactly $N_{\rm shots} \sum_{m=0}^M  2^m$.)
+# Let us illustrate that below: we run the RPE algorithm for various $\varepsilon$ and plot experimental time versus energy error. (We take exact time evolution for simplicity: in this case we consider that the experimental time is exactly $N_{\rm shots} \sum_{m=0}^{M-1}  2^m$.)
 
 # %%
 epsilon_list = [0.1 / 2**m for m in range(11)]
@@ -439,8 +439,8 @@ cost_list = []
 res_list = []
 for epsilon in epsilon_list:
     M = int(np.ceil(np.log2(1 / epsilon)))
-    cost_list.append(sum([n_shots * 2**m for m in range(M + 1)]))
-    theta_list = qpe.robust_phase_estimation(H, psi0, epsilon, sign_E0, EXACT, n_shots)
+    cost_list.append(sum([n_shots * 2**m for m in range(M)]))
+    theta_list = qpe.robust_phase_estimation(H, psi0, M, sign_E0, EXACT, n_shots)
     res_list.append(theta_list[-1])
 
 # %%
@@ -494,13 +494,11 @@ sign_E0 = np.sign(E0_H2)
 n_shot_list = [2, 3, 4]
 
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(
-        H_H2, psi0_H2, epsilon, sign_E0, EXACT, n_shots
-    )
+    theta_list = qpe.robust_phase_estimation(H_H2, psi0_H2, M, sign_E0, EXACT, n_shots)
     distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list[1:]]
     plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
-plt.semilogy(np.pi / 3 / 2 ** np.arange(M + 1), "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
 plt.title(r"$H_2$ STO-3G - exact time evolution")
 plt.xlabel("iteration $m$")
@@ -518,15 +516,17 @@ n_shots = 2
 n_steps = 1
 
 thetas_trotter_H2 = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, epsilon, sign_E0, n_steps, n_shots, verbosity=1
+    H_H2, psi0_H2, M, sign_E0, n_steps, n_shots, verbosity=1
 )
-distances_trotter_H2 = [qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2]
+distances_trotter_H2 = [
+    qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2[1:]
+]
 
 # %% [markdown]
 # ... and fails to get the desired precision
 
 # %%
-plt.semilogy(np.pi / 3 / 2 ** np.arange(M + 1), "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_steps}$")
 plt.legend()
 plt.title(f"$N_{{\\rm shots}}={n_shots}$")
