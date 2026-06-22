@@ -267,7 +267,7 @@ assert np.isclose(
 # ## QPE on walk operator
 
 # %% [markdown]
-# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the walk operator using the functions introduced above and runs the "textbook" QPE circuit on $\mathcal{W}$.
+# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the walk operator using the functions introduced above and runs the "textbook" QPE circuit using $\mathcal{W}$ as the unitary. Here for simplicity we keep standard QPE circuit with unitaries controlled by the phase qubits. Crucially we do not apply the last optimization from [Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015), where only the SELECT circuits are controlled by the phase qubits (right pannel of Fig 1).
 
 # %%
 n_phase_qubits = 4
@@ -425,7 +425,7 @@ m_ph = 4  # number of phase qubits
 traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph, verbosity=1)
 # Get the energy
 energy = qpe.get_energy_from_lcu_walk_phase(theta, λ_H2)
-print(f"\nenergy = {energy + H_H2.e_const:.4f}, error={abs(E0_H2 - energy):.4f}")
+print(f"\nenergy = {energy + H_H2.e_const:.4f}, error = {abs(E0_H2 - energy):.4f}")
 # Check error bound
 delta_e = qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2)
 print(f"error bound = {delta_e:.4f}")
@@ -446,16 +446,14 @@ for m_ph in tqdm.tqdm(n_phase_bits_arr):
     energies_H2.append(qpe.get_energy_from_lcu_walk_phase(theta, λ_H2))
 
 # %%
-delta_es = [qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_arr]
+delta_es = np.array(
+    [qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_arr]
+)
 
 plt.plot(n_phase_bits_arr, energies_H2, "-o", label="LCU")
 plt.axhline(y=E0_H2, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
-    n_phase_bits_arr,
-    [E0_H2 + delta_e for delta_e in delta_es],
-    [E0_H2 - delta_e for delta_e in delta_es],
-    alpha=0.2,
-    label="error bound",
+    n_phase_bits_arr, E0_H2 + delta_es, E0_H2 - delta_es, alpha=0.2, label="error bound"
 )
 plt.legend()
 plt.xticks(n_phase_bits_arr)
