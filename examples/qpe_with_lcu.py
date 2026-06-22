@@ -458,7 +458,7 @@ plt.fill_between(
 plt.legend()
 plt.xticks(n_phase_bits_arr)
 plt.title(f"$H_2$ STO-3G basis ({H_H2.n_qubits} qubits)")
-plt.ylabel("energy")
+plt.ylabel("unshifted energy")
 plt.xlabel("number of phase qubits");
 
 # %%
