@@ -425,7 +425,7 @@ m_ph = 4  # number of phase qubits
 traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph, verbosity=1)
 # Get the energy
 energy = qpe.get_energy_from_lcu_walk_phase(theta, λ_H2)
-print(f"\nenergy = {energy:.4f}, error={abs(E0_H2 - energy):.4f}")
+print(f"\nenergy = {energy + H_H2.e_const:.4f}, error={abs(E0_H2 - energy):.4f}")
 # Check error bound
 delta_e = qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2)
 print(f"error bound = {delta_e:.4f}")
