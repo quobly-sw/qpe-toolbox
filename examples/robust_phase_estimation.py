@@ -119,7 +119,7 @@ E0, psi0 = do_dmrg(H)
 # We first consider exact time evolution.
 
 # %%
-rng = np.random.default_rng(seed=42)
+rng = np.random.default_rng(42)
 t = rng.random()
 data_reg = list(range(1, n_qubits + 1))
 U = H.get_U_exact(t, data_reg, controls=(0,))
@@ -279,12 +279,14 @@ M = int(np.ceil(np.log2(1 / epsilon)))
 
 n_shots = 2
 
+rng = np.random.default_rng(42)
+
 # m = 0
-phi_0 = qpe.rpe_get_hadamard_output(H, psi0, 0, EXACT, n_shots)
+phi_0 = qpe.rpe_get_hadamard_output(H, psi0, 0, EXACT, n_shots, rng=rng)
 theta_0 = phi_0
 
 m = 1
-phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots)
+phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots, rng=rng)
 S_1 = [(phi_1 + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
 
 # %% [markdown]
@@ -327,8 +329,9 @@ print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
 
 n_shots = 1
 
+rng = np.random.default_rng(42)
 theta_list = qpe.robust_phase_estimation(
-    H, psi0, M, sign_E0, EXACT, n_shots, verbosity=1
+    H, psi0, M, sign_E0, EXACT, n_shots, verbosity=1, rng=rng
 )
 
 # %%
@@ -348,8 +351,11 @@ plt.ylabel("$d(\\theta_m, E)$");
 # %%
 n_shot_list = [1, 2, 3, 4]
 
+rng = np.random.default_rng(42)
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(H, psi0, M, sign_E0, EXACT, n_shots)
+    theta_list = qpe.robust_phase_estimation(
+        H, psi0, M, sign_E0, EXACT, n_shots, rng=rng
+    )
     plt.semilogy(
         [qpe.rpe_distance(theta, E0) for theta in theta_list],
         "-o",
@@ -379,8 +385,9 @@ n_steps = 1
 n_shots = 4
 thetas_ttr_list = []
 
+rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1
+    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1, rng=rng
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -404,8 +411,9 @@ plt.ylabel("error");
 # %%time
 
 n_steps = 2
+rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1
+    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1, rng=rng
 )
 thetas_ttr_list.append(thetas_ttr)
 
@@ -437,10 +445,13 @@ n_shots = 5
 
 cost_list = []
 res_list = []
+rng = np.random.default_rng(42)
 for epsilon in epsilon_list:
     M = int(np.ceil(np.log2(1 / epsilon)))
     cost_list.append(sum([n_shots * 2**m for m in range(M)]))
-    theta_list = qpe.robust_phase_estimation(H, psi0, M, sign_E0, EXACT, n_shots)
+    theta_list = qpe.robust_phase_estimation(
+        H, psi0, M, sign_E0, EXACT, n_shots, rng=rng
+    )
     res_list.append(theta_list[-1])
 
 # %%
@@ -491,10 +502,14 @@ print(f"E_DMRG : {E0_H2 + H_H2.e_const:.10f}")
 epsilon = 0.02
 M = int(np.ceil(np.log2(1 / epsilon)))
 sign_E0 = np.sign(E0_H2)
-n_shot_list = [2, 3, 4]
+n_shot_list = [2, 3, 1000]
 
+# n_shot stays small, result depends a lot on seed
+rng = np.random.default_rng(2)
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(H_H2, psi0_H2, M, sign_E0, EXACT, n_shots)
+    theta_list = qpe.robust_phase_estimation(
+        H_H2, psi0_H2, M, sign_E0, EXACT, n_shots, rng=rng
+    )
     distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list]
     plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
@@ -515,8 +530,9 @@ plt.ylabel("$d(\\theta_m, E)$");
 n_shots = 2
 n_steps = 1
 
+rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, M, sign_E0, n_steps, n_shots, verbosity=1
+    H_H2, psi0_H2, M, sign_E0, n_steps, n_shots, verbosity=1, rng=rng
 )
 distances_trotter_H2 = [qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2]
 

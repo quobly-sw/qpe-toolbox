@@ -17,7 +17,16 @@ from .hadamard_test import run_hadamard_test
 
 
 def robust_phase_estimation(
-    H, psi0, n_repetitions, sign_E0, n_steps, n_shots, *, trotter_order=2, verbosity=0
+    H,
+    psi0,
+    n_repetitions,
+    sign_E0,
+    n_steps,
+    n_shots,
+    *,
+    trotter_order=2,
+    verbosity=0,
+    rng=None,
 ):
     r"""
     Perform the Robust Phase Estimation (RPE) algorithm.
@@ -56,6 +65,11 @@ def robust_phase_estimation(
         Order of the Trotter-Suzuki decomposition.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print intermediate phase estimates.
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
+        Random generator for the Hadamard-test sampling. Pass a seeded
+        generator (e.g. ``numpy.random.default_rng(42)``) for deterministic
+        results. A single generator is threaded through every iteration.
+        Ignored when ``n_shots`` is ``EXACT``.
 
     Returns
     -------
@@ -67,16 +81,24 @@ def robust_phase_estimation(
         raise ValueError("sign_E0 must be +-1")
 
     st = time.time()
+    if rng is None:
+        rng = np.random.default_rng()
 
     theta_list = []
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(n_repetitions):
         if n_steps is EXACT:
-            phi_m = rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots)
+            phi_m = rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, rng=rng)
         else:
             phi_m = rpe_get_hadamard_output(
-                H, psi0, m, n_steps * 2**m, n_shots, trotter_order=trotter_order
+                H,
+                psi0,
+                m,
+                n_steps * 2**m,
+                n_shots,
+                trotter_order=trotter_order,
+                rng=rng,
             )
 
         if m == 0:
@@ -98,7 +120,7 @@ def robust_phase_estimation(
     return theta_list
 
 
-def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
+def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2, rng=None):
     r"""
     Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
 
@@ -121,6 +143,10 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
         Use ``EXACT`` to compute probabilities exactly.
     trotter_order : int, default ``2``
         Order of the Trotter-Suzuki decomposition.
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
+        Random generator threaded through the two Hadamard tests, so the real
+        and imaginary parts use independent samples. Ignored when ``n_shots``
+        is ``EXACT``.
 
     Returns
     -------
@@ -137,8 +163,8 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2):
             raise ValueError("Can only evolve for strictly positive n_steps")
         dt = evolution_time / n_steps
         U_m = [H.get_trotter_step(dt, phys_reg, trotter_order)] * n_steps
-    X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
-    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
+    X_m = run_hadamard_test(psi0, U_m, 0, n_shots, rng=rng)
+    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots, rng=rng)
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)
 

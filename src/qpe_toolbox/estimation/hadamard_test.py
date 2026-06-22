@@ -70,7 +70,7 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
     return circ
 
 
-def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
+def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, rng=None):
     r"""
     Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
 
@@ -96,8 +96,9 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots. If ``EXACT``, probabilities are computed exactly,
         else probabilities are estimated by sampling.
-    seed : None or int, optional
-        A random seed, passed to ``numpy.random.seed`` if given.
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
+        Random generator forwarded to the circuit sampler (``circ.sample``).
+        Ignored when ``n_shots`` is ``EXACT``.
 
     Returns
     -------
@@ -109,7 +110,7 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
     if n_shots is EXACT:
         probs = circ.compute_marginal(where=[aux_ind])
     else:
-        count = Counter(circ.sample(C=n_shots, seed=seed))
+        count = Counter(circ.sample(C=n_shots, seed=rng))
         probs = [0.0, 0.0]
         for b, c in count.items():
             probs[int(b[aux_ind])] += c / n_shots
