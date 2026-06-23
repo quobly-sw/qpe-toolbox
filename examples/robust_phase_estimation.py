@@ -209,11 +209,11 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # $$ g(2^m) = \mathbb{E}[Z(2^{m})] = \exp(-i 2^{m} E_0) $$
 #
-# for $m=0,1,..,M-1$. Each iteration gives an additional bit of precision in $E_0$.
+# for $m=0,1,..,M-1$. The objective is to obtain $\theta_m$ defined as the best $m$-bit approximation of $E_0$. Each iteration gives an additional bit of precision in $E_0$.
 #
 # **Algorithm 1 (p.24)**
 #
-# 1. The algorithm is initialized with $\theta_{-1}=0$ so that $\theta_0 = \phi_0$.
+# 1. The algorithm is initialized with $\theta_{-1}=0$.
 #
 # 2. For each $m$:
 #
@@ -231,19 +231,19 @@ ax_t.set_ylabel("duration (seconds)");
 #     $$ \theta_m = 2^{-m} (2\pi k + \phi_m), $$
 #     where $k$ is an integer between $0$ and $2^m - 1$ which minimizes the distance
 #
-#      $$ d(\theta_m, \theta_{m-1}) = \min_{q\in\mathbb{Z}} | \theta_m - \theta_{m-1} + 2q\pi|, $$
-#       under the condition $-\pi < \theta \leq \pi$.
+#      $$ d(\theta_m, \theta_{m-1}) = \min_{q\in\mathbb{Z}} | \theta_m - \theta_{m-1} + 2\pi q|, $$
+#       under the condition $-\pi < \theta_m \leq \pi$.
 #
 # The algorithm ensures that at each step, $\theta_m$ is the best $m$-bit approximation of $E_0$.
 # The following lemma guarantees convergence:
 #
 # **Lemma B.1. (p.25)**:
-# if $d(\phi_k,2^{k}E)<\frac{\pi}3$ for $k=0,1,...,m$ then $\theta_m$ is such that $d(\theta_m,E) \leq 2^{-m}\frac{\pi}3$
+# if $d(\phi_m,2^{m}E)<\frac{\pi}3$ for $m=0,1,...,M$ then $\theta_M$ is such that $d(\theta_M,E) \leq 2^{-M}\frac{\pi}3$
 
 # %% [markdown]
 # #### Illustration of the distance $d(\theta,\phi)$
 #
-# To build an intuition, let us plot the distance $d(\theta, \phi)$ as a function of $\theta$ for a given $\phi$ ($ 3\pi/2$ in the example) and vice-versa (the distance is symmetric by definition).
+# To build an intuition, let us plot the distance $d(\theta, \phi)$ as a function of $\theta$ for a given $\phi$ ($ \phi = 3\pi/2$ in the example) and vice-versa (the distance is symmetric by definition).
 
 # %%
 thetas = np.linspace(-2 * np.pi, 2 * np.pi, 600)
@@ -252,7 +252,6 @@ plt.xticks(
     [r"$-2\pi$", r"$-\pi$", "$0$", r"$\pi$", r"$2\pi$"],
 )
 plt.yticks([0, np.pi / 2, np.pi], ["0", "$\\pi/2$", "$\\pi$"])
-
 plt.xlabel(r"$\theta$")
 
 plt.plot(
@@ -287,30 +286,27 @@ theta_0 = phi_0
 
 m = 1
 phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots, rng=rng)
-S_1 = [(phi_1 + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
+possible_phases = [(phi_1 + sign_E0 * 2 * np.pi * q) / 2**m for q in range(2**m)]
 
 # %% [markdown]
-# Let's visualize how the different elements of $S_1$ compare to $\theta_0$
+# Let's visualize how the different possible phases compare to $\theta_0$
 
 # %%
-plt.hlines(1, -np.pi, np.pi, "k")
-plt.plot([-np.pi, np.pi], [1, 1], "|", markersize=10, color="k")
+plt.plot([-np.pi, np.pi], [1, 1], marker="|", markersize=10, color="k")
 plt.plot(theta_0, 1, "*", markersize=20, color="r", label=r"$\theta_0$")
-y = np.ones(np.shape(S_1))
-plt.plot(S_1, y, "o", markersize=15, label=r"$S_1$")
+plt.plot(possible_phases, [1, 1], "o", markersize=15, label=r"possible phases")
 
 plt.text(-1.1 * np.pi, 0.99, r"$-\pi$", fontsize=16)
 plt.text(np.pi, 0.99, r"$\pi$", fontsize=16)
 plt.text(1.05 * theta_0, 0.99, r"$\theta_0$", fontsize=16, color="r")
-
 plt.axis("off")
 plt.legend();
 
 # %% [markdown]
-# We compute $\theta_1$ as the element from $S_1$ closest to $\theta_0$ and check that the error decreases between the first and second iteration:
+# We compute $\theta_1$ as the closest possible phase to $\theta_0$ and check that the error decreases between the first and second iteration:
 
 # %%
-theta_1, d_min = qpe.rpe_update_theta(S_1, theta_0)
+theta_1, d_min = qpe.rpe_update_theta(possible_phases, theta_0)
 print(f"Exact energy E = {E0:.4f}")
 print(f"theta_0 = {theta_0:.4f}")
 print(f"theta_1 = {theta_1:.4f}")
