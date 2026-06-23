@@ -18,7 +18,7 @@
 # %% [markdown]
 # In this notebook, we introduce advanced techniques for encoding the Hamiltonian into a unitary: Linear Combination of Unitaries and Qubitization. These techniques were first introduced in the context of Hamiltonian simulation and later applied to phase estimation.
 #
-# We mainly take inspiration from [Lin Lin's lecture notes on Quantum Algorithms for Scientific Computation](https://math.berkeley.edu/~linlin/qasc/) and from the paper [Encoding Electronic Spectra in Quantum Circuits with Linear T Complexity, Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015). The interested reader can read these works and references therein for the original papers where the techniques were developed.
+# We mainly take inspiration from [Lin Lin's lecture notes on Quantum Algorithms for Scientific Computation](https://math.berkeley.edu/~linlin/qasc/) and from the paper [Encoding Electronic Spectra in Quantum Circuits with Linear T Complexity, Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015). The interested reader is referred to these works and references therein for the original derivations.
 
 # %%
 import time
@@ -38,7 +38,7 @@ from qpe_toolbox.hamiltonian import (
 )
 from qpe_toolbox.tensor import apply_gate_from_mpo, kron_mps
 
-cutoff = 1e-10
+# %%
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
@@ -46,9 +46,9 @@ plt.rcParams.update({"font.size": 12})
 #
 # $$ H = \sum_{\ell=0}^{L-1} w_\ell H_\ell \qquad \mathrm{s.t.} \qquad w_\ell \geq 0, \qquad H_\ell^2 = \mathbb{1}, $$
 #
-# where $H_\ell^2 = \mathbb{1}$ expresses the condition that $H_\ell$ is hermitian and unitary.
+# where $H_\ell^2 = \mathbb{1}$ expresses the condition that $H_\ell$ is Hermitian and unitary.
 #
-# Spin-$1/2$ Hamiltonians are natively written in this form since Pauli matrices are hermitian and unitary. For fermionic Hamiltonians, this decomposition can be done e.g. via the Jordan-Wigner transformation.
+# Spin-$1/2$ Hamiltonians are natively written in this form since Pauli matrices are Hermitian and unitary. For fermionic Hamiltonians, this decomposition can be done e.g. via the Jordan-Wigner transformation.
 #
 # The weights $w_\ell$ are defined to be positive (if needed the phase of $w_\ell$ can always be absorbed by a re-definition of the unitary $H_\ell$.)
 #
@@ -58,7 +58,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # Note that the cost of Quantum Phase Estimation scales with the 1-norm $\lambda$. There is a lot of research activity devoted to compressing the Hamiltonian and reducing $\lambda$, see e.g. [this work](https://pubs.acs.org/doi/10.1021/acs.jctc.3c00912) and [this more recent work](https://journals.aps.org/prx/abstract/10.1103/pb2g-j9cw) and references therein. These advanced LCU techniques are beyond the scope of this simple introduction, where we consider a naive LCU based on the Pauli decomposition of $H$.
 #
-# We then introduce an empty ancilla register of size $m_L$
+# We then introduce an empty ancilla register of size $m_L$.
 #
 # $$ m_L \equiv \lceil{ \mathrm{log}_2 (L) \rceil}$$
 #
@@ -66,7 +66,7 @@ plt.rcParams.update({"font.size": 12})
 #
 # $$ w_\ell = 0,~H_\ell = \mathbb{1} \qquad \mathrm{for}~ L \leq \ell < 2^{m_L}.$$
 #
-# We consider the 1D Heisenberg model with 4 spins
+# We consider the 1D Heisenberg model with 4 spins.
 
 # %%
 n_qubits = 4
@@ -82,15 +82,15 @@ E0_dmrg, psi0_mps = do_dmrg(H)
 print(f"DMRG energy: E0 = {E0_dmrg:.3f}")
 
 # %% [markdown]
-# The LCU scheme involves two oracles: PREPARE and SELECT, that we introduce in the following.
+# The LCU scheme involves two oracles: PREPARE and SELECT, which we introduce below.
 
 # %% [markdown]
-# ## l-register and PREPARE oracle
+# ## $\ell$-register and PREPARE oracle
 # The PREPARE oracle acts on the $m_L$ qubits of the auxiliary $\ell$-register to prepare a superposition state related to the LCU decomposition:
 #
 # $$ \mathrm{PREPARE} \equiv \sum_{\ell=0}^{L-1} \sqrt{\frac{w_\ell}{\lambda}} \ket{\ell}\bra{0} $$
 #
-# The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as a MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
+# The quantum circuit implementation of the PREPARE oracle relies on complicated subroutines like unary iteration and QROM (see [this paper](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015) cited in the introduction), that are beyond the scope of this introduction. Here, we consider a simple implementation of PREPARE as an MPO. It will be sufficient to introduce the general ideas of LCU-based qubitization.
 
 # %%
 prepare_mpo = qpe.build_lcu_prepare_mpo(H)
@@ -105,12 +105,11 @@ zero_mps = qtn.MPS_computational_state("0" * m_L)
 L_mps = prepare_mpo.apply(zero_mps)
 
 # %% [markdown]
-# Alernatively, the $\ket{\mathcal{L}}$ state can be directly build calling the `build_lcu_prepare_state_mps` function
+# Alternatively, the $\ket{\mathcal{L}}$ state can be built directly by calling the `build_lcu_prepare_state_mps` function.
 
 # %%
-print(
-    f"overlap (should be 1) = {L_mps.overlap(qpe.build_lcu_prepare_state_mps(H)):.3f}"
-)
+overlap = L_mps.overlap(qpe.build_lcu_prepare_state_mps(H))
+print(f"overlap (should be 1) = {overlap:.3f}")
 
 # %% [markdown]
 # ## SELECT oracle gate
@@ -124,20 +123,20 @@ print(
 # Note that for any $\ket{\psi}$ we have:
 #
 # $$ \bra{\psi}\bra{\mathcal{L}} \mathrm{SELECT} \ket{\mathcal{L}}\ket{\psi} = \bra{\psi}\frac{H}{\lambda}\ket{\psi} $$
-# i.e. the combination of SELECT and PREPARE gives an encoding of the Hamiltonian. This property allows to construct a unitary operator: $\mathcal{W}$, the walk operator,  that gives an exact encoding of the spectrum of $H$ via a technique called qubitization.
+# i.e. the combination of SELECT and PREPARE gives an encoding of the Hamiltonian. This property allows us to construct a unitary operator: $\mathcal{W}$, the walk operator, that gives an exact encoding of the spectrum of $H$ via a technique called qubitization.
 
 # %%
 select_gates = qpe.lcu_select_gates(H)
 
 
 # %% [markdown]
-# In our simple example of a spin Hamiltonian, the unitaries $H_\ell$ are Pauli strings ($XX, YY, ZZ$). Note that for LCU of chemistry Hamiltonians, more advanced schemes like Single Factorization, Double Factorization, Tensor Hyper Contraction... are introduced where the unitaries $H_\ell$ do not coincide anymore with Pauli strings (see e.g. [this work](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.030305) on Tensor Hyper Contraction for a discussion).
+# In our simple example of a spin Hamiltonian, the unitaries $H_\ell$ are Pauli strings ($XX, YY, ZZ$). Note that for LCU of chemistry Hamiltonians, more advanced schemes like Single Factorization, Double Factorization, Tensor Hyper Contraction... are introduced where the unitaries $H_\ell$ no longer coincide with Pauli strings (see e.g. [this work](https://journals.aps.org/prxquantum/abstract/10.1103/PRXQuantum.2.030305) on Tensor Hyper Contraction for a discussion).
 
 # %%
 print(*select_gates[:10], sep="\n")
 
 # %% [markdown]
-# The first gates correspond to $\ket{0}\bra{0} \otimes X_0 X_1$ in "Hamiltonian" notation, where $X_i$ represents the $X$ Pauli matrix acting on the $i-$th spin of the Heisenberg model, or $i$-th physical qubit.
+# The first gates correspond to $\ket{0}\bra{0} \otimes X_0 X_1$ in "Hamiltonian" notation, where $X_i$ represents the $X$ Pauli matrix acting on the $i$-th spin of the Heisenberg model, or $i$-th physical qubit.
 # Since the physical register indexing is shifted by $m_L=4$ to avoid confusion with the auxiliary $\ell$-register, the first and second qubits of the physical register (index $0$ and $1$ in the physical register "local" indexing) correspond to qubit $4$ and $5$ in the total register.
 #
 # We start by projecting $\ket{0}^{\otimes m_L}$ onto $\ket{1}^{\otimes m_L}$ (apply $X$ on qubits $0$ to $3$), then apply a controlled-$X$ on qubit $4$ and $5$, then apply the reversed projection $\ket{0}^{\otimes m_L} \bra{1}^{\otimes m_L}$.
@@ -145,7 +144,7 @@ print(*select_gates[:10], sep="\n")
 # Note that qubits in the $\ell$-register are indexed from $0$ to $m_L-1$. Qubits in the physical register are indexed from $m_L$ to $m_L + n - 1$.
 
 # %% [markdown]
-# Applying the SELECT oracle on $\ket{\mathcal{L}}\ket{\psi_0}$, and projecting onto the same state, we get a measure of the ground state energy:
+# Applying the SELECT oracle on $\ket{\mathcal{L}}\ket{\psi_0}$, and projecting onto the same state, we obtain an estimate of the ground state energy:
 #
 # $$ \bra{\psi_0} \bra{\mathcal{L}} \mathrm{SELECT} \ket{\mathcal{L}} \ket{\psi_0} = \frac{E_0}{\lambda}. $$
 
@@ -166,21 +165,21 @@ assert np.isclose(Lpsi_mps.H @ circ.psi, E0_dmrg / λ)
 
 # %% [markdown]
 # ## Walk operator
-# We are now ready to build the Walk operator, defined by
+# We are now ready to build the walk operator, defined by
 #
-# $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv \left(2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} \right) $$
+# $$ \mathcal{W} = \mathcal{R}_L \cdot \mathrm{SELECT}, \qquad \mathcal{R}_L \equiv 2 \ket{\mathcal{L}} \bra{\mathcal{L}} \otimes \mathbb{1} - \mathbb{1} $$
 #
-# First we define $\mathcal{R}_L$ as a MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by a MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$; circuits with non trivial subroutines that are beyond the scope of this introduction.
+# First we define $\mathcal{R}_L$ as an MPO. Since we simulate quantum circuits as tensor networks we can always replace any part of the circuit by an MPO. In a real QPU one would need to build a Householder reflection circuit that involves a $\mathrm{PREPARE}$ and $\mathrm{PREPARE}^\dagger$. The implementation of these oracles as quantum circuits is complex and beyond the scope of this introduction.
 #
-# ### Reflection as a MPO
+# ### Reflection as an MPO
 #
-# The PREPARE oracle is key to build a reflection operator:
+# The PREPARE oracle is key to building a reflection operator:
 #
 # $$\mathcal{R}_{L} = 2 \ket{\mathcal{L}}\bra{\mathcal{L}}\otimes\mathbb{1} - \mathbb{1} $$
 #
-# that will enter in the definition of the Walk operator.
+# that appears in the definition of the walk operator.
 #
-# Here, we build this reflection as a MPO.
+# Here, we build this reflection as an MPO.
 
 # %%
 R_L = qpe.build_lcu_reflection_mpo(H)
@@ -191,7 +190,7 @@ display(R_L)
 # ### Walk operator
 
 # %% [markdown]
-# Let us apply SELECT on the $\ket{\mathcal{L}}\ket{\psi}$ state
+# Let us apply SELECT on the $\ket{\mathcal{L}}\ket{\psi}$ state.
 
 # %%
 circ = qtn.CircuitMPS(psi0=Lpsi_mps)
@@ -235,7 +234,7 @@ assert np.isclose(Lpsi_mps.H @ psi_final, E0_dmrg / λ)
 assert np.isclose(phi.H @ psi_final, -np.sqrt(1 - (E0_dmrg / λ) ** 2))
 
 # %% [markdown]
-# In the basis $\{ \ket{\mathcal{L}}\ket{\psi_k},  \ket{\phi_k} \}$, the Walk operator reads
+# In the basis $\{ \ket{\mathcal{L}}\ket{\psi_k},  \ket{\phi_k} \}$, the walk operator reads
 #
 # $$ \mathcal{W} = e^{i \arccos\left({E_k/\lambda}\right) Y} $$
 # where we have introduced the $Y$ Pauli matrix.
@@ -265,10 +264,10 @@ assert np.isclose(
 # Thus, the action of $\mathcal{W}$ on $\ket{\mathcal{L}}\ket{\psi_k}$ spans a two-dimensional space in which its eigenphases are exact functions of the energy $E_k$. We can therefore apply the QPE algorithm on $\mathcal{W}$ to find $E_k$.
 
 # %% [markdown]
-# ## QPE on Walk operator
+# ## QPE on walk operator
 
 # %% [markdown]
-# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the Walk operator using the different functions we have previously introduced and runs the "textbook" QPE circuit on $\mathcal{W}$.
+# The `run_qpe_lcu_walk_operator` function from the `estimation` module builds the walk operator using the functions introduced above and runs the "textbook" QPE circuit using $\mathcal{W}$ as the unitary. For simplicity, we use the standard QPE circuit, in which the full walk operator $\mathcal{W}$ is controlled by the phase qubits. Crucially, we do not apply the last optimization from [Babbush *et al.*, PRX **8**, 041015 (2018)](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.8.041015), where only the SELECT circuits are controlled by the phase qubits (right panel of Fig 1).
 
 # %%
 n_phase_qubits = 4
@@ -278,14 +277,14 @@ traces, theta = qpe.run_qpe_lcu_walk_operator(H, psi0_mps, n_phase_qubits, verbo
 # %% [markdown]
 # Now we compute the energy from the eigenphase of $\mathcal{W}$:
 #
-# $$ 2 \pi \theta = \pm \arccos(E_0/\lambda) \implies E_0 = \cos(2 \pi \theta) * \lambda $$
+# $$ 2 \pi \theta = \pm \arccos(E_0/\lambda) \implies E_0 = \lambda \cos(2 \pi \theta) $$
 
 # %%
 energy = qpe.get_energy_from_lcu_walk_phase(theta, λ)
 print(f"energy = {energy:.4f}")
 
 # %% [markdown]
-# The QPE circuit returns a measure of $\theta$ with precision of order $\Delta\theta = 1/2^{m}$ where $m$ is the number of phase qubits (in reality you need a little bit more than $m$ phase qubits to reach this precision with guarantees, see the tutorial on [Texbook QPE](./textbook_qpe.ipynb).)
+# The QPE circuit returns a measurement of $\theta$ with precision of order $\Delta\theta = 1/2^{m}$ where $m$ is the number of phase qubits (in reality one needs slightly more than $m$ phase qubits to reach this precision with guarantees, see the tutorial on [Textbook QPE](./textbook_qpe.ipynb).)
 # The precision on $E$ is then
 #
 # $$ \Delta E = \lambda \frac{2\pi}{2^m} \sqrt{1 - \left(\frac{E_0}{\lambda}\right)^2}  $$
@@ -300,10 +299,10 @@ print(f"error bound = {delta_e:.4f}")
 
 # %%
 thetas = []
-n_phase_bits_list = list(range(2, 6))
+n_phase_bits_arr = np.arange(2, 6)
 durations = []
 energies = []
-for m_ph in tqdm.tqdm(n_phase_bits_list):
+for m_ph in tqdm.tqdm(n_phase_bits_arr):
     st = time.time()
     traces, theta = qpe.run_qpe_lcu_walk_operator(H, psi0_mps, m_ph)
     thetas.append(theta)
@@ -314,26 +313,30 @@ for m_ph in tqdm.tqdm(n_phase_bits_list):
 # We plot the energy as a function of the number of phase qubits to see how the precision evolves
 
 # %%
-delta_es = [qpe.estimate_lcu_error(m_ph, E0_dmrg, λ) for m_ph in n_phase_bits_list]
+delta_es = [qpe.estimate_lcu_error(m_ph, E0_dmrg, λ) for m_ph in n_phase_bits_arr]
 
-plt.plot(n_phase_bits_list, energies, "-o", label="QPE")
+plt.plot(n_phase_bits_arr, energies, "-o", label="LCU")
 plt.axhline(y=E0_dmrg, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
-    n_phase_bits_list,
+    n_phase_bits_arr,
     [E0_dmrg + delta_e for delta_e in delta_es],
     [E0_dmrg - delta_e for delta_e in delta_es],
     alpha=0.2,
-    label="error bound",
+    label="LCU error bound",
 )
 plt.legend()
-plt.title(f"Heisenberg {H.n_qubits} spins - LCU")
+plt.xticks(n_phase_bits_arr)
+plt.title(f"Heisenberg {H.n_qubits} spins")
 plt.ylabel("energy")
 plt.xlabel("number of phase qubits");
 
 # %%
-plt.plot(n_phase_bits_list, durations, "-o")
+plt.plot(n_phase_bits_arr, durations, "-o", label="LCU")
+plt.legend()
 plt.ylabel("duration (seconds)")
-plt.xlabel("number of phase qubits");
+plt.xticks(n_phase_bits_arr)
+plt.xlabel("number of phase qubits")
+plt.title(f"Heisenberg {H.n_qubits} spins");
 
 # %% [markdown]
 # ## Compare with second order Trotter
@@ -346,10 +349,10 @@ size_interval = 2.0
 trotter_order = 2
 n_trotter_steps = 6
 
-for m_ph in tqdm.tqdm(n_phase_bits_list):
+for m_ph in tqdm.tqdm(n_phase_bits_arr):
     zeros_mph = qtn.MPS_computational_state("0" * m_ph)
     psi_init = kron_mps(zeros_mph, psi0_mps)
-    init_circ = qtn.CircuitMPS(psi0=psi_init, cutoff=cutoff)
+    init_circ = qtn.CircuitMPS(psi0=psi_init, cutoff=1e-10)
     traces, energy = qpe.qpe_energy(
         H,
         init_circ,
@@ -365,28 +368,35 @@ for m_ph in tqdm.tqdm(n_phase_bits_list):
 # We visualize the convergence of the energy with the number of phase qubits
 
 # %%
-plt.plot(n_phase_bits_list, res_ttr["energies"], "-s")
+plt.plot(n_phase_bits_arr, energies, "-o", label="LCU")
+(trotter_line,) = plt.plot(n_phase_bits_arr, res_ttr["energies"], "-s", label="Trotter")
 plt.axhline(y=E0_dmrg, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
-    n_phase_bits_list,
-    [E0_dmrg + size_interval / 2**m_ph for m_ph in n_phase_bits_list],
-    [E0_dmrg - size_interval / 2**m_ph for m_ph in n_phase_bits_list],
+    n_phase_bits_arr,
+    E0_dmrg + size_interval / 2**n_phase_bits_arr,
+    E0_dmrg - size_interval / 2**n_phase_bits_arr,
     alpha=0.2,
-    label="error bound",
+    label="Trotter error bound",
+    color=trotter_line.get_color(),
 )
 plt.legend()
 plt.title(f"Heisenberg {H.n_qubits} spins - 2nd order Trotter {n_trotter_steps} steps")
 plt.ylabel("energy")
+plt.xticks(n_phase_bits_arr)
 plt.xlabel("number of phase qubits");
 
 # %% [markdown]
 # The computation is much longer, although the comparison is not completely fair.
-# Indeed, in the LCU-based QPE we apply the REFLECT oracle as a MPO, which translates into much less gates to apply and less operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
+# Indeed, in the LCU-based QPE we apply the REFLECT oracle as an MPO, which translates into fewer gates to apply and fewer operations in the simulation (here the simulation time is mainly due to the number of operations, since we work with small systems the bond dimension remains small).
 
 # %%
-plt.plot(n_phase_bits_list, res_ttr["durations"], "-s")
+plt.plot(n_phase_bits_arr, durations, "-o", label="LCU")
+plt.plot(n_phase_bits_arr, res_ttr["durations"], "-s", label="Trotter")
+plt.legend()
+plt.xticks(n_phase_bits_arr)
 plt.ylabel("duration (seconds)")
-plt.xlabel("number of phase qubits");
+plt.xlabel("number of phase qubits")
+plt.title(f"Heisenberg {H.n_qubits} spins");
 
 # %% [markdown]
 # ## Quantum chemistry example: diatomic Hydrogen
@@ -416,11 +426,11 @@ print(f"L={L_H2} terms in the LCU decomposition \nLCU 1-norm λ = {λ_H2:.4f}")
 # %%
 m_ph = 4  # number of phase qubits
 
-# QPE on Walk operator
+# QPE on walk operator
 traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph, verbosity=1)
 # Get the energy
 energy = qpe.get_energy_from_lcu_walk_phase(theta, λ_H2)
-print(f"\nenergy = {energy:.4f}, error={abs(E0_H2 - energy):.4f}")
+print(f"\nenergy = {energy + H_H2.e_const:.4f}, error = {abs(E0_H2 - energy):.4f}")
 # Check error bound
 delta_e = qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2)
 print(f"error bound = {delta_e:.4f}")
@@ -430,36 +440,38 @@ print(f"error bound = {delta_e:.4f}")
 
 # %%
 thetas = []
-n_phase_bits_list = list(range(2, 6))
-durations = []
-energies = []
-for m_ph in tqdm.tqdm(n_phase_bits_list):
+n_phase_bits_arr = np.arange(2, 6)
+durations_H2 = []
+energies_H2 = []
+for m_ph in tqdm.tqdm(n_phase_bits_arr):
     st = time.time()
     traces, theta = qpe.run_qpe_lcu_walk_operator(H_H2, psi0_H2, m_ph)
     thetas.append(theta)
-    durations.append(time.time() - st)
-    energies.append(qpe.get_energy_from_lcu_walk_phase(theta, λ_H2))
+    durations_H2.append(time.time() - st)
+    energies_H2.append(qpe.get_energy_from_lcu_walk_phase(theta, λ_H2))
 
 # %%
-delta_es = [qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_list]
+delta_es = np.array(
+    [qpe.estimate_lcu_error(m_ph, E0_H2, λ_H2) for m_ph in n_phase_bits_arr]
+)
 
-plt.plot(n_phase_bits_list, energies, "-o", label="QPE")
+plt.plot(n_phase_bits_arr, energies_H2, "-o", label="LCU")
 plt.axhline(y=E0_H2, color="k", linestyle=":", label="DMRG")
 plt.fill_between(
-    n_phase_bits_list,
-    [E0_H2 + delta_e for delta_e in delta_es],
-    [E0_H2 - delta_e for delta_e in delta_es],
-    alpha=0.2,
-    label="error bound",
+    n_phase_bits_arr, E0_H2 + delta_es, E0_H2 - delta_es, alpha=0.2, label="error bound"
 )
 plt.legend()
-plt.title(f"H2 STO-3 basis ({H_H2.n_qubits} qubits) - LCU")
-plt.ylabel("energy")
+plt.xticks(n_phase_bits_arr)
+plt.title(f"$H_2$ STO-3G basis ({H_H2.n_qubits} qubits)")
+plt.ylabel("unshifted energy")
 plt.xlabel("number of phase qubits");
 
 # %%
-plt.plot(n_phase_bits_list, durations, "-o")
+plt.plot(n_phase_bits_arr, durations_H2, "-o", label="LCU")
 plt.ylabel("duration (seconds)")
-plt.xlabel("number of phase qubits");
+plt.xticks(n_phase_bits_arr)
+plt.xlabel("number of phase qubits")
+plt.legend()
+plt.title(f"$H_2$ STO-3G basis ({H_H2.n_qubits} qubits)")
 
 # %%
