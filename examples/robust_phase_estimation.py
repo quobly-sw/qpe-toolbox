@@ -211,7 +211,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # $$ g(2^m) = \mathbb{E}[Z(2^{m})] = \exp(-i 2^{m} E_0) $$
 #
-# for $m=0,1,..,M-1$. The objective is to obtain $\theta_m$ defined as the best $m$-bit approximation of $E_0$. Each iteration gives an additional bit of precision in $E_0$.
+# for $m=0,1,..,M-1$. At each step the algorithm computes an estimate $\theta_m$ of $E_0$; the objective is that $\theta_m$ be the best $m$-bit approximation of $E_0$, so that each iteration adds one bit of precision.
 #
 # **Algorithm 1 (p.24)**
 #
@@ -236,7 +236,7 @@ ax_t.set_ylabel("duration (seconds)");
 #      $$ d(\theta_m, \theta_{m-1}) = \min_{q\in\mathbb{Z}} | \theta_m - \theta_{m-1} + 2\pi q|, $$
 #       under the condition $-\pi < \theta_m \leq \pi$.
 #
-# The algorithm ensures that at each step, $\theta_m$ is the best $m$-bit approximation of $E_0$.
+# The algorithm ensures that at each step, $\theta_m$ is indeed the best $m$-bit approximation of $E_0$.
 # The following lemma guarantees convergence:
 #
 # **Lemma B.1. (p.25)**:
