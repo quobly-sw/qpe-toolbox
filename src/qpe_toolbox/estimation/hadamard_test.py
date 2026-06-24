@@ -17,7 +17,9 @@ from qpe_toolbox.circuit import make_circMPS
 from .qpe_circuit import qpe_circuit
 
 
-def build_hadamard_test_circuit(init_mps, unitary, theta):
+def build_hadamard_test_circuit(
+    init_mps, unitary, theta, *, cutoff=1e-10, max_bond=None
+):
     r"""
     Construct the quantum circuit implementing the Hadamard test.
 
@@ -35,7 +37,8 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
     Parameters
     ----------
     init_mps : :quimb-api:`MatrixProductState`
-        Initial state :math:`\ket{\psi}` of the data register.
+        Initial state :math:`\ket{\psi}` of the data register. A single ancilla
+        qubit is prepended, giving a :quimb-api:`CircuitMPS`.
     unitary : :quimb-api:`Gate` or iterable of :quimb-api:`Gate`
         The unitary :math:`U`, acting on data-register-local qubit indices
         ``[0, n_data)`` without controls (same convention as in
@@ -48,6 +51,12 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
         Typical values:
         - ``0`` for estimating the real part
         - ``-π/2`` for estimating the imaginary part
+    cutoff : float, default ``1e-10``
+        Singular-value truncation threshold of the underlying
+        :quimb-api:`CircuitMPS`.
+    max_bond : int or None, default ``None``
+        Maximum bond dimension of the underlying :quimb-api:`CircuitMPS`. If
+        ``None``, no explicit limit is imposed.
 
     Returns
     -------
@@ -55,12 +64,16 @@ def build_hadamard_test_circuit(init_mps, unitary, theta):
         Circuit implementing the Hadamard test.
     """
     unitary_gates = [unitary] if isinstance(unitary, qtn.Gate) else unitary
-    circ0 = make_circMPS(n_phase_bits=1, psi_mps=init_mps)
+    circ0 = make_circMPS(
+        n_phase_bits=1, psi_mps=init_mps, cutoff=cutoff, max_bond=max_bond
+    )
     _, circ = qpe_circuit(circ0, [unitary_gates], global_phase=theta)
     return circ
 
 
-def run_hadamard_test(init_mps, unitary, theta, n_shots, *, seed=None):
+def run_hadamard_test(
+    init_mps, unitary, theta, n_shots, *, seed=None, cutoff=1e-10, max_bond=None
+):
     r"""
     Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
 
@@ -91,13 +104,21 @@ def run_hadamard_test(init_mps, unitary, theta, n_shots, *, seed=None):
         else probabilities are estimated by sampling.
     seed : None or int, optional
         A random seed, passed to ``numpy.random.seed`` if given.
+    cutoff : float, default ``1e-10``
+        Singular-value truncation threshold of the underlying
+        :quimb-api:`CircuitMPS`.
+    max_bond : int or None, default ``None``
+        Maximum bond dimension of the underlying :quimb-api:`CircuitMPS`. If
+        ``None``, no explicit limit is imposed.
 
     Returns
     -------
     Z : float
         Estimated value of :math:`Z(\theta) = P(0) - P(1)`.
     """
-    circ = build_hadamard_test_circuit(init_mps, unitary, theta)
+    circ = build_hadamard_test_circuit(
+        init_mps, unitary, theta, cutoff=cutoff, max_bond=max_bond
+    )
     aux_ind = 0
     if n_shots is EXACT:
         probs = circ.compute_marginal(where=[aux_ind])

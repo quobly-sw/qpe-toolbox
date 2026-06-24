@@ -18,7 +18,17 @@ from .quantum_phase_estimation import trotter_evolution_gates
 
 
 def robust_phase_estimation(
-    H, psi0, epsilon, sign_E0, n_trotter_steps, n_shots, *, trotter_order=2, verbosity=0
+    H,
+    psi0,
+    epsilon,
+    sign_E0,
+    n_trotter_steps,
+    n_shots,
+    *,
+    trotter_order=2,
+    cutoff=1e-10,
+    max_bond=None,
+    verbosity=0,
 ):
     r"""
     Perform the Robust Phase Estimation (RPE) algorithm.
@@ -49,6 +59,12 @@ def robust_phase_estimation(
         Use ``EXACT`` to compute probabilities exactly.
     trotter_order : int, default ``2``
         Order of the Trotter-Suzuki decomposition.
+    cutoff : float, default ``1e-10``
+        Singular-value truncation threshold of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`.
+    max_bond : int or None, default ``None``
+        Maximum bond dimension of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`. If ``None``, no explicit limit is imposed.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print intermediate phase estimates.
 
@@ -72,7 +88,14 @@ def robust_phase_estimation(
             EXACT if n_trotter_steps is EXACT else n_trotter_steps * 2**m
         )
         phi_m = rpe_get_hadamard_output(
-            H, psi0, m, n_trotter_steps_m, n_shots, trotter_order=trotter_order
+            H,
+            psi0,
+            m,
+            n_trotter_steps_m,
+            n_shots,
+            trotter_order=trotter_order,
+            cutoff=cutoff,
+            max_bond=max_bond,
         )
         if m == 0:
             theta_m = phi_m
@@ -91,7 +114,17 @@ def robust_phase_estimation(
     return theta_list
 
 
-def rpe_get_hadamard_output(H, psi0, m, n_trotter_steps, n_shots, *, trotter_order=2):
+def rpe_get_hadamard_output(
+    H,
+    psi0,
+    m,
+    n_trotter_steps,
+    n_shots,
+    *,
+    trotter_order=2,
+    cutoff=1e-10,
+    max_bond=None,
+):
     r"""
     Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
 
@@ -115,6 +148,12 @@ def rpe_get_hadamard_output(H, psi0, m, n_trotter_steps, n_shots, *, trotter_ord
     trotter_order : int, default ``2``
         Order of the Trotter-Suzuki decomposition. Ignored when
         ``n_trotter_steps=EXACT``.
+    cutoff : float, default ``1e-10``
+        Singular-value truncation threshold of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`.
+    max_bond : int or None, default ``None``
+        Maximum bond dimension of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`. If ``None``, no explicit limit is imposed.
 
     Returns
     -------
@@ -131,8 +170,10 @@ def rpe_get_hadamard_output(H, psi0, m, n_trotter_steps, n_shots, *, trotter_ord
                 H, evolution_time, n_trotter_steps, trotter_order=trotter_order
             )
         )
-    X_m = run_hadamard_test(psi0, U_m, 0, n_shots)
-    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots)
+    X_m = run_hadamard_test(psi0, U_m, 0, n_shots, cutoff=cutoff, max_bond=max_bond)
+    Y_m = run_hadamard_test(
+        psi0, U_m, -np.pi / 2, n_shots, cutoff=cutoff, max_bond=max_bond
+    )
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)
 
