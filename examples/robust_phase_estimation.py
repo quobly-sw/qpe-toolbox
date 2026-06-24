@@ -42,7 +42,7 @@ from qpe_toolbox.hamiltonian import (
 plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
-# ## Hadamard test
+# ## Hadamard Test
 # The Robust Phase Estimation algorithm relies on the Hadamard test procedure, which we introduce below. Our presentation takes inspiration from [Lin Lin's lecture notes](https://math.berkeley.edu/~linlin/qasc/) and the ["Hadamard test" Wikipedia page](https://en.wikipedia.org/wiki/Hadamard_test).
 #
 # The goal of the Hadamard test is to compute $\bra{\psi} U \ket{\psi}$ where $U$ is a unitary operator. Since $U$ is generally not Hermitian, it is not an observable; therefore the real and imaginary parts of $\bra{\psi} U \ket{\psi}$ must be measured separately.
@@ -195,16 +195,18 @@ ax_e.set_ylabel("error (units of J)")
 ax_t.set_ylabel("duration (seconds)");
 
 # %% [markdown]
-# ## Robust phase estimation algorithm
+# ## Robust Phase Estimation Algorithm
 #
 # ### Introduction
+#
+# In the previous section, we defined a function $g(t) = \mathbb{E}Z(t)$, where $Z(t) = \bra{\Psi} U(t) \ket{\Psi}$ is computed using the Hadamard test. In this section, we explain how to process this function within Quantum Phase Estimation algorithm.
 #
 # Quote from Günther et al. [PRX Quantum 7, 020332](https://doi.org/10.1103/ynxb-p2xq):
 # > "If we think of g(t) as a time signal, then the phase estimation routine will constitute a signal processing transformation to compute the lowest frequency of $g(t)$ (corresponding to the energy $E_0$), provided that we have some guarantee on the overlap of $\ket{\psi}$ with the ground state; we assume a lower bound
 #   $c_0 \geq \eta$. With appropriate signal processing methods, one can find the value of $E_0$ with accuracy $\varepsilon$ using $M$ circuits with time evolution for
 #  times $t_1, . . . , t_M$. This can be done such that the maximal time evolution $t_{\rm max} = \mathrm{max}\{t_1, . . . , t_M\}$ and the total time over all circuit runs $t_{\rm tot} = t_1 + t_2 + · · · + t_M$  both scale as $\varepsilon^{-1}$. This Heisenberg scaling is known to be optimal."
 #
-# ### Algorithm
+# ### Description of the Algorithm
 # To get precision $\varepsilon$, the idea of the robust phase estimation algorithm is to consider $M$ different circuits where $M = \lceil \log_2 \varepsilon^{-1} \rceil$ and estimate
 #
 # $$ g(2^m) = \mathbb{E}[Z(2^{m})] = \exp(-i 2^{m} E_0) $$
@@ -241,8 +243,6 @@ ax_t.set_ylabel("duration (seconds)");
 # if $d(\phi_m,2^{m}E)<\frac{\pi}3$ for $m=0,1,...,M$ then $\theta_M$ is such that $d(\theta_M,E) \leq 2^{-M}\frac{\pi}3$
 
 # %% [markdown]
-# #### Illustration of the distance $d(\theta,\phi)$
-#
 # To build an intuition, let us plot the distance $d(\theta, \phi)$ as a function of $\theta$ for a given $\phi$ ($ \phi = 3\pi/2$ in the example) and vice-versa (the distance is symmetric by definition).
 
 # %%
@@ -312,7 +312,7 @@ print(f"theta_0 = {theta_0:.4f}")
 print(f"theta_1 = {theta_1:.4f}")
 
 # %% [markdown]
-# ### Running RPE: statistical precision
+# ### Statistical Precision
 #
 # We will now run the algorithm and see the influence of statistical noise. The `robust_phase_estimation` function returns the full list of $\theta_m$, $m=0,...,M-1$.
 #
@@ -365,7 +365,7 @@ plt.ylabel("$d(\\theta_m, E)$")
 plt.title(rf"$\epsilon={epsilon},\; M={M}$");
 
 # %% [markdown]
-# ### Trotter approximation of the time evolution operator
+# ### RPE with Trotter Approximation
 #
 # We now apply the same algorithm but replace the exact time evolution operator by a second order Trotter approximation.
 #
@@ -428,7 +428,7 @@ plt.xlabel("iteration $m$")
 plt.ylabel("error");
 
 # %% [markdown]
-# ## Heisenberg scaling
+# ## Heisenberg Scaling
 #
 # The experimental time is proportional to $N_{\rm shots} \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. The RPE algorithm reaches a precision $\varepsilon$ in $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations.
 # Hence it achieves Heisenberg scaling: reaching a precision $\varepsilon$ in time $\mathcal{O}(2^M) = \mathcal{O}(1/\varepsilon)$.
@@ -470,7 +470,7 @@ plt.text(10, 5e-5, "Heisenberg Hamiltonian \n4 spins, $S=1/2$, $J=1$")
 plt.legend();
 
 # %% [markdown]
-# ## Quantum chemistry example: diatomic Hydrogen
+# ## Quantum Chemistry Example: Diatomic Hydrogen
 
 # %% [markdown]
 # Let us now consider a molecule: we take $H_2$ in the minimal atomic orbital basis STO-3G. The Hamiltonian in qubit form is obtained via a Jordan-Wigner transformation.
@@ -516,7 +516,7 @@ plt.xlabel("iteration $m$")
 plt.ylabel("$d(\\theta_m, E)$");
 
 # %% [markdown]
-# ### Trotter
+# ### Trotterized Time Evolution
 
 # %% [markdown]
 # The Trotter decomposition of the molecular Hamiltonian is longer, and simulations become harder. The following run will take a minute...
@@ -547,7 +547,7 @@ plt.ylabel("error");
 # If you want to reach the expected precision, what would you try to increase first? $N_{\rm shots}$ or $n_{\rm steps}$?
 
 # %% [markdown]
-# ### Chemical accuracy?
+# ### Chemical Accuracy?
 #
 # The standard for chemical accuracy is $\varepsilon = 10^{-3}$ Ha. Hartrees are the default unit in `pyscf`. We can directly compute the number of iterations required for chemical accuracy:
 
