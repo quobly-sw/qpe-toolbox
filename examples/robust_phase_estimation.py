@@ -199,7 +199,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # ### Introduction
 #
-# In the previous section, we defined a function $g(t) = \mathbb{E}Z(t)$, where $Z(t) = \bra{\Psi} U(t) \ket{\Psi}$ is computed using the Hadamard test. In this section, we explain how to process this function within Quantum Phase Estimation algorithm.
+# In the previous section, we defined a function $g(t) = \mathbb{E}Z(t)$, where $Z(t) = \bra{\psi} U(t) \ket{\psi}$ is computed using the Hadamard test. In this section, we explain how to process this function within the Quantum Phase Estimation algorithm.
 #
 # Quote from Günther et al. [PRX Quantum 7, 020332](https://doi.org/10.1103/ynxb-p2xq):
 # > "If we think of g(t) as a time signal, then the phase estimation routine will constitute a signal processing transformation to compute the lowest frequency of $g(t)$ (corresponding to the energy $E_0$), provided that we have some guarantee on the overlap of $\ket{\psi}$ with the ground state; we assume a lower bound
@@ -289,7 +289,7 @@ phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots, rng=rng)
 possible_phases = [(phi_1 + sign_E0 * 2 * np.pi * q) / 2**m for q in range(2**m)]
 
 # %% [markdown]
-# Let's visualize how the different possible phases compare to $\theta_0$
+# Let us visualize how the different possible phases compare to $\theta_0$
 
 # %%
 plt.plot([-np.pi, np.pi], [1, 1], marker="|", markersize=10, color="k")
@@ -489,7 +489,7 @@ E0_H2, psi0_H2 = do_dmrg(H_H2)
 print(f"E_DMRG : {E0_H2 + H_H2.e_const:.10f}")
 
 # %% [markdown]
-# ### Exact time evolution
+# ### Exact Time Evolution
 
 # %% [markdown]
 # The system is small enough for exact exponentiation of the Hamiltonian matrix, and exact time evolution.
