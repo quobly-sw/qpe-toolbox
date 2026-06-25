@@ -209,7 +209,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # ### Introduction
 #
-# In the previous section, we defined a function $g(t) = \mathbb{E}Z(t)$, where $Z(t) = \bra{\psi} U(t) \ket{\psi}$ is computed using the Hadamard test. In this section, we explain how to process this function within the Quantum Phase Estimation algorithm.
+# In the previous section, we defined a function $g(t) = \mathbb{E}[\mathbf{Z}(t)] = \bra{\psi} U(t) \ket{\psi}$ is computed using the Hadamard test. In this section, we explain how to process this function within the Quantum Phase Estimation algorithm.
 #
 # Quote from Günther et al. [PRX Quantum 7, 020332](https://doi.org/10.1103/ynxb-p2xq):
 # > "If we think of g(t) as a time signal, then the phase estimation routine will constitute a signal processing transformation to compute the lowest frequency of $g(t)$ (corresponding to the energy $E_0$), provided that we have some guarantee on the overlap of $\ket{\psi}$ with the ground state; we assume a lower bound
@@ -219,11 +219,11 @@ ax_t.set_ylabel("duration (seconds)");
 # ### Description of the Algorithm
 # To get precision $\varepsilon$, the idea of the robust phase estimation algorithm is to consider $M$ different circuits where $M = \lceil \log_2 \varepsilon^{-1} \rceil$ and estimate
 #
-# $$ g(2^m) = \mathbb{E}[Z(2^{m})] = \exp(-i 2^{m} E_0) $$
+# $$ g(2^m) = \mathbb{E}[\mathbf{Z}(2^{m})] = \exp(-i 2^{m} E_0) $$
 #
 # for $m=0,1,..,M-1$. At each step the algorithm computes an estimate $\theta_m$ of $E_0$; the objective is that $\theta_m$ be the best $m$-bit approximation of $E_0$, so that each iteration adds one bit of precision.
 #
-# **Algorithm 1 (p.24)**
+# **Algorithm 1 (arXiv p.24 / PRX p.20)**
 #
 # 1. The algorithm is initialized with $\theta_{-1}=0$.
 #
@@ -234,7 +234,7 @@ ax_t.set_ylabel("duration (seconds)");
 #     $$ \bar{\bf Z}(2^{m}) = \frac{1}{N_{\rm shots}} \sum_{n=1}^{N_{\rm shots}} {\bf Z}^{(n)} (2^m) $$
 #
 #
-#     - From the outcome we compute $\phi_m = - \arg(\bar{Z}(2^m))$ using `numpy.angle`
+#     - From the outcome we compute $\phi_m = - \arg(\bar{Z}(2^m))$
 #
 #     - By definition $\phi_m \in (-\pi, \pi]:~\phi_m~$  is an approximation of $2^mE_0$ modulo $2\pi$
 #
@@ -249,7 +249,7 @@ ax_t.set_ylabel("duration (seconds)");
 # The algorithm ensures that at each step, $\theta_m$ is indeed the best $m$-bit approximation of $E_0$.
 # The following lemma guarantees convergence:
 #
-# **Lemma B.1. (p.25)**:
+# **Lemma B.1. (arXiv p.25 / PRX p.21)**:
 # if $d(\phi_m,2^{m}E)<\frac{\pi}3$ for $m=0,1,...,M$ then $\theta_M$ is such that $d(\theta_M,E) \leq 2^{-M}\frac{\pi}3$
 
 # %% [markdown]
