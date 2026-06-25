@@ -157,14 +157,15 @@ print(f"error = {abs(np.angle(Z) / t + E0):.2g}")
 #
 
 # %%
-shots_list = np.array([10, 100, 500, 1000, 2000])
+shots_list = np.array([10, 50, 100, 200, 400, 500, 800, 1000, 1500, 2000])
 errors = []
 durations = []
+rng = np.random.default_rng(42)
 
 for n_shots in tqdm.tqdm(shots_list):
     st = time.time()
-    X = qpe.run_hadamard_test(psi0, U, 0, n_shots=n_shots)
-    Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots=n_shots)
+    X = qpe.run_hadamard_test(psi0, U, 0, n_shots, rng=rng)
+    Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots, rng=rng)
     et = time.time() - st
 
     Z = X + 1j * Y
@@ -177,18 +178,27 @@ for n_shots in tqdm.tqdm(shots_list):
 # The statistical error decreases as $1/\sqrt{N_{\rm shots}}$ while the computation time increases linearly with $N_{\rm shots}$.
 
 # %%
+log_prefactor = np.log(errors) + np.log(shots_list) / 2
+mean = np.exp(log_prefactor.mean())
+std = np.exp(log_prefactor.std())
 fig, (ax_e, ax_t) = plt.subplots(nrows=2)
 fig.subplots_adjust(hspace=0.4)
-ax_e.loglog(shots_list, errors, "-o")
 ax_e.loglog(
     shots_list,
-    errors[0] * np.sqrt(10 / shots_list),
+    mean / np.sqrt(shots_list),
     "--",
     label="$\\propto 1/\\sqrt{N_{\\rm shots}}$",
-    zorder=0,
 )
+ax_e.fill_between(
+    shots_list,
+    mean / std / np.sqrt(shots_list),
+    mean * std / np.sqrt(shots_list),
+    alpha=0.2,
+)
+ax_e.loglog(shots_list, errors, "-o")
+
 ax_t.plot(shots_list, durations, "-o")
-ax_e.legend()
+ax_e.legend(loc="lower left")
 ax_e.set_xlabel("number of shots")
 ax_t.set_xlabel("number of shots")
 ax_e.set_ylabel("error (units of J)")
