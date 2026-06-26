@@ -173,23 +173,23 @@ def rpe_distance(phi, theta):
     """
     Compute the angular distance between two angles.
 
-    The distance is defined modulo π and lies in the interval [0, π].
+    The distance is defined modulo π and lies in the interval [0, π).
 
     Parameters
     ----------
-    phi : float
+    phi : float or array of float
         First angle in radians.
-    theta : float
+    theta : float or array of float
         Second angle in radians.
 
     Returns
     -------
-    d : float
+    d : float or array of float
         Angular distance between ``phi`` and ``theta``.
     """
     sign = np.sign(phi - theta)
-    K = int(abs(phi - theta) / (2 * np.pi) + 1 / 2)
-    return abs(phi - theta - K * sign * 2 * np.pi)
+    K = np.floor(np.abs(phi - theta) / (2 * np.pi) + 1 / 2)
+    return np.abs(phi - theta - K * sign * 2 * np.pi)
 
 
 def rpe_update_theta(S, theta_ref):
