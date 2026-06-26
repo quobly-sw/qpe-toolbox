@@ -106,7 +106,7 @@ def robust_phase_estimation(
             theta_m = phi_m
         else:
             # refine the previous guess theta_{m-1} = theta_list[m - 1]
-            S_m = [(phi_m + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
+            S_m = (phi_m + sign_E0 * 2 * np.pi * np.arange(2**m)) / 2**m
             theta_m, _d_min = rpe_update_theta(S_m, theta_list[m - 1])
 
         if verbosity >= 1:

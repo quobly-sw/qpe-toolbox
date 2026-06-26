@@ -241,7 +241,7 @@ ax_t.set_ylabel("duration (seconds)");
 #     - Given a previous guess $\theta_{m-1}$ for the ground state energy $E_0$, the new energy estimate $\theta_m$ is given by
 #
 #     $$ \theta_m = 2^{-m} (2\pi k + \phi_m), $$
-#     where $k$ is an integer between $0$ and $2^m - 1$ which minimizes the distance
+#     where $k$ is an integer between $0$ and $2^m - 1$ chosen such that $\theta_m $ minimizes the distance
 #
 #      $$ d(\theta_m, \theta_{m-1}) = \min_{q\in\mathbb{Z}} | \theta_m - \theta_{m-1} + 2\pi q|, $$
 #       under the condition $-\pi < \theta_m \leq \pi$.
@@ -250,7 +250,7 @@ ax_t.set_ylabel("duration (seconds)");
 # The following lemma guarantees convergence:
 #
 # **Lemma B.1. (arXiv p.25 / PRX p.21)**:
-# if $d(\phi_m,2^{m}E)<\frac{\pi}3$ for $m=0,1,...,M$ then $\theta_M$ is such that $d(\theta_M,E) \leq 2^{-M}\frac{\pi}3$
+# if $d(\phi_m,2^{m}E)<\frac{\pi}3$ for $m=0,1,...,M -1$ then $\theta_m$ is such that $d(\theta_m,E) \leq 2^{-m}\frac{\pi}3$
 
 # %% [markdown]
 # To build an intuition, let us plot the distance $d(\theta, \phi)$ as a function of $\theta$ for a given $\phi$ ($ \phi = 3\pi/2$ in the example) and vice-versa (the distance is symmetric by definition).
@@ -258,22 +258,14 @@ ax_t.set_ylabel("duration (seconds)");
 # %%
 thetas = np.linspace(-2 * np.pi, 2 * np.pi, 600)
 plt.xticks(
-    [i * np.pi for i in range(-2, 3)],
-    [r"$-2\pi$", r"$-\pi$", "$0$", r"$\pi$", r"$2\pi$"],
+    np.pi * np.arange(-2, 3), [r"$-2\pi$", r"$-\pi$", "$0$", r"$\pi$", r"$2\pi$"]
 )
-plt.yticks([0, np.pi / 2, np.pi], ["0", "$\\pi/2$", "$\\pi$"])
+plt.yticks([0, np.pi / 2, np.pi], ["0", r"$\pi/2$", r"$\pi$"])
 plt.xlabel(r"$\theta$")
 
+plt.plot(thetas, qpe.rpe_distance(thetas, 3 * np.pi / 2), label=r"$d(3\pi/2, \theta)$")
 plt.plot(
-    thetas,
-    [qpe.rpe_distance(t, 3 * np.pi / 2) for t in thetas],
-    label=r"$d(3\pi/2, \theta)$",
-)
-plt.plot(
-    thetas,
-    [qpe.rpe_distance(3 * np.pi / 2, t) for t in thetas],
-    "--",
-    label=r"$d(\theta, 3\pi/2)$",
+    thetas, qpe.rpe_distance(3 * np.pi / 2, thetas), "--", label=r"$d(\theta, 3\pi/2)$"
 )
 plt.legend();
 
@@ -287,7 +279,6 @@ epsilon = 0.02
 M = int(np.ceil(np.log2(1 / epsilon)))
 
 n_shots = 2
-
 rng = np.random.default_rng(42)
 
 # m = 0
@@ -296,7 +287,7 @@ theta_0 = phi_0
 
 m = 1
 phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots, rng=rng)
-possible_phases = [(phi_1 + sign_E0 * 2 * np.pi * q) / 2**m for q in range(2**m)]
+possible_phases = [(phi_1 + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
 
 # %% [markdown]
 # Let us visualize how the different possible phases compare to $\theta_0$
