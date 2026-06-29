@@ -270,14 +270,10 @@ plt.plot(
 plt.legend();
 
 # %% [markdown]
-# Let us now illustrate the first two steps of the algorithm for concreteness. We start with $N_{\rm shots}=2$ and $\epsilon = 0.02$. We also consider exact time evolution.
+# Let us now illustrate the first two steps of the algorithm for concreteness. We start with $N_{\rm shots}=2$ and consider exact time evolution.
 
 # %%
 sign_E0 = np.sign(E0)
-
-epsilon = 0.02
-M = int(np.ceil(np.log2(1 / epsilon)))
-
 n_shots = 2
 rng = np.random.default_rng(42)
 
