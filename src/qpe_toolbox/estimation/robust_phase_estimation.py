@@ -100,10 +100,7 @@ def robust_phase_estimation(
             theta_m = phi_m
         else:
             # refine the previous guess theta_{m-1} = theta_list[m - 1]
-            # candidate energies, wrapped into (-pi, pi]
-            S_m = (phi_m + 2 * np.pi * np.arange(2**m)) / 2**m
-            S_m = (S_m + np.pi) % (2 * np.pi) - np.pi
-            theta_m, _d_min = rpe_update_theta(S_m, theta_list[m - 1])
+            theta_m = rpe_update_theta(phi_m, theta_list[m - 1], m)
 
         if verbosity >= 1:
             et = time.time() - st
@@ -188,28 +185,28 @@ def rpe_distance(phi, theta):
     return np.abs(phi - theta - K * sign * 2 * np.pi)
 
 
-def rpe_update_theta(S, theta_ref):
-    """
-    Find the angle in a set closest to a reference angle.
-
-    The comparison is performed using the angular distance
-    modulo 2π.
+def rpe_update_theta(phi_m, theta_ref, m):
+    r"""
+    Refine the phase estimate at iteration ``m``.
 
     Parameters
     ----------
-    S : list of float
-        Candidate angles.
+    phi_m : float
+        Phase estimate at iteration ``m``, in radians.
     theta_ref : float
-        Reference angle.
+        Reference angle (previous energy estimate :math:`\theta_{m-1}`).
+    m : int
+        Iteration index.
 
     Returns
     -------
-    theta_min : float
-        Angle in ``S`` closest to ``theta_ref``.
-    d_min : float
-        Corresponding minimal angular distance.
+    theta_m : float
+        Refined energy estimate, the candidate nearest to ``theta_ref``, wrapped
+        into :math:`(-\pi, \pi]`.
     """
-    S = np.asarray(S)
-    distances = rpe_distance(S, theta_ref)
-    i_min = np.argmin(distances)
-    return S[i_min], distances[i_min]
+    # The candidates (phi_m + *pi*k) / 2^m form a uniform grid on the circle.
+    # Grid point closest (modulo :math:`2\pi`) to ``theta_ref`` is obtained by rounding
+    # the float (2^m theta_ref - phi_m) / 2pi
+    k = round((2**m * theta_ref - phi_m) / (2 * np.pi))
+    theta_m = (phi_m + 2 * np.pi * k) / 2**m
+    return (theta_m + np.pi) % (2 * np.pi) - np.pi

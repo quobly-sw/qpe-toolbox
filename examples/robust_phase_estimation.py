@@ -304,10 +304,10 @@ plt.legend();
 # We compute $\theta_1$ as the closest possible phase to $\theta_0$ and check that the error decreases between the first and second iteration:
 
 # %%
-theta_1, d_min = qpe.rpe_update_theta(possible_phases, theta_0)
-print(f"Exact energy E = {E0:.4f}")
-print(f"theta_0 = {theta_0:.4f}")
-print(f"theta_1 = {theta_1:.4f}")
+theta_1 = qpe.rpe_update_theta(phi_1, theta_0, m)
+print(f"Exact energy {E0 = :.4f}")
+print(f"{theta_0 = :.4f},   error = {abs(E0 - theta_0):.4f}")
+print(f"{theta_1 = :.4f},   error = {abs(E0 - theta_1):.4f}")
 
 # %% [markdown]
 # ### Statistical Precision
