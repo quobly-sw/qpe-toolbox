@@ -20,7 +20,6 @@ def robust_phase_estimation(
     H,
     psi0,
     n_repetitions,
-    sign_E0,
     n_steps,
     n_shots,
     *,
@@ -53,8 +52,6 @@ def robust_phase_estimation(
         iteration adds one bit of precision. To reach a target precision
         :math:`\varepsilon`, take :math:`M = \lceil \log_2 \varepsilon^{-1}
         \rceil`.
-    sign_E0 : float
-        Sign of the target energy eigenvalue.
     n_steps : int or qpe_toolbox.EXACT
         Number of Trotter steps used to approximate the time evolution.
         Use ``EXACT`` for exact time evolution.
@@ -77,9 +74,6 @@ def robust_phase_estimation(
         Phase estimates :math:`\theta_0, \dots, \theta_{M-1}`, one per
         iteration. The last element is the most accurate estimate.
     """
-    if abs(abs(sign_E0) - 1.0) > 1e-12:
-        raise ValueError("sign_E0 must be +-1")
-
     st = time.time()
     if rng is None:
         rng = np.random.default_rng()
@@ -106,7 +100,9 @@ def robust_phase_estimation(
             theta_m = phi_m
         else:
             # refine the previous guess theta_{m-1} = theta_list[m - 1]
-            S_m = (phi_m + sign_E0 * 2 * np.pi * np.arange(2**m)) / 2**m
+            # candidate energies, wrapped into (-pi, pi]
+            S_m = (phi_m + 2 * np.pi * np.arange(2**m)) / 2**m
+            S_m = (S_m + np.pi) % (2 * np.pi) - np.pi
             theta_m, _d_min = rpe_update_theta(S_m, theta_list[m - 1])
 
         if verbosity >= 1:
@@ -213,10 +209,7 @@ def rpe_update_theta(S, theta_ref):
     d_min : float
         Corresponding minimal angular distance.
     """
-    d_min = rpe_distance(S[0], theta_ref)
-    theta_min = S[0]
-    for theta in S[1:]:
-        if (rpe_distance(theta, theta_ref) <= d_min) and (-np.pi <= theta < np.pi):
-            d_min = rpe_distance(theta, theta_ref)
-            theta_min = theta
-    return theta_min, d_min
+    S = np.asarray(S)
+    distances = rpe_distance(S, theta_ref)
+    i_min = np.argmin(distances)
+    return S[i_min], distances[i_min]

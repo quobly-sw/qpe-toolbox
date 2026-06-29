@@ -273,7 +273,6 @@ plt.legend();
 # Let us now illustrate the first two steps of the algorithm for concreteness. We start with $N_{\rm shots}=2$ and consider exact time evolution.
 
 # %%
-sign_E0 = np.sign(E0)
 n_shots = 2
 rng = np.random.default_rng(42)
 
@@ -283,7 +282,9 @@ theta_0 = phi_0
 
 m = 1
 phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots, rng=rng)
-possible_phases = [(phi_1 + sign_E0 * 2 * np.pi * k) / 2**m for k in range(2**m)]
+# candidate energies, wrapped into (-pi, pi]
+possible_phases = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
+possible_phases = (possible_phases + np.pi) % (2 * np.pi) - np.pi
 
 # %% [markdown]
 # Let us visualize how the different possible phases compare to $\theta_0$
@@ -324,7 +325,7 @@ n_shots = 1
 
 rng = np.random.default_rng(42)
 theta_list = qpe.robust_phase_estimation(
-    H, psi0, M, sign_E0, EXACT, n_shots, verbosity=1, rng=rng
+    H, psi0, M, EXACT, n_shots, verbosity=1, rng=rng
 )
 
 # %%
@@ -346,9 +347,7 @@ n_shot_list = [1, 2, 3, 4]
 
 rng = np.random.default_rng(42)
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(
-        H, psi0, M, sign_E0, EXACT, n_shots, rng=rng
-    )
+    theta_list = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
     plt.semilogy(
         [qpe.rpe_distance(theta, E0) for theta in theta_list],
         "-o",
@@ -380,7 +379,7 @@ thetas_ttr_list = []
 
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1, rng=rng
+    H, psi0, M, n_steps, n_shots, verbosity=1, rng=rng
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -406,7 +405,7 @@ plt.ylabel("error");
 n_steps = 2
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, sign_E0, n_steps, n_shots, verbosity=1, rng=rng
+    H, psi0, M, n_steps, n_shots, verbosity=1, rng=rng
 )
 thetas_ttr_list.append(thetas_ttr)
 
@@ -442,9 +441,7 @@ rng = np.random.default_rng(42)
 for epsilon in epsilon_list:
     M = int(np.ceil(np.log2(1 / epsilon)))
     cost_list.append(sum([n_shots * 2**m for m in range(M)]))
-    theta_list = qpe.robust_phase_estimation(
-        H, psi0, M, sign_E0, EXACT, n_shots, rng=rng
-    )
+    theta_list = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
     res_list.append(theta_list[-1])
 
 # %%
@@ -494,15 +491,12 @@ print(f"E_DMRG : {E0_H2 + H_H2.e_const:.10f}")
 # %%
 epsilon = 0.02
 M = int(np.ceil(np.log2(1 / epsilon)))
-sign_E0 = np.sign(E0_H2)
 n_shot_list = [2, 3, 1000]
 
 # n_shot stays small, result depends a lot on seed
 rng = np.random.default_rng(2)
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(
-        H_H2, psi0_H2, M, sign_E0, EXACT, n_shots, rng=rng
-    )
+    theta_list = qpe.robust_phase_estimation(H_H2, psi0_H2, M, EXACT, n_shots, rng=rng)
     distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list]
     plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
@@ -525,7 +519,7 @@ n_steps = 1
 
 rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, M, sign_E0, n_steps, n_shots, verbosity=1, rng=rng
+    H_H2, psi0_H2, M, n_steps, n_shots, verbosity=1, rng=rng
 )
 distances_trotter_H2 = [qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2]
 
