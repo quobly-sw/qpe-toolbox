@@ -394,8 +394,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
     -------
     E_max : float
         Upper bound of the search window in physical energy units:
-        ``E_target + size_interval / 2``. This is the :math:`E_\\mathrm{max}`
-        of the QPE derivation.
+        ``E_target + size_interval / 2``.
     evolution_time : float
         Total evolution time corresponding to the search interval.
     global_phase : float
