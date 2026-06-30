@@ -297,7 +297,7 @@ possible_phases = (possible_phases + np.pi) % (2 * np.pi) - np.pi
 # %%
 plt.plot([-np.pi, np.pi], [1, 1], marker="|", markersize=10, color="k")
 plt.plot(theta_0, 1, "*", markersize=20, color="r", label=r"$\theta_0$")
-plt.plot(possible_phases, [1, 1], "o", markersize=15, label=r"possible phases")
+plt.plot(possible_phases, [1, 1], "o", markersize=15, label=r"possible $\theta_1$")
 
 plt.text(-1.1 * np.pi, 0.99, r"$-\pi$", fontsize=16)
 plt.text(np.pi, 0.99, r"$\pi$", fontsize=16)
@@ -431,42 +431,36 @@ plt.ylabel("error");
 # %% [markdown]
 # ## Heisenberg Scaling
 #
-# The experimental time is proportional to $N_{\rm shots} \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. The RPE algorithm reaches a precision $\varepsilon$ in $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations.
+# The experimental time is proportional to $N_{\rm shots} \cdot \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. The RPE algorithm reaches a precision $\varepsilon$ in $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations.
 # Hence it achieves Heisenberg scaling: reaching a precision $\varepsilon$ in time $\mathcal{O}(2^M) = \mathcal{O}(1/\varepsilon)$.
 #
-# Let us illustrate that below: we run the RPE algorithm for various $\varepsilon$ and plot experimental time versus energy error. (We take exact time evolution for simplicity: in this case we consider that the experimental time is exactly $N_{\rm shots} \sum_{m=0}^{M-1}  2^m$.)
+# Let us illustrate that below: we run the RPE algorithm for various $\varepsilon$ and plot experimental time versus energy error. Here we use exact time evolution for simplicity: in this case the experimental time is exactly $N_{\rm shots} \cdot \sum_{m=0}^{M-1}  2^m$.
 
 # %%
-epsilon_list = [0.1 / 2**m for m in range(11)]
+epsilon_values = 0.1 / 2 ** np.arange(11)
 n_shots = 5
 
 cost_list = []
 res_list = []
 rng = np.random.default_rng(42)
-for epsilon in epsilon_list:
+for epsilon in epsilon_values:
     M = int(np.ceil(np.log2(1 / epsilon)))
     cost_list.append(sum([n_shots * 2**m for m in range(M)]))
     theta_list = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
     res_list.append(theta_list[-1])
 
 # %%
+xfit = np.array([0.2, 0.1 / 2**15])
+plt.loglog(xfit**-2, xfit, "k:", label=r"$t_{tot}=1/\epsilon^2$")
+plt.loglog(xfit**-1, xfit, "b:", label=r"$t_{tot}=1/\epsilon$")
+plt.loglog(cost_list, epsilon_values, "rd", label=r"target $\epsilon$")
 plt.loglog(cost_list, [abs(en - E0) for en in res_list], "-o", label="RPE")
-plt.loglog(cost_list, epsilon_list, "rd", label=r"target $\epsilon$")
-plt.loglog(
-    [1 / eps**2 for eps in epsilon_list],
-    epsilon_list,
-    "k:",
-    label=r"$t_{tot}=1/\epsilon^2$",
-)
-plt.loglog(
-    [1 / eps for eps in epsilon_list], epsilon_list, "b:", label=r"$t_{tot}=1/\epsilon$"
-)
 
 plt.xlabel("Experimental time $t_{tot}$ (number of shots x repetitions)")
 plt.ylabel(r"Energy error $\epsilon$")
 plt.title("Heisenberg scaling of RPE with exact time evolution")
-plt.text(10, 5e-5, "Heisenberg Hamiltonian \n4 spins, $S=1/2$, $J=1$")
-plt.legend();
+plt.xlim(10, 2e5)
+plt.legend(title="Heisenberg Hamiltonian\n4 spins, $S=1/2$, $J=1$");
 
 # %% [markdown]
 # ## Quantum Chemistry Example: Diatomic Hydrogen
