@@ -4,8 +4,8 @@ import numpy as np
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.estimation import (
+    angular_distance,
     robust_phase_estimation,
-    rpe_distance,
     rpe_update_theta,
 )
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
@@ -18,7 +18,7 @@ def test_rpe():
     n_repetitions = 7
 
     theta_list = robust_phase_estimation(H, psi0, n_repetitions, EXACT, EXACT)
-    assert abs(rpe_distance(E0, theta_list[-1])) < 2**-n_repetitions
+    assert abs(angular_distance(E0, theta_list[-1])) < 2**-n_repetitions
 
 
 def test_rpe_seed_deterministic():
@@ -44,10 +44,10 @@ def test_rpe_update_theta_matches_bruteforce():
             # brute-force reference: wrapped candidate set, nearest by distance
             candidates = (phi_m + 2 * np.pi * np.arange(2**m)) / 2**m
             candidates = (candidates + np.pi) % (2 * np.pi) - np.pi
-            theta_brute = candidates[np.argmin(rpe_distance(candidates, theta_ref))]
+            theta_brute = candidates[np.argmin(angular_distance(candidates, theta_ref))]
 
             theta_fast = rpe_update_theta(phi_m, theta_ref, m)
-            assert rpe_distance(theta_fast, theta_brute) < 1e-12
+            assert angular_distance(theta_fast, theta_brute) < 1e-12
 
 
 if __name__ == "__main__":

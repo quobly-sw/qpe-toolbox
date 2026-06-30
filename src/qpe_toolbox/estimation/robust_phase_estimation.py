@@ -63,10 +63,8 @@ def robust_phase_estimation(
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print intermediate phase estimates.
     rng : :numpy-random:`numpy.random.Generator <generator>`, optional
-        Random generator for the Hadamard-test sampling. Pass a seeded
-        generator (e.g. ``numpy.random.default_rng(42)``) for deterministic
-        results. A single generator is threaded through every iteration.
-        Ignored when ``n_shots`` is ``EXACT``.
+        Random generator for the Hadamard-test sampling. Ignored when
+        ``n_shots`` is ``EXACT``.
 
     Returns
     -------
@@ -162,7 +160,7 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2, rn
     return -np.angle(Z_m)
 
 
-def rpe_distance(phi, theta):
+def angular_distance(phi, theta):
     """
     Compute the angular distance between two angles.
 

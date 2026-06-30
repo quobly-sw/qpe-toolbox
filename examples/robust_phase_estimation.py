@@ -263,9 +263,14 @@ plt.xticks(
 plt.yticks([0, np.pi / 2, np.pi], ["0", r"$\pi/2$", r"$\pi$"])
 plt.xlabel(r"$\theta$")
 
-plt.plot(thetas, qpe.rpe_distance(thetas, 3 * np.pi / 2), label=r"$d(3\pi/2, \theta)$")
 plt.plot(
-    thetas, qpe.rpe_distance(3 * np.pi / 2, thetas), "--", label=r"$d(\theta, 3\pi/2)$"
+    thetas, qpe.angular_distance(thetas, 3 * np.pi / 2), label=r"$d(3\pi/2, \theta)$"
+)
+plt.plot(
+    thetas,
+    qpe.angular_distance(3 * np.pi / 2, thetas),
+    "--",
+    label=r"$d(\theta, 3\pi/2)$",
 )
 plt.legend();
 
@@ -330,7 +335,7 @@ theta_list = qpe.robust_phase_estimation(
 
 # %%
 plt.semilogy(
-    [qpe.rpe_distance(theta, E0) for theta in theta_list],
+    [qpe.angular_distance(theta, E0) for theta in theta_list],
     "-o",
     label=f"$N_{{\\rm shots}}={n_shots}$",
 )
@@ -349,7 +354,7 @@ rng = np.random.default_rng(42)
 for n_shots in n_shot_list:
     theta_list = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
     plt.semilogy(
-        [qpe.rpe_distance(theta, E0) for theta in theta_list],
+        [qpe.angular_distance(theta, E0) for theta in theta_list],
         "-o",
         label=f"$N_{{\\rm shots}}={n_shots}$",
     )
@@ -386,7 +391,7 @@ thetas_ttr_list.append(thetas_ttr)
 
 # %%
 plt.semilogy(
-    [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[0]],
+    [qpe.angular_distance(theta, E0) for theta in thetas_ttr_list[0]],
     "-o",
     label=f"$n_{{\\rm steps}}={n_steps}$",
 )
@@ -412,7 +417,7 @@ thetas_ttr_list.append(thetas_ttr)
 # %%
 for i, n_steps in enumerate([1, 2]):
     plt.semilogy(
-        [qpe.rpe_distance(theta, E0) for theta in thetas_ttr_list[i]],
+        [qpe.angular_distance(theta, E0) for theta in thetas_ttr_list[i]],
         "-o",
         label=f"$n_{{\\rm steps}}={n_steps}$",
     )
@@ -497,7 +502,7 @@ n_shot_list = [2, 3, 1000]
 rng = np.random.default_rng(2)
 for n_shots in n_shot_list:
     theta_list = qpe.robust_phase_estimation(H_H2, psi0_H2, M, EXACT, n_shots, rng=rng)
-    distances = [qpe.rpe_distance(theta, E0_H2) for theta in theta_list]
+    distances = [qpe.angular_distance(theta, E0_H2) for theta in theta_list]
     plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
@@ -521,7 +526,9 @@ rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
     H_H2, psi0_H2, M, n_steps, n_shots, verbosity=1, rng=rng
 )
-distances_trotter_H2 = [qpe.rpe_distance(theta, E0_H2) for theta in thetas_trotter_H2]
+distances_trotter_H2 = [
+    qpe.angular_distance(theta, E0_H2) for theta in thetas_trotter_H2
+]
 
 # %% [markdown]
 # ... and fails to get the desired precision
