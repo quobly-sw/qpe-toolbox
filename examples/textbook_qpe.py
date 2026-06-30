@@ -265,7 +265,7 @@ plt.ylabel(r"$P(a)$");
 #
 # The correspondence between the QPE output $\theta$ and the energy $E$ for a given set of parameters $E_{\rm target}$ and $\Delta$ is
 #
-# $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2}.$$
+# $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2} = \frac{E_{\rm max} - E}{\Delta}.$$
 #
 # From the previous equation, if we measure $\theta$ with $m$ bits of precision, the energy error is at most $\Delta / 2^m$.
 #

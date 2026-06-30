@@ -81,14 +81,14 @@ def qpe_energy(
 
       .. math::
 
-         E = E_\\mathrm{shift} - \\frac{2 \\pi \\theta}{t_\\mathrm{evol}}
+         E = E_\\mathrm{max} - \\frac{2 \\pi \\theta}{t_\\mathrm{evol}}
 
       where :math:`\\theta` is the phase of the most probable state and
-      :math:`E_\\mathrm{shift} = E_\\mathrm{target} + \\Delta/2` (see
+      :math:`E_\\mathrm{max} = E_\\mathrm{target} + \\Delta/2` (see
       :func:`set_search_window`).
     - Supports both Trotterized and exact evolution.
     """
-    E_shift, evolution_time, global_phase = set_search_window(
+    E_max, evolution_time, global_phase = set_search_window(
         hamiltonian, E_target, size_interval
     )
 
@@ -128,7 +128,7 @@ def qpe_energy(
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
 
-    energy = E_shift - 2 * np.pi * theta / evolution_time
+    energy = E_max - 2 * np.pi * theta / evolution_time
     return traces, energy
 
 
@@ -392,7 +392,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
 
     Returns
     -------
-    E_shift : float
+    E_max : float
         Upper bound of the search window in physical energy units:
         ``E_target + size_interval / 2``. This is the :math:`E_\\mathrm{max}`
         of the QPE derivation.
@@ -400,7 +400,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
         Total evolution time corresponding to the search interval.
     global_phase : float
         Global phase applied to the circuit:
-        ``(E_shift - e_const) * evolution_time``.
+        ``(E_max - e_const) * evolution_time``.
 
     Notes
     -----
@@ -409,7 +409,7 @@ def set_search_window(hamiltonian, E_target, size_interval):
     if not (size_interval > 0):
         raise ValueError(f"Invalid size_interval: {size_interval}")
     E_const = getattr(hamiltonian, "e_const", 0.0)
-    E_shift = E_target + size_interval / 2
+    E_max = E_target + size_interval / 2
     evolution_time = 2 * np.pi / size_interval
-    global_phase = (E_shift - E_const) * evolution_time
-    return E_shift, evolution_time, global_phase
+    global_phase = (E_max - E_const) * evolution_time
+    return E_max, evolution_time, global_phase
