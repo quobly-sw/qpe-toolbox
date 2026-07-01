@@ -23,7 +23,7 @@ def robust_phase_estimation(
     n_steps,
     n_shots,
     *,
-    trotter_order=2,
+    trotter_order=1,
     verbosity=0,
     rng=None,
 ):
@@ -58,7 +58,7 @@ def robust_phase_estimation(
     n_shots : int or EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
-    trotter_order : int, default ``2``
+    trotter_order : int, default ``1``
         Order of the Trotter-Suzuki decomposition.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print intermediate phase estimates.
@@ -111,7 +111,7 @@ def robust_phase_estimation(
     return theta_list
 
 
-def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2, rng=None):
+def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=1, rng=None):
     r"""
     Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
 
@@ -132,7 +132,7 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=2, rn
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
-    trotter_order : int, default ``2``
+    trotter_order : int, default ``1``
         Order of the Trotter-Suzuki decomposition.
     rng : :numpy-random:`numpy.random.Generator <generator>`, optional
         Random generator threaded through the two Hadamard tests, so the real
