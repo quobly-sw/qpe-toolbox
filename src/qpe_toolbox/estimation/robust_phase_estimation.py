@@ -103,7 +103,7 @@ def robust_phase_estimation(
         if verbosity >= 1:
             et = time.time() - st
             print(
-                f"{m} \t {np.round(phi_m, 4):<6} \t {np.round(theta_m, 4):<6} \t {et:<6.1f}"
+                f"{m} \t {np.round(phi_m, 4): 6} \t {np.round(theta_m, 4): 6} \t {et:<6.1f}"
             )
 
         theta_list.append(theta_m)
