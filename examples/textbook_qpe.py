@@ -265,7 +265,7 @@ plt.ylabel(r"$P(a)$");
 #
 # The correspondence between the QPE output $\theta$ and the energy $E$ for a given set of parameters $E_{\rm target}$ and $\Delta$ is
 #
-# $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2}.$$
+# $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2} = \frac{E_{\rm max} - E}{\Delta}.$$
 #
 # From the previous equation, if we measure $\theta$ with $m$ bits of precision, the energy error is at most $\Delta / 2^m$.
 #
@@ -455,7 +455,7 @@ def qpe_with_prob_success(
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
     """
 
-    E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
+    E_shift, evolution_time, global_phase = qpe.set_search_window(
         hamiltonian, E_target, size_interval
     )
 
@@ -473,7 +473,7 @@ def qpe_with_prob_success(
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
-    energy = Emax - 2 * np.pi * theta / evolution_time + E_const
+    energy = E_shift - 2 * np.pi * theta / evolution_time
     return energy, np.max(probs), prob_success
 
 
