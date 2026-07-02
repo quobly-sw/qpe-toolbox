@@ -114,13 +114,12 @@ E0, psi0 = do_dmrg(H)
 #
 # The function `run_hadamard_test` runs the Hadamard test and returns $\mathrm{Re}~e^{i\theta} \bra{\psi}U\ket{\psi}$.
 #
-# Below we estimate $E_0$ by running the Hadamard test for time evolution over a random time $t$.
+# Below we estimate $E_0$ by running the Hadamard test for time evolution over a given time $t$.
 #
 # We first consider exact time evolution.
 
 # %%
-rng = np.random.default_rng(42)
-t = rng.random()
+t = 0.7  # exact value does not matter here
 data_reg = list(range(1, n_qubits + 1))
 U = H.get_U_exact(t, data_reg, controls=(0,))
 
