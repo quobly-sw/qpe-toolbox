@@ -430,7 +430,7 @@ plt.ylabel("error");
 # %% [markdown]
 # ## Heisenberg Scaling
 #
-# The experimental time is proportional to $N_{\rm shots} \cdot \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. The RPE algorithm reaches a precision $\varepsilon$ in $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations.
+# The experimental time is proportional to $N_{\rm shots} \cdot \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. With $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations, the RPE algorithm reaches a precision of order $\varepsilon$ (the guaranteed bound is $2^{-(M-1)}\pi/3 \simeq 2\varepsilon$).
 # Hence it achieves Heisenberg scaling: reaching a precision $\varepsilon$ in time $\mathcal{O}(2^M) = \mathcal{O}(1/\varepsilon)$.
 #
 # Let us illustrate that below: we run the RPE algorithm for various $\varepsilon$ and plot experimental time versus energy error. Here we use exact time evolution for simplicity: in this case the experimental time is exactly $N_{\rm shots} \cdot \sum_{m=0}^{M-1}  2^m$.

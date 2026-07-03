@@ -49,9 +49,10 @@ def robust_phase_estimation(
     n_repetitions : int
         Number of RPE iterations :math:`M`. Iterations are indexed by
         :math:`m = 0, 1, \dots, M-1` with evolution time :math:`2^m`, and each
-        iteration adds one bit of precision. To reach a target precision
+        iteration adds one bit of precision. To reach a precision of order
         :math:`\varepsilon`, take :math:`M = \lceil \log_2 \varepsilon^{-1}
-        \rceil`.
+        \rceil`; the guaranteed bound is then :math:`2^{-(M-1)}\pi/3 \simeq
+        2\varepsilon`.
     n_steps : int or qpe_toolbox.EXACT
         Number of Trotter steps used to approximate the time evolution.
         Use ``EXACT`` for exact time evolution.
