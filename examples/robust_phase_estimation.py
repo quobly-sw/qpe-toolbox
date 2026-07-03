@@ -383,7 +383,7 @@ thetas_ttr_list = []
 
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, n_steps, n_shots, verbosity=1, rng=rng
+    H, psi0, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -409,7 +409,7 @@ plt.ylabel("error");
 n_steps = 2
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, n_steps, n_shots, verbosity=1, rng=rng
+    H, psi0, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
 thetas_ttr_list.append(thetas_ttr)
 
@@ -517,7 +517,7 @@ n_steps = 1
 
 rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, M, n_steps, n_shots, verbosity=1, rng=rng
+    H_H2, psi0_H2, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
 distances_trotter_H2 = [
     qpe.angular_distance(theta, E0_H2) for theta in thetas_trotter_H2
@@ -551,7 +551,3 @@ print(f"Chemical accuracy eps={epsilon} requires M={M} iterations")
 # Reaching chemical accuracy requires at least ten iterations, and a sufficient number of shots and Trotter steps.
 # If you want to go further, you can first estimate the runtime for $M=10$ and a given number of shots and Trotter steps,
 # then with some patience try to run the simulation.
-
-# %%
-
-# %%
