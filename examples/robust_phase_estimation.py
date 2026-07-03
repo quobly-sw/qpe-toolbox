@@ -453,7 +453,9 @@ xfit = np.array([0.2, 0.1 / 2**15])
 plt.loglog(xfit**-2, xfit, "k:", label=r"$t_{tot}=1/\epsilon^2$")
 plt.loglog(xfit**-1, xfit, "b:", label=r"$t_{tot}=1/\epsilon$")
 plt.loglog(cost_list, epsilon_values, "rd", label=r"target $\epsilon$")
-plt.loglog(cost_list, [abs(en - E0) for en in res_list], "-o", label="RPE")
+plt.loglog(
+    cost_list, [qpe.angular_distance(en, E0) for en in res_list], "-o", label="RPE"
+)
 
 plt.xlabel("Experimental time $t_{tot}$ (number of shots x repetitions)")
 plt.ylabel(r"Energy error $\epsilon$")

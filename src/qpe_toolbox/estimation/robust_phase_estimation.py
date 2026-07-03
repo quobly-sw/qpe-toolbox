@@ -164,7 +164,7 @@ def angular_distance(phi, theta):
     """
     Compute the angular distance between two angles.
 
-    The distance is defined modulo π and lies in the interval [0, π).
+    The distance is defined modulo π and lies in the interval [0, π].
 
     Parameters
     ----------
@@ -200,9 +200,9 @@ def rpe_update_theta(phi_m, theta_ref, m):
     -------
     theta_m : float
         Refined energy estimate, the candidate nearest to ``theta_ref``, wrapped
-        into :math:`(-\pi, \pi]`.
+        into :math:`[-\pi, \pi)`.
     """
-    # The candidates (phi_m + *pi*k) / 2^m form a uniform grid on the circle.
+    # The candidates (phi_m + 2*pi*k) / 2^m form a uniform grid on the circle.
     # Grid point closest (modulo :math:`2\pi`) to ``theta_ref`` is obtained by rounding
     # the float (2^m theta_ref - phi_m) / 2pi
     k = round((2**m * theta_ref - phi_m) / (2 * np.pi))
