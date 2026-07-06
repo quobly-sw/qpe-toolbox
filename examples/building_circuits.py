@@ -53,18 +53,17 @@ rng = np.random.default_rng(42)
 n_qubits = 5  # total number of qubits
 circ = qtn.Circuit(n_qubits)  # instantiate the class, get an empty circuit
 
-# Hadamard on the 2nd qubit and 0th layer
+# Hadamard gates on 2nd and 3rd qubits in first layer
 circ.apply_gate(gate_id="h", qubits=[1], gate_round=0)
-
 circ.apply_gate(gate_id="h", qubits=[2], gate_round=0)
 
-# 'Rx' with angle 'pi/6' on the 5th qubit and 0th layer
+# 'Rx' with angle 'pi/6' on the 5th qubit in first layer
 circ.apply_gate(gate_id="rx", params=[np.pi / 6], qubits=[4], gate_round=0)
 
-# CNOT from 1st to 2nd qubits in the 1st layer
+# CNOT from 1st to 2nd qubit in 2nd layer
 circ.apply_gate(gate_id="cx", qubits=[0, 1], gate_round=1)
 
-# 'Rzz' with angle 'pi/5' between 4th to 5th qubits, 1st layer
+# 'Rzz' with angle 'pi/5' between 4th and 5th qubits in 2nd layer
 circ.apply_gate(gate_id="rzz", params=[np.pi / 5], qubits=[3, 4], gate_round=1)
 
 circ.apply_gate(gate_id="cx", qubits=[3, 4], gate_round=2)
