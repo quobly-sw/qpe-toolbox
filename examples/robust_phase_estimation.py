@@ -328,15 +328,13 @@ print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
 n_shots = 1
 
 rng = np.random.default_rng(42)
-theta_list = qpe.robust_phase_estimation(
+theta_values = qpe.robust_phase_estimation(
     H, psi0, M, EXACT, n_shots, verbosity=1, rng=rng
 )
 
 # %%
 plt.semilogy(
-    [qpe.angular_distance(theta, E0) for theta in theta_list],
-    "-o",
-    label=f"$N_{{\\rm shots}}={n_shots}$",
+    qpe.angular_distance(theta_values, E0), "-o", label=f"$N_{{\\rm shots}}={n_shots}$"
 )
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
@@ -351,9 +349,9 @@ n_shot_list = [1, 2, 3, 4]
 
 rng = np.random.default_rng(42)
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
+    theta_values = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
     plt.semilogy(
-        [qpe.angular_distance(theta, E0) for theta in theta_list],
+        qpe.angular_distance(theta_values, E0),
         "-o",
         label=f"$N_{{\\rm shots}}={n_shots}$",
     )
@@ -390,7 +388,7 @@ thetas_ttr_list.append(thetas_ttr)
 
 # %%
 plt.semilogy(
-    [qpe.angular_distance(theta, E0) for theta in thetas_ttr_list[0]],
+    qpe.angular_distance(thetas_ttr_list[0], E0),
     "-o",
     label=f"$n_{{\\rm steps}}={n_steps}$",
 )
@@ -416,7 +414,7 @@ thetas_ttr_list.append(thetas_ttr)
 # %%
 for i, n_steps in enumerate([1, 2]):
     plt.semilogy(
-        [qpe.angular_distance(theta, E0) for theta in thetas_ttr_list[i]],
+        qpe.angular_distance(thetas_ttr_list[i], E0),
         "-o",
         label=f"$n_{{\\rm steps}}={n_steps}$",
     )
@@ -471,10 +469,7 @@ plt.legend(title="Heisenberg Hamiltonian\n4 spins, $S=1/2$, $J=1$");
 # Unlike the previous spin Hamiltonian, the molecular Hamiltonian is non-local: it couples distant qubits.
 
 # %%
-mol = gto.M(
-    atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.735))],
-    basis="STO-3G",
-)
+mol = gto.M(atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.735))], basis="STO-3G")
 
 H_H2 = chemistry_hamiltonian(
     mol, hf_mode="rhf", encoding="original", do_fci=True, do_ccsd=False
@@ -496,8 +491,10 @@ n_shot_list = [2, 3, 1000]
 # n_shot stays small, result depends a lot on seed
 rng = np.random.default_rng(2)
 for n_shots in n_shot_list:
-    theta_list = qpe.robust_phase_estimation(H_H2, psi0_H2, M, EXACT, n_shots, rng=rng)
-    distances = [qpe.angular_distance(theta, E0_H2) for theta in theta_list]
+    theta_values = qpe.robust_phase_estimation(
+        H_H2, psi0_H2, M, EXACT, n_shots, rng=rng
+    )
+    distances = qpe.angular_distance(theta_values, E0_H2)
     plt.semilogy(distances, "-o", label=f"$N_{{\\rm shots}}={n_shots}$")
 
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
@@ -521,9 +518,7 @@ rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
     H_H2, psi0_H2, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
-distances_trotter_H2 = [
-    qpe.angular_distance(theta, E0_H2) for theta in thetas_trotter_H2
-]
+distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, E0_H2)
 
 # %% [markdown]
 # ... and fails to get the desired precision

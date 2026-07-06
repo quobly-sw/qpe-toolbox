@@ -69,7 +69,7 @@ def robust_phase_estimation(
 
     Returns
     -------
-    theta_list : list of float
+    theta_values : (M,) array of float
         Phase estimates :math:`\theta_0, \dots, \theta_{M-1}`, one per
         iteration. The last element is the most accurate estimate.
     """
@@ -77,7 +77,7 @@ def robust_phase_estimation(
     if rng is None:
         rng = np.random.default_rng()
 
-    theta_list = []
+    theta_values = np.zeros(n_repetitions)
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
     for m in range(n_repetitions):
@@ -96,20 +96,19 @@ def robust_phase_estimation(
 
         if m == 0:
             # initialization theta_{-1} = 0, hence theta_0 = phi_0
-            theta_m = phi_m
+            theta_values[m] = phi_m
         else:
             # refine the previous guess theta_{m-1} = theta_list[m - 1]
-            theta_m = rpe_update_theta(phi_m, theta_list[m - 1], m)
+            theta_values[m] = rpe_update_theta(phi_m, theta_values[m - 1], m)
 
         if verbosity >= 1:
             et = time.time() - st
             print(
-                f"{m} \t {np.round(phi_m, 4): 6} \t {np.round(theta_m, 4): 6} \t {et:<6.1f}"
+                f"{m} \t {np.round(phi_m, 4): 6} \t {np.round(theta_values[m], 4): 6}"
+                f" \t {et:<6.1f}"
             )
 
-        theta_list.append(theta_m)
-
-    return theta_list
+    return theta_values
 
 
 def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=1, rng=None):
