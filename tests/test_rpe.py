@@ -29,8 +29,8 @@ def test_rpe_seed_deterministic():
     b = robust_phase_estimation(H, psi0, 5, EXACT, 4, rng=np.random.default_rng(123))
     c = robust_phase_estimation(H, psi0, 5, EXACT, 4, rng=np.random.default_rng(456))
 
-    assert a == b  # same seed -> identical
-    assert a != c  # different seed -> different sampling
+    assert np.array_equal(a, b)  # same seed -> identical
+    assert not np.array_equal(a, c)  # different seed -> different sampling
 
 
 def test_rpe_update_theta_matches_bruteforce():
