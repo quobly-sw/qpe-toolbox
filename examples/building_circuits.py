@@ -16,7 +16,7 @@
 # # Building Circuits
 
 # %% [markdown]
-# In this notebook we will explain step by step how to create, plot, record and load quantum circuits in $\texttt{quimb}$ and $\texttt{qiskit}$.
+# In this notebook we will explain step by step how to create, plot, record and load quantum circuits in [$\texttt{quimb}$](https://quimb.readthedocs.io/) and [$\texttt{qiskit}$](https://www.ibm.com/quantum/qiskit).
 
 # %%
 import json
@@ -71,7 +71,7 @@ circ.apply_gate(gate_id="cx", qubits=[2, 3], gate_round=3)
 circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 
 # %% [markdown]
-# When applying each gate, we also specified the `gate_round`; this information can be used for multiple purposes, like visualization. $\texttt{quimb}$ includes ready-made constructors for well-known circuits like the QAOA Ansatz, so that they do not need to be built from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa)). We also provide some functions generating simple brick-wall and random circuits, which are the main focus of our `performance.py` example:
+# When applying each gate, we also specified the `gate_round`; this information can be used for multiple purposes, like visualization. $\texttt{quimb}$ includes ready-made constructors for well-known circuits like the QAOA Ansatz, so that they do not need to be built from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa)). We also provide some functions generating simple brick-wall and random circuits, which are the main focus of our [performance notebook](./performance_mps.ipynb):
 
 # %%
 # Build a circuit with random parameters and two-layer structure;
@@ -86,7 +86,7 @@ brickwall_circuit = generate_brickwall_circuit(
 )
 
 # Same as before, but the entangling layer randomly picks pairs
-# of qubits at a maximum distance `ent_range`
+# of qubits at a maximum distance `two_qubit_gate_range`
 random_circuit = generate_rand_circuit(
     n_qubits=10,
     depth=4,
@@ -136,7 +136,7 @@ fig = draw_layered_circuit(
 # ### Recording and Loading Circuits
 
 # %% [markdown]
-# We are also interested in saving our circuits for later use. For some applications, researchers prefer to keep a `.qasm` format file with all the information on the circuit; in other cases, like we do in `performance.py`, we require a properly serialized dictionary in `.json` format. Both options can be automatically imported into a `Circuit` instance in $\texttt{quimb}$.
+# We are also interested in saving our circuits for later use. For some applications, researchers prefer to keep a `.qasm` format file with all the information on the circuit; in other cases, as we do in the [performance notebook](./performance_mps.ipynb), we require a properly serialized dictionary in `.json` format. Both options can be automatically imported into a `Circuit` instance in $\texttt{quimb}$.
 #
 # We provide the following functions:
 #
