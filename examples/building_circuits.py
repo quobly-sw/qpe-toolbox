@@ -187,8 +187,8 @@ with open("example_output_quimb_circuit.json", "w") as f:
 #         ],
 #         "round": 0
 #       },
-#     ]
 #       ...
+#     ]
 # }
 # ```
 
