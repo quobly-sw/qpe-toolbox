@@ -178,9 +178,8 @@ def angular_distance(phi, theta):
     d : float or array of float
         Angular distance between ``phi`` and ``theta``.
     """
-    sign = np.sign(phi - theta)
-    K = np.floor(np.abs(phi - theta) / (2 * np.pi) + 1 / 2)
-    return np.abs(phi - theta - K * sign * 2 * np.pi)
+    K = np.rint((phi - theta) / (2 * np.pi))
+    return np.abs(phi - theta - K * 2 * np.pi)
 
 
 def rpe_update_theta(phi_m, theta_ref, m):
