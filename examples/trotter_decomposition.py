@@ -377,11 +377,14 @@ res2f = fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order=2)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4), sharey=True)
-for i, t in enumerate(res2["t"]):
+for i, t in enumerate(res2f["t"]):
     axl.loglog(
-        t / res2["n_s"], res2["errors_lists"][i], "-o", label=rf"t={t / np.pi:.2g}$\pi$"
+        t / res2f["n_s"],
+        res2f["errors_lists"][i],
+        "-o",
+        label=rf"t={t / np.pi:.2g}$\pi$",
     )
-    axr.loglog(t**3 / res2["n_s"] ** 2, res2["errors_lists"][i], "-o")
+    axr.loglog(t**3 / res2f["n_s"] ** 2, res2f["errors_lists"][i], "-o")
 
 axl.legend()
 axl.set_xlabel("timestep $dt$")
