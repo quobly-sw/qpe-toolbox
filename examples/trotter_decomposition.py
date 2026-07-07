@@ -163,14 +163,22 @@ res = errors_trotter_slice(t_list, ns_list, trotter_order=1)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
+xfit = np.linspace(0.1, 100, 101)
+axr.loglog(xfit, 0.2 * xfit, ":k", label=r"$\propto {t_f^2}/{n_{\text{steps}}}$")
 for i, t in enumerate(res["t"]):
-    axl.plot(
-        res["n_s"], res["errors_lists"][i], "-o", label=rf"$t_f=${t / np.pi:.2g}$\pi$"
+    axl.plot(res["n_s"], res["errors_lists"][i], "-o")
+    axr.loglog(
+        t**2 / res["n_s"],
+        res["errors_lists"][i],
+        "-o",
+        label=rf"$t_f=${t / np.pi:.2g}$\pi$",
     )
-    axr.loglog(t**2 / res["n_s"], res["errors_lists"][i], "-o")
+
 
 axl.set_ylim(0, 3)
-axl.legend()
+axr.set_xlim(0.1, 1e4)
+axr.set_ylim(0.01, 10)
+axr.legend()
 axl.set_xlabel("$n_{steps}$")
 axr.set_xlabel(r"${t_f^2}/{n_{\text{steps}}}$")
 axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
@@ -389,6 +397,7 @@ for i, t in enumerate(res2f["t"]):
 axl.legend()
 axl.set_xlabel("timestep $dt$")
 axl.set_ylabel(r"$1-\text{Fidelity}$")
+axr.set_ylabel(r"$1-\text{Fidelity}$")
 axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
 fig.suptitle("Fidelity for second-order Trotter");
 
