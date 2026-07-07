@@ -16,11 +16,11 @@
 # # Trotter-Suzuki decomposition of $U(t)$
 #
 # In this notebook we introduce the Trotter-Suzuki decomposition to approximate the time-evolution operator $U(t) = \exp(-i H t)$ for a Hamiltonian $H$. We study the error and cost of the approximation.
-# We take the nearest-neighbor 1D Heisenberg Hamiltonian to illustrate the method. We consider first and second order Trotter-Suzuki formulas.
+# We take the nearest-neighbor 1D Heisenberg Hamiltonian to illustrate the method. We consider first- and second-order Trotter-Suzuki formulas.
 #
 # ## Introduction
 #
-# We start by introducing the general idea of Trotterization. We would like to compute the exponentiation of an operator $H$. For small systems, it can be performed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_U_exact` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
+# We start by introducing the general idea of Trotterization. We would like to compute the exponentiation of an operator $H$. For small systems, it can be performed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_U_exact` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems, however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
 #
 # Let us decompose the operator as $H = A + B$. In practice, we decompose the Hamiltonian into a sum of operators whose exponentiation can be easily implemented, e.g. Pauli strings. When $A$ and $B$ commute, as for scalar numbers, the exponential of the sum is the product of exponentials:
 #
@@ -64,13 +64,13 @@ qubit_reg = list(range(n_qubits))
 # The Trotter-Suzuki decompositions give approximations of $U$ with increasing precision. The first-order Trotter-Suzuki decomposition is given by:
 #
 # $$ e^{-i H \frac{t}{r}} = e^{-i H_1 \frac{t}{r}} \dots e^{-i H_L \frac{t}{r}} + \mathcal{O} \left(\left(\frac{t}{r}\right)^2 \right). $$
-# Along the full time evolution $t$ errors accumulate:
+# Over the full evolution time $t$, errors accumulate:
 #
 # $$ e^{-i H t} = \left( e^{-i H_1 \frac{t}{r}} \dots e^{-iH_L \frac{t}{r}} \right)^r + \mathcal{O} \left(\frac{t^2}{r}\right), $$
 # so that the error is linear in the timestep $\delta t \equiv t/r$.
 #
 # ### Second-order Trotter-Suzuki formula
-# Higher order decompositions can be obtained recursively. Here we go up to the second order Trotter-Suzuki decomposition:
+# Higher-order decompositions can be obtained recursively. Here we go up to the second-order Trotter-Suzuki decomposition:
 #
 # $$ e^{-i H \frac{t}{r}} = e^{-i H_1 \frac{t}{2r}} \dots e^{-i H_{L-1} \frac{t}{2r}} e^{-i H_L \frac{t}{r}} e^{-i H_{L-1} \frac{t}{2r}} \dots e^{-i H_1 \frac{t}{2r}}  + \mathcal{O} \left(\left(\frac{t}{r}\right)^3 \right), $$
 # which gives:
@@ -106,7 +106,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 # %% [markdown]
 # ## Trotter error: full unitary distance as metric
 #
-# Let us first use the distance of the full time evolution as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - \mathbb{1}~||$
+# Let us first use the distance of the full time evolution as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - \mathbb{1}||$
 #
 # We define a function that collects the errors defined for given times $t$ in `t_list`, number of timesteps $n_{steps}$ in `ns_list` and Trotterization order `order`.
 #
@@ -147,9 +147,9 @@ def errors_trotter_slice(t_list, ns_list, trotter_order, ntype="fro"):
 # We consider a sequence of evolution time growing like powers of $2$ as in QPE: $t_f = 2^kt, k = 1 \dots 6,$ where $t$ is picked randomly in $[0,2\pi]$. We vary the number of Trotter steps between $5$ and $200$.
 
 # %% [markdown]
-# ### First order Trotter
+# ### First-order Trotter
 #
-# Let us start with first order Trotter. The following cell should take a minute to run:
+# Let us start with first-order Trotter. The following cell should take a minute to run:
 
 # %%
 rng = np.random.default_rng(seed=42)
@@ -175,14 +175,14 @@ axl.set_xlabel("$n_{steps}$")
 axr.set_xlabel(r"${t_f^2}/{n_{\text{steps}}}$")
 axl.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
 axr.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
-fig.suptitle("First order Trotter");
+fig.suptitle("First-order Trotter");
 
 
 # %% [markdown]
-# ### Second order Trotter
+# ### Second-order Trotter
 
 # %% [markdown]
-# Similarly, we plot the errors reached with a second order Trotter formula, as a function of $n_{\rm steps}$ (left, linear scale) and as a function of $t_f^3 / n_{\rm steps}^2$ (right, log scale).
+# Similarly, we plot the errors reached with a second-order Trotter formula, as a function of $n_{\rm steps}$ (left, linear scale) and as a function of $t_f^3 / n_{\rm steps}^2$ (right, log scale).
 
 # %%
 res2 = errors_trotter_slice(t_list, ns_list, trotter_order=2)
@@ -202,27 +202,27 @@ axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
 axl.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
 axr.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
 
-fig.suptitle("Second order Trotter");
+fig.suptitle("Second-order Trotter");
 
 
 # %% [markdown]
 # ### Number of steps required to get below a given error
 #
-# For the first order Trotter formula, since the error scales like $t_f^2 / n_{\rm steps}$, to reach an error $\epsilon$ requires a minimal number of steps:
+# For the first-order Trotter formula, since the error scales like $t_f^2 / n_{\rm steps}$, to reach an error $\epsilon$ requires a minimal number of steps:
 #
 # $$ n_{\rm steps} = \mathcal{O} (t_f^2 / \epsilon) $$
 #
-# Since in QPE maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is number of phase bits, we get
+# Since in QPE the maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is the number of phase bits, we get
 #
 # $$ n_{\rm steps} = \mathcal{O} (2^{2m} / \epsilon). $$
 #
-# As shown on the plot below, the number of Trotter steps quickly grows to about $10^6$, which translates into at least as many CNOT gates. This is why in practice we use the second-order Trotter decomposition.
+# As shown in the plot below, the number of Trotter steps quickly grows to about $10^6$, which translates into at least as many CNOT gates. This is why in practice we use the second-order Trotter decomposition.
 #
 # Trotter error at second order is $\mathcal{O}(t_f^3 / n_{\rm steps}^2)$. Thus to reach an error $\epsilon$ requires a number of steps scaling like
 #
 # $$ n_{\rm steps} = \mathcal{O} (\sqrt{t_f^3 / \epsilon}) $$
 #
-# Since in QPE the maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is number of phase bits, we get
+# Since in QPE the maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is the number of phase bits, we get
 #
 # $$ n_{\rm steps} = \mathcal{O} (\sqrt{2^{3m} / \epsilon}) $$
 
@@ -248,7 +248,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # Here we investigate the number of entangling gates required to run a Trotter time evolution within a given error bound $\varepsilon$.
 #
-# The Trotter decomposition expresses the evolution operator as a product of exponential of Pauli strings. Let us describe the algorithm for the exponentiation of Pauli strings.
+# The Trotter decomposition expresses the evolution operator as a product of exponentials of Pauli strings. Let us describe the algorithm for the exponentiation of Pauli strings.
 
 # %% [markdown]
 # #### Quantum circuit for exponentiation of Pauli strings
@@ -259,11 +259,10 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # where $n$ is the number of qubits required to represent the Hilbert space.
 #
 # Here we present the algorithm to exponentiate $H_\ell$, i.e. to encode
-# $ e^{-i H_\ell t} = e^{ -i t U_1 \otimes U_2 \otimes \dots \otimes U_n }. $ A mathematical demonstration of a similar algorithm can be found in Fleury, Lacomme, *Quantum circuit for exponentiation of Hamiltonians:
+# $ e^{-i H_\ell t} = e^{ -i t U_1 \otimes U_2 \otimes \dots \otimes U_n }. $ A mathematical proof of a similar algorithm can be found in Fleury, Lacomme, *Quantum circuit for exponentiation of Hamiltonians:
 # an algorithmic description based on tensor products*, [arXiv:2501.17780](https://arxiv.org/abs/2501.17780).
 #
-# Let us first state the following two properties
-# :
+# Let us first state the following two properties:
 # * $ e^{-i t Z} = R_Z(2t) $ by definition.
 # * $ e^{-i t Z_{i_1} Z_{i_2} \dots Z_{i_M}} = CX_{i_1 i_2} CX_{i_2 i_3} \dots CX_{i_{M-1} i_M} \left( \mathbb{1}^{\otimes (i_M-1)} \otimes R_Z(2t) \otimes \mathbb{1}^{\otimes (n - i_M - 1)} \right) CX_{i_{M-1} i_M} CX_{i_{M-1} i_{M-2}} \dots CX_{i_1 i_2} $ (see [arXiv:2501.17780](https://arxiv.org/abs/2501.17780)).
 #
@@ -278,7 +277,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # 5. Bring the qubits back to their original basis applying the inverse rotations.
 #
 #
-# This algorithm is executed by the `rotation_gates` function from $\texttt{qpe-toolbox}$ 's `hamiltonian` module.
+# This algorithm is executed by the `rotation_gates` function from $\texttt{qpe-toolbox}$'s `hamiltonian` module.
 
 # %% [markdown]
 # #### CNOT gate count
@@ -292,7 +291,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # - One Trotter slice (first order):
 #
 # $$ e^{ - i H dt } = \prod_{i=0}^{n-2} e^{-i  X_i X_{i+1} dt J/2} e^{-i  Y_i Y_{i+1} dt J/2} e^{-i  Z_i Z_{i+1} dt J/2} + \mathcal{O} (dt^2) $$
-# is thus implemented with $6(n-1)$ CNOT gates (3 axis, for each axis a length-2 Pauli string).
+# is thus implemented with $6(n-1)$ CNOT gates (3 axes, each contributing a length-2 Pauli string).
 #
 # This gives a total CNOT gate count for the Trotterization of $U(t)$:
 #
@@ -302,11 +301,11 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # $$ e^{ - i H dt } = \prod_{j=0}^{n-2} e^{-i  X_j X_{j+1} dt J/4} e^{-i  Y_j Y_{j+1} dt J/4} e^{-i  Z_j Z_{j+1} dt J/4} \prod_{k=0}^{n-2} e^{-i  Z_{n-2-k} Z_{n-1-k} dt J/4} e^{-i  Y_{n-2-k} Y_{n-1-k} dt J/4} e^{-i  X_{n-2-k} X_{n-1-k} dt J/4} + \mathcal{O} (dt^3). $$
 #
-# Total CNOT gate count second order Trotterization:
+# Total CNOT gate count second-order Trotterization:
 #
 # $$ 12(n - 1)n_{steps} \qquad \mathrm{CNOT~gates}.$$
 #
-# Note that the two neighboring $e^{-i  Z_{n-2} Z_{n-1} dt J/4}$ terms could be merged, as well as the $e^{-i X_0 X_1 dt J/4}$ terms from neighboring Trotter steps, to reduce the total CNOT gate count. Here we only implement the most naive version of second-order Trotterization: in general, one should merge the two occurences of the last Hamiltonian term.
+# Note that the two neighboring $e^{-i  Z_{n-2} Z_{n-1} dt J/4}$ terms could be merged, as well as the $e^{-i X_0 X_1 dt J/4}$ terms from neighboring Trotter steps, to reduce the total CNOT gate count. Here we only implement the most naive version of second-order Trotterization: in general, one should merge the two occurrences of the last Hamiltonian term.
 
 # %%
 fig, ax = plt.subplots()
@@ -332,8 +331,8 @@ fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$")
 
 
 # %% [markdown]
-# In a QPE experiment, we are interested in the time evolution of an Hamiltonian eigenstate. Let us therefore consider the quantum fidelity as an error metric. Quantum fidelity is defined as $|\langle\psi_{\rm exact}(t) | \psi_{\rm trotter}(t)\rangle|^2$.
-# We consider second order Trotter decomposition
+# In a QPE experiment, we are interested in the time evolution of a Hamiltonian eigenstate. Let us therefore consider the quantum fidelity as an error metric. Quantum fidelity is defined as $|\langle\psi_{\rm exact}(t) | \psi_{\rm trotter}(t)\rangle|^2$.
+# We consider the second-order Trotter decomposition.
 
 
 # %%
@@ -387,8 +386,8 @@ axl.legend()
 axl.set_xlabel("timestep $dt$")
 axl.set_ylabel(r"$1-\text{Fidelity}$")
 axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
-fig.suptitle("Fidelity for second order Trotter");
+fig.suptitle("Fidelity for second-order Trotter");
 
 # %% [markdown]
-# This ends our simple introduction on Trotter-Suzuki decomposition.
+# This ends our simple introduction to the Trotter-Suzuki decomposition.
 # For the reader interested in going further, we refer to [this paper by Andrew M. Childs](https://journals.aps.org/prx/abstract/10.1103/PhysRevX.11.011020) that gives a theoretical study of Trotter error with a focus on Hamiltonian simulation.
