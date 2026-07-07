@@ -254,7 +254,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # %% [markdown]
 # ### Number of CNOT Gates Required to get Below a Given Error
 #
-# Here we investigate the number of entangling gates required to run a Trotter time evolution within a given error bound $\varepsilon$.
+# Here we investigate the number of entangling gates required to run a Trotter time evolution within a given error bound $\epsilon$.
 #
 # The Trotter decomposition expresses the evolution operator as a product of exponentials of Pauli strings. Let us describe the algorithm for the exponentiation of Pauli strings.
 
