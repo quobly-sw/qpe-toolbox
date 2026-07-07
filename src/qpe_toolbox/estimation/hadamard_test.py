@@ -112,6 +112,7 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, rng=None):
 
     popcount = 0
     # as of quimb 1.13.0, arg qubits=[phase_qubit] is unsupported for circuitMPS
+    # here seed=rng is fine as quimb seed kwarg accepts np.Generator
     for bitstring in circ.sample(n_shots, seed=rng):
         popcount += int(bitstring[aux_ind])
     return (n_shots - 2 * popcount) / n_shots
