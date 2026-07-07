@@ -286,11 +286,12 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # For the Heisenberg Hamiltonian:
 #
-# $$ H = \frac{J}{2} \sum_{i=0}^{n-2} \left( X_i X_{i+1} + Y_i Y_{i+1} + Z_i Z_{i+1} \right). $$
+# $$ H = \frac{J}{4} \sum_{i=0}^{n-2} \left( X_i X_{i+1} + Y_i Y_{i+1} + Z_i Z_{i+1} \right), $$
+# with the normalization $S^\alpha = \sigma^\alpha/2$, so that $H = J\sum_i \mathbf{S}_i\cdot\mathbf{S}_{i+1}$.
 #
 # - One Trotter slice (first order):
 #
-# $$ e^{ - i H dt } = \prod_{i=0}^{n-2} e^{-i  X_i X_{i+1} dt J/2} e^{-i  Y_i Y_{i+1} dt J/2} e^{-i  Z_i Z_{i+1} dt J/2} + \mathcal{O} (dt^2) $$
+# $$ e^{ - i H dt } = \prod_{i=0}^{n-2} e^{-i  X_i X_{i+1} dt J/4} e^{-i  Y_i Y_{i+1} dt J/4} e^{-i  Z_i Z_{i+1} dt J/4} + \mathcal{O} (dt^2) $$
 # is thus implemented with $6(n-1)$ CNOT gates (3 axes, each contributing a length-2 Pauli string).
 #
 # This gives a total CNOT gate count for the Trotterization of $U(t)$:
@@ -299,13 +300,13 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # - Second order:
 #
-# $$ e^{ - i H dt } = \prod_{j=0}^{n-2} e^{-i  X_j X_{j+1} dt J/4} e^{-i  Y_j Y_{j+1} dt J/4} e^{-i  Z_j Z_{j+1} dt J/4} \prod_{k=0}^{n-2} e^{-i  Z_{n-2-k} Z_{n-1-k} dt J/4} e^{-i  Y_{n-2-k} Y_{n-1-k} dt J/4} e^{-i  X_{n-2-k} X_{n-1-k} dt J/4} + \mathcal{O} (dt^3). $$
+# $$ e^{ - i H dt } = \prod_{j=0}^{n-2} e^{-i  X_j X_{j+1} dt J/8} e^{-i  Y_j Y_{j+1} dt J/8} e^{-i  Z_j Z_{j+1} dt J/8} \prod_{k=0}^{n-2} e^{-i  Z_{n-2-k} Z_{n-1-k} dt J/8} e^{-i  Y_{n-2-k} Y_{n-1-k} dt J/8} e^{-i  X_{n-2-k} X_{n-1-k} dt J/8} + \mathcal{O} (dt^3). $$
 #
 # Total CNOT gate count for second-order Trotterization:
 #
 # $$ 12(n - 1)n_{steps} \qquad \mathrm{CNOT~gates}.$$
 #
-# Note that the two neighboring $e^{-i  Z_{n-2} Z_{n-1} dt J/4}$ terms could be merged, as well as the $e^{-i X_0 X_1 dt J/4}$ terms from neighboring Trotter steps, to reduce the total CNOT gate count. Here we only implement the most naive version of second-order Trotterization: in general, one should merge the two occurrences of the last Hamiltonian term.
+# Note that the two neighboring $e^{-i  Z_{n-2} Z_{n-1} dt J/8}$ terms could be merged, as well as the $e^{-i X_0 X_1 dt J/8}$ terms from neighboring Trotter steps, to reduce the total CNOT gate count. Here we only implement the most naive version of second-order Trotterization: in general, one should merge the two occurrences of the last Hamiltonian term.
 
 # %%
 fig, ax = plt.subplots()
