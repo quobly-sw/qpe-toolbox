@@ -173,8 +173,8 @@ axl.set_ylim(0, 3)
 axl.legend()
 axl.set_xlabel("$n_{steps}$")
 axr.set_xlabel(r"${t_f^2}/{n_{\text{steps}}}$")
-axl.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
-axr.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
+axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
+axr.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
 fig.suptitle("First-order Trotter");
 
 
@@ -199,8 +199,8 @@ axl.set_ylim(0, 3)
 axl.legend()
 axl.set_xlabel("$n_{steps}$")
 axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
-axl.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
-axr.set_ylabel(r"$\| U_{\mathrm{Trotter}}U_{\mathrm{exact}} - \mathrm{Id} \|$")
+axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
+axr.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
 
 fig.suptitle("Second-order Trotter");
 
