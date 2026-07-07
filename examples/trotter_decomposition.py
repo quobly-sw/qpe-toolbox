@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# # Trotter-Suzuki decomposition of $U(t)$
+# # Trotter-Suzuki Decomposition of $U(t)$
 #
 # In this notebook we introduce the Trotter-Suzuki decomposition to approximate the time-evolution operator $U(t) = \exp(-i H t)$ for a Hamiltonian $H$. We study the error and cost of the approximation.
 # We take the nearest-neighbor 1D Heisenberg Hamiltonian to illustrate the method. We consider first- and second-order Trotter-Suzuki formulas.
@@ -60,7 +60,7 @@ h_spin = heisenberg_hamiltonian(n_qubits)
 qubit_reg = list(range(n_qubits))
 
 # %% [markdown]
-# ### First-order Trotter-Suzuki formula
+# ### First-order Trotter-Suzuki Formula
 # Trotter-Suzuki decompositions of increasing order approximate $U$ with increasing precision. The first-order Trotter-Suzuki decomposition is given by:
 #
 # $$ e^{-i H \frac{t}{r}} = e^{-i H_1 \frac{t}{r}} \dots e^{-i H_L \frac{t}{r}} + \mathcal{O} \left(\left(\frac{t}{r}\right)^2 \right). $$
@@ -69,7 +69,7 @@ qubit_reg = list(range(n_qubits))
 # $$ e^{-i H t} = \left( e^{-i H_1 \frac{t}{r}} \dots e^{-iH_L \frac{t}{r}} \right)^r + \mathcal{O} \left(\frac{t^2}{r}\right), $$
 # so that the error is linear in the timestep $\delta t \equiv t/r$.
 #
-# ### Second-order Trotter-Suzuki formula
+# ### Second-order Trotter-Suzuki Formula
 # Higher-order decompositions can be obtained recursively. Here we go up to the second-order Trotter-Suzuki decomposition:
 #
 # $$ e^{-i H \frac{t}{r}} = e^{-i H_1 \frac{t}{2r}} \dots e^{-i H_{L-1} \frac{t}{2r}} e^{-i H_L \frac{t}{r}} e^{-i H_{L-1} \frac{t}{2r}} \dots e^{-i H_1 \frac{t}{2r}}  + \mathcal{O} \left(\left(\frac{t}{r}\right)^3 \right), $$
@@ -104,7 +104,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 
 
 # %% [markdown]
-# ## Trotter error: full unitary distance as metric
+# ## Trotter Error: Full Unitary Distance as a Metric
 #
 # Let us first use the distance between the full time-evolution operators as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - \mathbb{1}||$
 #
@@ -206,7 +206,7 @@ fig.suptitle("Second-order Trotter");
 
 
 # %% [markdown]
-# ### Number of steps required to get below a given error
+# ### Number of Steps Required to get Below a Given Error
 #
 # For the first-order Trotter formula, since the error scales as $t_f^2 / n_{\rm steps}$, reaching an error $\epsilon$ requires a minimum number of steps:
 #
@@ -244,14 +244,14 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 
 
 # %% [markdown]
-# ### Number of CNOT gates required to get below a given error
+# ### Number of CNOT Gates Required to get Below a Given Error
 #
 # Here we investigate the number of entangling gates required to run a Trotter time evolution within a given error bound $\varepsilon$.
 #
 # The Trotter decomposition expresses the evolution operator as a product of exponentials of Pauli strings. Let us describe the algorithm for the exponentiation of Pauli strings.
 
 # %% [markdown]
-# #### Quantum circuit for exponentiation of Pauli strings
+# #### Quantum Circuit for Exponentiation of Pauli Strings
 #
 # The different terms in the Hamiltonian can be written as Pauli strings, i.e. using the Pauli operator basis:
 #
@@ -280,7 +280,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # This algorithm is executed by the `rotation_gates` function from $\texttt{qpe-toolbox}$'s `hamiltonian` module.
 
 # %% [markdown]
-# #### CNOT gate count
+# #### CNOT Gate Count
 #
 # Thus, the algorithm to implement a Pauli string exponential $\exp( i \theta P_1 ... P_K )$, where the $P_i \in \{X,Y,Z\}$ are non-identity Pauli operators, uses $2 (K - 1)$ CNOT gates, $K$ being the length of the Pauli string.
 #
@@ -327,7 +327,7 @@ ax.legend()
 fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$")
 
 # %% [markdown]
-# ## Fidelity as an error metric
+# ## Fidelity as an Error Metric
 
 
 # %% [markdown]
