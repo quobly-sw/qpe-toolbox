@@ -271,8 +271,8 @@ qc_with_values.draw(initial_state=True, fold=-1)
 # ### Recording and Loading Circuits
 
 # %% [markdown]
-# A $\texttt{qiskit}$ circuit can be recorded as a `.qasm` file. However, because the plotting utility stacks gates according to their order of appearance, information about gate rounds is lost. As a result, there is no need to use the `.json` recording format in this case, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
-# To handle and visualize a circuit coherently on a layer-by-layer basis, one must rely on the functions previously introduced for $\texttt{quimb}$. Nevertheless, when a circuit is produced by the $\texttt{quimb}$ pipeline, it can be deserialized from a `.json` file.
+# A $\texttt{qiskit}$ circuit can be recorded as a `.qasm` file. However, a $\texttt{qiskit}$ `QuantumCircuit` has no notion of gate rounds: gates are stored as a plain ordered list, and the plotting utility simply stacks them in order of appearance. Since there is no round information to preserve, the `.json` recording format has no advantage over `.qasm` here, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
+# To handle and visualize a circuit coherently on a layer-by-layer basis, one must rely on the functions previously introduced for $\texttt{quimb}$. Nevertheless, a `.json` file produced by the $\texttt{quimb}$ pipeline can be deserialized into a $\texttt{qiskit}$ circuit.
 
 # %% [markdown]
 # ```
