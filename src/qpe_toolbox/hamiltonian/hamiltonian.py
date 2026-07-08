@@ -200,7 +200,7 @@ class Hamiltonian:
         if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
         h_dense = self.to_dense()
-        U = qu.expm(-1j * h_dense * evolution_time)
+        U = qu.expm(-1j * evolution_time * h_dense)
         return qtn.Gate.from_raw(U, qubits=data_reg, controls=controls)
 
     def get_trotter_step(self, dt, data_reg, trotter_order):
