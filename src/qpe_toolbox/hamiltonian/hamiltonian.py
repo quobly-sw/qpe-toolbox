@@ -133,13 +133,7 @@ class Hamiltonian:
         :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
         """
-        h_dense = np.zeros([2**self.n_qubits, 2**self.n_qubits], dtype="complex")
-        for coeff, paulis, qubits in self.terms:
-            ops = [qu.identity(2)] * self.n_qubits
-            for sigma, k in zip(paulis, qubits, strict=True):
-                ops[k] = qu.pauli(sigma)
-            h_dense += coeff * qu.kron(*ops)
-        return qu.qarray(h_dense)
+        return self.to_builder().build_dense()
 
     def to_builder(self):
         """
