@@ -627,7 +627,8 @@ for n_qubits in tqdm.tqdm(nqb_list):
 
     # Diagonalize hamiltonian
     st_ed = time.time()
-    eigvals, eigvecs = sla.eigsh(h_spin.to_sparse_array())
+    h_sparse = h_spin.to_sparse_array()
+    eigvals, eigvecs = sla.eigsh(h_sparse, 1, which="SA")
     res["durations_ed"].append(time.time() - st_ed)
 
     # Ground state
