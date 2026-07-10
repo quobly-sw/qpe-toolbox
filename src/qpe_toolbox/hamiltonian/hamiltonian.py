@@ -10,6 +10,7 @@
 import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
+import scipy.sparse
 from quimb.operator import SparseOperatorBuilder
 
 
@@ -134,6 +135,30 @@ class Hamiltonian:
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
         """
         return self.to_builder().build_dense()
+
+    def to_sparse_matrix(self):
+        """
+        Convert the Hamiltonian to a sparse matrix representation.
+
+        Returns
+        -------
+        :scipy:`scipy.sparse.csr_matrix <reference/generated/scipy.sparse.csr_matrix.html>`
+            Sparse Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
+        """
+        return self.to_builder().build_sparse_matrix()
+
+    def to_sparse_array(self):
+        """
+        Convert the Hamiltonian to a sparse matrix representation.
+
+        Returns
+        -------
+        :scipy:`scipy.sparse.csr_array <reference/generated/scipy.sparse.csr_matrix.html>`
+            Sparse Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
+        """
+        # quimb generates a scipy csr_matrix, which are being replaced by csr_array
+        # use this function as high level interface to directly get modern csr_array
+        return scipy.sparse.csr_array(self.to_sparse_matrix())
 
     def to_builder(self):
         """

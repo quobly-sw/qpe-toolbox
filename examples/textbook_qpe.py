@@ -46,6 +46,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.sparse.linalg as sla
 from IPython.display import display
 from quimb.tensor import MatrixProductState
 from tqdm import notebook as tqdm
@@ -624,12 +625,9 @@ st0 = time.time()
 for n_qubits in tqdm.tqdm(nqb_list):
     h_spin = heisenberg_hamiltonian(n_qubits)
 
-    # Get matrix
-    hamilt_qarray = h_spin.to_dense()
-
     # Diagonalize hamiltonian
     st_ed = time.time()
-    eigvals, eigvecs = np.linalg.eigh(hamilt_qarray)
+    eigvals, eigvecs = sla.eigsh(h_spin.to_sparse_array())
     res["durations_ed"].append(time.time() - st_ed)
 
     # Ground state
@@ -645,12 +643,10 @@ for n_qubits in tqdm.tqdm(nqb_list):
     durations = []
     bond_dims = []
     for n_phase_bits in tqdm.tqdm(ms, leave=False):
-        st = time.time()
         initial_circ = make_circ(n_phase_bits, psi0_mps)
         traces, energy = qpe.qpe_energy(
             h_spin, initial_circ, EXACT, E_target, size_interval, optimize=optimize
         )
-        et = time.time() - st
         energies.append(energy)
         probs.append(traces["prob"])
         durations.append(traces["ctimes"][-1])
