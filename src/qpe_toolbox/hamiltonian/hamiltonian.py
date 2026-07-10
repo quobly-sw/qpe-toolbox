@@ -153,7 +153,7 @@ class Hamiltonian:
 
         Returns
         -------
-        :scipy:`scipy.sparse.csr_array <reference/generated/scipy.sparse.csr_matrix.html>`
+        :scipy:`scipy.sparse.csr_array <reference/generated/scipy.sparse.csr_array.html>`
             Sparse Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
         """
         # quimb generates a scipy csr_matrix, which are being replaced by csr_array
