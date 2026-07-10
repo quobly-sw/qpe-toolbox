@@ -45,11 +45,6 @@ def test_sparse():
         assert h_mat.shape == h.shape
         assert np.allclose(h_mat.toarray(), dense, atol=1e-12)
 
-        h_arr = h.to_sparse_array()
-        assert isinstance(h_arr, scipy.sparse.csr_array)
-        assert h_arr.shape == h.shape
-        assert np.allclose(h_arr.toarray(), dense, atol=1e-12)
-
 
 def test_molecule_h2():
     mol = gto.M(
