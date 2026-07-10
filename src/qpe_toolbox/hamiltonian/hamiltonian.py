@@ -134,7 +134,7 @@ class Hamiltonian:
         :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
         """
-        return self.to_builder().build_dense()
+        return qu.qarray(self.to_builder().build_dense())
 
     def to_sparse_matrix(self):
         """
