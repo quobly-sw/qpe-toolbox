@@ -577,7 +577,6 @@ probs = []
 durations = []
 
 for n_phase_bits in tqdm.tqdm(ms):
-    st = time.time()
     initial_circ = make_circ(n_phase_bits, psi0_mps)
     traces, energy = qpe.qpe_energy(
         h_spin,
@@ -587,7 +586,6 @@ for n_phase_bits in tqdm.tqdm(ms):
         size_interval,
         optimize=optimize,
     )
-    et = time.time() - st
     energies.append(energy)
     probs.append(traces["prob"])
     durations.append(traces["ctimes"][-1])
