@@ -218,8 +218,11 @@ class Hamiltonian:
         """
         if len(data_reg) != self.n_qubits:
             raise ValueError("Invalid data_reg size")
-        h_dense = self.to_dense()
-        U = qu.expm(-1j * evolution_time * h_dense)
+
+        # sparse expm -> dense convert is much faster than todense -> expm
+        h_csc = self.to_sparse_matrix().tocsc()  # tocsc to optimize expm
+        u_csc = scipy.sparse.linalg.expm(-1j * evolution_time * h_csc)
+        U = qu.qarray(u_csc.toarray())  # quimb does not support sparse arrays in Gate
         return qtn.Gate.from_raw(U, qubits=data_reg, controls=controls)
 
     def get_trotter_step(self, dt, data_reg, trotter_order):
