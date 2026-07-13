@@ -15,6 +15,7 @@ from .parametrized_circuits import (
     ansatz_circuit,
     ansatz_circuit_su4,
     ansatz_circuit_sym,
+    ansatz_circuit_tfi,
     generate_brickwall_circuit,
     generate_rand_circuit,
 )
