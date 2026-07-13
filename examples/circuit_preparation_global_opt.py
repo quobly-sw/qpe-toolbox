@@ -53,8 +53,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 #
 # $$
 #
-# with $g_x = -1.1$ and $g_{zz} = -1.0$. This model is non-integrable and has a
-# quantum phase transition at $|g_x| = |g_{zz}|$. We work in the ferromagnetic regime.
+# with $g_x = -1.1$ and $g_{zz} = -1.0$.
 
 # %%
 def loss_circ(circ, mpo):
@@ -133,7 +132,7 @@ circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
 print(
-    f" # = {circ_opt.d: 5d}",
+    f" # of parameters = {circ_opt.d: 5d}",
     f" Energy = {circ_opt.loss:.8f}",
     f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
     f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
@@ -155,7 +154,7 @@ circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize_basinhopping(n=1000, nhop=20, temperature=0.1)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
 print(
-    f" # = {circ_opt.d: 5d}",
+    f" # of parameters = {circ_opt.d: 5d}",
     f" Energy = {circ_opt.loss:.8f}",
     f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
     f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
@@ -167,7 +166,7 @@ print()
 #
 # Starting from depth-1, we optimize the circuit, then add one layer at a time,
 # using the previously found parameters as initial guess for the deeper circuit.
-# This often leads to better convergence because the optimisation landscape
+# This might lead to faster convergence because the optimisation landscape
 # for deeper circuits is easier to navigate when starting close to a good
 # shallow solution.
 
@@ -178,7 +177,7 @@ circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
 print(
-    f" # = {circ_opt.d: 5d}",
+    f" # of parameters = {circ_opt.d: 5d}",
     f" Energy = {circ_opt.loss:.8f}",
     f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
     f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
@@ -191,7 +190,7 @@ for ii in range(2, depth + 1):
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
     print(
-        f" # = {circ_opt.d: 5d}",
+        f" # of parameters = {circ_opt.d: 5d}",
         f" Energy = {circ_opt.loss:.8f}",
         f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
         f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
@@ -207,5 +206,5 @@ print()
 # yields the best compromise between circuit depth and fidelity.
 #
 # The trial state prepared by the circuit can then be used as input for
-# Quantum Phase Estimation (QPE) to refine the energy estimate, as shown
-# in the `textbook_qpe` and `variational_circuit_preparation` examples.
+# Quantum Phase Estimation (QPE) to perform the energy estimate, as shown
+# in the `textbook_qpe` examples.
