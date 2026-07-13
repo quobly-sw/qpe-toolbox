@@ -14,20 +14,19 @@
 # ---
 
 # %% [markdown]
-# # Variational Circuit Preparation for the Transverse-Field Ising Model
+# # Circuit Preparation via Global Optimization
 #
-# We show how to approximate the ground state of a transverse-field Ising (TFI) Hamiltonian,
-# expressed as a Matrix-Product-Operator (MPO), using a parametrized quantum circuit.
-# Three different optimization strategies are compared:
+# We show how to approximate the ground state of a transverse-field Ising (TFI) Hamiltonian
+# using a parametrized quantum circuit. Three different optimization strategies are compared:
 #
 # 1. **Standard L-BFGS** on a fixed-depth circuit.
-# 2. **Basin-hopping** to escape local minima.
-# 3. **Sequential layer-by-layer optimization**, where the parameters learned for a shallower
-#    circuit are used to initialize a deeper one.
+# 2. **Basin-hopping** - a global optimization method that helps escape local minima.
+# 3. **Sequential layer-by-layer optimization**, where the parameters of a shallower circuit
+#    are used to initialize a deeper one.
 #
-# This notebook reproduces some of the ideas from R. Haghshenas et al.,
-# [*Variational Power of Quantum Circuit Tensor Networks*](https://link.aps.org/doi/10.1103/PhysRevX.12.011047) (2022),
-# and follows the coding style of the `qpe_toolbox` examples.
+# The TFI model is defined on a 1D chain with open boundaries. The variational ansatz is a
+# brick-wall circuit of SU(4) gates (each acting on two neighbouring qubits). All parameters are optimized simultaneously using automatic
+# differentiation via JAX.
 
 # %%
 import os
@@ -46,14 +45,16 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 # %% [markdown]
 # ## Hamiltonian: 1D Transverse-Field Ising (TFI) model
 #
-# We consider a chain of $n=16$ spins with open boundaries. The Hamiltonian reads
+# We consider a chain of $n$ spins with open boundaries. The Hamiltonian reads
 #
 # $$
+#
 # H = g_x \sum_{i} X_i + g_{zz} \sum_{i} Z_i Z_{i+1},
 #
 # $$
 #
-# with $g_x = -1.1$ and $g_{zz} = -1.0$.
+# with $g_x = -1.1$ and $g_{zz} = -1.0$. This model is non-integrable and features
+# a quantum phase transition at $|g_x| = |g_{zz}|$; we work in the ferromagnetic regime.
 
 # %%
 def loss_circ(circ, mpo):
@@ -120,9 +121,10 @@ print()
 # ## 1. Direct L-BFGS optimization
 #
 # We use the `ansatz_circuit_su4` circuit, which consists of layers of SU(4)
-# two-qubit gates interleaved with single-qubit rotations. For a depth-8 circuit
-# (16 qubits) we have roughly $16 \times 15 \times 2 = 480$ parameters.
-# The optimizer runs for up to 10000 iterations.
+# two-qubit gates arranged in a brick-wall pattern. Each SU(4) gate is parameterized
+# by 15 real numbers.
+#
+# The L-BFGS optimizer runs for up to 10 000 iterations.
 
 # %%
 # --- L-BFGS ---
@@ -132,10 +134,10 @@ circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
 print(
-    f" # of parameters = {circ_opt.d: 5d}",
-    f" Energy = {circ_opt.loss:.8f}",
-    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
-    f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
+    f" # parameters = {circ_opt.d: 6d}",
+    f" Energy = {circ_opt.loss: >12.8f}",
+    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
+    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
 )
 print()
 
@@ -144,32 +146,33 @@ print()
 #
 # Basin-hopping is a global optimisation algorithm that performs random steps
 # in parameter space, followed by a local minimisation. It can help to escape
-# poor local minima. Here we use 1000 iterations with 10 hops per step.
+# poor local minima. Here we use 5000 iterations with 10 hops per step and a
+# temperature of 0.1 (controlling the acceptance probability of uphill moves).
 
 # %%
 # --- Basin hopping ---
 depth = 6
 circ = ansatz_circuit_su4(n_qubits, depth)
 circ_opt = make_circuit_optimizer(circ, mpo)
-optimal_circ = circ_opt.optimize_basinhopping(n=1000, nhop=20, temperature=0.1)
+optimal_circ = circ_opt.optimize_basinhopping(n=5000, nhop=10, temperature=0.1)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
 print(
-    f" # of parameters = {circ_opt.d: 5d}",
-    f" Energy = {circ_opt.loss:.8f}",
-    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
-    f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
+    f" # parameters = {circ_opt.d: 4d}",
+    f" Energy = {circ_opt.loss: >12.8f}",
+    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
+    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
 )
 print()
 
 # %% [markdown]
 # ## 3. Sequential layer-wise optimization
 #
-# Starting from depth-1, we optimize the circuit, then add one layer at a time,
+# Starting from a depth-1 circuit, we optimize it, then add one layer at a time,
 # using the previously found parameters as initial guess for the deeper circuit.
-# This might lead to faster convergence because the optimisation landscape
-# for deeper circuits is easier to navigate when starting close to a good
-# shallow solution.
-
+# This can lead to faster convergence because the optimisation landscape for
+# deeper circuits is easier to navigate when starting close to a good shallow
+# solution.
+#
 # %%
 # --- Sequential optimization ---
 circ = ansatz_circuit_su4(n_qubits, 1)
@@ -177,10 +180,10 @@ circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
 print(
-    f" # of parameters = {circ_opt.d: 5d}",
-    f" Energy = {circ_opt.loss:.8f}",
-    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
-    f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
+    f" # parameters = {circ_opt.d: 4d}",
+    f" Energy = {circ_opt.loss: >12.8f}",
+    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
+    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
 )
 
 for ii in range(2, depth + 1):
@@ -190,10 +193,10 @@ for ii in range(2, depth + 1):
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
     print(
-        f" # of parameters = {circ_opt.d: 5d}",
-        f" Energy = {circ_opt.loss:.8f}",
-        f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy):.3e}",
-        f" 1-F = {1 - np.abs(ovlp) ** 2:.3e}",
+        f" # parameters = {circ_opt.d: 4d}",
+        f" Energy = {circ_opt.loss: >12.8f}",
+        f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
+        f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
     )
 print()
 
@@ -201,10 +204,9 @@ print()
 # ## Results and discussion
 #
 # The table above reports the number of parameters, the achieved energy,
-# the relative error, and the infidelity $1 - F$ (where $F$ is the overlap
-# squared with the DMRG ground state). Typically, the sequential strategy
-# yields the best compromise between circuit depth and fidelity.
+# the relative error with respect to the DMRG energy, and the infidelity
+# $1 - F$ (where $F = |\langle \psi_{\mathrm{DMRG}} | \psi_{\mathrm{circ}} \rangle|^2$).
 #
 # The trial state prepared by the circuit can then be used as input for
-# Quantum Phase Estimation (QPE) to perform the energy estimate, as shown
-# in the `textbook_qpe` examples.
+# Quantum Phase Estimation (QPE) to refine the energy estimate, as shown
+# in the `textbook_qpe` tutorial.
