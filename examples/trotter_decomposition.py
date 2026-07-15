@@ -377,7 +377,7 @@ for i, t in enumerate(t_values):
 axl.legend()
 axl.set_xlabel("timestep $dt$")
 axl.set_ylabel(r"$1-|\langle\psi_{\rm exact} | \psi_{\rm trotter}\rangle|^2$")
-axr.set_ylabel(r"$1-\text{Fidelity}$")
+axr.set_ylabel(r"$1-|\langle\psi_{\rm exact} | \psi_{\rm trotter}\rangle|^2$")
 axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
 fig.suptitle("Fidelity for second-order Trotter");
 
