@@ -247,7 +247,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 
 
 # %% [markdown]
-# ### Number of CNOT Gates Required to get Below a Given Error
+# ### Number of CNOT Gates Required to Get Below a Given Error
 #
 # Here we investigate the number of entangling gates required to run a Trotter time evolution within a given error bound $\epsilon$.
 #
