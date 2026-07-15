@@ -110,7 +110,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 #
 # Let us first use the distance between the full time-evolution operators as a metric: $||U_{\rm exact}^{\dagger}(t_f) U_{\rm Trotter}(t_f) - \mathbb{1}||$
 #
-# We define a function that collects the errors for evolution times $t$ in `t_values`, numbers of timesteps $n_{steps}$ in `n_steps_values`, and Trotterization order `trotter_order`.
+# We define a function that collects the errors for evolution times $t$ in `t_values`, numbers of timesteps $n_{\rm steps}$ in `n_steps_values`, and Trotterization order `trotter_order`.
 #
 # NB: in this example we consider the Frobenius norm to define the error. Any other norm supported by `quimb.norm` can be used via the optional parameter `ntype`.
 
@@ -176,7 +176,7 @@ axl.set_ylim(0, 3)
 axr.set_xlim(1e-3, 2e2)
 axr.set_ylim(1e-3, 10)
 axr.legend(loc="upper left")
-axl.set_xlabel("$n_{steps}$")
+axl.set_xlabel(r"$n_{\text{steps}}$")
 axr.set_xlabel(r"${t_f^2}/{n_{\text{steps}}}$")
 axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
 axr.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
@@ -202,7 +202,7 @@ for i, t in enumerate(t_values):
 
 axl.set_ylim(0, 3)
 axl.legend()
-axl.set_xlabel("$n_{steps}$")
+axl.set_xlabel(r"$n_{\text{steps}}$")
 axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
 axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
 axr.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
@@ -227,7 +227,7 @@ fig.suptitle("Second-order Trotter");
 #
 # $$ n_{\rm steps} = \mathcal{O} (\sqrt{t_f^3 / \epsilon}) $$
 #
-# Since in QPE the maximum evolution time is $t_f = \mathcal{O} (2^m)$ where $m$ is the number of phase bits, we get
+# Again with the QPE maximum evolution time $t_f = \mathcal{O} (2^m)$, we get
 #
 # $$ n_{\rm steps} = \mathcal{O} (\sqrt{2^{3m} / \epsilon}) $$
 
@@ -301,7 +301,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # This gives a total CNOT gate count for the Trotterization of $U(t)$:
 #
-# $$ 6(n - 1)n_{steps} \qquad \mathrm{CNOT~gates}$$
+# $$ 6(n - 1)n_{\rm steps} \qquad \mathrm{CNOT~gates}$$
 #
 # - Second order:
 #
@@ -309,7 +309,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 #
 # Total CNOT gate count for second-order Trotterization:
 #
-# $$ 12(n - 1)n_{steps} \qquad \mathrm{CNOT~gates}.$$
+# $$ 12(n - 1)n_{\rm steps} \qquad \mathrm{CNOT~gates}.$$
 #
 # Note that the two neighboring $e^{-i  Z_{n-2} Z_{n-1} dt J/8}$ terms could be merged, as well as the $e^{-i X_0 X_1 dt J/8}$ terms from neighboring Trotter steps, to reduce the total CNOT gate count. Here we only implement the most naive version of second-order Trotterization: in general, one should merge the two occurrences of the last Hamiltonian term.
 
