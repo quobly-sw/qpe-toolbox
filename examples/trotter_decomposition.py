@@ -141,7 +141,13 @@ def errors_trotter_slice(t_values, n_steps_values, trotter_order, ntype="fro"):
 
 
 # %% [markdown]
-# We consider a sequence of evolution times growing as powers of $2$ as in QPE: $t_f = 2^kt_0, k = 0 \dots 5$. Here we pick $t_0 = 0.1$, we already discussed how to choose $t_0$ in [Textbook QPE](./textbook_qpe.ipynb#evolution-time-and-global-phase). We vary the number of Trotter steps between $5$ and $200$.
+# We consider a sequence of evolution times growing as powers of $2$ as in QPE: $t_f = 2^kt_0, k = 0 \dots 5$. Following the convention discussed in [Textbook QPE](./textbook_qpe.ipynb#evolution-time-and-global-phase), we pick $t_0 = 2\pi/\Delta$, where $\Delta = 10$ is the width of the energy search window. We vary the number of Trotter steps between $5$ and $200$.
+
+# %%
+Δ = 10
+t0 = 2 * np.pi / Δ
+t_values = t0 * 2 ** np.arange(6)
+n_steps_values = np.array([5, 10, 50, 100, 200])
 
 # %% [markdown]
 # ### First-order Trotter
@@ -149,10 +155,6 @@ def errors_trotter_slice(t_values, n_steps_values, trotter_order, ntype="fro"):
 # Let us start with first-order Trotter. The following cell should take a minute to run:
 
 # %%
-t0 = 0.1
-t_values = 2 * np.pi * t0 * 2 ** np.arange(6)
-n_steps_values = np.array([5, 10, 50, 100, 200])
-
 errors_1st, durations_1st = errors_trotter_slice(
     t_values, n_steps_values, trotter_order=1
 )
@@ -209,7 +211,7 @@ fig.suptitle("Second-order Trotter");
 
 
 # %% [markdown]
-# ### Number of Steps Required to get Below a Given Error
+# ### Number of Steps Required to Get Below a Given Error
 #
 # For the first-order Trotter formula, since the error scales as $t_f^2 / n_{\rm steps}$, reaching an error $\epsilon$ requires a minimum number of steps:
 #
@@ -219,7 +221,7 @@ fig.suptitle("Second-order Trotter");
 #
 # $$ n_{\rm steps} = \mathcal{O} (2^{2m} / \epsilon). $$
 #
-# As shown in the plot below, the number of Trotter steps quickly grows to about $10^6$, which translates into at least as many CNOT gates. This is why in practice we use the second-order Trotter decomposition.
+# As shown in the plot below, the number of Trotter steps quickly grows beyond $10^4$, which translates into almost a million CNOT gates. This is why in practice we use the second-order Trotter decomposition.
 #
 # The Trotter error at second order is $\mathcal{O}(t_f^3 / n_{\rm steps}^2)$. Thus reaching an error $\epsilon$ requires a number of steps scaling as
 #
