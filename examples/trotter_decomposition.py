@@ -33,8 +33,6 @@
 # $$ e^{A+B} =  \lim_{r \to \infty} \left( e^{\frac{A}{r}} e^{\frac{B}{r}} \right)^r. $$
 
 # %%
-import time
-
 import matplotlib.pyplot as plt
 import numpy as np
 import quimb as qu
@@ -120,13 +118,11 @@ def errors_trotter_slice(t_values, n_steps_values, trotter_order, ntype="fro"):
     n_t = len(t_values)
     n_n = len(n_steps_values)
     errors = np.empty((n_t, n_n))
-    durations = np.empty((n_t, n_n))
 
     for i in tqdm.tqdm(range(n_t)):
         U_exact = qu.expm(-1j * t_values[i] * h_dense)
 
         for j in tqdm.tqdm(range(n_n), leave=False):
-            st = time.time()
             circ = qtn.Circuit(n_qubits)
             dt = t_values[i] / n_steps_values[j]
             trotter_slice = h_spin.get_trotter_step(dt, data_reg, trotter_order)
@@ -135,9 +131,8 @@ def errors_trotter_slice(t_values, n_steps_values, trotter_order, ntype="fro"):
             U_trotter = circ.get_uni().to_dense()
 
             errors[i, j] = qu.norm(U_exact.H @ U_trotter - id2n, ntype=ntype)
-            durations[i, j] = time.time() - st
 
-    return errors, durations
+    return errors
 
 
 # %% [markdown]
@@ -155,9 +150,7 @@ n_steps_values = np.array([5, 10, 50, 100, 200])
 # Let us start with first-order Trotter. The following cell should take a minute to run:
 
 # %%
-errors_1st, durations_1st = errors_trotter_slice(
-    t_values, n_steps_values, trotter_order=1
-)
+errors_1st = errors_trotter_slice(t_values, n_steps_values, trotter_order=1)
 
 # %% [markdown]
 # As seen in the introduction, we expect the error to scale as $t_f^2 / n_{\rm steps}$. Let us plot the errors versus $n_{\rm steps}$ (left, linear scale) and versus $t_f^2 / n_{\rm steps}$ (right, log scale):
@@ -190,9 +183,7 @@ fig.suptitle("First-order Trotter");
 # Similarly, we plot the errors reached with a second-order Trotter formula, as a function of $n_{\rm steps}$ (left, linear scale) and as a function of $t_f^3 / n_{\rm steps}^2$ (right, log scale).
 
 # %%
-errors_2nd, durations_2nd = errors_trotter_slice(
-    t_values, n_steps_values, trotter_order=2
-)
+errors_2nd = errors_trotter_slice(t_values, n_steps_values, trotter_order=2)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
@@ -346,7 +337,6 @@ def fidelities_trotter_slice(t_values, n_steps_values, trotter_order):
     n_t = len(t_values)
     n_n = len(n_steps_values)
     errors = np.empty((n_t, n_n))
-    durations = np.empty((n_t, n_n))
 
     _eigvals, eigvecs = np.linalg.eigh(h_dense)
     psi0 = eigvecs[:, 0]
@@ -358,7 +348,6 @@ def fidelities_trotter_slice(t_values, n_steps_values, trotter_order):
         psi_ref = U @ psi0
 
         for j in tqdm.tqdm(range(n_n), leave=False):
-            st = time.time()
             circ = circ0.copy()
             dt = t_values[i] / n_steps_values[j]
             trotter_slice = h_spin.get_trotter_step(dt, data_reg, trotter_order)
@@ -368,14 +357,11 @@ def fidelities_trotter_slice(t_values, n_steps_values, trotter_order):
             errors[i, j] = abs(
                 1 - qu.fidelity(circ.psi.to_dense(), psi_ref, squared=True)
             )
-            durations[i, j] = time.time() - st
-    return errors, durations
+    return errors
 
 
 # %%
-errors_fidelity, durations_fidelity = fidelities_trotter_slice(
-    t_values, n_steps_values, trotter_order=2
-)
+errors_fidelity = fidelities_trotter_slice(t_values, n_steps_values, trotter_order=2)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4), sharey=True)
@@ -390,7 +376,7 @@ for i, t in enumerate(t_values):
 
 axl.legend()
 axl.set_xlabel("timestep $dt$")
-axl.set_ylabel(r"$1-\text{Fidelity}$")
+axl.set_ylabel(r"$1-|\langle\psi_{\rm exact} | \psi_{\rm trotter}\rangle|^2$")
 axr.set_ylabel(r"$1-\text{Fidelity}$")
 axr.set_xlabel(r"${t_f^3}/n_{\text{steps}}^2$")
 fig.suptitle("Fidelity for second-order Trotter");
