@@ -56,8 +56,10 @@ plt.rcParams.update({"font.size": 12})
 
 # %%
 n_qubits = 4
+id2n = qu.eye(2**n_qubits)
 h_spin = heisenberg_hamiltonian(n_qubits)
-qubit_reg = list(range(n_qubits))
+h_dense = h_spin.to_dense()
+data_reg = list(range(n_qubits))
 
 # %% [markdown]
 # ### First-order Trotter-Suzuki Formula
@@ -86,7 +88,7 @@ qubit_reg = list(range(n_qubits))
 # %%
 # First-order Trotter
 dt = 1
-trotter_routine = h_spin.get_trotter_step(dt, qubit_reg, trotter_order=1)
+trotter_routine = h_spin.get_trotter_step(dt, data_reg, trotter_order=1)
 
 circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
@@ -95,7 +97,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 
 # %%
 # Second-order Trotter
-trotter_routine = h_spin.get_trotter_step(dt, qubit_reg, trotter_order=2)
+trotter_routine = h_spin.get_trotter_step(dt, data_reg, trotter_order=2)
 
 circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
@@ -108,43 +110,38 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 #
 # Let us first use the distance between the full time-evolution operators as a metric: $||U_{\rm Trotter}^{\dagger}(t_f) U_{\rm exact}(t_f) - \mathbb{1}||$
 #
-# We define a function that collects the errors for evolution times $t$ in `t_list`, numbers of timesteps $n_{steps}$ in `ns_list`, and Trotterization order `order`.
+# We define a function that collects the errors for evolution times $t$ in `t_values`, numbers of timesteps $n_{steps}$ in `n_steps_values`, and Trotterization order `trotter_order`.
 #
 # NB: in this example we consider the Frobenius norm to define the error. Any other norm supported by `quimb.norm` can be used via the optional parameter `ntype`.
 
 
 # %%
-def errors_trotter_slice(t_list, ns_list, trotter_order, ntype="fro"):
-    res = {"t": t_list, "n_s": ns_list, "errors_lists": [], "durations_lists": []}
+def errors_trotter_slice(t_values, n_steps_values, trotter_order, ntype="fro"):
+    n_t = len(t_values)
+    n_n = len(n_steps_values)
+    errors = np.empty((n_t, n_n))
+    durations = np.empty((n_t, n_n))
 
-    hamilt_matrix = h_spin.to_dense()
-    id2n = qu.eye(2**n_qubits)
+    for i in tqdm.tqdm(range(n_t)):
+        U_exact = qu.expm(-1j * t_values[i] * h_dense)
 
-    for t in tqdm.tqdm(t_list):
-        U_matrix = qu.expm(-1j * hamilt_matrix * t)
-
-        errors = []
-        durations = []
-        for n_steps in tqdm.tqdm(ns_list, leave=False):
+        for j in tqdm.tqdm(range(n_n), leave=False):
             st = time.time()
             circ = qtn.Circuit(n_qubits)
-            dt = t / n_steps
-            trotter_slice = h_spin.get_trotter_step(dt, qubit_reg, trotter_order)
-            for _ in range(n_steps):
+            dt = t_values[i] / n_steps_values[j]
+            trotter_slice = h_spin.get_trotter_step(dt, data_reg, trotter_order)
+            for _ in range(n_steps_values[j]):
                 circ.apply_gates(trotter_slice)
             U_trotter = circ.get_uni().to_dense()
 
-            errors.append(qu.norm(U_matrix.H @ U_trotter - id2n, ntype=ntype))
-            durations.append(time.time() - st)
+            errors[i, j] = qu.norm(U_exact.H @ U_trotter - id2n, ntype=ntype)
+            durations[i, j] = time.time() - st
 
-        res["errors_lists"].append(errors)
-        res["durations_lists"].append(durations)
-
-    return res
+    return errors, durations
 
 
 # %% [markdown]
-# We consider a sequence of evolution times growing as powers of $2$ as in QPE: $t_f = 2^kt, k = 1 \dots 6,$ where $t$ is picked randomly in $[0,2\pi]$. We vary the number of Trotter steps between $5$ and $200$.
+# We consider a sequence of evolution times growing as powers of $2$ as in QPE: $t_f = 2^kt_0, k = 0 \dots 5$. Here we pick $t_0 = 0.1$, we already discussed how to choose $t_0$ in [Textbook QPE](./textbook_qpe.ipynb#evolution-time-and-global-phase). We vary the number of Trotter steps between $5$ and $200$.
 
 # %% [markdown]
 # ### First-order Trotter
@@ -152,11 +149,13 @@ def errors_trotter_slice(t_list, ns_list, trotter_order, ntype="fro"):
 # Let us start with first-order Trotter. The following cell should take a minute to run:
 
 # %%
-rng = np.random.default_rng(seed=42)
-t_list = np.array([2 * np.pi * rng.random() * 2**j for j in range(6)])
-ns_list = np.array([5, 10, 50, 100, 200])
+t0 = 0.1
+t_values = 2 * np.pi * t0 * 2 ** np.arange(6)
+n_steps_values = np.array([5, 10, 50, 100, 200])
 
-res = errors_trotter_slice(t_list, ns_list, trotter_order=1)
+errors_1st, durations_1st = errors_trotter_slice(
+    t_values, n_steps_values, trotter_order=1
+)
 
 # %% [markdown]
 # As seen in the introduction, we expect the error to scale as $t_f^2 / n_{\rm steps}$. Let us plot the errors versus $n_{\rm steps}$ (left, linear scale) and versus $t_f^2 / n_{\rm steps}$ (right, log scale):
@@ -165,20 +164,16 @@ res = errors_trotter_slice(t_list, ns_list, trotter_order=1)
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
 xfit = np.linspace(0.1, 100, 101)
 axr.loglog(xfit, 0.2 * xfit, ":k", label=r"$\propto {t_f^2}/{n_{\text{steps}}}$")
-for i, t in enumerate(res["t"]):
-    axl.plot(res["n_s"], res["errors_lists"][i], "-o")
+for i, t in enumerate(t_values):
+    axl.plot(n_steps_values, errors_1st[i], "-o")
     axr.loglog(
-        t**2 / res["n_s"],
-        res["errors_lists"][i],
-        "-o",
-        label=rf"$t_f=${t / np.pi:.2g}$\pi$",
+        t**2 / n_steps_values, errors_1st[i], "-o", label=rf"$t_f=${t / np.pi:.2g}$\pi$"
     )
 
-
 axl.set_ylim(0, 3)
-axr.set_xlim(0.1, 1e4)
+axr.set_xlim(0.1, 2e2)
 axr.set_ylim(0.01, 10)
-axr.legend()
+axr.legend(loc="lower right")
 axl.set_xlabel("$n_{steps}$")
 axr.set_xlabel(r"${t_f^2}/{n_{\text{steps}}}$")
 axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
@@ -193,15 +188,15 @@ fig.suptitle("First-order Trotter");
 # Similarly, we plot the errors reached with a second-order Trotter formula, as a function of $n_{\rm steps}$ (left, linear scale) and as a function of $t_f^3 / n_{\rm steps}^2$ (right, log scale).
 
 # %%
-res2 = errors_trotter_slice(t_list, ns_list, trotter_order=2)
+errors_2nd, durations_2nd = errors_trotter_slice(
+    t_values, n_steps_values, trotter_order=2
+)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
-for i, t in enumerate(res2["t"]):
-    axl.plot(
-        res2["n_s"], res2["errors_lists"][i], "-o", label=rf"$t_f=${t / np.pi:.2g}$\pi$"
-    )
-    axr.loglog(t**3 / res2["n_s"] ** 2, res2["errors_lists"][i], "-o")
+for i, t in enumerate(t_values):
+    axl.plot(n_steps_values, errors_2nd[i], "-o", label=rf"$t_f=${t / np.pi:.2g}$\pi$")
+    axr.loglog(t**3 / n_steps_values**2, errors_2nd[i], "-o")
 
 axl.set_ylim(0, 3)
 axl.legend()
@@ -238,10 +233,10 @@ fig.suptitle("Second-order Trotter");
 epsilon = 1e-2
 
 fig, ax = plt.subplots()
-ax.loglog(t_list, t_list**2 / epsilon, "-o", label=r"first order $t_f^2/\epsilon$")
+ax.loglog(t_values, t_values**2 / epsilon, "-o", label=r"first order $t_f^2/\epsilon$")
 ax.loglog(
-    t_list,
-    np.sqrt(t_list**3 / epsilon),
+    t_values,
+    np.sqrt(t_values**3 / epsilon),
     "-.s",
     label=r"second order $\sqrt{t_f^{3}/\epsilon}$",
 )
@@ -319,14 +314,14 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # %%
 fig, ax = plt.subplots()
 ax.loglog(
-    t_list,
-    6 * (n_qubits - 1) * t_list**2 / epsilon,
+    t_values,
+    6 * (n_qubits - 1) * t_values**2 / epsilon,
     "-o",
     label=r"first order $6(n-1)t_f^2/\epsilon$",
 )
 ax.loglog(
-    t_list,
-    np.sqrt(12 * (n_qubits - 1) * t_list**3 / epsilon),
+    t_values,
+    np.sqrt(12 * (n_qubits - 1) * t_values**3 / epsilon),
     "-.s",
     label=r"second order $12(n-1)\sqrt{t_f^{3}/\epsilon}$",
 )
@@ -345,54 +340,51 @@ fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$")
 
 
 # %%
-def fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order):
-    res = {"t": t_list, "n_s": ns_list, "errors_lists": [], "durations_lists": []}
+def fidelities_trotter_slice(t_values, n_steps_values, trotter_order):
+    n_t = len(t_values)
+    n_n = len(n_steps_values)
+    errors = np.empty((n_t, n_n))
+    durations = np.empty((n_t, n_n))
 
-    reg = list(range(n_qubits))
-    h_spin = heisenberg_hamiltonian(n_qubits)
-    hamilt_matrix = h_spin.to_dense()
-    _eigvals, eigvecs = np.linalg.eigh(hamilt_matrix)
-
+    _eigvals, eigvecs = np.linalg.eigh(h_dense)
     psi0 = eigvecs[:, 0]
     psi0_mps = qtn.MatrixProductState.from_dense(psi0)
+    circ0 = qtn.Circuit(n_qubits, psi0=psi0_mps)
 
-    for t in tqdm.tqdm(t_list):
-        U = qu.expm(-1j * hamilt_matrix * t)
+    for i in tqdm.tqdm(range(n_t)):
+        U = qu.expm(-1j * t_values[i] * h_dense)
         psi_ref = U @ psi0
 
-        errors = []
-        durations = []
-        for n_steps in tqdm.tqdm(ns_list, leave=False):
+        for j in tqdm.tqdm(range(n_n), leave=False):
             st = time.time()
-            circ = qtn.Circuit(n_qubits, psi0=psi0_mps)
-            dt = t / n_steps
-            trotter_slice = h_spin.get_trotter_step(dt, reg, trotter_order)
-            for _ in range(n_steps):
+            circ = circ0.copy()
+            dt = t_values[i] / n_steps_values[j]
+            trotter_slice = h_spin.get_trotter_step(dt, data_reg, trotter_order)
+            for _ in range(n_steps_values[j]):
                 circ.apply_gates(trotter_slice)
 
-            errors.append(
-                abs(1 - qu.fidelity(circ.psi.to_dense(), psi_ref, squared=True))
+            errors[i, j] = abs(
+                1 - qu.fidelity(circ.psi.to_dense(), psi_ref, squared=True)
             )
-            durations.append(time.time() - st)
-
-        res["errors_lists"].append(errors)
-        res["durations_lists"].append(durations)
-    return res
+            durations[i, j] = time.time() - st
+    return errors, durations
 
 
 # %%
-res2f = fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order=2)
+errors_fidelity, durations_fidelity = fidelities_trotter_slice(
+    t_values, n_steps_values, trotter_order=2
+)
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4), sharey=True)
-for i, t in enumerate(res2f["t"]):
+for i, t in enumerate(t_values):
     axl.loglog(
-        t / res2f["n_s"],
-        res2f["errors_lists"][i],
+        t / n_steps_values,
+        errors_fidelity[i],
         "-o",
         label=rf"t={t / np.pi:.2g}$\pi$",
     )
-    axr.loglog(t**3 / res2f["n_s"] ** 2, res2f["errors_lists"][i], "-o")
+    axr.loglog(t**3 / n_steps_values**2, errors_fidelity[i], "-o")
 
 axl.legend()
 axl.set_xlabel("timestep $dt$")
