@@ -44,7 +44,7 @@ mystyles = [
 ]
 
 # %% [markdown]
-# ## Introduction
+# ## A First Trotterized Run
 
 # %% [markdown]
 # - We consider the 1D nearest-neighbor Heisenberg Hamiltonian with open boundary conditions and take the DMRG ground state as the "exact" reference state.
@@ -75,7 +75,6 @@ print(
 )
 
 circuit0 = make_circ(n_phase_bits0, psi0_mps)
-trotter_order0 = 1
 
 # %% [markdown]
 # - [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) represents the QPE circuit as a tensor network:
@@ -83,7 +82,7 @@ trotter_order0 = 1
 # %%
 dt = evolution_time / n_trotter_steps0
 _, circ = qpe.qpe_first_stage(
-    h_spin, circuit0, evolution_time, dt, global_phase, trotter_order=trotter_order0
+    h_spin, circuit0, evolution_time, dt, global_phase, trotter_order=1
 )
 
 phase_reg = list(range(n_phase_bits0))
@@ -109,7 +108,7 @@ traces, energy = qpe.qpe_energy(
     n_trotter_steps0,
     E_target,
     size_interval,
-    trotter_order=trotter_order0,
+    trotter_order=1,
     verbosity=1,
 )
 
@@ -122,7 +121,7 @@ print(
 )
 
 # %% [markdown]
-# ## Precision: influence of the number of phase qubits and number of Trotter steps
+# ## Influence of Phase Qubits and Trotter Steps
 #
 # We run several QPE circuits, varying the number of phase qubits and Trotter steps, and measure the energy. We also record the gate count and simulation time, and compare two modes of circuit simulation available with $\texttt{quimb}$: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` contraction-path optimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
 #
@@ -183,7 +182,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
     res["entangling_gates"].append(gates_count)
 
 # %% [markdown]
-# ### Error versus number of phase qubits
+# ### Error Versus Number of Phase Qubits
 #
 # Let us see how the precision improves when adding more qubits in the phase register, for different numbers of Trotter steps:
 
@@ -219,7 +218,7 @@ ax.set_ylabel("energy error");
 # For `n_trotter_steps >= 3`, the Trotter error becomes negligible and the curves overlap with the exact-time-evolution curve.
 
 # %% [markdown]
-# ### Error versus number of Trotter steps
+# ### Error Versus Number of Trotter Steps
 #
 # We now plot the error as a function of the number of Trotter steps $n_{\rm steps}$ for a given number of phase qubits:
 
@@ -257,7 +256,7 @@ ax.set_ylabel("energy error");
 # The red dashed line shows the second-order Trotter error bound $t^3 / n_{\rm steps}^2$. The black dashed line shows the theoretical QPE error bound $\Delta / 2^{n_{\rm phase~bits}}$. Here $2$ Trotter steps are sufficient to reach the QPE precision for this number of phase qubits.
 
 # %% [markdown]
-# ### Gate count and computation time
+# ### Gate Count and Computation Time
 #
 # Let us now visualize the gate count. We only count entangling gates, i.e. multi-qubit gates. The Trotterized time-evolution operator is implemented with CNOT gates and one-qubit gates (rotations). In QPE, the time evolution is controlled on the phase register. Hence, the CNOT become multi-controlled CCNOT gates and the rotation gates become controlled-rotations. The number of Trotter steps in the controlled time-evolution sequence grows exponentially with the number of phase qubits, and so does the number of entangling gates.
 
@@ -307,7 +306,7 @@ ax_t.set_ylabel("computation time (seconds)");
 # * Note that a comparison between $\texttt{quimb}$'s `CircuitMPS` and  $\texttt{qiskit}$ MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example. A detailed example on the way $\texttt{quimb}$ performs tensor network contraction and in particular hyperoptimization can be found in the [Hyperoptimization](./hyperoptimization.ipynb) notebook.
 
 # %% [markdown]
-# ## Resource analysis
+# ## Resource Analysis
 #
 # For larger numbers of phase qubits, computation becomes costly: in the following we do not run the simulation but only generate the list of gate instructions.
 
