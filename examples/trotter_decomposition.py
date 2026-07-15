@@ -287,7 +287,7 @@ fig.suptitle(f"Number of Trotter steps to get below $\\epsilon = {epsilon}$");
 # %% [markdown]
 # #### CNOT Gate Count
 #
-# Thus, the algorithm to implement a Pauli string exponential $\exp( i \theta P_1 ... P_K )$, where the $P_i \in \{X,Y,Z\}$ are non-identity Pauli operators, uses $2 (K - 1)$ CNOT gates, $K$ being the length of the Pauli string.
+# Thus, the algorithm to implement a Pauli string exponential $\exp(-i \theta P_1 ... P_K )$, where the $P_i \in \{X,Y,Z\}$ are non-identity Pauli operators, uses $2 (K - 1)$ CNOT gates, $K$ being the length of the Pauli string.
 #
 # For the Heisenberg Hamiltonian:
 #
@@ -384,7 +384,7 @@ for i, t in enumerate(t_values):
         t / n_steps_values,
         errors_fidelity[i],
         "-o",
-        label=rf"t={t / np.pi:.2g}$\pi$",
+        label=rf"$t_f={t / np.pi:.2g}\pi$",
     )
     axr.loglog(t**3 / n_steps_values**2, errors_fidelity[i], "-o")
 
