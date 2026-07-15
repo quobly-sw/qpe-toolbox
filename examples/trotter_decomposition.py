@@ -321,14 +321,14 @@ ax.loglog(
 )
 ax.loglog(
     t_values,
-    np.sqrt(12 * (n_qubits - 1) * t_values**3 / epsilon),
+    12 * (n_qubits - 1) * np.sqrt(t_values**3 / epsilon),
     "-.s",
     label=r"second order $12(n-1)\sqrt{t_f^{3}/\epsilon}$",
 )
 ax.set_xlabel(r"$t_f$")
 ax.set_ylabel(r"number of CNOT gates")
 ax.legend()
-fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$")
+fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$");
 
 # %% [markdown]
 # ## Fidelity as an Error Metric
