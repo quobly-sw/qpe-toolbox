@@ -7,6 +7,22 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ## [Unreleased]
 
+### Changed
+
+- `robust_phase_estimation`: replaced `epsilon` with `n_repetitions`, removed
+  `sign_E0`, added an `rng` argument for deterministic sampling, and changed
+  the `trotter_order` default from 2 to 1. The returned list now has length
+  `n_repetitions` (no leading placeholder).
+- `run_hadamard_test` / `rpe_get_hadamard_output`: replaced `seed` with an
+  `rng` (`numpy.random.Generator`) argument.
+- Renamed `rpe_distance` to `angular_distance`; it is now vectorized.
+- `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now
+  returning a single angle.
+
+### Removed
+
+- `rpe_distance` (renamed to `angular_distance`).
+
 ## [1.1.0] - 2026-04-02
 
 ### Changed
