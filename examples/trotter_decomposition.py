@@ -164,7 +164,7 @@ errors_1st, durations_1st = errors_trotter_slice(
 
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
-xfit = np.linspace(0.1, 100, 101)
+xfit = np.linspace(1e-5, 100, 101)
 axr.loglog(xfit, 0.2 * xfit, ":k", label=r"$\propto {t_f^2}/{n_{\text{steps}}}$")
 for i, t in enumerate(t_values):
     axl.plot(n_steps_values, errors_1st[i], "-o")
@@ -173,9 +173,9 @@ for i, t in enumerate(t_values):
     )
 
 axl.set_ylim(0, 3)
-axr.set_xlim(0.1, 2e2)
-axr.set_ylim(0.01, 10)
-axr.legend(loc="lower right")
+axr.set_xlim(1e-3, 2e2)
+axr.set_ylim(1e-3, 10)
+axr.legend(loc="upper left")
 axl.set_xlabel("$n_{steps}$")
 axr.set_xlabel(r"${t_f^2}/{n_{\text{steps}}}$")
 axl.set_ylabel(r"$\| U_{\mathrm{exact}}^\dag U_{\mathrm{Trotter}} - \mathrm{Id} \|$")
