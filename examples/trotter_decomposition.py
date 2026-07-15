@@ -169,7 +169,7 @@ axr.loglog(xfit, 0.2 * xfit, ":k", label=r"$\propto {t_f^2}/{n_{\text{steps}}}$"
 for i, t in enumerate(t_values):
     axl.plot(n_steps_values, errors_1st[i], "-o")
     axr.loglog(
-        t**2 / n_steps_values, errors_1st[i], "-o", label=rf"$t_f=${t / np.pi:.2g}$\pi$"
+        t**2 / n_steps_values, errors_1st[i], "-o", label=rf"$t_f={t / np.pi:.2g}\pi$"
     )
 
 axl.set_ylim(0, 3)
@@ -197,7 +197,7 @@ errors_2nd, durations_2nd = errors_trotter_slice(
 # %%
 fig, (axl, axr) = plt.subplots(ncols=2, figsize=(12, 4))
 for i, t in enumerate(t_values):
-    axl.plot(n_steps_values, errors_2nd[i], "-o", label=rf"$t_f=${t / np.pi:.2g}$\pi$")
+    axl.plot(n_steps_values, errors_2nd[i], "-o", label=rf"$t_f={t / np.pi:.2g}\pi$")
     axr.loglog(t**3 / n_steps_values**2, errors_2nd[i], "-o")
 
 axl.set_ylim(0, 3)
