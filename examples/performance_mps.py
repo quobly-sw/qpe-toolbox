@@ -241,14 +241,15 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # into the procedure for applying a long-range gate: it requires permuting the two
 # involved qubits through the 1-dimensional layout until they are nearest neighbors,
 # followed by the local application of the two-body gate. While `CircuitMPS` would
-# restore the initial layout after the gate application, `PermMPS` leaves this new
+# restore the initial layout after the gate application, `CircuitPermMPS` leaves this new
 # layout and tracks the intermediate trajectories of the qubits. This class may
 # reduce wall-clock times when entangling gates are sparse. However, our circuit
 # instances are not sparse enough to show a clear advantage. This can be seen for `depth=1` in the right column
 # (random entangling pattern). Despite these results, we expect that a study with
-# varying `ent_prob` and `ent_range` in the function `generate_rand_circuit` would
-# reveal a regime where `CircuitPermMPS` outperforms `CircuitMPS` for sparse circuits
-# (low `ent_prob`, medium-low `ent_range`).
+# varying `two_qubit_gate_prob` and `two_qubit_gate_range` in the function
+# `generate_rand_circuit` would reveal a regime where `CircuitPermMPS` outperforms
+# `CircuitMPS` for sparse circuits (low `two_qubit_gate_prob`, medium-low
+# `two_qubit_gate_range`).
 
 # %% [markdown]
 # ### Scaling with the Bond Dimension
