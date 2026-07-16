@@ -15,7 +15,7 @@
 # %% [markdown]
 # # QPE with Trotterization
 #
-# In this example we perform Quantum Phase Estimation with a second-order Trotter decomposition of the time evolution operator $U(t) = \exp(-i H t)$.
+# In this example we perform Quantum Phase Estimation with a second-order Trotter decomposition of the time-evolution operator $U(t) = \exp(-i H t)$.
 #
 # Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we introduced and ran QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki Decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
 #
@@ -55,7 +55,7 @@ h_spin = heisenberg_hamiltonian(n_qubits)
 exact_energy, psi0_mps = do_dmrg(h_spin)
 
 # %% [markdown]
-# - Then we set the different parameters to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$ (see the [Textbook QPE](./textbook_qpe.ipynb) example).
+# - Then we set the parameters needed to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$ (see the [Textbook QPE](./textbook_qpe.ipynb) example).
 #
 # - Note that `n_trotter_steps` is the number of Trotter steps used to decompose the first controlled time evolution, over the interval $t$ (`evolution_time`). As the circuit proceeds, we apply time evolution over an exponentially growing time $2^k t$ controlled by the $k$-th phase qubit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
 
@@ -141,7 +141,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
     energies = []
     gates_count = []
     for n_phase_bits in tqdm.tqdm(nphase_list, leave=False):
-        # contracting circuit in MPS mode is much more efficient than generic TN
+        # contracting the circuit in MPS mode is much more efficient than generic TN
         # deeper, wider circuits can be classically simulated
         initial_circMPS = make_circMPS(n_phase_bits, psi0_mps)
         traces, energy = qpe.qpe_energy(
@@ -302,7 +302,7 @@ ax_t.set_ylabel("computation time (seconds)");
 #
 # * We quickly reach computation times of tens of seconds due to the exponentially growing circuit depth. Recall that for such small systems, the Hamiltonian can be exactly diagonalized in a fraction of a second on any laptop. For QPE to gain an advantage over exact diagonalization or DMRG, larger systems, with more than 30 qubits and strong correlations, must be considered.
 #
-# * Note that a comparison between $\texttt{quimb}$'s `CircuitMPS` and  $\texttt{qiskit}$ MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example. A detailed example on the way $\texttt{quimb}$ performs tensor network contraction and in particular hyperoptimization can be found in the [Hyperoptimization](./hyperoptimization.ipynb) notebook.
+# * Note that a comparison between $\texttt{quimb}$'s `CircuitMPS` and  $\texttt{qiskit}$ MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example. A detailed example of how $\texttt{quimb}$ performs tensor network contraction, in particular hyperoptimization, can be found in the [Hyperoptimization](./hyperoptimization.ipynb) notebook.
 
 # %% [markdown]
 # ## Resource Analysis
