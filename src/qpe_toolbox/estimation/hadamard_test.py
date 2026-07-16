@@ -7,8 +7,6 @@
 #
 # --------------------------------------------------------------------------------------
 
-from collections import Counter
-
 import quimb.tensor as qtn
 
 from qpe_toolbox import EXACT
@@ -70,7 +68,7 @@ def build_hadamard_test_circuit(init_mps, U_gate, theta):
     return circ
 
 
-def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
+def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, rng=None):
     r"""
     Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
 
@@ -96,8 +94,9 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots. If ``EXACT``, probabilities are computed exactly,
         else probabilities are estimated by sampling.
-    seed : None or int, optional
-        A random seed, passed to ``numpy.random.seed`` if given.
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
+        Random generator forwarded to the circuit sampler (``circ.sample``).
+        Ignored when ``n_shots`` is ``EXACT``.
 
     Returns
     -------
@@ -105,12 +104,15 @@ def run_hadamard_test(init_mps, U_gate, theta, n_shots, *, seed=None):
         Estimated value of :math:`Z(\theta) = P(0) - P(1)`.
     """
     circ = build_hadamard_test_circuit(init_mps, U_gate, theta)
-    aux_ind = 0
+    aux_ind = 0  # as imposed by make_circMPS
+
     if n_shots is EXACT:
         probs = circ.compute_marginal(where=[aux_ind])
-    else:
-        count = Counter(circ.sample(C=n_shots, seed=seed))
-        probs = [0.0, 0.0]
-        for b, c in count.items():
-            probs[int(b[aux_ind])] += c / n_shots
-    return probs[0] - probs[1]
+        return probs[0] - probs[1]
+
+    popcount = 0
+    # as of quimb 1.13.0, arg qubits=[phase_qubit] is unsupported for circuitMPS
+    # here seed=rng is fine as quimb seed kwarg accepts np.Generator
+    for bitstring in circ.sample(n_shots, seed=rng):
+        popcount += int(bitstring[aux_ind])
+    return (n_shots - 2 * popcount) / n_shots
