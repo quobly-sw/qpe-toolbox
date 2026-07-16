@@ -115,7 +115,7 @@ circ_quimb = generate_rand_circuit(
 # Recast it into the right classes
 circ_dict = serialize_from_quimb_Circuit(circ_quimb)
 circ_quimb = deserialize_to_quimb_CircuitMPS(
-    full_gate_dict=circ_dict, max_bond=2**depth, cutoff=10e-8
+    full_gate_dict=circ_dict, max_bond=2**depth, cutoff=1e-10
 )
 circ_qiskit = deserialize_to_qiskit_QuantumCircuit(circ_dict, measure=True)
 
@@ -124,7 +124,7 @@ num_samples = 10**4  # pick the number of samples
 simulator = AerSimulator(
     method="matrix_product_state",
     matrix_product_state_max_bond_dimension=2**depth,
-    matrix_product_state_truncation_threshold=10e-8,
+    matrix_product_state_truncation_threshold=1e-10,
     seed_simulator=1,
 )
 result = simulator.run(circ_qiskit, shots=num_samples).result()
@@ -162,7 +162,7 @@ plot_histogram(
 # ### Scaling with the Number of Qubits
 
 # %% [markdown]
-# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen depths are `depth=1, 3, 5`, and the $\texttt{quimb}$ class $\texttt{PermMPS}$ is also used for random circuits with `depth=1`:
+# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen depths are `depth=1, 3, 5`, and the $\texttt{quimb}$ class `CircuitPermMPS` (labeled PermMPS in the plots) is also used for random circuits with `depth=1`:
 
 # %%
 mycolors = ("tab:red", "tab:orange", "tab:olive", "tab:purple", "tab:pink", "tab:cyan")
@@ -237,7 +237,7 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 #
 # The discussion so far focused on the `CircuitMPS` class from $\texttt{quimb}$.
 # Nevertheless, there exists another MPS class that tries to leverage the non-locality of
-# long-range circuits: `PermMPS`. The goal of this class can be understood by diving a bit
+# long-range circuits: `CircuitPermMPS`. The goal of this class can be understood by diving a bit
 # into the procedure for applying a long-range gate: it requires permuting the two
 # involved qubits through the 1-dimensional layout until they are nearest neighbors,
 # followed by the local application of the two-body gate. While `CircuitMPS` would
@@ -247,7 +247,7 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # instances are not sparse enough to show a clear advantage. This can be seen for `depth=1` in the right column
 # (random entangling pattern). Despite these results, we expect that a study with
 # varying `ent_prob` and `ent_range` in the function `generate_rand_circuit` would
-# reveal a regime where `PermMPS` outperforms `CircuitMPS` for sparse circuits
+# reveal a regime where `CircuitPermMPS` outperforms `CircuitMPS` for sparse circuits
 # (low `ent_prob`, medium-low `ent_range`).
 
 # %% [markdown]
@@ -334,7 +334,7 @@ for shots in num_samples:
         simulator = AerSimulator(
             method="matrix_product_state",
             matrix_product_state_max_bond_dimension=2**depth,
-            matrix_product_state_truncation_threshold=10e-8,
+            matrix_product_state_truncation_threshold=1e-10,
             mps_log_data=True,
         )
         result = simulator.run(qc, shots=shots).result()
@@ -386,7 +386,7 @@ for idx, ax in np.ndenumerate(axes):
     if idx[0] == 2:
         ax.set_xlabel("number of qubits")
 plot_errorbar(axes[0, 0], dum, dum, dum, "tab:orange", label="quimb")
-plot_errorbar(axes[0, 0], dum, dum, dum, "tab:cyan", label="qiskit=aer")
+plot_errorbar(axes[0, 0], dum, dum, dum, "tab:cyan", label="qiskit-aer")
 axes[0, 0].legend(loc="lower right", fontsize=12)
 axes[0, 0].set_title("brickwall circuits", fontsize=12)
 axes[0, 1].set_title("random circuits", fontsize=12)
@@ -402,4 +402,4 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 # Although we have found counterexamples to results such as those gathered in [feniqs_lite](https://arxiv.org/abs/2504.14027), we are well aware that $\texttt{quimb}$ can offer even more by introducing more flexible quantum circuit classes (like `Circuit`) and methods suited for different architectures:
 # * [`sample`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3523-L3674) : uses light-cone simplification and caching of the marginal distributions for chosen groupings of qubits.
 # * [`sample_gate_by_gate`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L4023-L4143) : achieves a cost for sampling similar to that of computing single amplitudes, but increases the number of tensor networks to be contracted. This method was [introduced in 2021](https://arxiv.org/abs/2112.08499).
-# * [`sample_chaotic`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3762-L3892) : assumes that only subgroups of qubits are correlated, while the rest of the sampled bitstring results are essentially random. This strategy was successful at classically replicating one of the latest [quantum advantage claims](https://www.nature.com/articles/s41586-019-1666-5).
+# * [`sample_chaotic`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3762-L3892) : assumes that only subgroups of qubits are correlated, while the rest of the sampled bitstring results are essentially random. This strategy was successful at classically replicating one of the most prominent [quantum advantage claims](https://www.nature.com/articles/s41586-019-1666-5).
