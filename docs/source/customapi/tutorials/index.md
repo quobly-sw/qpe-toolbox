@@ -24,9 +24,13 @@ performance_mps.ipynb
 
 hyperoptimization.ipynb
 
-variational_circuit_preparation.ipynb
-
 mpo_to_circuit.ipynb
+
+circuit_preparation_global_opt.py
+
+circuit_preparation_local_opt.py
+
+circuit_preparation_approximate_local_opt.py
 ```
 
 
