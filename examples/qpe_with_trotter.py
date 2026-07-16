@@ -172,7 +172,7 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
                 trotter_order=trotter_order,
                 optimize="greedy",
             )
-            duration_tn.append(traces["ctimes"][-1])
+            duration_tn.append(traces_tn["ctimes"][-1])
             assert abs(energy_tn - energy) < 1e-6
 
     res["durations_tn"].append(duration_tn)
