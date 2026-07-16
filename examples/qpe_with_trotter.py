@@ -15,7 +15,7 @@
 # %% [markdown]
 # # QPE with Trotterization
 #
-# In this example we perform Quantum Phase Estimation with a second-order Trotter decomposition of the time-evolution operator $U(t) = \exp(-i H t)$.
+# In this example we perform Quantum Phase Estimation with first and second-order Trotter decompositions of the time-evolution operator $U(t) = \exp(-i H t)$.
 #
 # Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we introduced and ran QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki Decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
 #
@@ -66,7 +66,7 @@ Emax = E_target + size_interval / 2
 evolution_time = 2 * np.pi / size_interval
 global_phase = Emax * evolution_time
 
-print(f"exact theta = {(E_target + size_interval / 2 - exact_energy) / size_interval}")
+print(f"exact theta = {(Emax - exact_energy) / size_interval}")
 
 n_phase_bits0 = 2
 n_trotter_steps0 = 1
