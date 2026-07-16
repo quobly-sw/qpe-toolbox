@@ -16,9 +16,9 @@
 # # quimb - qiskit MPS benchmark
 
 # %% [markdown]
-# Recent studies comparing different quantum backends, like the one collected in [feniqs_lite](https://arxiv.org/abs/2504.14027), have pointed out that $\texttt{qiskit-aer}$ may be one of the fastest options to execute and sample a quantum circuit with classical resources, thanks to its underlying Rust/C++ implementation. Nevertheless, in a simple comparative study, we detect that this advantage depends strongly on the underlying circuit architecture when compared with $\texttt{quimb}$.
+# Recent studies comparing different quantum backends, such as the one collected in [feniqs_lite](https://arxiv.org/abs/2504.14027), have pointed out that $\texttt{qiskit-aer}$ may be one of the fastest options for executing and sampling a quantum circuit with classical resources, thanks to its underlying Rust/C++ implementation. Nevertheless, in a simple comparison with $\texttt{quimb}$, we find that this advantage depends strongly on the circuit architecture.
 #
-# In this example, we explore the contraction and sampling times for two types of circuits: brickwork and random entangling patterns. Carrying out several simulations with the respective MPS classes in $\texttt{qiskit-aer}$ and $\texttt{quimb}$, we find that $\texttt{quimb}$ becomes faster than $\texttt{qiskit-aer}$ for deep enough circuits constituted by long-range gates. The data used in this study were computed on a laptop using a single CPU thread and are loaded from the accompanying JSON files.
+# In this example, we explore the contraction and sampling times for two types of circuits: brickwall and random entangling patterns. Carrying out several simulations with the respective MPS classes in $\texttt{qiskit-aer}$ and $\texttt{quimb}$, we find that $\texttt{quimb}$ becomes faster than $\texttt{qiskit-aer}$ for deep enough circuits built from long-range gates. The data used in this study were computed on a laptop using a single CPU thread and are loaded from the accompanying JSON files.
 
 # %%
 import json
@@ -66,7 +66,7 @@ def plot_errorbar(ax, x, y, yerr, mfc, *, fmt="o", label=None):
 # ## Circuit instances
 
 # %% [markdown]
-# Let us visualize the smallest instances of circuits that explored throughout this example:
+# Let us visualize the smallest instances of the circuits explored throughout this example:
 
 # %%
 circuit_types = ("brick", "rand")
@@ -92,13 +92,13 @@ for ctype in circuit_types:
 # %% [markdown]
 # The next cell contains a short code example demonstrating how we compare simulation timings:
 #
-# (1) we create or load already existing circuits with the functions introduced in `building_circuits`,
+# (1) we create new circuits or load existing ones with the functions introduced in the [Building Circuits](./building_circuits.ipynb) example,
 #
 # (2) we run simulations (circuit execution + sampling) and access the times and samples,
 #
 # (3) we compare the results for both backends.
 #
-# The following code is also a sample of how we obtained the pre-computed data (note that we fixed the number of threads to 1):
+# The following code also illustrates how the precomputed data were obtained (note that we fixed the number of threads to 1):
 
 # %%
 # Create small circuit
@@ -148,15 +148,15 @@ plot_histogram(
 # %% [markdown]
 # ## Dependence of contraction and sampling times for quimb
 #
-# In the following we present a non-exhaustive study of the dependence of the MPS (layer-by-layer) contraction time $t_{\mathrm{contr}}$ and sampling $t_{\mathrm{sampl}}$ in $\texttt{quimb}$. We will seek the trend of these times as the number of qubits `n_qubits` (length of the MPS) and depth rise; note that the depth of the circuit upper bounds the bond dimension $\chi$ of the fully contracted MPS as $\chi \leq 2^{\rm depth}$.
+# In the following we present a non-exhaustive study of the dependence of the MPS (layer-by-layer) contraction time $t_{\mathrm{contr}}$ and sampling time $t_{\mathrm{sampl}}$ in $\texttt{quimb}$. We track how these times grow with the number of qubits `n_qubits` (length of the MPS) and the depth; note that the depth of the circuit upper bounds the bond dimension $\chi$ of the fully contracted MPS as $\chi \leq 2^{\rm depth}$.
 #
-# We will compare the results for both types of quantum circuit instances introduced above. Since these classes of circuits are both random (in the sense that the parametrization of the single body gates is random), a thorough study would require averaging over circuit architectures and parametrizations. Such a study is beyond the scope of this example; we will actually observe that without averaging out this randomness we can extract solid comparisons.
+# We will compare the results for both types of quantum circuit instances introduced above. Since these classes of circuits are both random (in the sense that the parametrization of the one-qubit gates is random), a thorough study would require averaging over circuit architectures and parametrizations. Such a study is beyond the scope of this example; we will see that solid comparisons can be drawn even without averaging over this randomness.
 #
 # The conditions of the simulations include:
 # - A maximum bond dimension `max_bond` $\chi=2^{\rm depth}$, such that the simulation should not introduce any norm truncation due to bond dimension capping.
 # - A `cutoff` parameter, set to $\varepsilon=10^{-10}$; this cutoff controls the tail of singular values that is cut out after a local gate application.
 #
-# A more natural prescription for the study than the one chosen here would be to set a maximum accumulated error in the norm $\varepsilon_{\mathrm{total}}$, and study the growth of $t_{\mathrm{contr}}$, $t_{\mathrm{sampl}}$ and $\chi$ for that fixed threshold in `n_qubits` and $\chi$. We avoid this prescription due to the difficulty of fixing the maximum error across different backends.
+# A more natural prescription for the study than the one chosen here would be to set a maximum accumulated error in the norm $\varepsilon_{\mathrm{total}}$, and study the growth of $t_{\mathrm{contr}}$, $t_{\mathrm{sampl}}$ and $\chi$ for that fixed threshold in `n_qubits` and depth. We avoid this prescription due to the difficulty of fixing the maximum error across different backends.
 
 # %% [markdown]
 # ### Dependence in the number of qubits
@@ -216,46 +216,45 @@ fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsiz
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
-# Both the contraction and sampling times vary linearly with the number of qubtis.
-# Indeed the circuit classes treated here involve a number of gates proportional
+# Both the contraction and sampling times vary linearly with the number of qubits.
+# Indeed, the circuit classes treated here involve a number of gates proportional
 # to the number of qubits in the register, therefore the circuit contraction process
-# repeats the gate application procedure an amount times that is $\propto n_{\rm qubits}$.
+# repeats the gate application procedure a number of times proportional to $n_{\rm qubits}$.
 # This behavior is reflected by the scaling of the red markers. To highlight the scaling,
-# a set of parallel power-law lines $\propto n_{\rm qubits}$ are added to the grid
+# a set of parallel power-law lines $\propto n_{\rm qubits}$ is added to the grid
 # as a guide to the eye.
 #
-# Conversely, the sampling requires finding the probability marginals for different
-# outcomes by setting the $n_{\rm qubits}$ bitstring.
+# Similarly, sampling requires computing probability marginals qubit by qubit
+# to fix each of the $n_{\rm qubits}$ bits of the outcome.
 # Therefore, the scaling of sampling times with the number of qubits is also $\propto n_{\rm qubits}$.
 #
-# Note though, that it is not the same to sample a single bitstring or 10 bitstrings
-# in one go: the `sample` method from $\texttt{quimb}$ caches the marginal distributions
-# between calls; this means that sampling more and more bitstrings gets everso faster
-# than a single bitstring. This effect is reflected by the gap between the orange
-# markers (1 sample) and the yellow markers (10 samples): the later indicate the average
+# Note, though, that sampling a single bitstring is not equivalent to sampling
+# 10 bitstrings in one go: the `sample` method from $\texttt{quimb}$ caches the marginal
+# distributions between calls; this means that sampling gets progressively cheaper
+# per bitstring. This effect is reflected by the gap between the orange
+# markers (1 sample) and the yellow markers (10 samples): the latter indicate the average
 # sampling time for drawing 10 bitstrings (thus we are timing `sample(C=10)/10` rather than `sample(C=1)`).
 #
-# The former discussion was fully dedicated to the `CircuitMPS` class from $\texttt{quimb}$.
+# The discussion so far focused on the `CircuitMPS` class from $\texttt{quimb}$.
 # Nevertheless, there exists another MPS class that tries to leverage the non-locality of
 # long-range circuits: `PermMPS`. The goal of this class can be understood by diving a bit
 # into the procedure for applying a long-range gate: it requires permuting the two
-# involved qubits through the 1-dimensional layout until they are nearest-neighbors,
+# involved qubits through the 1-dimensional layout until they are nearest neighbors,
 # followed by the local application of the two-body gate. While `CircuitMPS` would
 # restore the initial layout after the gate application, `PermMPS` leaves this new
-# layout and tracks the intermediate trajectories of the qubits. Obviously, this
-# class may yield advantageous wall-clock time measures when the number of gates
-# is sparse. Opposed to that, our circuit instances are not sparse enough to detect
-# a clear advantage. This can be seen for `depth=1` in the right column
+# layout and tracks the intermediate trajectories of the qubits. This class may
+# reduce wall-clock times when entangling gates are sparse. However, our circuit
+# instances are not sparse enough to show a clear advantage. This can be seen for `depth=1` in the right column
 # (random entangling pattern). Despite these results, we expect that a study with
 # varying `ent_prob` and `ent_range` in the function `generate_rand_circuit` would
-# define a regime of dominance of `PermMPS` over `CircuitMPS` for sparse circuits
+# reveal a regime where `PermMPS` outperforms `CircuitMPS` for sparse circuits
 # (low `ent_prob`, medium-low `ent_range`).
 
 # %% [markdown]
 # ### Dependence in the bond dimension
 
 # %% [markdown]
-# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen circiuit sizes are $n_{\rm qubits} \in \{64, 128, 256\}$:
+# In the following plot we present our results in two columns: the left for brickwall circuits, and the right for random circuits. The chosen circuit sizes are $n_{\rm qubits} \in \{64, 128, 256\}$:
 
 # %%
 x_range = np.linspace(1, 256)
@@ -308,17 +307,17 @@ fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 
 # %% [markdown]
-# In order to understand scaling of the contraction and sampling times with the bond dimension we first need to recall which are the algorithmic expectations for each case.
+# To understand the scaling of the contraction and sampling times with the bond dimension, we first recall the expected algorithmic cost in each case.
 #
-# The contraction procedure involves (as mentioned earlier) the application of a two-body gate onto a pair of local tensors on an MPS, which at a given depth may have a bond dimension $\chi\leq 2^{\rm depth}$. The algorithmic cost for this contraction is $\propto \chi^3$, as it can be easily computed by [dimension arguments](https://www.tensors.net/p-tutorial-1). This scaling only becomes visible for the largest bond dimensions in the right column for the random entangling pattern circuits, which at the same time saturate the bound between the circuit depth and the bond dimension: $\chi=2^{\rm depth}$. As a guide to the eye, we have added the cubic power law that passes by the points with highest $\chi$.
+# The contraction procedure involves (as mentioned earlier) the application of a two-body gate onto a pair of local tensors on an MPS, which at a given depth may have a bond dimension $\chi\leq 2^{\rm depth}$. The algorithmic cost for this contraction is $\propto \chi^3$, as can easily be checked by [dimension arguments](https://www.tensors.net/p-tutorial-1). This scaling only becomes visible for the largest bond dimensions in the right column for the random entangling pattern circuits, which at the same time saturate the bound between the circuit depth and the bond dimension: $\chi=2^{\rm depth}$. As a guide to the eye, we have added the cubic power law that passes through the points with highest $\chi$.
 #
-# For the case of sampling a single bitstring, the scaling can be trickier: sampling a single bitstring requires constructing the diagonal of a reduced density matrix, which can be done with cost $\propto \chi^2$ if we consider only contracting the bra and ket parts of the MPS around the sites where the bitstring outcome is to be fixed. This is actually the scaling observed in the lower row of results for all the intances (see quadratic power law in grey passing by the points with highest $\chi$); despite that, we want to note that before contracting the MPS bra and ket, the MPS must be canonicalized. If the cost of such a process was to be included within the sampling time, then the cost would scale as $\propto \chi^3$, due to the [cost of performing rank-revealing matrix decompositions](https://www.tensors.net/p-tutorial-2).
+# For the case of sampling a single bitstring, the scaling can be trickier: sampling a single bitstring requires constructing the diagonal of a reduced density matrix, which can be done with cost $\propto \chi^2$ if we consider only contracting the bra and ket parts of the MPS around the sites where the bitstring outcome is to be fixed. This is actually the scaling observed in the lower row of results for all the instances (see quadratic power law in grey passing through the points with highest $\chi$). Note, however, that before contracting the MPS bra and ket, the MPS must be canonicalized. If the cost of such a process were to be included within the sampling time, then the cost would scale as $\propto \chi^3$, due to the [cost of performing rank-revealing matrix decompositions](https://www.tensors.net/p-tutorial-2).
 
 # %% [markdown]
 # ## Comparison between quimb and qiskit-aer
 #
-# In the case of $\texttt{qiskit-aer}$ backend, the contraction and sampling times cannot be easily split apart;
-# this means that the simulator only returns $t_{\mathrm{total}}(n_{\mathrm{sampl}})$, which is not necessarily equal to $t_{\mathrm{total}}(n_{\mathrm{sampl}})=t_{\mathrm{contr}}+n_{\mathrm{sampl}}\cdot t_{\mathrm{sampl}}$. The simplest way to estimate $t_{\mathrm{contr}}$ could be to repeat the simulation for a fixed circuit architecture and a list of $n_{\mathrm{sampl}}$ values, and to deduce $t_{\mathrm{contr}}$ and $t_{\mathrm{sampl}}$ from a $n_{\mathrm{sampl}}\to 0$ extrapolation. Nevertheless, when we explored this behavior for few instances, we found that there exist different regimes where the extrapolation would follow a particular scaling power law in $n_{\mathrm{sampl}}$:
+# For the $\texttt{qiskit-aer}$ backend, the contraction and sampling times cannot be easily split apart;
+# this means that the simulator only returns $t_{\mathrm{total}}(n_{\mathrm{sampl}})$, which does not necessarily decompose as $t_{\mathrm{contr}}+n_{\mathrm{sampl}}\cdot t_{\mathrm{sampl}}$. The simplest way to estimate $t_{\mathrm{contr}}$ would be to repeat the simulation for a fixed circuit architecture and a list of $n_{\mathrm{sampl}}$ values, and to deduce $t_{\mathrm{contr}}$ and $t_{\mathrm{sampl}}$ from a $n_{\mathrm{sampl}}\to 0$ extrapolation. Nevertheless, when we explored this behavior for a few instances, we found that there exist different regimes where the extrapolation would follow a particular scaling power law in $n_{\mathrm{sampl}}$:
 
 # %%
 n_qubits = 32
@@ -360,7 +359,7 @@ ax.set_yscale("log")
 ax.grid(which="both", linestyle="-", linewidth=0.25)
 
 # %% [markdown]
-# Therefore we restrain ourselves to compare the total wall-clock time for contracting the different circuits and sample 10 strings in both backends:
+# We therefore restrict ourselves to comparing the total wall-clock time to contract each circuit and sample 10 bitstrings in both backends:
 
 # %%
 n_qubits_values = 2 ** np.arange(4, 9)
@@ -395,12 +394,12 @@ fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsiz
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
-# Interestingly, while for all sizes and depths of the chosen brickwall circuits $\texttt{qiskit-aer}$ dominates with speedups of almost an order of magnitude, the same cannot be told for random circuits with long-range entangling gates. We observe that for deep enough instances (${\rm depth}\geq 4$), $\texttt{qiskit-aer}$ and $\texttt{quimb}$ already perform comparably; for the deepest random circuits explored here, $\texttt{quimb}$ surpasses $\texttt{qiskit-aer}$ by an order of magnitude.
+# Interestingly, while for all sizes and depths of the chosen brickwall circuits $\texttt{qiskit-aer}$ dominates with speedups of almost an order of magnitude, the same cannot be said for random circuits with long-range entangling gates. We observe that for deep enough instances (${\rm depth}\geq 4$), $\texttt{qiskit-aer}$ and $\texttt{quimb}$ already perform comparably; for the deepest random circuits explored here, $\texttt{quimb}$ surpasses $\texttt{qiskit-aer}$ by an order of magnitude.
 
 # %% [markdown]
 # ## Other strategies within quimb
 #
-# Despite we already found some counterexamples to results like the ones gathered in [feniqs_lite](https://arxiv.org/abs/2504.14027), we are well aware that $\texttt{quimb}$ can offer even more by introducing more flexible quantum circuit classes (like `Circuit`) and methods suited for different architectures:
+# Although we have found counterexamples to results such as those gathered in [feniqs_lite](https://arxiv.org/abs/2504.14027), we are well aware that $\texttt{quimb}$ can offer even more by introducing more flexible quantum circuit classes (like `Circuit`) and methods suited for different architectures:
 # * [`sample`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3523-L3674) : uses light-cone simplification and caching of the marginal distributions for chosen groupings of qubits.
-# * [`sample_gate_by_gate`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L4023-L4143) : achieves a cost for sampling similar to that of computing single amplitudes, but enlarges the amount of tensor networks to be contracted. This method was [introduced in 2021](https://arxiv.org/abs/2112.08499).
+# * [`sample_gate_by_gate`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L4023-L4143) : achieves a cost for sampling similar to that of computing single amplitudes, but increases the number of tensor networks to be contracted. This method was [introduced in 2021](https://arxiv.org/abs/2112.08499).
 # * [`sample_chaotic`](https://github.com/jcmgray/quimb/blob/main/quimb/tensor/circuit.py#L3762-L3892) : assumes that only subgroups of qubits are correlated, while the rest of the sampled bitstring results are essentially random. This strategy was successful at classically replicating one of the latest [quantum advantage claims](https://www.nature.com/articles/s41586-019-1666-5).
