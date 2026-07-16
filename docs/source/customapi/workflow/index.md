@@ -12,7 +12,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
    2.1. Density Matrix Renormalization Group (DMRG) - see the tutorial on {doc}`Chemistry to qubit Hamiltonians <../tutorials/chemistry_to_qubit>`.
 
-   2.2. Parametrized circuit optimization - see the tutorial on {doc}`Variational circuit preparation <../tutorials/variational_circuit_preparation>`.
+   2.2. Parametrized circuit optimization - see the tutorial on {doc}`Variational circuit preparation <../tutorials/circuit_preparation_global_opt>`.
 
 3. Encode $\hat{H}$ into a unitary via either:
 
