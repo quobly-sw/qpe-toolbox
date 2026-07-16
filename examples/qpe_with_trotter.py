@@ -17,7 +17,7 @@
 #
 # In this example we perform Quantum Phase Estimation with a second-order Trotter decomposition of the time evolution operator $U(t) = \exp(-i H t)$.
 #
-# Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we introduced and ran QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
+# Previously in the [Textbook QPE](./textbook_qpe.ipynb) example, we introduced and ran QPE with an exact matrix representation of $U$; this is only possible for small systems amenable to exact diagonalization. In general, we use a Trotter approximation to exponentiate the Hamiltonian; see the tutorial on [Trotter-Suzuki Decomposition](./trotter_decomposition.ipynb) for an introduction to Trotter approximants to exponentials of matrices.
 #
 # We study the energy precision obtained as a function of the number of phase qubits in the QPE circuits and the number of Trotter steps in the time evolution. We also perform some simple resource analysis: we quantify the number of entangling gates and the time required to simulate the circuits with $\texttt{quimb}$.
 
@@ -57,7 +57,7 @@ exact_energy, psi0_mps = do_dmrg(h_spin)
 # %% [markdown]
 # - Then we set the different parameters to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$ (see the [Textbook QPE](./textbook_qpe.ipynb) example).
 #
-# - Note that `n_trotter_steps` (or `n_steps`) is the number of Trotter steps used to decompose the first controlled time evolution, over the interval $t$ (`evolution_time`). As the circuit proceeds, we apply time evolution over an exponentially growing time $2^k t$ conditioned on the $k$-th circuit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
+# - Note that `n_trotter_steps` is the number of Trotter steps used to decompose the first controlled time evolution, over the interval $t$ (`evolution_time`). As the circuit proceeds, we apply time evolution over an exponentially growing time $2^k t$ controlled by the $k$-th phase qubit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
 
 # %%
 E_target = exact_energy + 0.2
@@ -141,27 +141,9 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
     energies = []
     gates_count = []
     for n_phase_bits in tqdm.tqdm(nphase_list, leave=False):
-        initial_circMPS = make_circMPS(n_phase_bits, psi0_mps)
-
-        if (n_trotter_steps is not EXACT) and (
-            n_phase_bits < max_tn_nphase or n_trotter_steps < max_tn_nsteps
-        ):
-            # using generic tensor network contraction to simulate a quantum circuit
-            # is usually very expensive. Only try for small numbers of qubits.
-            initial_circ = make_circ(n_phase_bits, psi0_mps)
-            traces, energy = qpe.qpe_energy(
-                h_spin,
-                initial_circ,
-                n_trotter_steps,
-                E_target,
-                size_interval,
-                trotter_order=trotter_order,
-                optimize="greedy",
-            )
-            duration_tn.append(traces["ctimes"][-1])
-
-        # contracting circuit in MPS mode is much more efficient
+        # contracting circuit in MPS mode is much more efficient than generic TN
         # deeper, wider circuits can be classically simulated
+        initial_circMPS = make_circMPS(n_phase_bits, psi0_mps)
         traces, energy = qpe.qpe_energy(
             h_spin,
             initial_circMPS,
@@ -174,7 +156,24 @@ for n_trotter_steps in tqdm.tqdm(ns_list):
         count = count_gates_by_qb(traces["gates_count"])
         gates_count.append(count["2qb"] + count["3+qb"])
         duration_mps.append(traces["ctimes"][-1])
-        assert abs(energy - energies[-1]) < 1e-6
+
+        if (n_trotter_steps is not EXACT) and (
+            n_phase_bits < max_tn_nphase or n_trotter_steps < max_tn_nsteps
+        ):
+            # using generic tensor network contraction to simulate a quantum circuit
+            # is usually very expensive. Only try for small numbers of qubits.
+            initial_circ = make_circ(n_phase_bits, psi0_mps)
+            traces_tn, energy_tn = qpe.qpe_energy(
+                h_spin,
+                initial_circ,
+                n_trotter_steps,
+                E_target,
+                size_interval,
+                trotter_order=trotter_order,
+                optimize="greedy",
+            )
+            duration_tn.append(traces["ctimes"][-1])
+            assert abs(energy_tn - energy) < 1e-6
 
     res["durations_tn"].append(duration_tn)
     res["energies"].append(np.array(energies))
@@ -258,7 +257,7 @@ ax.set_ylabel("energy error");
 # %% [markdown]
 # ### Gate Count and Computation Time
 #
-# Let us now visualize the gate count. We only count entangling gates, i.e. multi-qubit gates. The Trotterized time-evolution operator is implemented with CNOT gates and one-qubit gates (rotations). In QPE, the time evolution is controlled on the phase register. Hence, the CNOT become multi-controlled CCNOT gates and the rotation gates become controlled-rotations. The number of Trotter steps in the controlled time-evolution sequence grows exponentially with the number of phase qubits, and so does the number of entangling gates.
+# Let us now visualize the gate count. We only count entangling gates, i.e. multi-qubit gates. The Trotterized time-evolution operator is implemented with CNOT gates and one-qubit gates (rotations). In QPE, the time evolution is controlled on the phase register. Hence, each CNOT gate acquires an additional control and becomes a CCNOT (Toffoli) gate, and the rotation gates become controlled rotations. The number of Trotter steps in the controlled time-evolution sequence grows exponentially with the number of phase qubits, and so does the number of entangling gates.
 
 # %%
 fig, (ax_n, ax_t) = plt.subplots(1, 2, figsize=(12, 4))
