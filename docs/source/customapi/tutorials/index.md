@@ -26,11 +26,11 @@ hyperoptimization.ipynb
 
 mpo_to_circuit.ipynb
 
-circuit_preparation_global_opt.py
+circuit_preparation_global_opt.ipynb
 
-circuit_preparation_local_opt.py
+circuit_preparation_local_opt.ipynb
 
-circuit_preparation_approximate_local_opt.py
+circuit_preparation_approximate_local_opt.ipynb
 ```
 
 
@@ -53,5 +53,3 @@ circuit_preparation_approximate_local_opt.py
 * {doc}`performance_mps <performance_mps>` compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
 
 * {doc}`hyperoptimization <hyperoptimization>` presents advanced contraction schemes provided by `quimb`.
-
-* {doc}`variational_circuit_preparation <variational_circuit_preparation>` finds an initial guess state with variational circuit optimization.
