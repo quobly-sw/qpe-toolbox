@@ -81,6 +81,10 @@ extlinks = {
         "https://numpy.org/doc/stable/reference/random/%s.html",
         "numpy.random.%s",
     ),
+    "scipy": (
+        "https://docs.scipy.org/doc/scipy/%s",
+        "%s",
+    ),
     "matplotlib-api": (
         "https://matplotlib.org/stable/api/_as_gen/matplotlib.%s.html",
         "matplotlib.%s",

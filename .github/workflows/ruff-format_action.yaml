@@ -19,6 +19,6 @@ jobs:
     - name: format src
       run: uv run --no-sync ruff format --check
 
-    # use pre-commit as task runner to activate venv for hook
+    # use pre-commit as task runner to get clean pass/fail status
     - name: format notebooks
       run: uv run --no-sync pre-commit run format-examples --all-files
