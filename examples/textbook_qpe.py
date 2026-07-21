@@ -46,6 +46,7 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.sparse.linalg as sla
 from IPython.display import display
 from quimb.tensor import MatrixProductState
 from tqdm import notebook as tqdm
@@ -265,7 +266,7 @@ plt.ylabel(r"$P(a)$");
 #
 # The correspondence between the QPE output $\theta$ and the energy $E$ for a given set of parameters $E_{\rm target}$ and $\Delta$ is
 #
-# $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2}.$$
+# $$\theta=\frac{E_{\rm target} - E}{\Delta} + \frac{1}{2} = \frac{E_{\rm max} - E}{\Delta}.$$
 #
 # From the previous equation, if we measure $\theta$ with $m$ bits of precision, the energy error is at most $\Delta / 2^m$.
 #
@@ -455,7 +456,7 @@ def qpe_with_prob_success(
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
     """
 
-    E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
+    E_shift, evolution_time, global_phase = qpe.set_search_window(
         hamiltonian, E_target, size_interval
     )
 
@@ -473,7 +474,7 @@ def qpe_with_prob_success(
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
-    energy = Emax - 2 * np.pi * theta / evolution_time + E_const
+    energy = E_shift - 2 * np.pi * theta / evolution_time
     return energy, np.max(probs), prob_success
 
 
@@ -576,7 +577,6 @@ probs = []
 durations = []
 
 for n_phase_bits in tqdm.tqdm(ms):
-    st = time.time()
     initial_circ = make_circ(n_phase_bits, psi0_mps)
     traces, energy = qpe.qpe_energy(
         h_spin,
@@ -586,7 +586,6 @@ for n_phase_bits in tqdm.tqdm(ms):
         size_interval,
         optimize=optimize,
     )
-    et = time.time() - st
     energies.append(energy)
     probs.append(traces["prob"])
     durations.append(traces["ctimes"][-1])
@@ -624,12 +623,10 @@ st0 = time.time()
 for n_qubits in tqdm.tqdm(nqb_list):
     h_spin = heisenberg_hamiltonian(n_qubits)
 
-    # Get matrix
-    hamilt_qarray = h_spin.to_dense()
-
     # Diagonalize hamiltonian
     st_ed = time.time()
-    eigvals, eigvecs = np.linalg.eigh(hamilt_qarray)
+    h_sparse = h_spin.to_sparse_matrix()
+    eigvals, eigvecs = sla.eigsh(h_sparse, 1, which="SA")
     res["durations_ed"].append(time.time() - st_ed)
 
     # Ground state
@@ -645,12 +642,10 @@ for n_qubits in tqdm.tqdm(nqb_list):
     durations = []
     bond_dims = []
     for n_phase_bits in tqdm.tqdm(ms, leave=False):
-        st = time.time()
         initial_circ = make_circ(n_phase_bits, psi0_mps)
         traces, energy = qpe.qpe_energy(
             h_spin, initial_circ, EXACT, E_target, size_interval, optimize=optimize
         )
-        et = time.time() - st
         energies.append(energy)
         probs.append(traces["prob"])
         durations.append(traces["ctimes"][-1])

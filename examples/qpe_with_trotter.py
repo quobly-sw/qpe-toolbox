@@ -322,7 +322,7 @@ ax_t.set_ylabel("computation time (seconds)");
 # For larger number of phase qubits, computation becomes costly: in the following we do not run the simulation but just get the list of gate instructions
 
 # %%
-E_const, Emax, evolution_time_resource, global_phase_resource = qpe.set_search_window(
+_, evolution_time_resource, global_phase_resource = qpe.set_search_window(
     h_spin, E_target, size_interval
 )
 

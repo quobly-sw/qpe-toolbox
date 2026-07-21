@@ -21,6 +21,11 @@ E0, psi0 = do_dmrg(ham)
 E_target = E0 + 0.2
 size_interval = 2
 
+e_const_shifted = 5.0
+ham_shifted = heisenberg_hamiltonian(2)
+ham_shifted.e_const = e_const_shifted
+E_target_shifted = E0 + e_const_shifted + 0.2
+
 
 def test_qpe():
     circ = make_circMPS(5, psi0)
@@ -28,6 +33,16 @@ def test_qpe():
     _, energy = qpe.qpe_energy(ham, circ, EXACT, E_target, size_interval)
 
     assert np.isclose(energy, -0.7375)
+
+
+def test_qpe_with_e_const():
+    circ = make_circMPS(5, psi0)
+
+    _, energy = qpe.qpe_energy(
+        ham_shifted, circ, EXACT, E_target_shifted, size_interval
+    )
+
+    assert np.isclose(energy, -0.7375 + e_const_shifted)
 
 
 def test_resource_analysis():
@@ -43,7 +58,7 @@ def test_resource_analysis():
 def _run_resource_analysis():
     n_phase_bits = 5
 
-    E_const, Emax, evolution_time, global_phase = qpe.set_search_window(
+    E_max, evolution_time, global_phase = qpe.set_search_window(
         ham, E_target, size_interval
     )
     n_steps = 4
@@ -79,8 +94,7 @@ def _run_resource_analysis():
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
-    energy = Emax - 2 * np.pi * theta / evolution_time
-    energy -= E_const
+    energy = E_max - 2 * np.pi * theta / evolution_time
 
     assert np.isclose(energy, -0.7375)
 
@@ -90,14 +104,14 @@ def test_gate_list_matches_circuit():
     n_phase_bits = 3
     circ = make_circMPS(n_phase_bits, psi0)
 
-    _, _, evolution_time, global_phase = qpe.set_search_window(
+    _, evolution_time, global_phase = qpe.set_search_window(
         ham, E_target, size_interval
     )
-    n_steps = 2
+    n_trotter_steps = 2
 
-    traces, _ = qpe.qpe_sample(ham, circ, evolution_time, n_steps, global_phase)
+    traces, _ = qpe.qpe_sample(ham, circ, evolution_time, n_trotter_steps, global_phase)
     _, gates_list = qpe.qpe_gate_list(
-        ham, n_phase_bits, evolution_time, n_steps, global_phase
+        ham, n_phase_bits, evolution_time, n_trotter_steps, global_phase
     )
 
     circuit_dict = serialize_from_quimb_Circuit(traces["circuit"])

@@ -36,8 +36,8 @@ from .quantum_phase_estimation import (
     trotter_evolution_powers,
 )
 from .robust_phase_estimation import (
+    angular_distance,
     robust_phase_estimation,
-    rpe_distance,
     rpe_get_hadamard_output,
     rpe_update_theta,
 )

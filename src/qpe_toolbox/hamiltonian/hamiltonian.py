@@ -10,6 +10,7 @@
 import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
+import scipy.sparse
 from quimb.operator import SparseOperatorBuilder
 
 
@@ -133,13 +134,18 @@ class Hamiltonian:
         :quimb:`quimb.qarray <autoapi/quimb/index.html#quimb.qarray>`
             Dense Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
         """
-        h_dense = np.zeros([2**self.n_qubits, 2**self.n_qubits], dtype="complex")
-        for coeff, paulis, qubits in self.terms:
-            ops = [qu.identity(2)] * self.n_qubits
-            for sigma, k in zip(paulis, qubits, strict=True):
-                ops[k] = qu.pauli(sigma)
-            h_dense += coeff * qu.kron(*ops)
-        return qu.qarray(h_dense)
+        return qu.qarray(self.to_builder().build_dense())
+
+    def to_sparse_matrix(self):
+        """
+        Convert the Hamiltonian to a sparse matrix representation.
+
+        Returns
+        -------
+        :scipy:`scipy.sparse.csr_matrix <reference/generated/scipy.sparse.csr_matrix.html>`
+            Sparse Hermitian matrix of shape ``(2**n_qubits, 2**n_qubits)``.
+        """
+        return self.to_builder().build_sparse_matrix()
 
     def to_builder(self):
         """
@@ -202,8 +208,11 @@ class Hamiltonian:
             phys_reg = list(range(self.n_qubits))
         if len(phys_reg) != self.n_qubits:
             raise ValueError("Invalid phys_reg size")
-        h_dense = self.to_dense()
-        U = qu.expm(-1j * evolution_time * h_dense)
+
+        # sparse expm -> dense convert is much faster than todense -> expm
+        h_csc = self.to_sparse_matrix().tocsc()  # tocsc to optimize expm
+        u_csc = scipy.sparse.linalg.expm(-1j * evolution_time * h_csc)
+        U = qu.qarray(u_csc.toarray())  # quimb does not support sparse arrays in Gate
         return qtn.Gate.from_raw(U, qubits=phys_reg, controls=controls)
 
     def get_trotter_step(self, dt, trotter_order, *, phys_reg=None):

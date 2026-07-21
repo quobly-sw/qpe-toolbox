@@ -13,11 +13,10 @@
 # ---
 
 # %% [markdown]
-# # Building circuits
-#
+# # Building Circuits
 
 # %% [markdown]
-# In this notebook we will explain step by step how to create, plot, record and load quantum circuits in $\texttt{quimb}$ and $\texttt{qiskit}$.
+# In this notebook we will explain step by step how to create, plot, record and load quantum circuits in [$\texttt{quimb}$](https://quimb.readthedocs.io/) and [$\texttt{qiskit}$](https://www.ibm.com/quantum/qiskit).
 
 # %%
 import json
@@ -44,28 +43,27 @@ from qpe_toolbox.circuit import (
 # ## Using $\texttt{quimb}$
 
 # %% [markdown]
-# ### Create custom circuits
+# ### Creating Custom Circuits
 
 # %% [markdown]
-# In the first place we need to know how wide our circuit is, i.e. specify the number of qubits on which the protocol will be executed. Once we know this, we can call the class `Circuit` to generate an empty instance. Once we have our empty instance, we will start appending the gates of interest, according to the quantum algorithm that we aim to execute. $\texttt{quimb}$ includes a list of constant and parametrizable one- and two-qubit gates that can be used for gate-by-gate construction. For example:
+# First, we need to specify how wide the circuit is, i.e. the number of qubits on which the protocol will be executed. We then instantiate the `Circuit` class to obtain an empty circuit, and append the gates of interest according to the quantum algorithm we aim to execute. $\texttt{quimb}$ includes a list of fixed and parametrized one- and two-qubit gates that can be used for gate-by-gate construction. For example:
 
 # %%
 rng = np.random.default_rng(42)
 n_qubits = 5  # total number of qubits
 circ = qtn.Circuit(n_qubits)  # instantiate the class, get an empty circuit
 
-# Hadamard on the 2nd qubit and 0th layer
+# Hadamard gates on 2nd and 3rd qubits in 1st layer
 circ.apply_gate(gate_id="h", qubits=[1], gate_round=0)
-
 circ.apply_gate(gate_id="h", qubits=[2], gate_round=0)
 
-# 'Rx' with angle 'pi/6' on the 5th qubit and 0th layer
+# 'Rx' with angle 'pi/6' on the 5th qubit in 1st layer
 circ.apply_gate(gate_id="rx", params=[np.pi / 6], qubits=[4], gate_round=0)
 
-# CNOT from 1st to 2nd qubits in the 1st layer
+# CNOT from 1st to 2nd qubit in 2nd layer
 circ.apply_gate(gate_id="cx", qubits=[0, 1], gate_round=1)
 
-# 'Rzz' with angle 'pi/5' between 4th to 5th qubits, 1st layer
+# 'Rzz' with angle 'pi/5' between 4th and 5th qubits in 2nd layer
 circ.apply_gate(gate_id="rzz", params=[np.pi / 5], qubits=[3, 4], gate_round=1)
 
 circ.apply_gate(gate_id="cx", qubits=[3, 4], gate_round=2)
@@ -73,12 +71,12 @@ circ.apply_gate(gate_id="cx", qubits=[2, 3], gate_round=3)
 circ.apply_gate(gate_id="rzz", params=[-np.pi / 5], qubits=[1, 2], gate_round=4)
 
 # %% [markdown]
-# When applying each one of the gates, we added further information on the `gate_round`; this information can be used for multiple purposes, like visualization. $\texttt{quimb}$ includes 'pre-cooked' recipes for well-known circuits like the QAOA Ansatz, such that they do not need to be rebuilt from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa) ). We also provide some functions with simple brick-wall and random circuits, which are the main focus of our `performance.py` example:
+# When applying each gate, we also specified the `gate_round`; this information can be used for multiple purposes, like visualization. $\texttt{quimb}$ includes ready-made constructors for well-known circuits like the QAOA Ansatz, so that they do not need to be built from scratch (see the list [here](https://quimb.readthedocs.io/en/latest/autoapi/quimb/tensor/circuit_gen/index.html#quimb.tensor.circuit_gen.gates_qaoa)). We also provide some functions generating simple brick-wall and random circuits, which are the main focus of our [performance notebook](./performance_mps.ipynb):
 
 # %%
-# Build a circuit with random parameters and two-layer structure;
-# one layer is a single-body rotation, and the other is
-# an entangling two-body gate
+# Build a circuit with random parameters and a repeated two-layer structure;
+# one layer is a single-qubit rotation, and the other is
+# an entangling two-qubit gate
 brickwall_circuit = generate_brickwall_circuit(
     n_qubits=10,
     depth=4,
@@ -88,7 +86,7 @@ brickwall_circuit = generate_brickwall_circuit(
 )
 
 # Same as before, but the entangling layer randomly picks pairs
-# of qubits at a maximum distance `ent_range`
+# of qubits at a maximum distance `two_qubit_gate_range`
 random_circuit = generate_rand_circuit(
     n_qubits=10,
     depth=4,
@@ -100,10 +98,10 @@ random_circuit = generate_rand_circuit(
 )
 
 # %% [markdown]
-# ### Plotting circuits
+# ### Plotting Circuits
 
 # %% [markdown]
-# $\texttt{quimb}$ includes visualization tools native from $\texttt{networkx}$, specialized on graphs. Therefore, if the user is interested on seeing the circuit as a graph, this is the right plotting tool. As a short example, we present how $\texttt{quimb}$ can automatically manage coloring by labels (gate type), index (qubit position) and round (depth in which the gate was applied) with graph layout:
+# $\texttt{quimb}$ includes visualization tools native to $\texttt{networkx}$, designed for graphs. Therefore, if the user is interested in seeing the circuit as a graph, this is the right plotting tool. As a short example, we show how $\texttt{quimb}$ can automatically manage coloring by labels (gate type), index (qubit position) and round (depth in which the gate was applied) in a graph layout:
 
 # %%
 # Indicate the set of tensors acting on particular qubits
@@ -132,15 +130,15 @@ fig = draw_layered_circuit(
 )
 
 # %% [markdown]
-# The rationale behind `draw_layered_circuit` is the very same as the `schematic` module of $\texttt{quimb}$, but we chose to build it ourselves for better picture scaling.
+# The rationale behind `draw_layered_circuit` is the same as that of the `schematic` module of $\texttt{quimb}$, but we chose to build it ourselves for better figure scaling.
 
 # %% [markdown]
-# ### Recording and loading circuits
+# ### Recording and Loading Circuits
 
 # %% [markdown]
-# We are also interested on saving our circuits for later use. For some applications, researchers prefer to keep a `.qasm` format file with all the information on the circuit; in other cases, like we do in `performance.py`, we require a properly serialized dictionary in `.json` format. Both options can be automatically imported to a `Circuit` instance in $\texttt{quimb}$.
+# We are also interested in saving our circuits for later use. For some applications, researchers prefer to keep a `.qasm` format file with all the information on the circuit; in other cases, as we do in the [performance notebook](./performance_mps.ipynb), we require a properly serialized dictionary in `.json` format. Both options can be automatically imported into a `Circuit` instance in $\texttt{quimb}$.
 #
-# In the following we introduce the following functions for each action:
+# We provide the following functions:
 #
 # ```
 # generate `quimb` circuit:
@@ -160,21 +158,21 @@ fig = draw_layered_circuit(
 
 # %%
 ## Saving as `.qasm`
-# Since the information on the rounds is not recorded usually
-# on `.qasm`, we added the option of saving that information on a different .txt
+# Since the round information is not usually recorded in `.qasm` files,
+# we added the option to save it in a separate `.txt` file
 dump_quimb_Circuit_to_qasm(
     circ=random_circuit, savefile_base="example_output_quimb_circuit", save_rounds=True
 )
 
 ## Saving as `.json`
-# The circuit needs to be properly serialized,
-# so return a dictionary with valid `.json` dtypes
+# The circuit must first be serialized into a dictionary
+# with JSON-compatible types
 dict_circ = serialize_from_quimb_Circuit(qc=random_circuit)
 with open("example_output_quimb_circuit.json", "w") as f:
     json.dump(dict_circ, f, indent=4)
 
 # %% [markdown]
-# Bare in mind that the structure of the dictionary generated by `serialize_from_quimb_Circuit` is the following:
+# Bear in mind that the structure of the dictionary generated by `serialize_from_quimb_Circuit` is as follows:
 # ```
 # {
 #     "n_qubits": 10,
@@ -189,13 +187,13 @@ with open("example_output_quimb_circuit.json", "w") as f:
 #         ],
 #         "round": 0
 #       },
-#     ]
 #       ...
+#     ]
 # }
 # ```
 
 # %% [markdown]
-# The reverse task of loading a `Circuit` can be easily done with the following functions:
+# The reverse task of loading a `Circuit` can easily be done with the following functions:
 
 # %%
 # Loading from `.qasm`
@@ -211,10 +209,10 @@ loaded_quimb_circ = deserialize_to_quimb_Circuit(dict_loaded_circ)
 # %% [markdown]
 # ## Using $\texttt{qiskit}$
 #
-# ### Create custom circuits
+# ### Creating Custom Circuits
 
 # %% [markdown]
-# Conversely, $\texttt{qiskit}$ also allows for gate-by-gate construction. The same small circuit example generated for $\texttt{quimb}$ is written for $\texttt{qiskit}$ as:
+# Similarly, $\texttt{qiskit}$ also allows for gate-by-gate construction. The same small circuit example generated for $\texttt{quimb}$ is written for $\texttt{qiskit}$ as:
 
 # %%
 qc = QuantumCircuit(5)
@@ -229,14 +227,14 @@ qc.cx(2, 3)
 qc.rzz(-np.pi / 5, 1, 2)
 
 # %% [markdown]
-# The way to access the list of gates on a circuit instance is slightly different than in $\texttt{quimb}$
+# The way to access the list of gates of a circuit instance is slightly different from $\texttt{quimb}$:
 
 # %%
 for ci in qc.data:
     print(ci.operation.name, ci.qubits, ci.clbits)
 
 # %% [markdown]
-# Sometimes we will be interested on generic circuit Ansatze, and we will only want to bound some values to their parametrized gates. $\texttt{qiskit}$ includes a list of circuits ready to fill only these values; for example [`n_local`](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.circuit.library.NLocal):
+# Sometimes we will be interested in generic circuit Ansätze, and we will only want to bind some values to their parametrized gates. $\texttt{qiskit}$ provides ready-made parametrized circuits where only the parameter values need to be supplied; for example [`n_local`](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.circuit.library.NLocal):
 
 # %%
 # This function allows us to feed any entanglement pattern
@@ -247,20 +245,20 @@ qc_nn = n_local(5, "ry", "cx", entanglement="linear", reps=2)
 qc_lr = n_local(4, "ry", "cx", entanglement=[(0, 1), (1, 3), (0, 3), (2, 3)], reps=2)
 
 # %% [markdown]
-# In order to feed the parameters, we only need to pass a list of values and assign them:
+# To assign the parameters, we simply pass a list of values:
 
 # %%
 param_values = rng.uniform(0, 2 * np.pi, qc_lr.num_parameters)
 qc_with_values = qc_lr.assign_parameters(param_values)
 
 # %% [markdown]
-# ### Plotting circuits
+# ### Plotting Circuits
 #
 # The plotting utility for $\texttt{qiskit}$ is similar to our `draw_layered_circuit` function or to the `schematic` functionality from $\texttt{quimb}$:
 
 # %%
 # Drawing the circuit with `mpl` output allows for coloring the gates,
-# and `fold=-1`` avoids breaking the circuit
+# and `fold=-1` avoids breaking the circuit
 qc.draw(output="mpl", initial_state=True, fold=-1)
 
 # %%
@@ -270,11 +268,11 @@ qc_nn.draw(output="mpl", initial_state=True, fold=-1)
 qc_with_values.draw(initial_state=True, fold=-1)
 
 # %% [markdown]
-# ### Recording and loading circuits
+# ### Recording and Loading Circuits
 
 # %% [markdown]
-# A $\texttt{qiskit}$ circuit can be recorded as a `.qasm` file. However, because the plotting utility stacks gates according to their order of appearance, information about gate rounds is lost. As a result, there is no need to use the `.json` recording format in this case, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
-# To address and visualize a circuit coherently on a layer-by-layer basis, one must therefore rely on the functionalities previously introduced for $\texttt{quimb}$. Nevertheless, when a circuit is produced by the $\texttt{quimb}$ pipeline, it can indeed be deserialized from a `.json` file.
+# A $\texttt{qiskit}$ circuit can be recorded as a `.qasm` file. However, a $\texttt{qiskit}$ `QuantumCircuit` has no notion of gate rounds: gates are stored as a plain ordered list, and the plotting utility simply stacks them in order of appearance. Since there is no round information to preserve, the `.json` recording format has no advantage over `.qasm` here, and we therefore do not provide a `serialize_from_qiskit_QuantumCircuit` function.
+# To handle and visualize a circuit coherently on a layer-by-layer basis, one must rely on the functions previously introduced for $\texttt{quimb}$. Nevertheless, a `.json` file produced by the $\texttt{quimb}$ pipeline can be deserialized into a $\texttt{qiskit}$ circuit.
 
 # %% [markdown]
 # ```
@@ -293,19 +291,19 @@ qc_with_values.draw(initial_state=True, fold=-1)
 
 # %%
 # Save as `.qasm`
-# IMPORTANT: only circuits with bounded parameter values can be dumped in `.qasm`
+# IMPORTANT: only circuits with bound parameter values can be dumped in `.qasm`
 qasm_code = dumps(qc_with_values)
 with open("example_output_qiskit_circuit.qasm", "w") as f:
     f.write(qasm_code)
 
 # %% [markdown]
-# In $\texttt{qiskit}$ the `.qasm` files are loaded as:
+# In $\texttt{qiskit}$ the `.qasm` files are loaded as follows:
 
 # %%
 qc = QuantumCircuit.from_qasm_file("example_output_quimb_circuit.qasm")
 
 # %% [markdown]
-# For the sake of completeness, we also introduce a deserialization from `.json` allowing for loading the circuit until a given depth saved in the key `"round"` of each `"gate"`:
+# For the sake of completeness, we also introduce a deserialization from `.json` allowing for loading the circuit up to a given depth saved in the key `"round"` of each `"gate"`:
 
 # %%
 with open("example_output_quimb_circuit.json") as f:
@@ -313,14 +311,14 @@ with open("example_output_quimb_circuit.json") as f:
 qc = deserialize_to_qiskit_QuantumCircuit(dict_loaded_circ)
 
 # %% [markdown]
-# Note that whenever some observable needs to be extracted from the $\texttt{qiskit}$ circuit instance, a (layer) of measurements must be explicitly called. To activate measures, activate the argument `measure=True` in `deserialize_to_qiskit_QuantumCircuit`:
+# Note that whenever some observable needs to be extracted from the $\texttt{qiskit}$ circuit instance, a layer of measurements must be explicitly called. To add measurements, set the argument `measure=True` in `deserialize_to_qiskit_QuantumCircuit`:
 
 # %%
 qc = deserialize_to_qiskit_QuantumCircuit(dict_loaded_circ, measure=True)
 qc.draw(output="mpl", initial_state=True, fold=-1)
 
 # %% [markdown]
-# The package $\texttt{qiskit-quimb}$ is a good option for fast transformation from $\texttt{qiskit}$ `QuantumCircuit` into $\texttt{quimb}$ `Circuit` classes. Note that the transformation does not include gate round information, so the output $\texttt{quimb}$ circuit cannot be plotted with `draw_layered_circuit`:
+# The package $\texttt{qiskit-quimb}$ is a good option for quickly converting a $\texttt{qiskit}$ `QuantumCircuit` into a $\texttt{quimb}$ `Circuit`. Note that the conversion does not preserve gate round information, so the output $\texttt{quimb}$ circuit cannot be plotted with `draw_layered_circuit`:
 
 # %%
 ent_pattern = [(0, 1), (1, 3), (3, 0), (2, 3), (1, 5), (4, 2), (4, 5), (5, 3)]

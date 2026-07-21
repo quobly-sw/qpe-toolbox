@@ -3,6 +3,7 @@
 import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
+import scipy.sparse
 from pyscf import gto
 
 from qpe_toolbox.estimation import build_hadamard_test_circuit, trotter_evolution_gates
@@ -32,6 +33,17 @@ def test_heisenberg():
         heis_mpo = heis_ham.to_mpo()
         heis_dense = heis_ham.to_dense()
         assert np.max(abs(heis_dense - heis_mpo.to_dense())) < 1e-12
+
+
+def test_sparse():
+    for n_qubits in [2, 4]:
+        h = heisenberg_hamiltonian(n_qubits)
+        dense = np.asarray(h.to_dense())
+
+        h_mat = h.to_sparse_matrix()
+        assert isinstance(h_mat, scipy.sparse.csr_matrix)
+        assert h_mat.shape == h.shape
+        assert np.allclose(h_mat.toarray(), dense, atol=1e-12)
 
 
 def test_molecule_h2():
@@ -115,5 +127,6 @@ def test_U():
 
 if __name__ == "__main__":
     test_heisenberg()
+    test_sparse()
     test_molecule_h2()
     test_U()

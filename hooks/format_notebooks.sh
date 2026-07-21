@@ -17,6 +17,6 @@ mkdir -p jupyter_execute
 rm -f jupyter_execute/*ipynb
 
 # jupytext working dir is the one of the notebook, need relative  path from examples/
-jupytext -q --to ../jupyter_execute//ipynb $@
-ruff format jupyter_execute/*ipynb
-jupytext -q --to ../examples//py jupyter_execute/*ipynb
+uv run jupytext -q --to ../jupyter_execute//ipynb $@
+uv run ruff format jupyter_execute/*ipynb
+uv run jupytext -q --to ../examples//py jupyter_execute/*ipynb

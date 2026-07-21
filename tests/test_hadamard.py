@@ -38,8 +38,9 @@ def test_hadamard_test_shots():
     psi = qtn.MPS_computational_state("1")
 
     n_shots = 1000
-    X = run_hadamard_test(psi, _phase_unitary(phi), 0, n_shots, seed=42)
-    Y = run_hadamard_test(psi, _phase_unitary(phi), -np.pi / 2, n_shots, seed=42)
+    rng = np.random.default_rng(42)
+    X = run_hadamard_test(psi, _phase_unitary(phi), 0, n_shots, rng=rng)
+    Y = run_hadamard_test(psi, _phase_unitary(phi), -np.pi / 2, n_shots, rng=rng)
     # statistical error scales as 1 / sqrt(n_shots)
     assert abs(X - np.cos(phi)) < 5 / np.sqrt(n_shots)
     assert abs(Y - np.sin(phi)) < 5 / np.sqrt(n_shots)
