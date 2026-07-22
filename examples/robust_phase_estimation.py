@@ -15,10 +15,9 @@
 # %% [markdown]
 # # Robust Phase Estimation
 #
-# This example introduces the Robust Phase Estimation algorithm; this QPE version requires only a single ancilla/phase qubit. Our implementation is inspired by [J. Günther et al., Phase Estimation with Partially Randomized Time Evolution](https://doi.org/10.1103/ynxb-p2xq).
+# In the previous notebooks, we used the "textbook" (sometimes called "canonical") version of QPE, which requires multiple qubits in the phase register as well as an inverse Quantum Fourier Transform. Logical qubits are expected to remain a scarce resource on early fault-tolerant quantum computers, therefore we are interested in a formulation that requires less qubits. Over the years, many single-ancilla variants of QPE have been proposed, starting with [Kitaev's Iterative Quantum Phase Estimation (IQPE)](https://arxiv.org/abs/quant-ph/9511026). In this notebook, we introduce one such variant: Robust Phase Estimation (RPE). Like IQPE, RPE requires only a single ancilla qubit. However, it differs in how it reconstructs the phase from the measurement outcomes. Our implementation is inspired by [J. Günther et al., Phase Estimation with Partially Randomized Time Evolution](https://doi.org/10.1103/ynxb-p2xq).
 #
 # In this notebook we explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
-#
 # We study the Trotter and statistical errors, and check that the RPE algorithm satisfies Heisenberg scaling, i.e. the ability to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
 
 # %%
@@ -286,23 +285,35 @@ theta_0 = phi_0
 
 m = 1
 phi_1 = qpe.rpe_get_hadamard_output(H, psi0, m, EXACT, n_shots, rng=rng)
+possible_phases_looped = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
 # candidate energies, wrapped into (-pi, pi]
-possible_phases = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
-possible_phases = (possible_phases + np.pi) % (2 * np.pi) - np.pi
+possible_phases = (possible_phases_looped + np.pi) % (2 * np.pi) - np.pi
 
 # %% [markdown]
 # Let us visualize how the different possible phases compare to $\theta_0$
 
 # %%
-plt.plot([-np.pi, np.pi], [1, 1], marker="|", markersize=10, color="k")
-plt.plot(theta_0, 1, "*", markersize=20, color="r", label=r"$\theta_0$")
-plt.plot(possible_phases, [1, 1], "o", markersize=15, label=r"possible $\theta_1$")
+tfit = np.linspace(0, 1, 1001)
+fig, ax = plt.subplots()
+ax.plot(np.cos(2 * np.pi * tfit), np.sin(2 * np.pi * tfit), "-k", lw=2)
+ax.plot(
+    np.cos(theta_0), np.sin(theta_0), "*", markersize=20, color="r", label=r"$\theta_0$"
+)
+ax.plot(
+    np.cos(possible_phases),
+    np.sin(possible_phases),
+    "o",
+    markersize=15,
+    label=r"possible $\theta_1$",
+)
+ax.plot(tfit * np.cos(theta_0), tfit * np.sin(theta_0), "-r")
+for x in possible_phases:
+    ax.plot(tfit * np.cos(x), tfit * np.sin(x), "--", color="tab:blue")
+ax.plot(0, 0, "ok", ms=8)
 
-plt.text(-1.1 * np.pi, 0.99, r"$-\pi$", fontsize=16)
-plt.text(np.pi, 0.99, r"$\pi$", fontsize=16)
-plt.text(1.05 * theta_0, 0.99, r"$\theta_0$", fontsize=16, color="r")
-plt.axis("off")
-plt.legend();
+ax.axis("off")
+ax.set_aspect(1.0)
+ax.legend(loc="upper right", bbox_to_anchor=(1.4, 1));
 
 # %% [markdown]
 # We compute $\theta_1$ as the closest possible phase to $\theta_0$ and check that the error decreases between the first and second iteration:
@@ -314,6 +325,9 @@ print(f"{theta_0 = :.4f},   error = {abs(E0 - theta_0):.4f}")
 print(f"{theta_1 = :.4f},   error = {abs(E0 - theta_1):.4f}")
 
 # %% [markdown]
+# For `n_shots=2`, the Hadamard test can only return the phases $\phi \in \{0, \pi/4, \pi/2, 3\pi/4, \pi, -3\pi/4, -\pi/2, -\pi/4\}.$ Therefore at a given step $m$, the difference between the exact angle and the test outcome may be large. Surprisingly, this does not prevent the robust phase estimation to converge to the correct angle with good probability.
+
+# %% [markdown]
 # ### Statistical Precision
 #
 # We will now run the algorithm and see the influence of statistical noise. The `robust_phase_estimation` function returns the full list of $\theta_m$, $m=0,...,M-1$.
@@ -323,28 +337,245 @@ print(f"{theta_1 = :.4f},   error = {abs(E0 - theta_1):.4f}")
 # %%
 epsilon = 0.02
 M = int(np.ceil(np.log2(1 / epsilon)))
-print(f"Target precision epsilon={epsilon}: requires M={M} iterations\n")
+print(f"Target precision {epsilon=}: requires {M=} iterations")
+print(f"{E0 = :.8f}\n")
 
+M = 10
 n_shots = 1
-
+n_samples = 600
 rng = np.random.default_rng(42)
-theta_values = qpe.robust_phase_estimation(
-    H, psi0, M, EXACT, n_shots, verbosity=1, rng=rng
-)
+
+thetas1 = np.zeros((n_samples, M))
+for i in range(n_samples):
+    thetas1[i] = qpe.robust_phase_estimation(
+        H, psi0, M, EXACT, n_shots, verbosity=i == 0, rng=rng
+    )
+
+# %% [markdown]
+# It may look surprising that it evens works with such a rough sampling. At each step `m`, the measured phase `phi_m` is indeed far away from the exact sampling result (as could be classically simulated using `marginal`). Let us look closer at what is happening. The outcome of each measurement gives exactly 1 bit of information. Applying `N_shot=1` for both real and complex values therefore gives 2 bit of information, reducing the reachable phases `phi_m` to $\{\pi/4,-\pi/4,-3\pi/4,3\pi/4\}$. This happens to be enough most of the time: convergence only requires that at each step, `d(theta_m, 2^m E0) < pi/3`, which can be achieved with 4 points on the circle only. However, there are cases where the sampling does *not* stay within this error margin. We exhibit such a case below, where we can see that even with exact time evolution, `theta_m` converges to a wrong value that is not `E0`.
 
 # %%
-plt.semilogy(
-    qpe.angular_distance(theta_values, E0), "-o", label=f"$N_{{\\rm shots}}={n_shots}$"
+# pick a carefully selected seed
+# this simulation introduces an error at step 0
+# consequently `theta_m` converge to a wrong value
+print(f"{E0 = }")
+rng = np.random.default_rng(31)
+errored_theta = qpe.robust_phase_estimation(H, psi0, 14, EXACT, 1, verbosity=1, rng=rng)
+
+# %% [markdown]
+# Let us do a statistical study to check how often this happens:
+
+# %%
+# %%time
+M = int(np.ceil(np.log2(1 / epsilon)))
+print(f"Target precision {epsilon=}: requires {M=} iterations")
+print(f"{E0 = :.8f}\n")
+
+M = 10
+n_shots = 1
+n_samples = 600
+rng = np.random.default_rng(42)
+
+thetas1 = np.zeros((n_samples, M))
+for i in range(n_samples):
+    thetas1[i] = qpe.robust_phase_estimation(
+        H, psi0, M, EXACT, n_shots, verbosity=i == 0, rng=rng
+    )
+
+
+# %%
+def success_prob(thetas, *, verbosity=0):
+    M = thetas.shape[1]
+    mode, success_prob = np.empty(M), np.empty(M)
+    for m in range(M):
+        unique_vals, counts = np.unique(thetas[:, m], return_counts=True)
+        mode_index = counts.argmax()
+        mode[m] = unique_vals[mode_index]
+        success = qpe.angular_distance(unique_vals, E0) < (np.pi / 3 / 2**m)
+        success_prob[m] = counts[success].sum() / n_samples
+        if verbosity > 0:
+            print(f"{m = }, mode = {mode[m]: .6f}, count = {counts[mode_index]}")
+    return mode, success_prob
+
+
+# %%
+mode1, success_prob1 = success_prob(thetas1, verbosity=1)
+
+# %%
+dist1 = qpe.angular_distance(thetas1, E0)
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+ax.errorbar(
+    np.arange(M),
+    dist1.mean(axis=0),
+    yerr=dist1.std(axis=0),
+    fmt="-s",
+    label=r"$\langle d(\theta, E_0) \rangle$",
 )
-plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
-plt.legend()
-plt.xlabel("iteration $m$")
-plt.ylabel("$d(\\theta_m, E)$");
+ax.plot(np.arange(M), dist1.min(axis=0), "-o", label=r"$\min_\theta \; d(\theta, E_0)$")
+ax.plot(
+    np.arange(M),
+    qpe.angular_distance(mode1, E0),
+    ":*",
+    label=r"$mode_\theta \; d(\theta, E_0)$",
+)
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 1; average on {n_samples = }");
+
+# %%
+# node weights: count of each unique distance at iteration m, with a single alpha
+# normalization shared across all m (max over m of the column's largest count)
+node_stats = [np.unique(dist1[:, m], return_counts=True) for m in range(M)]
+cmax = max(counts.max() for _, counts in node_stats)
+
+# edge weights: flow volume P(value at m, value at m+1) = count(a, b) / n_samples,
+# normalized so the busiest edge reaches alpha = 1
+edges = []
+for m in range(M - 1):
+    for a in np.unique(dist1[:, m]):
+        succ, n_succ = np.unique(dist1[dist1[:, m] == a, m + 1], return_counts=True)
+        for b, nab in zip(succ, n_succ, strict=False):
+            edges.append((m, a, b, nab / n_samples))
+pmax = max(p for *_, p in edges)
+
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+for m, a, b, p in edges:
+    ax.plot([m, m + 1], [a, b], "-", color="tab:blue", alpha=p / pmax, lw=2 * p / pmax)
+for m, (values_m, counts_m) in enumerate(node_stats):
+    for v, c in zip(values_m, counts_m, strict=False):
+        ax.plot(m, v, "o", color="tab:blue", alpha=c / cmax, ms=10)
+
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 1, {n_samples = }")
+fig.savefig("rpe_trajectories.png")
+
+# %%
+unique, count = np.unique(dist1, axis=0, return_counts=True)
+cmax = count.max()
+M = dist1.shape[1]
+
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+for u, c in zip(unique, count, strict=False):
+    ax.plot(np.arange(M), u, "-", alpha=c / cmax, lw=2 * c / cmax, color="tab:blue")
+
+for m in range(M):
+    unique_m, count_m = np.unique(dist1[:, m], return_counts=True)
+    cmax_m = count_m.max()
+    for u, c in zip(unique_m, count_m, strict=False):
+        ax.plot(m, u, "o", alpha=c / cmax_m, ms=10, color="tab:blue")
+
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 1, {n_samples = }")
+fig.savefig("rpe_trajectories.png")
+
+# %%
+m = 7
+fig, ax = plt.subplots(layout="tight")
+ax.axvline(E0, ls=":", color="k", label=r"$E_0$")
+ax.hist(thetas1[:, m], bins=40, label=rf"$\theta_{m}$")
+ax.set_title(f"N_shots = 1, {n_samples = }")
+ax.legend();
+
+# %%
+rng = np.random.default_rng(42)
+n_samples, M = thetas1.shape
+
+thetas2 = np.zeros((n_samples, M))
+thetas3 = np.zeros((n_samples, M))
+for i in range(n_samples):
+    thetas2[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 2, rng=rng)
+    thetas3[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 3, rng=rng)
+
+# %%
+mode2, success_prob2 = success_prob(thetas2)
+mode3, success_prob3 = success_prob(thetas3)
+
+# %%
+dist2 = qpe.angular_distance(thetas2, E0)
+unique, count = np.unique(dist2, axis=0, return_counts=True)
+cmax = count.max()
+
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+for u, c in zip(unique, count, strict=False):
+    ax.plot(np.arange(M), u, "-", alpha=c / cmax, lw=2 * c / cmax, color="tab:orange")
+
+for m in range(M):
+    unique_m, count_m = np.unique(dist2[:, m], return_counts=True)
+    cmax_m = count_m.max()
+    for u, c in zip(unique_m, count_m, strict=False):
+        plt.plot(m, u, "o", alpha=c / cmax_m, ms=10, color="tab:orange")
+
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 2, n_samples = {dist2.shape[0]}");
+
+# %%
+dist3 = qpe.angular_distance(thetas3, E0)
+unique, count = np.unique(dist3, axis=0, return_counts=True)
+cmax = count.max()
+
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+for u, c in zip(unique, count, strict=False):
+    ax.plot(u, "-", alpha=c / cmax, lw=2 * c / cmax, color="tab:green")
+
+for m in range(M):
+    unique_m, count_m = np.unique(dist3[:, m], return_counts=True)
+    cmax_m = count_m.max()
+    for u, c in zip(unique_m, count_m, strict=False):
+        plt.plot(m, u, "o", alpha=c / cmax_m, ms=10, color="tab:green")
+
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 3, n_samples = {dist3.shape[0]}");
+
+# %%
+fig, ax = plt.subplots(layout="tight")
+ax.plot(success_prob1, "-o", label=r"$N_{\rm shot} = 1$")
+ax.plot(success_prob2, "-s", label=r"$N_{\rm shot} = 2$")
+ax.plot(success_prob3, "-x", label=r"$N_{\rm shot} = 3$")
+ax.set_ylim(0, 1.0)
+ax.set_xlim(0, M - 1)
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("success rate")
+ax.set_ylabel(r"$\mathbb{P} \left( d(\theta, E_0) < 2^{-m} \cdot \pi / 3 \right)$")
+ax.legend(loc="lower left", title=f"Heisenberg chain\n{n_qubits = }")
+ax.set_title(f"{n_samples = }");
+
+# %%
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+ax.plot(qpe.angular_distance(mode1, E0), "-o", label="N_shot = 1")
+ax.plot(qpe.angular_distance(mode2, E0), "-s", label="N_shot = 2")
+ax.plot(qpe.angular_distance(mode3, E0), "-v", label="N_shot = 3")
+
+ax.set_yscale("log")
+ax.legend(loc="lower left", title=f"Heisenberg chain\n{n_qubits = }")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"{n_samples = }, most likely measurement");
 
 # %% [markdown]
 # We see that for such small systems, with exact time evolution, a single shot gives an estimate that converges. We now increase the number of shots to improve the precision.
 
 # %%
+# THIS IS MISLEADING
 n_shot_list = [1, 2, 3, 4]
 
 rng = np.random.default_rng(42)
@@ -369,28 +600,97 @@ plt.title(rf"$\epsilon={epsilon},\; M={M}$");
 #
 # The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
 #
-# The computation will now take longer since the number of gates for the time evolution grows like $2^m$.
+# The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative to the most likely case.
 
 # %%
 # %%time
-print(f"epsilon={epsilon}, M={M}")
+epsilon = 0.02
+M = int(np.ceil(np.log2(1 / epsilon)))
+print(f"{epsilon = }, {M = }")
 
-n_steps = 1
-n_shots = 4
-thetas_ttr_list = []
+n_samples = 20
+n_shots = 2
+trotter_order = 2
 
 rng = np.random.default_rng(42)
-thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
-)
+thetas_ttr1 = np.zeros((n_samples, M))
+thetas_ttr2 = np.zeros((n_samples, M))
+for i in range(n_samples):
+    thetas_ttr1[i] = qpe.robust_phase_estimation(
+        H, psi0, M, 1, n_shots, trotter_order=trotter_order, rng=rng
+    )
+    thetas_ttr2[i] = qpe.robust_phase_estimation(
+        H, psi0, M, 2, n_shots, trotter_order=trotter_order, rng=rng
+    )
 
-thetas_ttr_list.append(thetas_ttr)
+# %%
+mode1_trotter, success_prob1_trotter = success_prob(thetas_ttr1)
+dist1_trotter = qpe.angular_distance(thetas_ttr1, E0)
+unique, count = np.unique(dist1_trotter, axis=0, return_counts=True)
+cmax = count.max()
+M = dist1_trotter.shape[1]
+
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+for u, c in zip(unique, count, strict=False):
+    ax.plot(u, "-", alpha=c / cmax, lw=2 * c / cmax, color="tab:blue")
+
+ax.plot([], [], "-o", color="tab:blue", label="n_trotter_steps = 1")
+for m in range(M):
+    unique_m, count_m = np.unique(dist1_trotter[:, m], return_counts=True)
+    # cmax_m = count_m.max()
+    cmax_m = n_samples
+    for u, c in zip(unique_m, count_m, strict=False):
+        ax.plot(m, u, "o", alpha=c / cmax_m, ms=10, color="tab:blue")
+
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 4, {n_samples = }, {trotter_order = }");
+
+# %%
+mode2_trotter, success_prob2_trotter = success_prob(thetas_ttr2)
+dist2_trotter = qpe.angular_distance(thetas_ttr2, E0)
+unique, count = np.unique(dist2_trotter, axis=0, return_counts=True)
+cmax = count.max()
+M = dist2_trotter.shape[1]
+
+fig, ax = plt.subplots(layout="tight")
+ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+for u, c in zip(unique, count, strict=False):
+    ax.plot(u, "-", alpha=c / cmax, lw=2 * c / cmax, color="tab:orange")
+
+ax.plot([], [], "-o", color="tab:orange", label="n_trotter_steps = 2")
+for m in range(M):
+    unique_m, count_m = np.unique(dist2_trotter[:, m], return_counts=True)
+    cmax_m = count_m.max()
+    for u, c in zip(unique_m, count_m, strict=False):
+        ax.plot(m, u, "o", alpha=c / cmax_m, ms=10, color="tab:orange")
+
+ax.set_yscale("log")
+ax.legend(loc="lower left")
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("$d(\\theta_m, E)$")
+ax.set_title(f"N_shots = 4, {n_samples = }, {trotter_order = }");
+
+# %%
+fig, ax = plt.subplots(layout="tight")
+ax.plot(success_prob1_trotter, "-o", label="n_trotter_steps = 1")
+ax.plot(success_prob2_trotter, "-s", label="n_trotter_steps = 2")
+ax.set_ylim(0, 1.0)
+ax.set_xlim(0, M - 1)
+ax.set_xlabel("iteration $m$")
+ax.set_ylabel("success rate")
+ax.set_ylabel(r"$\mathbb{P} \left( d(\theta, E_0) < 2^{-m} \cdot \pi / 3 \right)$")
+ax.legend(loc="lower left", title="Heisenberg chain\n$N_{shots} = 4$")
+ax.set_title(f"{n_samples = }");
 
 # %%
 plt.semilogy(
-    qpe.angular_distance(thetas_ttr_list[0], E0),
+    qpe.angular_distance(thetas_ttr1, E0),
     "-o",
-    label=f"$n_{{\\rm steps}}={n_steps}$",
+    label="$n_{\\rm steps} = 1$",
 )
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
@@ -405,6 +705,7 @@ plt.ylabel("error");
 # %%time
 
 n_steps = 2
+thetas_ttr_list = []
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
     H, psi0, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
