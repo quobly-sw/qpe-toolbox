@@ -36,7 +36,7 @@ os.environ["JAX_ENABLE_X64"] = "True"
 
 import autoray
 import numpy as np
-from quimb.tensor import DMRG2, TNOptimizer
+import quimb.tensor as qtn
 
 # Local imports from qpe_toolbox
 from qpe_toolbox.circuit import ansatz_circuit_su4
@@ -47,14 +47,10 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 #
 # We consider a chain of $n$ spins with open boundaries. The Hamiltonian reads
 #
-# $$
+# $$ H = g_x \sum_{i} X_i + g_{zz} \sum_{i} Z_i Z_{i+1}, $$
 #
-# H = g_x \sum_{i} X_i + g_{zz} \sum_{i} Z_i Z_{i+1},
+# with $g_x = -1.1$ and $g_{zz} = -1.0$.
 #
-# $$
-#
-# with $g_x = -1.1$ and $g_{zz} = -1.0$. This model is non-integrable and features
-# a quantum phase transition at $|g_x| = |g_{zz}|$; we work in the ferromagnetic regime.
 
 # %%
 def loss_circ(circ, mpo):
@@ -80,7 +76,7 @@ def make_circuit_optimizer(circ, mpo):
 
     The optimizer uses L-BFGS-B (or basin-hopping) and JAX for gradients.
     """
-    return TNOptimizer(
+    return qtn.TNOptimizer(
         circ,
         loss_circ,
         loss_constants={"mpo": mpo},
@@ -88,7 +84,6 @@ def make_circuit_optimizer(circ, mpo):
         optimizer="L-BFGS-B",
         progbar=False,
     )
-
 
 # %% [markdown]
 # ## DMRG reference ground state
@@ -110,7 +105,7 @@ ham = Hamiltonian(terms, n_qubits)
 mpo = ham.to_mpo()
 
 # --- DMRG ---
-dmrg = DMRG2(mpo)
+dmrg = qtn.DMRG2(mpo)
 dmrg.solve(max_sweeps=16, tol=1e-8, bond_dims=64, verbosity=0)
 GS = dmrg.state
 dmrg_energy = np.real(dmrg.energy)

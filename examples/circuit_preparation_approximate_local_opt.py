@@ -40,171 +40,10 @@ os.environ["MKL_NUM_THREADS"] = "1"
 import autoray
 import numpy as np
 import quimb.tensor as qtn
-import tqdm
 from quimb.tensor import DMRG2
-from quimb.tensor.contraction import contract_strategy
 
-from qpe_toolbox.circuit import ansatz_circuit_su4
+from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
-
-# %% [markdown]
-# ## Tensor Network Fitting (ALS Core)
-#
-# The function `_tn_fit_core` is the workhorse of the fitting procedure. It implements the **alternating least-squares** update:
-#
-# - Each variable tensor (the one we want to optimize) is identified by a unique tag `"__VARi__"` and also carries the tag `"__KET__"` to separate it from the target part of the network.
-# - We form the overlap network `tnAB = tn_fit * conj(tn_target)`. Its contraction gives the overlap `<tn_fit | tn_target>`.
-# - For each variable tensor, we compute its **environment** `b` by contracting all other tensors in `tnAB`. This environment is the partial derivative of the overlap with respect to that tensor.
-# - The optimal update (given the rest) is the **polar decomposition** of `b`: we reshape `b` into a matrix (combining left and right indices), perform an SVD `b = U S V^dagger`, and set the new tensor to `U V^dagger` (the unitary part). This maximizes the overlap with the target.
-# - We iterate over all variable tensors (one sweep) and repeat for a number of steps or until convergence.
-#
-# The wrapper `tn_fit` handles tagging, combining with the target, and copying the optimized data back to the original tensor network.
-
-# %%
-def _tn_fit_core(
-    var_tags,
-    tnAB,
-    tol,
-    steps,
-    *,
-    progbar=False,
-):
-    """
-    Core ALS optimization loop for tensor network fitting.
-
-    Parameters
-    ----------
-    var_tags : list of str
-        Unique tags identifying the variable tensors to optimize.
-    tnAB : TensorNetwork
-        The overlap network (ket part + conjugated target).
-    tol : float
-        Convergence tolerance on the change of the overlap.
-    steps : int
-        Maximum number of sweeps.
-    progbar : bool
-        Whether to show a progress bar.
-    """
-
-    xp = tnAB.get_namespace()
-
-    # Pre-compute environment contractions for each variable tensor.
-    env_contractions = []
-    for tg in var_tags:
-        # The variable tensor is identified by the "__KET__" tag and its unique var tag.
-        tb = tnAB["__KET__", tg]
-        lix = tb.left_inds
-        rix = tuple(x for x in tb.inds if x not in tb.left_inds)
-        # The environment is everything except this tensor.
-        b_tn = tnAB.select((tg,), "!all")
-        env_contractions.append((tb, b_tn, lix, rix))
-
-    if tol != 0.0 or progbar:
-        old_d = float("inf")
-
-    if progbar:
-        pbar = tqdm.trange(steps)
-    else:
-        pbar = range(steps)
-
-    for _ in pbar:
-        # Sweep over all variable tensors.
-        for tb, b_tn, lix, rix in env_contractions:
-            # Contract the environment to a dense matrix.
-            b = b_tn.to_dense(rix, lix)
-            # SVD of the environment.
-            u, _, v = xp.linalg.svd(b)
-            # Optimal update: U @ V^dagger (the unitary part).
-            x = u @ v
-            x_r = xp.reshape(x, tb.shape)
-            tb.modify(data=xp.conj(x_r))
-
-        # Check convergence based on the change in the overlap.
-        if (tol != 0.0) or progbar:
-            dagx = autoray.dag(x)
-
-            d = float(0)
-            if x.ndim == 2:
-                d = xp.trace(xp.real(dagx @ b))
-            else:
-                d = xp.real(dagx @ b)
-
-            if abs(d - old_d) < tol:
-                break
-            old_d = d
-
-        if progbar:
-            pbar.set_description(f"{d:.4g}")
-
-
-def tn_fit(
-    tn,
-    tn_target,
-    tags=None,
-    steps=100,
-    tol=1e-8,
-    contract_optimize="auto-hq",
-    *,
-    progbar=False,
-    **kwargs,
-):
-    """
-    Fit a tensor network `tn` to a target tensor network `tn_target`.
-
-    This is the external interface that tags the tensors to optimize,
-    builds the overlap network, calls the ALS core, and copies the results back.
-
-    Parameters
-    ----------
-    tn : TensorNetwork
-        The tensor network to be optimized (modified in-place).
-    tn_target : TensorNetwork
-        The target network (usually a state we want to approximate).
-    tags : str or list of str, optional
-        Tags selecting which tensors of `tn` to optimize. If None, all are optimized.
-    steps : int
-        Number of ALS sweeps.
-    tol : float
-        Convergence tolerance.
-    contract_optimize : str
-        Contraction strategy for the environments.
-    progbar : bool
-        Whether to show a progress bar.
-    """
-    tn_fit = tn.copy()
-    tn_fit.add_tag("__KET__")
-
-    # Tag the tensors to be optimized.
-    if tags is None:
-        to_tag = tn_fit.tensors
-    else:
-        to_tag = tn_fit.select_tensors(tags, "any")
-
-    var_tags = []
-    for i, t in enumerate(to_tag):
-        var_tag = f"__VAR{i}__"
-        t.add_tag(var_tag)
-        var_tags.append(var_tag)
-
-    # Build the overlap network: <tn_fit | tn_target>.
-    tn_target_conj = tn_target.conj(mangle_inner=True)
-    tnAB = tn_fit.combine(tn_target_conj, virtual=True, check_collisions=False)
-
-    with contract_strategy(contract_optimize):
-        _tn_fit_core(
-            var_tags=var_tags,
-            tnAB=tnAB,
-            tol=tol,
-            steps=steps,
-            progbar=progbar,
-            **kwargs,
-        )
-
-    # Copy optimized data back to the original tensor network.
-    for t1, t2 in zip(tn, tn_fit, strict=True):
-        t2.transpose_like_(t1)
-        t1.modify(data=t2.data)
-
 
 # %% [markdown]
 # ## Script Execution: Layer-by-Layer Sweep
@@ -228,9 +67,11 @@ def tn_fit(
 # %% [markdown]
 # ### 1. Hamiltonian and DMRG Reference
 # We set up the 1D transverse-field Ising model:
-# \( H = \sum_i g_x X_i + \sum_i g_{zz} Z_i Z_{i+1} \)
-# with \( g_x = -1.1 \), \( g_{zz} = -1.0 \). We take 16 qubits.
-# The ground state is computed with DMRG (bond dimension 64, 16 sweeps) and used as the target.
+#
+# $$ H = g_x \sum_{i} X_i + g_{zz} \sum_{i} Z_i Z_{i+1}, $$
+#
+# with $g_x = -1.1$ and $g_{zz} = -1.0$.
+# We take 8 qubits. The ground state is computed with DMRG (bond dimension 64, 16 sweeps) and used as the target.
 
 # %%
 ## hamiltonian
