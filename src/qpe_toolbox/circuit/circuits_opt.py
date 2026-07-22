@@ -158,7 +158,6 @@ def tn_fit(
     contract_optimize="auto-hq",
     *,
     progbar=False,
-    **kwargs,
 ):
     """
     Fit tensor network `tn` to target tensor network `tn_target`.
@@ -179,9 +178,6 @@ def tn_fit(
         Contraction strategy for the environments.
     progbar : bool
         Whether to show a progress bar.
-    **kwargs
-        Additional keyword arguments (currently unused, reserved for forward
-        compatibility).
     """
     tn_fit = tn.copy()
     tn_fit.add_tag("__KET__")
@@ -209,7 +205,6 @@ def tn_fit(
             tol=tol,
             steps=steps,
             progbar=progbar,
-            **kwargs,
         )
 
     # Copy optimized data back to the original tensor network.
