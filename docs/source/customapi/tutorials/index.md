@@ -26,9 +26,7 @@ hyperoptimization.ipynb
 
 mpo_to_circuit.ipynb
 
-circuit_preparation_global_opt.ipynb
-
-circuit_preparation_local_opt.ipynb
+circuit_preparation_opt.ipynb
 
 circuit_preparation_approximate_local_opt.ipynb
 ```
