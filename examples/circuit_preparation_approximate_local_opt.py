@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# # Circuit Preparation via Local Optimization with Approximate Tensor Contraction
+# # Variational circuit preparation II
 #
 # This script implements a local optimization to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Unlike the straightforward global fitting of the entire circuit (as in `circuit_preparation_global_opt.py`), this version performs a **sweeping algorithm** that optimizes the circuit layer by layer, sweeping from the bottom (first layer) to the top (last layer) and back, much like a DMRG sweep.
 # The method is useful when the circuit is deep. By sequentially updating each layer while approximating the rest of the circuit with finite bond dimensions MPSs, we can efficiently achieve high fidelity with the target MPS.

@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# # Circuit Preparation via Global and Local Optimization
+# # Variational circuit preparation II
 #
 # In this tutorial, we demonstrate two complementary classical pre-processing techniques to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Such a circuit can be used as an initial state in quantum phase estimation (QPE) or other quantum algorithms.
 #
