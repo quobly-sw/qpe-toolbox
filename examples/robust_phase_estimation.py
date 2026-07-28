@@ -440,7 +440,7 @@ ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"$n_{{\\rm shots}} = 1$, {n_samples = }")
 
 # %% [markdown]
-# We see that it is at each step, there is a small but non zero possibility to make an error from which it is unlikely to recover. In such a case, `theta_m` converges to a value that is not $\theta_{\rm ex}$. We can also consider a higher number of shots:
+# We see that it is at each step, there is a small but non zero possibility to make an error from which it is unlikely to recover. In such a case, `theta_m` converges to a value that is not $\theta_{\rm ex}$. Since there is a fixed gap between different possibly reached values, taking the average over many realization with fixed `n_shots` does not converge to the exact value $\theta_{\rm ex}$. However, improving the sampling by adding more shots does improve the accuracy, as we can see when considering a higher number of shots:
 
 # %%
 rng = np.random.default_rng(42)
@@ -483,7 +483,7 @@ axes[0].legend(loc="lower left")
 axes[0].set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 
 # %% [markdown]
-# Let us now look at the success probability, ie the probability for $\theta_m$ to be within $2^{-m}\pi/3$ angular distance from $\theta_{\rm ex}$:
+# Let us look at the success probability, ie the probability for $\theta_m$ to be within $2^{-m}\pi/3$ angular distance from $\theta_{\rm ex}$:
 
 # %%
 fig, ax = plt.subplots(layout="tight")
@@ -501,7 +501,7 @@ ax.legend(loc="lower left", title=f"Heisenberg chain\n{n_qubits = }")
 ax.set_title(f"{n_samples = }");
 
 # %% [markdown]
-# We see increasing `n_shots` significantly increases the probability of success, yet even `n_shots=2` provides high probability to reach high precision. Finally, let us compare the most likely outcome for different `n_shots`:
+# We see increasing `n_shots` significantly increases the probability of success. Fortunately, small values such as `n_shots=2` already provide high probability to reach high precision. Finally, let us compare the most likely outcome for different `n_shots`:
 
 # %%
 fig, ax = plt.subplots(layout="tight")
@@ -517,7 +517,9 @@ ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"{n_samples = }, most likely outcome");
 
 # %% [markdown]
-# As we see, the robust phase estimation works surpisingly well even for small values of `n_shots`, although errors are still possible. It is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
+# Here, we see that adding more shots increases the probability of success (=probability of converging to $theta_{\rm ex}$ as `m` grows) and reduces the chance to have an error at a given stage `m`, but also increases the accuracy of the most likely case. However, the simulation cost grows linearly with `n_shots`, as on a quantum computer each shot corresponds to a different run of the quantum algorithm.
+#
+# To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. It is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
 
 # %% [markdown]
 # ### RPE with Trotter Approximation
