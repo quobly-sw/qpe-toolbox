@@ -219,7 +219,7 @@ ax_t.set_ylabel("duration (seconds)");
 #
 # $$ g(2^m t_0 ) = \mathbb{E}[\mathbf{Z}(2^m t_0)] = \exp(-i\,2^{m} E_0  t_0) $$
 #
-# for $m=0,1,..,M-1$. At each step the algorithm computes an estimate $\theta_m$ of $\theta_{\rm ex}$; the objective is that $\theta_m$ be the best $m$-bit approximation of $\theta_\star$, so that each iteration adds one bit of precision.
+# for $m=0,1,..,M-1$. At each step the algorithm computes an estimate $\theta_m$ of $\theta_{\rm ex}$; the objective is that $\theta_m$ be the best $m$-bit approximation of $\theta_{\rm ex}$, so that each iteration adds one bit of precision.
 #
 # **Algorithm 1 (arXiv p.24 / PRX p.20)**
 #
@@ -234,9 +234,9 @@ ax_t.set_ylabel("duration (seconds)");
 #
 #     - From the outcome we compute $\phi_m = - \arg(\bar{Z}(2^m t_0))$
 #
-#     - By definition $\phi_m \in (-\pi, \pi]:~\phi_m~$  is an approximation of $2^m \theta_\star$ modulo $2\pi$
+#     - By definition $\phi_m \in (-\pi, \pi]:~\phi_m~$  is an approximation of $2^m \theta_{\rm ex}$ modulo $2\pi$
 #
-#     - Given a previous guess $\theta_{m-1}$ for the phase $\theta_\star$, the new estimate $\theta_m$ is given by
+#     - Given a previous guess $\theta_{m-1}$ for the phase $\theta_{\rm ex}$, the new estimate $\theta_m$ is given by
 #
 #     $$ \theta_m = 2^{-m} (2\pi k + \phi_m), $$
 #     where $k$ is an integer between $0$ and $2^m - 1$ chosen such that $\theta_m $ minimizes the distance
@@ -244,7 +244,7 @@ ax_t.set_ylabel("duration (seconds)");
 #      $$ d(\theta_m, \theta_{m-1}) = \min_{q\in\mathbb{Z}} | \theta_m - \theta_{m-1} + 2\pi q|, $$
 #       under the condition $-\pi < \theta_m \leq \pi$.
 #
-# The algorithm ensures that at each step, $\theta_m$ is indeed the best $m$-bit approximation of $\theta_\star$.
+# The algorithm ensures that at each step, $\theta_m$ is indeed the best $m$-bit approximation of $\theta_{\rm ex}$.
 # The following lemma guarantees convergence:
 #
 # **Lemma B.1. (arXiv p.25 / PRX p.21)**:
@@ -273,7 +273,7 @@ plt.plot(
 plt.legend();
 
 # %% [markdown]
-# For simplicity we set the base evolution time $t_0 = 1$ (default), the target phase is still $\theta_\star = E_0 t_0$. More generally, given a known energy window of width $\Delta$ containing $E_0$, the evolution time is chosen as $t_0 = 2\pi/\Delta$ (together with a global phase) to map the spectrum into the unambiguous interval. See the [Textbook QPE](./textbook_qpe.ipynb) example for a discussion on the evolution time.
+# For simplicity we set the base evolution time $t_0 = 1$ (default), the target phase is still $\theta_{\rm ex} = E_0 t_0$. More generally, given a known energy window of width $\Delta$ containing $E_0$, the evolution time is chosen as $t_0 = 2\pi/\Delta$ (together with a global phase) to map the spectrum into the unambiguous interval. See the [Textbook QPE](./textbook_qpe.ipynb) example for a discussion on the evolution time.
 #
 # Let us now illustrate the first two steps of the algorithm for concreteness. We start with $n_{\rm shots}=2$ and consider exact time evolution.
 
@@ -401,7 +401,7 @@ mode1, success_prob1 = success_prob(thetas1, verbosity=1)
 # %%
 m = 7
 fig, ax = plt.subplots(layout="tight")
-ax.axvline(theta_exact, ls=":", color="k", label=r"$\theta_*$")
+ax.axvline(theta_exact, ls=":", color="k", label=r"$\theta_{\rm ex}$")
 ax.hist(thetas1[:, m], bins=40, label=rf"$\theta_{m}$")
 ax.set_title(f"$n_{{\\rm shots}} = 1$, {n_samples = }")
 ax.set_xlim(-np.pi, np.pi)
@@ -436,11 +436,11 @@ for m in range(M):
 ax.set_yscale("log")
 ax.legend(loc="lower left")
 ax.set_xlabel("iteration $m$")
-ax.set_ylabel("$d(\\theta_m, \\theta_\\star)$")
+ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"$n_{{\\rm shots}} = 1$, {n_samples = }")
 
 # %% [markdown]
-# We see that it is at each step, there is a small but non zero possibility to make an error from which it is unlikely to recover. In such a case, `theta_m` converges to a value that is not $\theta_*$. We can also consider a higher number of shots:
+# We see that it is at each step, there is a small but non zero possibility to make an error from which it is unlikely to recover. In such a case, `theta_m` converges to a value that is not $\theta_{\rm ex}$. We can also consider a higher number of shots:
 
 # %%
 rng = np.random.default_rng(42)
@@ -480,10 +480,10 @@ for i, thetas in enumerate((thetas2, thetas3)):
     axes[i].set_title(f"$n_{{\\rm shots}} = {i + 2}$, n_samples = {dist.shape[0]}")
 
 axes[0].legend(loc="lower left")
-axes[0].set_ylabel("$d(\\theta_m, \\theta_\\star)$");
+axes[0].set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 
 # %% [markdown]
-# Let us now look at the success probability, ie the probability for $\theta_m$ to be within $2^{-m}\pi/3$ angular distance from $\theta_*$:
+# Let us now look at the success probability, ie the probability for $\theta_m$ to be within $2^{-m}\pi/3$ angular distance from $\theta_{\rm ex}$:
 
 # %%
 fig, ax = plt.subplots(layout="tight")
@@ -495,7 +495,7 @@ ax.set_xlim(0, M - 1)
 ax.set_xlabel("iteration $m$")
 ax.set_ylabel("success rate")
 ax.set_ylabel(
-    r"$\mathbb{P} \left( d(\theta, \theta_\star) < 2^{-m} \cdot \pi / 3 \right)$"
+    r"$\mathbb{P} \left( d(\theta, \theta_{\rm ex}) < 2^{-m} \cdot \pi / 3 \right)$"
 )
 ax.legend(loc="lower left", title=f"Heisenberg chain\n{n_qubits = }")
 ax.set_title(f"{n_samples = }");
@@ -513,7 +513,7 @@ ax.plot(qpe.angular_distance(mode3, theta_exact), "-v", label=r"$n_{\rm shots} =
 ax.set_yscale("log")
 ax.legend(loc="lower left", title=f"Heisenberg chain\n{n_qubits = }")
 ax.set_xlabel("iteration $m$")
-ax.set_ylabel("$d(\\theta_m, \\theta_\\star)$")
+ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"{n_samples = }, most likely outcome");
 
 # %% [markdown]
@@ -647,7 +647,7 @@ plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
 plt.title(r"$H_2$ STO-3G - exact time evolution")
 plt.xlabel("iteration $m$")
-plt.ylabel("$d(\\theta_m, \\theta_\\star)$");
+plt.ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 
 # %%
 epsilon = 0.02
