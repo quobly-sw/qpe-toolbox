@@ -267,8 +267,8 @@ def qpe_gate_list(
 
     Returns
     -------
-    traces : dict
-        Dictionary containing the gate counts.
+    gates_count : dict
+        Dictionary mapping gate labels to their counts.
     gates_list : list of :quimb-api:`Gate`
         Gate sequence of the full QPE circuit.
 
@@ -282,7 +282,7 @@ def qpe_gate_list(
         hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
     gates_list = list(qpe_gates(unitaries, global_phase=global_phase))
-    traces = {"gates_count": count_gates(gates_list)}
+    gates_count = count_gates(gates_list)
 
     if savefile is not None:
         if n_trotter_steps is EXACT:
@@ -293,7 +293,7 @@ def qpe_gate_list(
         with open(savefile, "w") as outfile:
             json.dump(gate_dict, outfile)
 
-    return traces, gates_list
+    return gates_count, gates_list
 
 
 def qpe_first_stage(
