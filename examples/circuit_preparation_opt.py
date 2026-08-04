@@ -59,7 +59,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %%
 # --- Hamiltonian definition ---
-n_qubits = 3
+n_qubits = 8
 gx, gzz = -1.1, -1.0
 terms = []
 for x in range(n_qubits):
