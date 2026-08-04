@@ -190,7 +190,7 @@ print()
 
 # %% [markdown]
 # ## Local Optimization
-#  Ref: Physical Review Research 6, 033062 (2024), Quantum 9, 1789 (2025).
+#  Ref: Causer et al. [Phys. Rev. Research 6, 033062 (2024)](https://doi.org/10.1103/PhysRevResearch.6.033062), Gibbs and Cincio, [Quantum 9, 1789 (2025)](https://doi.org/10.22331/q-2025-07-09-1789).
 #
 # In this approach, the circuit is represented as a tensor network (each two-qubit gate is a 4-leg tensor). We optimize the tensor entries directly using a local (sweeping) optimization based on the polar decomoposition that maximize the fidelity.
 # We use the function `tn_fit` from `qpe_toolbox.circuit`, which performs a local optimisation of the tensor network.
