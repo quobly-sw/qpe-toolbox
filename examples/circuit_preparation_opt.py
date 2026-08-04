@@ -13,7 +13,7 @@
 # ---
 
 # %% [markdown]
-# # Variational circuit preparation II
+# # Variational circuit preparation I
 #
 # In this tutorial, we demonstrate two complementary classical pre-processing techniques to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Such a circuit can be used as an initial state in quantum phase estimation (QPE) or other quantum algorithms.
 #
@@ -81,6 +81,7 @@ print()
 # ## Global Optimization
 #
 # The circuit is built from SU(4) gates, each parameterized by 15 real numbers. We define a loss function that computes the expectation value of the Hamiltonian MPO with respect to the state produced by the circuit. The gradient is obtained via automatic differentiation (JAX).
+# Ref: Haghshenas et al. [Phys. Rev. X 12, 011047 (2022)](https://doi.org/10.1103/PhysRevX.12.011047)
 #
 # Three global optimization strategies are compared:
 # 1. **Standard L-BFGS** on a fixed-depth circuit.
