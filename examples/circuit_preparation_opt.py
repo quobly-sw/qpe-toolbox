@@ -17,7 +17,7 @@
 #
 # In this tutorial, we demonstrate two complementary classical pre-processing techniques to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Such a circuit can be used as an initial state in quantum phase estimation (QPE) or other quantum algorithms.
 #
-# We consider the 1D transverse-field Ising model and build a brick-wall circuit of SU(4) gates.
+# We consider the 1D transverse-field Ising model and build a brick-wall circuit of general two-qubit gates, where each of them can be parametrized by at most 3 CNOT gates and 15 elementary one-qubit gates (for more details, read Vatan and Williams, [Phys. Rev. A 69, 032315 (2004)](https://doi.org/10.1103/PhysRevA.69.032315)).
 #
 # The two approaches are:
 #
@@ -78,7 +78,7 @@ print(f"*** DMRG reference energy: {dmrg_energy:12.10f}")
 print()
 
 # %% [markdown]
-# ## Global Optimization (Parameter-based)
+# ## Global Optimization
 #
 # The circuit is built from SU(4) gates, each parameterized by 15 real numbers. We define a loss function that computes the expectation value of the Hamiltonian MPO with respect to the state produced by the circuit. The gradient is obtained via automatic differentiation (JAX).
 #
