@@ -38,6 +38,7 @@ os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["JAX_ENABLE_X64"] = "True"
 
 import autoray
+import matplotlib.pyplot as plt
 import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
@@ -81,7 +82,7 @@ print()
 # ## Global Optimization
 #
 # The circuit is built from SU(4) gates, each parameterized by 15 real numbers. We define a loss function that computes the expectation value of the Hamiltonian MPO with respect to the state produced by the circuit. The gradient is obtained via automatic differentiation (JAX).
-# Ref: Haghshenas et al. [Phys. Rev. X 12, 011047 (2022)](https://doi.org/10.1103/PhysRevX.12.011047)
+# Ref: Haghshenas et al. [Phys. Rev. X 12, 011047 (2022)](https://doi.org/10.1103/PhysRevX.12.011047), [Tensor Network Training of Quantum Circuits](https://quimb.readthedocs.io/en/latest/examples/ex_tn_train_circuit.html)
 #
 # Three global optimization strategies are compared:
 # 1. **Standard L-BFGS** on a fixed-depth circuit.
@@ -164,14 +165,20 @@ print()
 
 # %%
 print("*** Global L-BFGS sequential optimization ")
+depths_global = []
+errors_global = []
+
 circ = ansatz_circuit_su4(n_qubits, 1)
 circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
+err = np.abs(1 - circ_opt.loss / dmrg_energy)
+depths_global.append(1)
+errors_global.append(err)
 print(
     f" # parameters = {circ_opt.d: 4d}",
     f" Energy = {circ_opt.loss: >12.8f}",
-    f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
+    f" Error = {err: >10.3e}",
     f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
 )
 
@@ -181,13 +188,30 @@ for ii in range(2, depth + 1):
     circ_opt = make_circuit_optimizer(circ, mpo)
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
+    err = np.abs(1 - circ_opt.loss / dmrg_energy)
+    depths_global.append(ii)
+    errors_global.append(err)
     print(
         f" # parameters = {circ_opt.d: 4d}",
         f" Energy = {circ_opt.loss: >12.8f}",
-        f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
+        f" Error = {err: >10.3e}",
         f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
     )
 print()
+
+# %% [markdown]
+# #### Plot: Error vs depth for global sequential optimization
+# %%
+plt.figure(figsize=(6, 4))
+plt.plot(depths_global, errors_global, marker="o", linestyle="-")
+plt.xlabel("Circuit depth")
+plt.ylabel("Energy error $|1 - E/E_{DMRG}|$")
+plt.title("Global L-BFGS sequential optimisation")
+plt.yscale("log")
+plt.grid(visible=True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
 
 # %% [markdown]
 # ## Local Optimization
@@ -228,6 +252,10 @@ print()
 
 # %%
 print("*** Local sequential optimization")
+# --- Modified: store errors vs depth ---
+depths_local = []
+errors_local = []
+
 circ = ansatz_circuit_su4(
     n_qubits=n_qubits, depth=1, param_scaling=0.01, parametrize=False
 )
@@ -240,9 +268,12 @@ tnH = tn.H
 tn.align_(mpo, tnH)
 energy_tn = tnH & mpo & tn
 ene = autoray.do("real", energy_tn.contract(all))
+err = np.abs(1 - ene / dmrg_energy)
+depths_local.append(1)
+errors_local.append(err)
 
 print(
-    f"Depth = {1:2d}   Energy = {ene:12.8f}   Error = {np.abs(1 - ene / dmrg_energy):10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
+    f"Depth = {1:2d}   Energy = {ene:12.8f}   Error = {err:10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
 )
 
 for ii in range(2, depth + 1):
@@ -259,11 +290,27 @@ for ii in range(2, depth + 1):
     tn.align_(mpo, tnH)
     energy_tn = tnH & mpo & tn
     ene = autoray.do("real", energy_tn.contract(all))
+    err = np.abs(1 - ene / dmrg_energy)
+    depths_local.append(ii)
+    errors_local.append(err)
 
     print(
-        f"Depth = {ii:2d}   Energy = {ene:12.8f}   Error = {np.abs(1 - ene / dmrg_energy):10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
+        f"Depth = {ii:2d}   Energy = {ene:12.8f}   Error = {err:10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
     )
 print()
+
+# %% [markdown]
+# #### Plot: Error vs depth for local sequential optimization
+# %%
+plt.figure(figsize=(6, 4))
+plt.plot(depths_local, errors_local, marker="s", linestyle="-", color="green")
+plt.xlabel("Circuit depth")
+plt.ylabel("Energy error $|1 - E/E_{DMRG}|$")
+plt.title("Local sequential optimisation (tensor-network fitting)")
+plt.yscale("log")
+plt.grid(visible=True, alpha=0.3)
+plt.tight_layout()
+plt.show()
 
 # %% [markdown]
 # ## Discussion

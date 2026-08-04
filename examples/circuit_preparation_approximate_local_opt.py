@@ -39,6 +39,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
 import autoray
+import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
 from quimb.tensor import DMRG2
@@ -148,6 +149,12 @@ for ii in range(depth - 1):
 # After each full sweep, we contract the full circuit with the MPO to compute the energy and the overlap with the DMRG state. This gives a measure of convergence.
 
 # %%
+# Initialize lists to store convergence data
+sweep_numbers = []
+energy_errors = []
+infidelities = []
+energies = []
+
 # Print a header for the convergence output
 print("Sweep    Energy         Error       1-Fidelity")
 print("------------------------------------------------")
@@ -243,9 +250,40 @@ for sweep in range(1000):
     ene = autoray.do("real", energy_tn.contract(all))
     error = np.abs(1 - ene / dmrg_energy)
     infidelity = 1 - np.abs(ovlp) ** 2
+
+    # Store data for plotting
+    sweep_numbers.append(sweep)
+    energies.append(ene)
+    energy_errors.append(error)
+    infidelities.append(np.abs(infidelity))
+
     print(f"{sweep:5d}   {ene:12.8f}   {error:10.3e}   {infidelity:10.3e}")
 
     if abs(1 - ene / ene_old) < 1e-8:
         break
     else:
         ene_old = ene
+
+# %% [markdown]
+# ### 5. Plot Convergence
+# Plot energy error and infidelity versus sweep number.
+
+# %%
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.semilogy(sweep_numbers, energy_errors, "b-", label="Energy error")
+ax1.set_xlabel("Sweep")
+ax1.set_ylabel("Energy error (1 - E/E_DMRG)")
+ax1.set_title("Energy Error vs Sweep")
+ax1.grid(visible=True)
+ax1.legend()
+
+ax2.semilogy(sweep_numbers, infidelities, "r-", label="Infidelity")
+ax2.set_xlabel("Sweep")
+ax2.set_ylabel("Infidelity (1 - |<GS|ψ>|²)")
+ax2.set_title("Infidelity vs Sweep")
+ax2.grid(visible=True)
+ax2.legend()
+
+plt.tight_layout()
+plt.show()
