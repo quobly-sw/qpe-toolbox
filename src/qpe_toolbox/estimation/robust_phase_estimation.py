@@ -10,15 +10,14 @@
 import time
 
 import numpy as np
-
-from qpe_toolbox import EXACT
+import quimb.tensor as qtn
 
 from .hadamard_test import run_hadamard_test
-from .quantum_phase_estimation import trotter_evolution_gates
+from .quantum_phase_estimation import _evolution_powers
 
 
 def robust_phase_estimation(
-    H,
+    hamiltonian,
     psi0,
     n_repetitions,
     n_trotter_steps,
@@ -45,7 +44,7 @@ def robust_phase_estimation(
 
     Parameters
     ----------
-    H : Hamiltonian
+    hamiltonian : Hamiltonian
         Hamiltonian object from the ``Hamiltonian`` class.
     psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}` of the system.
@@ -91,17 +90,14 @@ def robust_phase_estimation(
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
 
+    unitaries = _evolution_powers(
+        hamiltonian, 1.0, n_trotter_steps, n_repetitions, trotter_order
+    )
     for m in range(n_repetitions):
-        n_trotter_steps_m = (
-            EXACT if n_trotter_steps is EXACT else n_trotter_steps * 2**m
-        )
         phi_m = rpe_get_hadamard_output(
-            H,
             psi0,
-            m,
-            n_trotter_steps_m,
+            unitaries[m],
             n_shots,
-            trotter_order=trotter_order,
             cutoff=cutoff,
             max_bond=max_bond,
             rng=rng,
@@ -125,19 +121,16 @@ def robust_phase_estimation(
 
 
 def rpe_get_hadamard_output(
-    H,
     psi0,
-    m,
-    n_trotter_steps,
+    unitary,
     n_shots,
     *,
-    trotter_order=1,
     cutoff=1e-10,
     max_bond=None,
     rng=None,
 ):
     r"""
-    Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
+    Estimate the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` using Hadamard tests.
 
     This function computes the phase corresponding to the unitary
     evolution over time :math:`2^m` by evaluating real and imaginary parts
@@ -145,20 +138,15 @@ def rpe_get_hadamard_output(
 
     Parameters
     ----------
-    H : Hamiltonian
-        Hamiltonian object defining the system.
     psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}`.
-    m : int
-        Iteration index corresponding to evolution time ``2**m``.
-    n_trotter_steps : int or qpe_toolbox.EXACT
-        Number of Trotter steps. Use ``EXACT`` for exact time evolution.
+    unitary : :quimb-api:Gate or iterable of :quimb-api:Gate
+        The unitary $U$ used in the Hadamard test, either a single gate
+        (e.g. an exact$U$) or its gate decomposition as an iterable of
+        gates (e.g. a Trotterized $U$).
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
-    trotter_order : int, default ``1``
-        Order of the Trotter-Suzuki decomposition. Ignored when
-        ``n_trotter_steps is EXACT``.
     cutoff : float, default ``1e-10``
         Singular-value truncation threshold of the underlying Hadamard-test
         :quimb-api:`CircuitMPS`.
@@ -175,21 +163,14 @@ def rpe_get_hadamard_output(
     phi_m : float
         Estimated phase angle in radians.
     """
-    evolution_time = 2**m
-    if n_trotter_steps is EXACT:
-        U_m = H.get_U_exact(evolution_time)
-    else:
-        # materialize the one-shot generator to reuse it in both Hadamard tests
-        U_m = list(
-            trotter_evolution_gates(
-                H, evolution_time, n_trotter_steps, trotter_order=trotter_order
-            )
-        )
+    if not isinstance(unitary, qtn.Gate):
+        unitary = list(unitary)  # reused in both Hadamard tests
+
     X_m = run_hadamard_test(
-        psi0, U_m, 0, n_shots, cutoff=cutoff, max_bond=max_bond, rng=rng
+        psi0, unitary, 0, n_shots, cutoff=cutoff, max_bond=max_bond, rng=rng
     )
     Y_m = run_hadamard_test(
-        psi0, U_m, -np.pi / 2, n_shots, cutoff=cutoff, max_bond=max_bond, rng=rng
+        psi0, unitary, -np.pi / 2, n_shots, cutoff=cutoff, max_bond=max_bond, rng=rng
     )
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)

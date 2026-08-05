@@ -65,7 +65,7 @@ def _run_resource_analysis():
     trotter_order = 2
 
     filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
-    traces, gates_list = qpe.qpe_gate_list(
+    gates_count, gates_list = qpe.qpe_gate_list(
         ham,
         n_phase_bits,
         evolution_time,
@@ -77,7 +77,7 @@ def _run_resource_analysis():
 
     assert len(gates_list) == 4241
 
-    c = sum(traces["gates_count"].values()) - traces["gates_count"]["SWAP"]
+    c = sum(gates_count.values()) - gates_count["SWAP"]
     assert c == len(gates_list)
 
     psi_init = kron_mps(qtn.MPS_computational_state("0" * n_phase_bits), psi0)
