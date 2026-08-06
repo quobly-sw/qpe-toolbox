@@ -106,10 +106,6 @@ extlinks = {
         "https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.%s",
         "qiskit.%s",
     ),
-    "optuna-api": (
-        "https://optuna.readthedocs.io/en/stable/reference/generated/optuna.%s.html",
-        "optuna.%s",
-    ),
 }
 
 # -- AutoAPI configuration ------------------------------------------------

@@ -47,3 +47,5 @@ mpo_to_circuit.ipynb
 * {doc}`performance_mps <performance_mps>` compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
 
 * {doc}`variational_circuit_preparation <variational_circuit_preparation>` finds an initial guess state with variational circuit optimization.
+
+* {doc}`mpo_to_circuit <mpo_to_circuit>` transpiles an MPO unitary operator into a nearest-neighbor brickwall circuit.
