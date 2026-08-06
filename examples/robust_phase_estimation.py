@@ -120,13 +120,12 @@ E0, psi0 = do_dmrg(H)
 
 # %%
 t = 0.7  # exact value does not matter here
-data_reg = list(range(1, n_qubits + 1))
-U = H.get_U_exact(t, data_reg, controls=(0,))
+exact_unitary = H.get_U_exact(t)
 
 n_shots = EXACT  # exact computation (no sampling)
 
-X = qpe.run_hadamard_test(psi0, U, 0, n_shots)
-Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots)
+X = qpe.run_hadamard_test(psi0, exact_unitary, 0, n_shots)
+Y = qpe.run_hadamard_test(psi0, exact_unitary, -np.pi / 2, n_shots)
 Z = X + 1j * Y
 
 print(f"error = {abs(np.angle(Z) / t + E0):.2g}")
@@ -163,8 +162,8 @@ rng = np.random.default_rng(42)
 
 for n_shots in tqdm.tqdm(shots_list):
     st = time.time()
-    X = qpe.run_hadamard_test(psi0, U, 0, n_shots, rng=rng)
-    Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots, rng=rng)
+    X = qpe.run_hadamard_test(psi0, exact_unitary, 0, n_shots, rng=rng)
+    Y = qpe.run_hadamard_test(psi0, exact_unitary, -np.pi / 2, n_shots, rng=rng)
     et = time.time() - st
 
     Z = X + 1j * Y
@@ -367,7 +366,7 @@ plt.title(rf"$\epsilon={epsilon},\; M={M}$");
 #
 # We now apply the same algorithm but replace the exact time evolution operator by a second order Trotter approximation.
 #
-# The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
+# The `n_trotter_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
 #
 # The computation will now take longer since the number of gates for the time evolution grows like $2^m$.
 
@@ -375,13 +374,13 @@ plt.title(rf"$\epsilon={epsilon},\; M={M}$");
 # %%time
 print(f"epsilon={epsilon}, M={M}")
 
-n_steps = 1
+n_trotter_steps = 1
 n_shots = 4
 thetas_ttr_list = []
 
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
+    H, psi0, M, n_trotter_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
 
 thetas_ttr_list.append(thetas_ttr)
@@ -390,7 +389,7 @@ thetas_ttr_list.append(thetas_ttr)
 plt.semilogy(
     qpe.angular_distance(thetas_ttr_list[0], E0),
     "-o",
-    label=f"$n_{{\\rm steps}}={n_steps}$",
+    label=f"$n_{{\\rm steps}}={n_trotter_steps}$",
 )
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
 plt.legend()
@@ -404,19 +403,19 @@ plt.ylabel("error");
 # %%
 # %%time
 
-n_steps = 2
+n_trotter_steps = 2
 rng = np.random.default_rng(42)
 thetas_ttr = qpe.robust_phase_estimation(
-    H, psi0, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
+    H, psi0, M, n_trotter_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
 thetas_ttr_list.append(thetas_ttr)
 
 # %%
-for i, n_steps in enumerate([1, 2]):
+for i, n_trotter_steps in enumerate([1, 2]):
     plt.semilogy(
         qpe.angular_distance(thetas_ttr_list[i], E0),
         "-o",
-        label=f"$n_{{\\rm steps}}={n_steps}$",
+        label=f"$n_{{\\rm steps}}={n_trotter_steps}$",
     )
 
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
@@ -512,11 +511,11 @@ plt.ylabel("$d(\\theta_m, E)$");
 # %%
 # %%time
 n_shots = 2
-n_steps = 1
+n_trotter_steps = 1
 
 rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, M, n_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
+    H_H2, psi0_H2, M, n_trotter_steps, n_shots, trotter_order=2, verbosity=1, rng=rng
 )
 distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, E0_H2)
 
@@ -525,7 +524,7 @@ distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, E0_H2)
 
 # %%
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
-plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_steps}$")
+plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_trotter_steps}$")
 plt.legend()
 plt.title(f"$N_{{\\rm shots}}={n_shots}$")
 plt.xlabel("iteration $m$")

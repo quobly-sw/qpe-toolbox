@@ -21,6 +21,18 @@ def test_rpe():
     assert abs(angular_distance(E0, theta_list[-1])) < 2**-n_repetitions
 
 
+def test_rpe_trotter():
+    n_qubits = 2
+    H = heisenberg_hamiltonian(n_qubits)
+    E0, psi0 = do_dmrg(H)
+    n_repetitions = 6
+
+    theta_list = robust_phase_estimation(
+        H, psi0, n_repetitions, n_trotter_steps=8, n_shots=EXACT, verbosity=0
+    )
+    assert abs(angular_distance(E0, theta_list[-1])) < 2**-n_repetitions
+
+
 def test_rpe_seed_deterministic():
     H = heisenberg_hamiltonian(4)
     _E0, psi0 = do_dmrg(H)
@@ -52,5 +64,6 @@ def test_rpe_update_theta_matches_bruteforce():
 
 if __name__ == "__main__":
     test_rpe()
+    test_rpe_trotter()
     test_rpe_seed_deterministic()
     test_rpe_update_theta_matches_bruteforce()

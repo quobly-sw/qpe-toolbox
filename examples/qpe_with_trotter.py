@@ -57,7 +57,7 @@ exact_energy, psi0_mps = do_dmrg(h_spin)
 # %% [markdown]
 # - Then we set the parameters needed to compute the energy with QPE. The QPE circuit output is a phase $2 \pi \theta$. We need to set an appropriate global phase and total evolution time to make sure we recover the correct energy value from the output $\theta$ (see the [Textbook QPE](./textbook_qpe.ipynb) example).
 #
-# - Note that `n_trotter_steps` is the number of Trotter steps used to decompose the first controlled time evolution, over the interval $t$ (`evolution_time`). As the circuit proceeds, we apply time evolution over an exponentially growing time $2^k t$ controlled by the $k$-th phase qubit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
+# - `n_trotter_steps` sets the number of Trotter steps decomposing the time interval $t$ (`evolution_time`), i.e. the number of substeps for the first controlled time evolution. Along the circuit, we apply time evolution over an exponentially growing time $2^k t$ conditioned on the $k$-th circuit; the number of Trotter steps grows accordingly as $2^k$ so as to keep the Trotter timestep constant.
 
 # %%
 E_target = exact_energy + 0.2
@@ -80,9 +80,13 @@ circuit0 = make_circ(n_phase_bits0, psi0_mps)
 # - [$\texttt{quimb}$](https://quimb.readthedocs.io/en/latest/) represents the QPE circuit as a tensor network:
 
 # %%
-dt = evolution_time / n_trotter_steps0
 _, circ = qpe.qpe_first_stage(
-    h_spin, circuit0, evolution_time, dt, global_phase, trotter_order=1
+    h_spin,
+    circuit0,
+    evolution_time,
+    n_trotter_steps0,
+    global_phase,
+    trotter_order=1,
 )
 
 phase_reg = list(range(n_phase_bits0))
@@ -319,19 +323,15 @@ n_trotter_steps_resource = 4
 
 entangling_gates = []
 for n_phase_bits in nphase_list_resource:
-    initial_circ = make_circ(n_phase_bits, psi0_mps)
-    dt = evolution_time_resource / n_trotter_steps_resource
-
-    traces_resource, res_resource = qpe.qpe_sample(
+    gates_count_resource, gates_resource = qpe.qpe_gate_list(
         h_spin,
-        initial_circ,
+        n_phase_bits,
         evolution_time_resource,
-        dt,
+        n_trotter_steps_resource,
         global_phase_resource,
         trotter_order=2,
-        run_simulation=False,
     )
-    count_qb = count_gates_by_qb(traces_resource["gates_count"])
+    count_qb = count_gates_by_qb(gates_count_resource)
     entangling_gates.append(count_qb["2qb"] + count_qb["3+qb"])
 
 # %%
@@ -343,11 +343,11 @@ fig.suptitle(
     f"QPE Heisenberg {n_qubits} spins, Trotter order 2 with $dt=t/{n_trotter_steps_resource}$"
 );
 # %% [markdown]
-# In the resource analysis mode (when `run_simulation=False`) the output is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.
+# The second output of `qpe_gate_list` is a list of `quimb.tensor.Gate` objects storing the details of the quantum circuit gates.
 
 # %%
 print("(label, params, qubits, controls)")
-print(*res_resource[:5], sep="\n")
+print(*gates_resource[:5], sep="\n")
 
 # %% [markdown]
 # As a final remark, note that in the process of releasing `qpe-toolbox` we became aware of recent related work on numerical simulations of textbook QPE on a $3$-qubit Heisenberg Hamiltonian using `qiskit`: [arxiv:2602.22349](https://arxiv.org/abs/2602.22349v1).

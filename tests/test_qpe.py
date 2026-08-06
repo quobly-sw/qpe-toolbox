@@ -8,6 +8,10 @@ import quimb.tensor as qtn
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import deserialize_to_quimb_CircuitMPS, make_circMPS
+from qpe_toolbox.circuit.serialize_circuits import (
+    serialize_from_quimb_Circuit,
+    serialize_from_quimb_gates,
+)
 from qpe_toolbox.estimation import quantum_phase_estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 from qpe_toolbox.tensor import kron_mps
@@ -53,34 +57,31 @@ def test_resource_analysis():
 
 def _run_resource_analysis():
     n_phase_bits = 5
-    circ = make_circMPS(n_phase_bits, psi0)
 
     E_max, evolution_time, global_phase = qpe.set_search_window(
         ham, E_target, size_interval
     )
     n_steps = 4
-    dt = evolution_time / n_steps
     trotter_order = 2
 
-    traces, gates_list = qpe.qpe_sample(
+    filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
+    gates_count, gates_list = qpe.qpe_gate_list(
         ham,
-        circ,
+        n_phase_bits,
         evolution_time,
-        dt,
+        n_steps,
         global_phase,
         trotter_order=trotter_order,
-        write_gates=True,
-        run_simulation=False,
+        savefile=filename,
     )
 
     assert len(gates_list) == 4241
 
-    c = sum(traces["gates_count"].values()) - traces["gates_count"]["SWAP"]
+    c = sum(gates_count.values()) - gates_count["SWAP"]
     assert c == len(gates_list)
 
     psi_init = kron_mps(qtn.MPS_computational_state("0" * n_phase_bits), psi0)
 
-    filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
     assert os.path.exists(filename)
     with open(filename) as infile:
         gate_dict = json.load(infile)
@@ -98,6 +99,27 @@ def _run_resource_analysis():
     assert np.isclose(energy, -0.7375)
 
 
+def test_gate_list_matches_circuit():
+    # the lazy gate list and the simulated circuit must hold the same gate sequence
+    n_phase_bits = 3
+    circ = make_circMPS(n_phase_bits, psi0)
+
+    _, evolution_time, global_phase = qpe.set_search_window(
+        ham, E_target, size_interval
+    )
+    n_trotter_steps = 2
+
+    traces, _ = qpe.qpe_sample(ham, circ, evolution_time, n_trotter_steps, global_phase)
+    _, gates_list = qpe.qpe_gate_list(
+        ham, n_phase_bits, evolution_time, n_trotter_steps, global_phase
+    )
+
+    circuit_dict = serialize_from_quimb_Circuit(traces["circuit"])
+    gates_dict = serialize_from_quimb_gates(circ.N, gates_list)
+    assert circuit_dict == gates_dict
+
+
 if __name__ == "__main__":
     test_qpe()
     test_resource_analysis()
+    test_gate_list_matches_circuit()

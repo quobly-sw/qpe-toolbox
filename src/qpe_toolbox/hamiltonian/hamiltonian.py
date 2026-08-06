@@ -178,7 +178,7 @@ class Hamiltonian:
         """
         return self.to_builder().build_mpo()
 
-    def get_U_exact(self, evolution_time, data_reg, controls):
+    def get_U_exact(self, evolution_time, *, phys_reg=None, controls=None):
         """
         Construct the exact time-evolution operator as a quantum gate.
 
@@ -193,26 +193,29 @@ class Hamiltonian:
         ----------
         evolution_time : float
             Evolution time.
-        data_reg : sequence of int
-            Qubit register on which the Hamiltonian acts.
-        controls : sequence of int or None
-            Control qubits for the gate.
+        phys_reg : sequence of int or None, default ``None``
+            Physical qubit register on which the Hamiltonian acts. If ``None``,
+            defaults to ``range(self.n_qubits)``.
+        controls : sequence of int or None, default ``None``
+            Control qubits for the gate. If ``None``, the gate is uncontrolled.
 
         Returns
         -------
         :quimb-api:`Gate`
             Exact multi-qubit unitary gate.
         """
-        if len(data_reg) != self.n_qubits:
-            raise ValueError("Invalid data_reg size")
+        if phys_reg is None:
+            phys_reg = list(range(self.n_qubits))
+        if len(phys_reg) != self.n_qubits:
+            raise ValueError("Invalid phys_reg size")
 
         # sparse expm -> dense convert is much faster than todense -> expm
         h_csc = self.to_sparse_matrix().tocsc()  # tocsc to optimize expm
         u_csc = scipy.sparse.linalg.expm(-1j * evolution_time * h_csc)
         U = qu.qarray(u_csc.toarray())  # quimb does not support sparse arrays in Gate
-        return qtn.Gate.from_raw(U, qubits=data_reg, controls=controls)
+        return qtn.Gate.from_raw(U, qubits=phys_reg, controls=controls)
 
-    def get_trotter_step(self, dt, data_reg, trotter_order):
+    def get_trotter_step(self, dt, trotter_order, *, phys_reg=None):
         """
         Construct a Trotterized time-evolution circuit (one step).
 
@@ -220,10 +223,11 @@ class Hamiltonian:
         ----------
         dt : float
             Time step.
-        data_reg : sequence of int
-            Qubit register.
         trotter_order : int
             Trotter order (1 or 2).
+        phys_reg : sequence of int or None, default ``None``
+            Physical qubit register on which the Hamiltonian acts. If ``None``,
+            defaults to ``range(self.n_qubits)``.
 
         Returns
         -------
@@ -235,24 +239,26 @@ class Hamiltonian:
         ValueError
             If the Trotter order is not implemented.
         """
-        if len(data_reg) != self.n_qubits:
-            raise ValueError("Invalid data_reg size")
+        if phys_reg is None:
+            phys_reg = list(range(self.n_qubits))
+        if len(phys_reg) != self.n_qubits:
+            raise ValueError("Invalid phys_reg size")
         if trotter_order == 1:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, dt, data_reg)
+                program += rotation_gates(term, dt, phys_reg)
             return program
         if trotter_order == 2:
             program = []
             for term in self.terms:
-                program += rotation_gates(term, dt / 2, data_reg)
+                program += rotation_gates(term, dt / 2, phys_reg)
             for term in reversed(self.terms):
-                program += rotation_gates(term, dt / 2, data_reg)
+                program += rotation_gates(term, dt / 2, phys_reg)
             return program
         raise ValueError(f"order {trotter_order} not implemented")
 
 
-def rotation_gates(term, dt, qubit_reg):
+def rotation_gates(term, dt, phys_reg):
     """
     Generate a gate sequence for exponentiating a Pauli-string term.
 
@@ -271,8 +277,9 @@ def rotation_gates(term, dt, qubit_reg):
         Hamiltonian term ``(theta, pauli_string, qubits)``.
     dt : float
         Time step or Trotter slice.
-    qubit_reg : sequence of int
-        Mapping from logical qubit indices to circuit qubits.
+    phys_reg : sequence of int
+        Physical qubit register: mapping from the term's logical qubit indices
+        to circuit qubits.
 
     Returns
     -------
@@ -285,29 +292,29 @@ def rotation_gates(term, dt, qubit_reg):
     # Rotations: H for X gates and RX(pi/2) for Y gates
     for op, qubit in zip(pauli_string, qubits, strict=True):
         if op.upper() == "X":
-            routine.append(("H", qubit_reg[qubit]))
+            routine.append(("H", phys_reg[qubit]))
         if op.upper() == "Y":
-            routine.append(("RX", np.pi / 2, qubit_reg[qubit]))
+            routine.append(("RX", np.pi / 2, phys_reg[qubit]))
 
     # CNOTs
     for j in range(len(pauli_string) - 1):
-        routine.append(("CNOT", qubit_reg[qubits[j]], qubit_reg[qubits[j + 1]]))
+        routine.append(("CNOT", phys_reg[qubits[j]], phys_reg[qubits[j + 1]]))
 
     # RZ gate
     routine.append(
-        ("RZ", 2 * theta * dt, qubit_reg[qubits[-1]])
+        ("RZ", 2 * theta * dt, phys_reg[qubits[-1]])
     )  ## RZ(alpha) = exp(-1j * alpha/2 * sigma_z)
 
     # CNOTs back
     for j in range(len(pauli_string) - 1, 0, -1):
-        routine.append(("CNOT", qubit_reg[qubits[j - 1]], qubit_reg[qubits[j]]))
+        routine.append(("CNOT", phys_reg[qubits[j - 1]], phys_reg[qubits[j]]))
 
     # Rotations back
     for op, qubit in zip(pauli_string, qubits, strict=True):
         if op.upper() == "X":
-            routine.append(("H", qubit_reg[qubit]))
+            routine.append(("H", phys_reg[qubit]))
 
         if op.upper() == "Y":
-            routine.append(("RX", -np.pi / 2, qubit_reg[qubit]))
+            routine.append(("RX", -np.pi / 2, phys_reg[qubit]))
 
     return routine

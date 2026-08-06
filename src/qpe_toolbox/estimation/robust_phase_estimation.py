@@ -10,22 +10,24 @@
 import time
 
 import numpy as np
-
-from qpe_toolbox import EXACT
+import quimb.tensor as qtn
 
 from .hadamard_test import run_hadamard_test
+from .quantum_phase_estimation import _evolution_powers
 
 
 def robust_phase_estimation(
-    H,
+    hamiltonian,
     psi0,
     n_repetitions,
-    n_steps,
+    n_trotter_steps,
     n_shots,
     *,
     trotter_order=1,
-    verbosity=0,
+    cutoff=1e-10,
+    max_bond=None,
     rng=None,
+    verbosity=0,
 ):
     r"""
     Perform the Robust Phase Estimation (RPE) algorithm.
@@ -42,7 +44,7 @@ def robust_phase_estimation(
 
     Parameters
     ----------
-    H : Hamiltonian
+    hamiltonian : Hamiltonian
         Hamiltonian object from the ``Hamiltonian`` class.
     psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}` of the system.
@@ -53,19 +55,26 @@ def robust_phase_estimation(
         :math:`\varepsilon`, take :math:`M = \lceil \log_2 \varepsilon^{-1}
         \rceil`; the guaranteed bound is then :math:`2^{-(M-1)}\pi/3 \simeq
         2\varepsilon`.
-    n_steps : int or qpe_toolbox.EXACT
-        Number of Trotter steps used to approximate the time evolution.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``m=0`` evolution; multiplied by
+        ``2**m`` at each iteration to keep the Trotter step size constant.
         Use ``EXACT`` for exact time evolution.
-    n_shots : int or EXACT
+    n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
     trotter_order : int, default ``1``
         Order of the Trotter-Suzuki decomposition.
-    verbosity : int, default ``0``
-        Verbosity level. If >= 1, print intermediate phase estimates.
+    cutoff : float, default ``1e-10``
+        Singular-value truncation threshold of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`.
+    max_bond : int or None, default ``None``
+        Maximum bond dimension of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`. If ``None``, no explicit limit is imposed.
     rng : :numpy-random:`numpy.random.Generator <generator>`, optional
         Random generator for the Hadamard-test sampling. Ignored when
         ``n_shots`` is ``EXACT``.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print intermediate phase estimates.
 
     Returns
     -------
@@ -80,19 +89,19 @@ def robust_phase_estimation(
     theta_values = np.zeros(n_repetitions)
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
+
+    unitaries = _evolution_powers(
+        hamiltonian, 1.0, n_trotter_steps, n_repetitions, trotter_order
+    )
     for m in range(n_repetitions):
-        if n_steps is EXACT:
-            phi_m = rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, rng=rng)
-        else:
-            phi_m = rpe_get_hadamard_output(
-                H,
-                psi0,
-                m,
-                n_steps * 2**m,
-                n_shots,
-                trotter_order=trotter_order,
-                rng=rng,
-            )
+        phi_m = rpe_get_hadamard_output(
+            psi0,
+            unitaries[m],
+            n_shots,
+            cutoff=cutoff,
+            max_bond=max_bond,
+            rng=rng,
+        )
 
         if m == 0:
             # initialization theta_{-1} = 0, hence theta_0 = phi_0
@@ -111,9 +120,17 @@ def robust_phase_estimation(
     return theta_values
 
 
-def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=1, rng=None):
+def rpe_get_hadamard_output(
+    psi0,
+    unitary,
+    n_shots,
+    *,
+    cutoff=1e-10,
+    max_bond=None,
+    rng=None,
+):
     r"""
-    Estimate the phase of :math:`\bra{\psi_0}\exp(-i H 2^m)\ket{\psi_0}` using Hadamard tests.
+    Estimate the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` using Hadamard tests.
 
     This function computes the phase corresponding to the unitary
     evolution over time :math:`2^m` by evaluating real and imaginary parts
@@ -121,19 +138,21 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=1, rn
 
     Parameters
     ----------
-    H : Hamiltonian
-        Hamiltonian object defining the system.
     psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}`.
-    m : int
-        Iteration index corresponding to evolution time ``2**m``.
-    n_steps : int or qpe_toolbox.EXACT
-        Number of Trotter steps. Use ``EXACT`` for exact time evolution.
+    unitary : :quimb-api:Gate or iterable of :quimb-api:Gate
+        The unitary $U$ used in the Hadamard test, either a single gate
+        (e.g. an exact$U$) or its gate decomposition as an iterable of
+        gates (e.g. a Trotterized $U$).
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
-    trotter_order : int, default ``1``
-        Order of the Trotter-Suzuki decomposition.
+    cutoff : float, default ``1e-10``
+        Singular-value truncation threshold of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`.
+    max_bond : int or None, default ``None``
+        Maximum bond dimension of the underlying Hadamard-test
+        :quimb-api:`CircuitMPS`. If ``None``, no explicit limit is imposed.
     rng : :numpy-random:`numpy.random.Generator <generator>`, optional
         Random generator threaded through the two Hadamard tests, so the real
         and imaginary parts use independent samples. Ignored when ``n_shots``
@@ -144,18 +163,15 @@ def rpe_get_hadamard_output(H, psi0, m, n_steps, n_shots, *, trotter_order=1, rn
     phi_m : float
         Estimated phase angle in radians.
     """
-    n_qubits = H.n_qubits
-    phys_reg = list(range(1, n_qubits + 1))
-    evolution_time = 2**m
-    if n_steps is EXACT:
-        U_m = H.get_U_exact(evolution_time, phys_reg, controls=(0,))
-    else:
-        if not (n_steps > 0):
-            raise ValueError("Can only evolve for strictly positive n_steps")
-        dt = evolution_time / n_steps
-        U_m = [H.get_trotter_step(dt, phys_reg, trotter_order)] * n_steps
-    X_m = run_hadamard_test(psi0, U_m, 0, n_shots, rng=rng)
-    Y_m = run_hadamard_test(psi0, U_m, -np.pi / 2, n_shots, rng=rng)
+    if not isinstance(unitary, qtn.Gate):
+        unitary = list(unitary)  # reused in both Hadamard tests
+
+    X_m = run_hadamard_test(
+        psi0, unitary, 0, n_shots, cutoff=cutoff, max_bond=max_bond, rng=rng
+    )
+    Y_m = run_hadamard_test(
+        psi0, unitary, -np.pi / 2, n_shots, cutoff=cutoff, max_bond=max_bond, rng=rng
+    )
     Z_m = X_m + 1j * Y_m
     return -np.angle(Z_m)
 

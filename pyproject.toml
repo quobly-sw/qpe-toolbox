@@ -123,6 +123,7 @@ build-backend = "hatchling.build"
   # remember to use single quotes for regex in TOML
   exclude = [  # don't report on objects that match any of these regex
       '\.__repr__$',
+      '\._\w+$',  # private helpers: docstrings welcome but not validated
   ]
   exclude_files = [ # don't process filepaths that match these regex
       '^tests/.*',

@@ -6,32 +6,50 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
+"""
+Hamiltonian-driven Quantum Phase Estimation circuit construction.
+
+Build the controlled unitaries :math:`U^{2^k} = e^{-i H t 2^k}` from a
+Hamiltonian and feed them to the generic QPE circuit builder in ``qpe_circuit``.
+
+The assembled circuit places two contiguous registers, phase first:
+
+- **phase register** -- the ``n_phase_bits`` estimation qubits, at indices
+  ``[0, n_phase_bits)`` (``phase_reg``). Hadamard wall, controls, inverse QFT.
+- **data register** -- the qubits the controlled unitary acts on, at indices
+  ``[n_phase_bits, initial_circ.N)``. For textbook QPE (and RPE) this *is* the
+  physical register; the generic ``qpe_circuit`` layer works in data-register
+  local indices ``[0, n_data)`` and shifts them past the phase register.
+
+The Hamiltonian methods ``get_U_exact`` / ``get_trotter_step`` build gates on
+the **physical register** ``phys_reg`` -- the ``n_qubits`` qubits the
+Hamiltonian acts on. Here ``phys_reg`` coincides with the data register, so the
+default ``phys_reg = range(n_qubits)`` is used. The distinction only matters
+for block-encoded variants (e.g. LCU), where the data register additionally
+contains ancilla qubits and ``data_reg = ancilla_reg + phys_reg``.
+"""
+
 import json
 import time
-import warnings
 
 import numpy as np
-from quimb.tensor.circuit import parse_to_gate
+import quimb.tensor as qtn
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates
-from qpe_toolbox.circuit.serialize_circuits import (
-    serialize_from_quimb_Circuit,
-    serialize_from_quimb_gates,
-)
+from qpe_toolbox.circuit.serialize_circuits import serialize_from_quimb_gates
 
-from .qft import iqft_swapped
+from .qpe_circuit import qpe_circuit, qpe_gates
 
 
 def qpe_energy(
     hamiltonian,
     initial_circ,
-    n_steps,
+    n_trotter_steps,
     E_target,
     size_interval,
     *,
     trotter_order=1,
-    write_gates=False,
     optimize="auto-hq",
     verbosity=0,
 ):
@@ -47,9 +65,9 @@ def qpe_energy(
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     initial_circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
         Initial circuit preparing the trial state in the data register.
-    n_steps : int or qpe_toolbox.EXACT
-        Number of time steps for Trotterized evolution, or ``EXACT`` for exact
-        evolution.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution, or ``EXACT`` for
+        exact evolution.
     E_target : float
         Central target energy for the search window, in physical energy units
         (i.e. including ``hamiltonian.e_const`` if present).
@@ -57,8 +75,6 @@ def qpe_energy(
         Width of the energy search interval.
     trotter_order : int, default ``1``
         Order of the Trotter decomposition.
-    write_gates : bool, default ``False``
-        If True, writes the gate sequence to a text file.
     optimize : str, default ``"auto-hq"``
         Optimization strategy when computing marginals with tensor networks.
     verbosity : int, default ``0``
@@ -95,39 +111,33 @@ def qpe_energy(
     # First stage: phase encoding
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
 
-    dt = EXACT if n_steps is EXACT else evolution_time / n_steps
     traces, probs = qpe_sample(
         hamiltonian,
         initial_circ,
         evolution_time,
-        dt,
+        n_trotter_steps,
         global_phase,
         trotter_order=trotter_order,
-        write_gates=write_gates,
         optimize=optimize,
-        verbosity=verbosity - 1,
+        verbosity=verbosity,
     )
 
-    traces["prob"] = float(np.max(probs))  # float here is for JSON
-    thetas_probs_list = np.ravel(probs).astype(float)
-    thetas_probs_list = sorted(
-        enumerate(thetas_probs_list), key=lambda x: x[1], reverse=True
-    )
-    traces["first_thetas"] = thetas_probs_list[:5]
+    probs_flat = np.ravel(probs).astype(float)
+    first_thetas = [(i, probs_flat[i]) for i in probs_flat.argsort()[::-1][:5]]
+    highest_prob_state, highest_prob = first_thetas[0]
+    traces["first_thetas"] = first_thetas
+    traces["prob"] = float(highest_prob)  # float here is for JSON
 
     if verbosity >= 1:
-        for x in thetas_probs_list[:5]:
+        for m, p in first_thetas:
             print(
-                f"{x[0]:b}".zfill(n_phase_bits),
-                f"|{x[0]}>",
-                f"{x[0] / 2**n_phase_bits:<{n_phase_bits + 2}}",
-                f"{x[1]:<6.4f}",
-                flush=True,
+                f"{m:b}".zfill(n_phase_bits),
+                f"|{m}>",
+                f"{m / 2**n_phase_bits:<{n_phase_bits + 2}}",
+                f"{p:<6.4f}",
             )
 
-    max_prob_state_int = np.argmax(probs)
-    theta = max_prob_state_int / 2**n_phase_bits
-
+    theta = highest_prob_state / 2**n_phase_bits
     energy = E_max - 2 * np.pi * theta / evolution_time
     return traces, energy
 
@@ -136,13 +146,11 @@ def qpe_sample(
     hamiltonian,
     initial_circ,
     evolution_time,
-    dt,
+    n_trotter_steps,
     global_phase,
     *,
     trotter_order=1,
-    write_gates=False,
     rehearse=False,
-    run_simulation=True,
     optimize="auto-hq",
     verbosity=0,
 ):
@@ -157,18 +165,17 @@ def qpe_sample(
         Circuit preparing the trial state.
     evolution_time : float
         Total evolution time for the controlled-U operations.
-    dt : float or qpe_toolbox.EXACT
-        Trotter step size; if ``EXACT``, evolution is exact.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; if ``EXACT``,
+        evolution is exact.
     global_phase : float
         Global phase added to the controlled-U operations.
     trotter_order : int, default ``1``
         Order of Trotter decomposition for time evolution.
-    write_gates : bool, default ``False``
-        If True, saves the gates to a text file.
     rehearse : bool, default ``False``
-        If True, precomputes marginals without measurement.
-    run_simulation : bool, default ``True``
-        Whether to perform full tensor network simulation or just track gates.
+        If ``True``, the final ``compute_marginal`` is not run: it returns the
+        contraction rehearsal (tensor network, path, and cost estimates)
+        instead of the phase probabilities.
     optimize : str, default ``"auto-hq"``
         Optimization strategy for tensor network marginal computation.
     verbosity : int, default ``0``
@@ -177,79 +184,126 @@ def qpe_sample(
     Returns
     -------
     traces : dict
-        Dictionary containing bond dimensions, timing, and gate counts.
-    result : array or list
-        Either the probability tensor of phase qubits (if ``run_simulation`` is True) or a list of gate instructions.
+        Dictionary containing bond dimensions, full QPE circuit, timing
+        and gate counts.
+    probs : array or dict
+        Probability tensor of the phase qubits, or the contraction rehearsal
+        when ``rehearse=True``.
 
     Notes
     -----
-    - Phase estimation is performed using a Hadamard wall followed by controlled-U operations.
-    - IQFT is applied on the phase register to extract probabilities.
-    - When ``run_simulation=False``, the function produces a gate list instead of simulating the circuit.
+    - To obtain the gate list without simulating the circuit (resource
+      analysis), use ``qpe_gate_list``.
+    - The QPE quantum circuit can be recovered as ``traces["circuit"]``.
+    - Whether the circuit is contracted lazily or eagerly is set by the *class*
+      of ``initial_circ``: a :quimb-api:`Circuit` accumulates an uncontracted
+      tensor network that the final ``compute_marginal`` contracts exactly
+      (steered by ``optimize`` / ``rehearse``), while a :quimb-api:`CircuitMPS`
+      is simulated eagerly with SVD truncation. Either way the marginal over the
+      phase register is returned, unless ``rehearse`` is ``True``.
+    - With ``rehearse=True`` no contraction is performed: ``compute_marginal``
+      returns the contraction rehearsal instead of the probabilities. Combined
+      with a :quimb-api:`Circuit`, evaluation is then completely lazy.
     """
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
+    phase_reg = list(range(n_phase_bits))
     st = time.time()
 
-    phase_reg = list(range(n_phase_bits))
-
-    traces, circ = qpe_first_stage(
-        hamiltonian,
-        initial_circ,
-        evolution_time,
-        dt,
-        global_phase,
-        trotter_order=trotter_order,
-        run_simulation=run_simulation,
-        verbosity=verbosity,
+    unitaries = _evolution_powers(
+        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
-
-    for gate_id in iqft_swapped(phase_reg):
-        if run_simulation:
-            circ.apply_gate(*gate_id, gate_round=traces["gate_round"])
-        else:
-            circ.append(parse_to_gate(*gate_id, gate_round=traces["gate_round"]))
-        traces["gate_round"] += 1
-    traces["ctimes"].append(time.time() - st)
+    traces, circ = qpe_circuit(
+        initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
+    )
     traces["gates_count"] = count_gates(circ)
 
-    if write_gates:
-        if dt is EXACT:
+    traces["circuit"] = circ.copy()
+    if verbosity > 0:
+        print("Start computing marginal on the phase register...")
+        print(
+            f"Elapsed {traces['ctimes'][-1]:.2f}s, bond dim {traces['bond_dims'][-1]}"
+        )
+    res = circ.compute_marginal(where=phase_reg, rehearse=rehearse, optimize=optimize)
+    traces["ctimes"].append(time.time() - st)
+    if verbosity >= 1:
+        print(f"Done. Total time {traces['ctimes'][-1]:.2f}s")
+    return traces, res
+
+
+def qpe_gate_list(
+    hamiltonian,
+    n_phase_bits,
+    evolution_time,
+    n_trotter_steps,
+    global_phase,
+    *,
+    trotter_order=1,
+    savefile=None,
+):
+    """
+    Build the QPE gate list for a Hamiltonian evolution without simulating it.
+
+    This produces the same gate sequence as ``qpe_sample`` but skips the tensor
+    network simulation; use it for resource analysis and circuit serialization.
+
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    n_phase_bits : int
+        Number of phase estimation qubits.
+    evolution_time : float
+        Total evolution time for the controlled-U operations.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; if ``EXACT``,
+        evolution is exact.
+    global_phase : float
+        Global phase added to the controlled-U operations.
+    trotter_order : int, default ``1``
+        Order of Trotter decomposition for time evolution.
+    savefile : str or os.PathLike or None, default ``None``
+        If not ``None``, path to which the serialized gates are written as JSON.
+        Not supported for exact time evolution (``n_trotter_steps=EXACT``).
+
+    Returns
+    -------
+    gates_count : dict
+        Dictionary mapping gate labels to their counts.
+    gates_list : list of :quimb-api:`Gate`
+        Gate sequence of the full QPE circuit.
+
+    Raises
+    ------
+    ValueError
+        If ``savefile`` is given together with exact time evolution
+        (``n_trotter_steps=EXACT``).
+    """
+    unitaries = _evolution_powers(
+        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+    )
+    gates_list = list(qpe_gates(unitaries, global_phase=global_phase))
+    gates_count = count_gates(gates_list)
+
+    if savefile is not None:
+        if n_trotter_steps is EXACT:
             raise ValueError("Cannot write gates for exact time evolution")
-        n_steps = int(evolution_time / dt)
-        filename = f"QPE_ttr{trotter_order}{n_steps}steps_{hamiltonian.n_qubits}qubits_{n_phase_bits}phbits"
-        if run_simulation:
-            gate_dict = serialize_from_quimb_Circuit(circ)
-        else:
-            gate_dict = serialize_from_quimb_gates(initial_circ.N, circ)
-        with open(filename + ".json", "w") as outfile:
+        gate_dict = serialize_from_quimb_gates(
+            n_phase_bits + hamiltonian.n_qubits, gates_list
+        )
+        with open(savefile, "w") as outfile:
             json.dump(gate_dict, outfile)
 
-    if run_simulation:
-        traces["circuit"] = circ.copy()
-        if verbosity > 0:
-            print("Start computing marginal on the phase register...")
-            print(
-                f"Elapsed {traces['ctimes'][-1]:.2f}s, bond dim {traces['bond_dims'][-1]}"
-            )
-        res = circ.compute_marginal(
-            where=phase_reg, rehearse=rehearse, optimize=optimize
-        )
-        traces["ctimes"].append(time.time() - st)
-        if verbosity >= 1:
-            print(f"Done. Total time {traces['ctimes'][-1]:.2f}s")
-        return traces, res
-    return traces, circ
+    return gates_count, gates_list
 
 
 def qpe_first_stage(
     hamiltonian,
     initial_circ,
     evolution_time,
-    dt,
+    n_trotter_steps,
     global_phase,
     *,
     trotter_order=1,
-    run_simulation=True,
     verbosity=0,
 ):
     """
@@ -269,111 +323,170 @@ def qpe_first_stage(
         Initial state of the system.
     evolution_time : float
         Total evolution time.
-    dt : float or qpe_toolbox.EXACT
-        Time step for Trotter decomposition; ``EXACT`` for exact evolution.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; ``EXACT`` for exact
+        evolution.
     global_phase : float
         Global phase applied to controlled-U operations.
     trotter_order : int, default ``1``
         Trotter order for time evolution.
-    run_simulation : bool, default ``True``
-        Whether to perform full tensor network simulation or just track gates.
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress and bond dimension information.
 
     Returns
     -------
     traces : dict
-        Contains bond dimensions, computation times, and optionally other metadata.
-    circ_or_gates : :quimb-api:`Circuit` or list
-        Updated circuit if ``run_simulation`` is True; otherwise, list of gate instructions.
+        Contains bond dimensions, computation times, and other metadata.
+    circ : :quimb-api:`Circuit` or :quimb-api:`CircuitMPS`
+        Updated circuit with the first stage applied.
 
     Notes
     -----
     - The phase register size is inferred from ``initial_circ.N - hamiltonian.n_qubits``.
-    - Warnings are raised if the Trotter step size exceeds the required evolution time.
     """
-    # input validation
-    if not ((dt is EXACT) or (np.isscalar(dt) and np.isreal(dt) and dt > 0)):
-        raise ValueError(f"dt must be EXACT or real > 0, got {dt}")
-
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
-    st = time.time()
-    ctimes = []
-    circ = initial_circ.copy()
-    bd_list = [circ.psi.max_bond()]
-    gates_list = []
+    unitaries = _evolution_powers(
+        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+    )
+    return qpe_circuit(
+        initial_circ,
+        unitaries,
+        global_phase=global_phase,
+        with_iqft=False,
+        verbosity=verbosity,
+    )
 
-    data_reg = [n_phase_bits + i for i in range(hamiltonian.n_qubits)]
-    phase_reg = list(range(n_phase_bits))
 
-    c_round = 0
-    # Hadamard wall
-    for k in range(n_phase_bits):
-        if run_simulation:
-            circ.apply_gate("H", phase_reg[k], gate_round=c_round)
-        else:
-            gates_list.append(parse_to_gate("H", phase_reg[k], gate_round=c_round))
-    c_round += 1
-    bd_list.append(circ.psi.max_bond())
-    ctimes.append(time.time() - st)
+def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
+    """
+    Build the exact evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
 
-    if verbosity >= 1:
-        print(f"Start C-Us, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}")
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Total evolution time ``t``.
+    n_phase_bits : int
+        Number of phase estimation qubits.
 
-    # Controlled-U
-    for k in range(n_phase_bits):
-        # |q> = q_0 * 2**(m-1) + ... + q_{m-1-k} * 2**k + ... + q_{m-1}
+    Returns
+    -------
+    unitaries : list of list of :quimb-api:`Gate`
+        ``unitaries[k]`` holds the single dense gate implementing
+        :math:`U(t \\, 2^k) = e^{-i H t 2^k}` on data-register-local qubits,
+        without controls, as expected by ``qpe_circuit`` and ``qpe_gates``.
+    """
+    return [
+        [hamiltonian.get_U_exact(evolution_time * 2**k)] for k in range(n_phase_bits)
+    ]
 
-        if run_simulation:
-            circ.apply_gate(
-                "PHASE", global_phase * 2**k, phase_reg[k], gate_round=c_round
-            )
-        else:
-            gates_list.append(
-                parse_to_gate(
-                    "PHASE", global_phase * 2**k, phase_reg[k], gate_round=c_round
-                )
-            )
-        c_round += 1
 
-        if dt is EXACT:
-            U_gate = hamiltonian.get_U_exact(
-                evolution_time * 2**k, data_reg, controls=(phase_reg[k],)
-            )
-            circ.apply_gate(U_gate)
-        else:
-            if dt > evolution_time * 2**k:
-                warnings.warn(
-                    f"k={k}, dt={dt:.3f} > t*2**k={evolution_time * 2**k:.3f} -> dt set to t*2**k",
-                    stacklevel=2,
-                )
-            n_steps = int(evolution_time * 2**k / dt + 1 / 2)
-            trotter_slice = hamiltonian.get_trotter_step(dt, data_reg, trotter_order)
-            for _ in range(n_steps):
-                for gate_id in trotter_slice:
-                    if run_simulation:
-                        circ.apply_gate(
-                            *gate_id, controls=(phase_reg[k],), gate_round=c_round
-                        )
-                    else:
-                        gates_list.append(
-                            parse_to_gate(
-                                *gate_id, controls=(phase_reg[k],), gate_round=c_round
-                            )
-                        )
-                    c_round += 1
+def trotter_evolution_gates(
+    hamiltonian, evolution_time, n_trotter_steps, *, trotter_order=1
+):
+    """
+    Build the gate sequence of one Trotterized evolution :math:`U(t)`.
 
-        bd_list.append(circ.psi.max_bond())
-        ctimes.append(time.time() - st)
-        if verbosity >= 1:
-            print(
-                f"Done w/ {k}-th C-U, elapsed {ctimes[-1]:.2f} s, bond dim {bd_list[-1]}"
-            )
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Evolution time ``t``.
+    n_trotter_steps : int
+        Number of Trotter steps, a positive integer. The Trotter step size is
+        ``dt = evolution_time / n_trotter_steps``.
+    trotter_order : int, default ``1``
+        Order of the Trotter decomposition.
 
-    traces = {"ctimes": ctimes, "bond_dims": bd_list, "gate_round": c_round}
-    if run_simulation:
-        return traces, circ
-    return traces, gates_list
+    Returns
+    -------
+    generator of :quimb-api:`Gate`
+        Lazily yields the gates of the Trotterized :math:`U(t)` on
+        data-register-local qubits, without controls, as expected by
+        ``qpe_circuit``, ``qpe_gates`` and the Hadamard test. The generator
+        is one-shot: it can be consumed only once.
+    """
+    trotter_slice = _trotter_slice(
+        hamiltonian, evolution_time, n_trotter_steps, trotter_order
+    )
+    return _repeat_gates(trotter_slice, n_trotter_steps)
+
+
+def trotter_evolution_powers(
+    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, *, trotter_order=1
+):
+    """
+    Build the Trotterized evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
+
+    The Trotter step size ``dt = evolution_time / n_trotter_steps`` is kept
+    constant across powers: power ``k`` uses ``n_trotter_steps * 2**k`` steps.
+
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Total evolution time ``t``.
+    n_trotter_steps : int
+        Number of Trotter steps for the ``U(t)`` evolution, a positive integer.
+    n_phase_bits : int
+        Number of phase estimation qubits.
+    trotter_order : int, default ``1``
+        Order of the Trotter decomposition.
+
+    Returns
+    -------
+    unitaries : list of generator of :quimb-api:`Gate`
+        ``unitaries[k]`` lazily yields the gates of the Trotterized
+        :math:`U(t \\, 2^k)` on data-register-local qubits, without controls,
+        as expected by ``qpe_circuit`` and ``qpe_gates``. Each generator is
+        one-shot: it can be consumed only once.
+    """
+    # dt = evolution_time / n_trotter_steps is constant across powers, so the
+    # Trotter step is built once and reused for every power.
+    trotter_slice = _trotter_slice(
+        hamiltonian, evolution_time, n_trotter_steps, trotter_order
+    )
+    return [
+        _repeat_gates(trotter_slice, n_trotter_steps * 2**k)
+        for k in range(n_phase_bits)
+    ]
+
+
+def _trotter_slice(hamiltonian, evolution_time, n_trotter_steps, trotter_order):
+    """Build one Trotter step's gates for ``dt = evolution_time / n_trotter_steps``."""
+    if not (isinstance(n_trotter_steps, (int, np.integer)) and n_trotter_steps > 0):
+        raise ValueError(
+            f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
+        )
+    dt = evolution_time / n_trotter_steps
+    return [
+        qtn.circuit.parse_to_gate(*gate_id)
+        for gate_id in hamiltonian.get_trotter_step(dt, trotter_order)
+    ]
+
+
+def _repeat_gates(gates, n_trotter_steps):
+    """Lazily yield ``n_trotter_steps`` repetitions of a parsed gate sequence."""
+    for _ in range(n_trotter_steps):
+        yield from gates
+
+
+def _evolution_powers(
+    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+):
+    """Dispatch between exact and Trotterized evolution unitaries."""
+    if n_trotter_steps is EXACT:
+        return exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits)
+    return trotter_evolution_powers(
+        hamiltonian,
+        evolution_time,
+        n_trotter_steps,
+        n_phase_bits,
+        trotter_order=trotter_order,
+    )
 
 
 def set_search_window(hamiltonian, E_target, size_interval):

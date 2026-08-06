@@ -57,7 +57,6 @@ plt.rcParams.update({"font.size": 12})
 # %%
 n_qubits = 4
 h_spin = heisenberg_hamiltonian(n_qubits)
-qubit_reg = list(range(n_qubits))
 
 # %% [markdown]
 # ### First-order Trotter-Suzuki formula
@@ -86,7 +85,7 @@ qubit_reg = list(range(n_qubits))
 # %%
 # First-order Trotter
 dt = 1
-trotter_routine = h_spin.get_trotter_step(dt, qubit_reg, trotter_order=1)
+trotter_routine = h_spin.get_trotter_step(dt, trotter_order=1)
 
 circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
@@ -95,7 +94,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 
 # %%
 # Second-order Trotter
-trotter_routine = h_spin.get_trotter_step(dt, qubit_reg, trotter_order=2)
+trotter_routine = h_spin.get_trotter_step(dt, trotter_order=2)
 
 circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
@@ -129,7 +128,7 @@ def errors_trotter_slice(t_list, ns_list, trotter_order, ntype="fro"):
             st = time.time()
             circ = qtn.Circuit(n_qubits)
             dt = t / n_steps
-            trotter_slice = h_spin.get_trotter_step(dt, qubit_reg, trotter_order)
+            trotter_slice = h_spin.get_trotter_step(dt, trotter_order)
             for _ in range(n_steps):
                 circ.apply_gates(trotter_slice)
             U_trotter = circ.get_uni().to_dense()
@@ -340,7 +339,6 @@ fig.suptitle(f"Number of CNOT gates to get below $\\epsilon = {epsilon}$")
 def fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order):
     res = {"t": t_list, "n_s": ns_list, "errors_lists": [], "durations_lists": []}
 
-    reg = list(range(n_qubits))
     h_spin = heisenberg_hamiltonian(n_qubits)
     hamilt_matrix = h_spin.to_dense()
     _eigvals, eigvecs = np.linalg.eigh(hamilt_matrix)
@@ -358,7 +356,7 @@ def fidelities_trotter_slice(n_qubits, t_list, ns_list, trotter_order):
             st = time.time()
             circ = qtn.Circuit(n_qubits, psi0=psi0_mps)
             dt = t / n_steps
-            trotter_slice = h_spin.get_trotter_step(dt, reg, trotter_order)
+            trotter_slice = h_spin.get_trotter_step(dt, trotter_order)
             for _ in range(n_steps):
                 circ.apply_gates(trotter_slice)
 
