@@ -22,6 +22,9 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 ### Removed
 
 - `rpe_distance` (renamed to `angular_distance`).
+- `hyperoptimization` example and all QAOA-related code: `examples/hyperoptimization.py`,
+  `src/qpe_toolbox/circuit/qaoa.py`, `tests/test_qaoa.py`, and the `optuna` and
+  `cmaes` dependencies.
 
 ## [1.1.0] - 2026-04-02
 

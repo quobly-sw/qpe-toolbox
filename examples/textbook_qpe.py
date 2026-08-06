@@ -565,7 +565,7 @@ print("number of phase bits for 1e-3 accuracy =", int(np.log2(10**3 * size_inter
 # %% [markdown]
 # Let us see how the error decreases when increasing the number of phase qubits.
 #
-# We measure the runtime of the simulation, choosing a `greedy` hyperoptimizer from $\texttt{quimb}$, see our [Hyperoptimization](./hyperoptimization.ipynb) notebook for details.
+# We measure the runtime of the simulation, choosing a `greedy` hyperoptimizer from $\texttt{quimb}$.
 
 # %%
 optimize = "greedy"
