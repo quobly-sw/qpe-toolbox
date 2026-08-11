@@ -406,7 +406,7 @@ def generate_rand_circuit(
     *,
     start_ent=False,
     param_scaling=1.0,
-    parametrize=True,
+    parametrize=False,
     rng=None,
 ):
     """
