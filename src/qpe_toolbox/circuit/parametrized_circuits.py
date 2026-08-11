@@ -36,7 +36,6 @@ _gate_parameter_numbers = {
     "FSIM": 2,
     "FSIMG": 5,
     "SU4": 15,
-    "iSWAP": 0,
 }
 
 
