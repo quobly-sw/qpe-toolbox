@@ -210,4 +210,4 @@ def tn_fit(
     # Copy optimized data back to the original tensor network.
     for t1, t2 in zip(tn, tn_fit, strict=True):
         t2.transpose_like_(t1)
-       t1.modify(data=t2.data, left_inds=t1.left_inds)
+        t1.modify(data=t2.data, left_inds=t1.left_inds)

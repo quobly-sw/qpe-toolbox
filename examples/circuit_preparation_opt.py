@@ -228,7 +228,7 @@ print("*** Local optimization")
 depth = 6
 circ = qu.tensor.Circuit(n_qubits)
 circ = ansatz_circuit_su4(
-    n_qubits=n_qubits, depth=depth, param_scaling=0.01, parametrize=False
+    n_qubits=n_qubits, depth=depth, param_scaling=1.0, parametrize=False
 )
 
 tn = circ.psi
@@ -257,7 +257,7 @@ depths_local = []
 errors_local = []
 
 circ = ansatz_circuit_su4(
-    n_qubits=n_qubits, depth=1, param_scaling=0.01, parametrize=False
+    n_qubits=n_qubits, depth=1, param_scaling=1.0, parametrize=False
 )
 
 tn = circ.psi

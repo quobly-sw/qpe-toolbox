@@ -77,7 +77,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %%
 ## hamiltonian
-n_qubits = 8
+n_qubits = 4
 list_paulis = ["I", "X", "Y", "Z"]
 gx, gzz = -1.1, -1.0
 terms = []
@@ -116,7 +116,7 @@ circ = ansatz_circuit_su4(
     n_qubits=n_qubits, depth=depth, param_scaling=0.1, parametrize=False, psi0=psi0
 )
 circ_P = circ.psi
-circ_G = circ.gates
+circ_G = list(circ.gates)
 
 # Build the forward MPS for each layer (from bottom to top).
 mpsB = []
@@ -177,7 +177,7 @@ for sweep in range(n_sweeps):
         tn_fit(
             tn,
             mpsB[-1].H,  # note: mpsB stores the conjugate, so we use its adjoint.
-            tags="SU4",
+            tags=f"ROUND_{depth - 1 - ii}",
             steps=10,  # inner ALS sweeps per layer update
             tol=1e-12,
             contract_optimize="auto-hq",
@@ -214,7 +214,7 @@ for sweep in range(n_sweeps):
         tn_fit(
             tn,
             mpsB.pop().H,  # use the top part; pop removes the last element (which corresponds to the layer just below)
-            tags="SU4",
+            tags=f"ROUND_{ii}",
             steps=10,
             tol=1e-12,
             contract_optimize="auto-hq",
