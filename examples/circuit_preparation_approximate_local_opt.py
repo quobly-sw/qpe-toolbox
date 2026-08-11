@@ -162,7 +162,8 @@ print("------------------------------------------------")
 ene_old = float("nan")
 ene = float("nan")
 
-for sweep in range(1000):
+n_sweeps = 1000
+for sweep in range(n_sweeps):
     ## Sweep down: optimize layers from top to bottom.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK (layers below) + gates of this layer.
