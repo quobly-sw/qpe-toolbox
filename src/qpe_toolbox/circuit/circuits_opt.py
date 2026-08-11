@@ -152,7 +152,7 @@ def _tn_fit_core(
 def tn_fit(
     tn,
     tn_target,
-    tags=None,
+    tags="SU4",
     steps=100,
     tol=1e-8,
     contract_optimize="auto-hq",
