@@ -187,13 +187,18 @@ for sweep in range(n_sweeps):
         # Copy the optimized tensor data back into the master circuit tensors.
         g0 = tn.select_tensors("ROUND_" + str(depth - 1 - ii), "any")
         g1 = circ_P.select_tensors("ROUND_" + str(depth - 1 - ii), "any")
-        g2 = [gate for gate in circ_G if gate.round == depth - 1 - ii]
-        for t0, t1, t2 in zip(g0, g1, g2, strict=True):
+        gate_indices = [
+            i for i, gate in enumerate(circ_G) if gate.round == depth - 1 - ii
+        ]
+        for t0, t1, ig in zip(g0, g1, gate_indices, strict=True):
             t1.modify(data=t0.data)
-            t2._array = t0.data  # noqa: SLF001
+            old = circ_G[ig]
+            circ_G[ig] = qtn.circuit.Gate.from_raw(
+                t0.data, qubits=old.qubits, controls=old.controls, round=old.round
+            )
 
         # Update mpsB: apply the conjugated gates (as MPOs) to move down one layer.
-        mpos = [gate.build_mpo(L=n_qubits) for gate in g2]
+        mpos = [circ_G[ig].build_mpo(L=n_qubits) for ig in gate_indices]
         mpos.reverse()  # reverse order because we are conjugating and moving down
 
         tmp = mpsB[-1]
@@ -224,13 +229,16 @@ for sweep in range(n_sweeps):
         # Copy optimized data back to master circuit.
         g0 = tn.select_tensors("ROUND_" + str(ii), "any")
         g1 = circ_P.select_tensors("ROUND_" + str(ii), "any")
-        g2 = [gate for gate in circ_G if gate.round == ii]
-        for t0, t1, t2 in zip(g0, g1, g2, strict=True):
+        gate_indices = [i for i, gate in enumerate(circ_G) if gate.round == ii]
+        for t0, t1, ig in zip(g0, g1, gate_indices, strict=True):
             t1.modify(data=t0.data)
-            t2._array = t0.data  # noqa: SLF001
+            old = circ_G[ig]
+            circ_G[ig] = qtn.circuit.Gate.from_raw(
+                t0.data, qubits=old.qubits, controls=old.controls, round=old.round
+            )
 
         # Update mpsK: apply the (non-conjugated) gates to move the forward boundary up.
-        mpos = [gate.build_mpo(L=n_qubits) for gate in g2]
+        mpos = [circ_G[ig].build_mpo(L=n_qubits) for ig in gate_indices]
 
         tmp = mpsK[-1]
         for jj in mpos:
