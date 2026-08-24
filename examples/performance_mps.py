@@ -212,7 +212,9 @@ axes[0, 1].set_title("random circuits")
 axes[0, 1].legend(loc="lower right", fontsize=8)
 axes[2, 0].set_xlabel("number of qubits")
 axes[2, 1].set_xlabel("number of qubits")
-fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsize=16)
+fig.text(
+    0.04, 0.5, "wall-clock time (s)", va="center", rotation="vertical", fontsize=16
+)
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
@@ -303,7 +305,9 @@ axes[0].set_ylabel("contraction")
 axes[1].set_title("random circuits")
 axes[2].set_ylabel("sampling")
 axes[0].legend(loc="lower right", fontsize=8)
-fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsize=16)
+fig.text(
+    0.04, 0.5, "wall-clock time (s)", va="center", rotation="vertical", fontsize=16
+)
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 
@@ -353,7 +357,7 @@ for shots in num_samples:
 fig, ax = plt.subplots(1, 1, figsize=(6, 6 / 1.61))
 for key, instance in dict_total_qiskit.items():
     plot_errorbar(ax, key, instance["mean"], instance["std"], "tab:cyan")
-ax.set_ylabel("contr. + sampl. time", fontsize=12)
+ax.set_ylabel("contr. + sampl. time (s)", fontsize=12)
 ax.set_xlabel("number of shots", fontsize=12)
 ax.set_xscale("log")
 ax.set_yscale("log")
@@ -391,7 +395,9 @@ plot_errorbar(axes[0, 0], dum, dum, dum, "tab:cyan", label="qiskit-aer")
 axes[0, 0].legend(loc="lower right", fontsize=12)
 axes[0, 0].set_title("brickwall circuits", fontsize=12)
 axes[0, 1].set_title("random circuits", fontsize=12)
-fig.text(0.04, 0.5, "wall-clock time", va="center", rotation="vertical", fontsize=12)
+fig.text(
+    0.04, 0.5, "wall-clock time (s)", va="center", rotation="vertical", fontsize=12
+)
 fig.tight_layout(rect=[0.05, 0.05, 1, 0.95])
 
 # %% [markdown]
