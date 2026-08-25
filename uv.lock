@@ -372,6 +372,18 @@ wheels = [
 ]
 
 [[package]]
+name = "cmaes"
+version = "0.13.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/94/ce/dcf35c4db556fcd25547f62b3b3fbf9e69f44054ff85434310702e29ac52/cmaes-0.13.1.tar.gz", hash = "sha256:5f56a9e8dd769ffd23ac2ad651979bdb6ca8846de60d97d03fe5ad8456c56c79", size = 61781, upload-time = "2026-08-21T13:42:59.347Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ff/18/1004ca44ba64b8b5ee24968246e056ff2110916250cc1a1ac4239ea407a8/cmaes-0.13.1-py3-none-any.whl", hash = "sha256:659881b1d574adf0b378448821e3da24a4f7b7a1989640cd902000c567897db5", size = 73401, upload-time = "2026-08-21T13:42:57.941Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -2734,6 +2746,7 @@ name = "qpe-toolbox"
 source = { editable = "." }
 dependencies = [
     { name = "autoray" },
+    { name = "cmaes" },
     { name = "cotengra" },
     { name = "jax" },
     { name = "matplotlib" },
@@ -2806,6 +2819,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "autoray", specifier = ">=0.8.4" },
+    { name = "cmaes", specifier = ">=0.13.1" },
     { name = "cotengra", specifier = ">=0.7.5" },
     { name = "cotengrust", marker = "extra == 'recommended'", specifier = ">=0.2.0" },
     { name = "jax", specifier = ">=0.8.1" },

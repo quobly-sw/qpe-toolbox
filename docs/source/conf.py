@@ -33,7 +33,6 @@ templates_path = ["_templates"]
 # -- Link to other documentation -----------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "networkx": ("https://networkx.org/documentation/stable/", None),
 }
 
 # -- Napoleon configuration ---------------------------------------------------

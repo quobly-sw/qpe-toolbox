@@ -47,7 +47,8 @@ dependencies = [
   "autoray>=0.8.4",
   "cotengra>=0.7.5",
   "matplotlib>=3.10.8",
-  "networkx>=3.6.1",
+  "networkx>=3.6.1",  # called by quimb drawing
+  "cmaes>=0.13.1",  # cotengra backend
 ]
 
 [project.optional-dependencies]
