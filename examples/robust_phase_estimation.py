@@ -49,24 +49,22 @@ plt.rcParams.update({"font.size": 12})
 # The idea is to build a random variable whose expectation value gives the real (resp. imaginary) part of $\bra{\psi} U \ket{\psi}$.
 # Consider the following circuit:
 #
-# <img src="./figures/gunther2025_fig3.png" align="center">
-#
-# *Taken from Günther et al., PRX Quantum **7**, 020332*.
+# <img src="./figures/hadamard_test_circuit.svg" align="center" width="60%">
 #
 # The Hadamard test uses a single auxiliary qubit initially in state $\ket{0}$ and a physical register with $n_{\rm qubits}$ qubits initialized in state $\ket{\psi}$.
-# We start by applying the Hadamard gate $H$ to the auxiliary qubit to put it in a superposition state. Then we apply a controlled-$U$ gate to the physical register conditioned on the auxiliary qubit, followed by a rotation (PHASE) gate  $R(\theta)$ and finally another Hadamard gate on the control qubit.
+# We start by applying the Hadamard gate $H$ to the auxiliary qubit to put it in a superposition state. Then we apply a controlled-$U$ gate to the physical register conditioned on the auxiliary qubit, followed by a rotation (PHASE) gate  $R(\beta)$ and finally another Hadamard gate on the control qubit.
 #
-# At the end of the circuit we measure the control qubit and define a random variable $\textbf{Z}_\theta$: if the result of the measurement is $\ket{0}$, we output $1$, if the result is $\ket{1}$, we output $-1$. The expectation value of $\textbf{Z}_\theta$ satisfies:
+# At the end of the circuit we measure the control qubit and define a random variable $\textbf{Z}_\beta$: if the result of the measurement is $\ket{0}$, we output $1$, if the result is $\ket{1}$, we output $-1$. The expectation value of $\textbf{Z}_\beta$ satisfies:
 #
-# $$ \mathbb{E}\textbf{Z}_\theta = P(0) - P(1) = \mathrm{Re} \left(e^{i\theta} \bra{\psi}U\ket{\psi}\right). $$
+# $$ \mathbb{E}\textbf{Z}_\beta = P(0) - P(1) = \mathrm{Re} \left(e^{i\beta} \bra{\psi}U\ket{\psi}\right). $$
 #
-# We use two special choices of $\theta$:
+# We use two special choices of $\beta$:
 #
-# $$ \theta = 0 \qquad \implies \qquad \mathbb{E}\textbf{Z}_\theta = \mathrm{Re} \left(\bra{\psi}U\ket{\psi}\right). $$
-# $$ \theta = -\frac{\pi}{2} \qquad \implies \qquad \mathbb{E}\textbf{Z}_\theta = \mathrm{Im} \left(\bra{\psi}U\ket{\psi}\right). $$
+# $$ \beta = 0 \qquad \implies \qquad \mathbb{E}\textbf{Z}_\beta = \mathrm{Re} \left(\bra{\psi}U\ket{\psi}\right). $$
+# $$ \beta = -\frac{\pi}{2} \qquad \implies \qquad \mathbb{E}\textbf{Z}_\beta = \mathrm{Im} \left(\bra{\psi}U\ket{\psi}\right). $$
 #
 #
-# Let $\textbf{X}$ and $\textbf{Y}$ be the random variables corresponding to $\theta=0, -\pi/2$ respectively.
+# Let $\textbf{X}$ and $\textbf{Y}$ be the random variables corresponding to $\beta=0, -\pi/2$ respectively.
 # Define $\textbf{Z} = \textbf{X} + i \textbf{Y}.$ Then we get
 #
 # $$ \mathbb{E}\textbf{Z} = \bra{\psi}U\ket{\psi} $$
