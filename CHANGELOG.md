@@ -23,8 +23,10 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 - `rpe_distance` (renamed to `angular_distance`).
 - `hyperoptimization` example and all QAOA-related code: `examples/hyperoptimization.py`,
-  `src/qpe_toolbox/circuit/qaoa.py`, `tests/test_qaoa.py`, and the `optuna` and
-  `cmaes` dependencies.
+  `src/qpe_toolbox/circuit/qaoa.py` and `tests/test_qaoa.py`. This removes
+  `brute_force_maxcut`, `compute_qaoa_contraction_costs` and
+  `study_optimization_time_costs` from `qpe_toolbox.circuit`.
+- `optuna` dependency.
 
 ## [1.1.0] - 2026-04-02
 
