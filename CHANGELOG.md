@@ -18,6 +18,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - Renamed `rpe_distance` to `angular_distance`; it is now vectorized.
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now
   returning a single angle.
+- `optuna` dependency moved from core dependency to recommended.
 
 ### Removed
 
@@ -26,7 +27,6 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
   `src/qpe_toolbox/circuit/qaoa.py` and `tests/test_qaoa.py`. This removes
   `brute_force_maxcut`, `compute_qaoa_contraction_costs` and
   `study_optimization_time_costs` from `qpe_toolbox.circuit`.
-- `optuna` dependency.
 
 ## [1.1.0] - 2026-04-02
 
