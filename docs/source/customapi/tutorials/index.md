@@ -22,8 +22,6 @@ robust_phase_estimation.ipynb
 
 performance_mps.ipynb
 
-hyperoptimization.ipynb
-
 variational_circuit_preparation.ipynb
 
 mpo_to_circuit.ipynb
@@ -48,6 +46,6 @@ mpo_to_circuit.ipynb
 
 * {doc}`performance_mps <performance_mps>` compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
 
-* {doc}`hyperoptimization <hyperoptimization>` presents advanced contraction schemes provided by `quimb`.
-
 * {doc}`variational_circuit_preparation <variational_circuit_preparation>` finds an initial guess state with variational circuit optimization.
+
+* {doc}`mpo_to_circuit <mpo_to_circuit>` transpiles an MPO unitary operator into a nearest-neighbor brickwall circuit.

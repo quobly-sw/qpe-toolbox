@@ -123,7 +123,7 @@ print(
 # %% [markdown]
 # ## Influence of Phase Qubits and Trotter Steps
 #
-# We run several QPE circuits, varying the number of phase qubits and Trotter steps, and measure the energy. We also record the gate count and simulation time, and compare two modes of circuit simulation available with $\texttt{quimb}$: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` contraction-path optimizer, see our notebook on [Hyperoptimization](./hyperoptimization.ipynb).
+# We run several QPE circuits, varying the number of phase qubits and Trotter steps, and measure the energy. We also record the gate count and simulation time, and compare two modes of circuit simulation available with $\texttt{quimb}$: the `Circuit` mode and the `CircuitMPS` mode. For the `Circuit` mode we choose a `greedy` contraction-path optimizer.
 #
 # Let us first run the circuits (this may take a couple of minutes):
 
@@ -298,11 +298,11 @@ ax_n.set_ylabel("number of entangling gates")
 ax_t.set_xlabel("number of phase qubits")
 ax_t.set_ylabel("computation time (seconds)");
 # %% [markdown]
-# * The `CircuitMPS` mode is much more efficient than the `Circuit` mode (actual timing depends on the contraction order found by the optimizer, see [our notebook on Hyperoptimization](./hyperoptimization.ipynb)). The computation time is directly correlated with the number of entangling gates, which grows exponentially with the number of phase qubits.
+# * The `CircuitMPS` mode is much more efficient than the `Circuit` mode (actual timing depends on the contraction order found by the optimizer). The computation time is directly correlated with the number of entangling gates, which grows exponentially with the number of phase qubits.
 #
 # * We quickly reach computation times of tens of seconds due to the exponentially growing circuit depth. Recall that for such small systems, the Hamiltonian can be exactly diagonalized in a fraction of a second on any laptop. For QPE to gain an advantage over exact diagonalization or DMRG, larger systems, with more than 30 qubits and strong correlations, must be considered.
 #
-# * Note that a comparison between $\texttt{quimb}$'s `CircuitMPS` and  $\texttt{qiskit}$ MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example. A detailed example of how $\texttt{quimb}$ performs tensor network contraction, in particular hyperoptimization, can be found in the [Hyperoptimization](./hyperoptimization.ipynb) notebook.
+# * Note that a comparison between $\texttt{quimb}$'s `CircuitMPS` and  $\texttt{qiskit}$ MPS can be found in the  [Performance MPS](./performance_mps.ipynb) example.
 
 # %% [markdown]
 # ## Resource Analysis
