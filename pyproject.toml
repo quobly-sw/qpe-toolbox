@@ -48,13 +48,14 @@ dependencies = [
   "cotengra>=0.7.5",
   "matplotlib>=3.10.8",
   "networkx>=3.6.1",  # called by quimb drawing
-  "cmaes>=0.13.1",  # cotengra backend
+  "cmaes>=0.12.0",  # cotengra backend
 ]
 
 [project.optional-dependencies]
 recommended = [
     "cotengrust>=0.2.0",
     "kahypar>=1.3.7",
+    "optuna>=4.6.0",
 ]
 
   [project.urls]
