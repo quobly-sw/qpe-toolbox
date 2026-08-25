@@ -33,7 +33,6 @@ templates_path = ["_templates"]
 # -- Link to other documentation -----------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
-    "networkx": ("https://networkx.org/documentation/stable/", None),
 }
 
 # -- Napoleon configuration ---------------------------------------------------
@@ -105,10 +104,6 @@ extlinks = {
     "qiskit-api": (
         "https://docs.quantum.ibm.com/api/qiskit/qiskit.circuit.%s",
         "qiskit.%s",
-    ),
-    "optuna-api": (
-        "https://optuna.readthedocs.io/en/stable/reference/generated/optuna.%s.html",
-        "optuna.%s",
     ),
 }
 

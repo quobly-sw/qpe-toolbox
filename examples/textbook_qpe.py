@@ -565,7 +565,7 @@ print("number of phase bits for 1e-3 accuracy =", int(np.log2(10**3 * size_inter
 # %% [markdown]
 # Let us see how the error decreases when increasing the number of phase qubits.
 #
-# We measure the runtime of the simulation, choosing a `greedy` hyperoptimizer from $\texttt{quimb}$, see our [Hyperoptimization](./hyperoptimization.ipynb) notebook for details.
+# We measure the runtime of the simulation, choosing a `greedy` optimizer from $\texttt{quimb}$.
 
 # %%
 optimize = "greedy"
@@ -709,12 +709,12 @@ initial_circ = make_circ(n_phase_bits, psi0_mps)
 
 interval_sizes = np.arange(0.2 * abs(E0), 4 * abs(E0), 0.9 * abs(E0))
 interval_energies = []
-num_points = 11
+n_energy_targets = 11
 for Δ in tqdm.tqdm(interval_sizes):
     assert Δ > 0
-    energy_targets = np.linspace(E0 - 0.5 * Δ, E0 + 0.4 * Δ, num_points)
-    energies_Δ = np.empty((num_points,))
-    for i in tqdm.tqdm(range(num_points), leave=False):
+    energy_targets = E0 + Δ * np.linspace(-0.5, 0.4, n_energy_targets)
+    energies_Δ = np.empty_like(energy_targets)
+    for i in tqdm.tqdm(range(n_energy_targets), leave=False):
         _, energies_Δ[i] = qpe.qpe_energy(
             h_spin, initial_circ, EXACT, energy_targets[i], Δ
         )
@@ -723,7 +723,7 @@ for Δ in tqdm.tqdm(interval_sizes):
 # %%
 fig, ax = plt.subplots()
 for Δ, energies_Δ in zip(interval_sizes, interval_energies, strict=True):
-    energy_targets = np.linspace(E0 - 0.5 * Δ, E0 + 0.4 * Δ, 11)
+    energy_targets = E0 + Δ * np.linspace(-0.5, 0.4, n_energy_targets)
     label = rf"$\Delta={Δ / abs(E0):.2f}E_0$"
     ax.plot(energy_targets - E0, energies_Δ - E0, "-o", label=label)
 
