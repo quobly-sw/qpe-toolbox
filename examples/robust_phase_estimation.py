@@ -75,7 +75,7 @@ plt.rcParams.update({"font.size": 12})
 alpha = np.pi / 6
 print(f"cos(alpha) = {np.cos(alpha):.4g} and sin(alpha) = {np.sin(alpha):.4g}")
 
-# Hadamard test with theta=0
+# Hadamard test with β=0
 circ = qtn.Circuit(2)
 circ.apply_gate("X", 1)
 circ.apply_gate("H", 0)
@@ -85,7 +85,7 @@ circ.apply_gate("H", 0)
 probs = circ.compute_marginal(where=[0])
 print(f"Re(<psi|U|psi>) = {probs[0] - probs[1]:.4g}")
 
-# Hadamard test with theta=-pi/2
+# Hadamard test with β=-pi/2
 circ = qtn.Circuit(2)
 circ.apply_gate("X", 1)
 circ.apply_gate("H", 0)
@@ -109,14 +109,14 @@ E0, psi0 = do_dmrg(H)
 #
 # $$ \mathbb{E}\textbf{Z} = e^{-i E_0 t}. $$
 #
-# The function `run_hadamard_test` runs the Hadamard test and returns $\mathrm{Re}~e^{i\theta} \bra{\psi}U\ket{\psi}$.
+# The function `run_hadamard_test` runs the Hadamard test and returns $\mathrm{Re}~e^{i\beta} \bra{\psi}U\ket{\psi}$.
 #
 # Below we estimate $E_0$ by running the Hadamard test for time evolution over a given time $t$.
 #
 # We first consider exact time evolution.
 
 # %%
-t0 = 1.0  # exact value does not matter here
+t0 = 1.0  # equivalent to Hamiltonian scaling factor
 data_reg = list(range(1, n_qubits + 1))
 U = H.get_U_exact(t0, data_reg, controls=(0,))
 
@@ -213,7 +213,7 @@ ax_t.set_ylabel("duration (seconds)");
 #  times $t_1, . . . , t_M$. This can be done such that the maximal time evolution $t_{\rm max} = \mathrm{max}\{t_1, . . . , t_M\}$ and the total time over all circuit runs $t_{\rm tot} = t_1 + t_2 + · · · + t_M$  both scale as $\varepsilon^{-1}$. This Heisenberg scaling is known to be optimal."
 #
 # ### Description of the Algorithm
-# We introduce a base evolution time $t_0$ and target the exact phase $\theta_{\rm ex} = E_0 t_0$. To get precision $\varepsilon$ on $\theta_{\rm ex}$, the idea of the robust phase estimation algorithm is to consider $M$ different circuits where $M = \lceil \log_2 \varepsilon^{-1} \rceil$ and estimate
+# We introduce a base evolution time $t_0$ and target the exact phase $\theta_{\rm ex} = E_0 t_0$. This evolution time can be seen as a scaling factor for the Hamiltonian. To get precision $\varepsilon$ on $\theta_{\rm ex}$, the idea of the robust phase estimation algorithm is to consider $M$ different circuits where $M = \lceil \log_2 \varepsilon^{-1} \rceil$ and estimate
 #
 # $$ g(2^m t_0 ) = \mathbb{E}[\mathbf{Z}(2^m t_0)] = \exp(-i\,2^{m} E_0  t_0) $$
 #
@@ -249,7 +249,7 @@ ax_t.set_ylabel("duration (seconds)");
 # if $d(\phi_m,2^{m}\theta_{\rm ex})<\frac{\pi}3$ for $m=0,1,...,M -1$ then $\theta_m$ is such that $d(\theta_m,\theta_{\rm ex}) \leq 2^{-m}\frac{\pi}3$
 
 # %% [markdown]
-# To build an intuition, let us plot the distance $d(\theta, \phi)$ as a function of $\theta$ for a given $\phi$ ($ \phi = 3\pi/2$ in the example) and vice-versa (the distance is symmetric by definition).
+# To build an intuition, let us plot the distance $d(\theta, \phi)$ as a function of $\theta$ for a given $\phi$ (e.g. $ \phi = 3\pi/2$) and vice-versa (the distance is symmetric by definition).
 
 # %%
 thetas = np.linspace(-2 * np.pi, 2 * np.pi, 600)
