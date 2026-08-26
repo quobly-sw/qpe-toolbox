@@ -364,7 +364,7 @@ errored_theta = qpe.robust_phase_estimation(
 
 # %% [markdown]
 # \
-# Let us do a statistical study to check how often this happens. Here we generate `n_samples=600` independent runs of a full robust phase estimation run, each of them with `n_shots=1`. We emphasizes that this is **not** the same as running a single robust phase estimation with `n_shots=600`.
+# Let us do a statistical study to check how often this happens. Here we generate `n_samples=600` independent runs of the full robust phase estimation algorithm, each of them with `n_shots=1`. We emphasizes that this is **not** the same as running a single robust phase estimation with `n_shots=600`. The motivation here is pedagogical: in a realistic experiment, one should always use all available circuit realizations to evaluate $\theta_m$, or in other words keep `n_samples=1`.
 
 # %%
 # %%time
@@ -438,7 +438,7 @@ ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"$n_{{\\rm shots}} = 1$, {n_samples = }")
 
 # %% [markdown]
-# We see that it is at each step, there is a small but non zero possibility to make an error from which it is unlikely to recover. In such a case, `theta_m` converges to a value that is not $\theta_{\rm ex}$. Since there is a fixed gap between different possibly reached values, taking the average over many realization with fixed `n_shots` does not converge to the exact value $\theta_{\rm ex}$. However, improving the sampling by adding more shots does improve the accuracy, as we can see when considering a higher number of shots:
+# We see that it is at each step, there is a small but non zero possibility to make an error from which it is unlikely to recover. In such a case, `theta_m` converges to a value that is not $\theta_{\rm ex}$. Since there is a fixed gap between different possibly reached values, taking the average over `n_samples` with fixed `n_shots` does not converge to the exact value $\theta_{\rm ex}$. However, improving the sampling by adding more shots does improve the accuracy, as we can see when considering a higher number of shots:
 
 # %%
 rng = np.random.default_rng(42)
@@ -515,9 +515,9 @@ ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"{n_samples = }, most likely outcome");
 
 # %% [markdown]
-# Here, we see that adding more shots increases the probability of success (=probability of converging to $theta_{\rm ex}$ as `m` grows) and reduces the chance to have an error at a given stage `m`, but also increases the accuracy of the most likely case. However, the simulation cost grows linearly with `n_shots`, as on a quantum computer each shot corresponds to a different run of the quantum algorithm.
+# Here, we see that adding more shots increases the probability of success (=probability of converging to $\theta_{\rm ex}$ as `m` grows) and reduces the chance to have an error at a given stage `m`, but also increases the accuracy of the most likely case. However, the simulation cost grows linearly with `n_shots`, as on a quantum computer each shot corresponds to a different run of the quantum algorithm.
 #
-# To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. It is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
+# To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. Let us mention that it is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
 
 # %% [markdown]
 # ### RPE with Trotter Approximation

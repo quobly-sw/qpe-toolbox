@@ -63,9 +63,10 @@ def robust_phase_estimation(
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
     t0 : float, default ``1.0``
-        Base evolution time; the phase estimated is :math:`\varphi = E_0 t_0`.
-        Choose :math:`t_0` so that :math:`|E_0 t_0| < \pi`, otherwise the
-        :math:`m = 0` phase is ambiguous.
+        Base evolution time, equivalent to a rescaling of the Hamiltonian.
+        The phase estimated is :math:`\varphi = E_0 t_0`. Choose :math:`t_0`
+        so that :math:`|E_0 t_0| < \pi`, otherwise the :math:`m = 0` phase
+        is ambiguous.
     trotter_order : int, default ``1``
         Order of the Trotter-Suzuki decomposition. Ignored when
         `n_steps is EXACT`.
