@@ -553,9 +553,11 @@ plt.semilogy(
 plt.semilogy(
     qpe.angular_distance(thetas_ttr2, theta_exact),
     "-s",
-    label="$n_{\\rm steps} = 1$",
+    label="$n_{\\rm steps} = 2$",
 )
-plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
+plt.semilogy(
+    np.pi / 3 / 2 ** np.arange(thetas_ttr1.size), "k--", label="$2^{-m}~\\pi/3$"
+)
 plt.legend()
 plt.title(r"$n_{\rm shots}=4$")
 plt.xlabel("iteration $m$")
@@ -634,7 +636,8 @@ n_shot_list = [2, 3, 1000]
 t0 = 1.0
 theta_exact_H2 = E0_H2 * t0
 
-# n_shot stays small, result depends a lot on seed
+# results are seed dependent when n_shot is small
+# Here we pick a seed representative of the most common case.
 rng = np.random.default_rng(2)
 for n_shots in n_shot_list:
     theta_values = qpe.robust_phase_estimation(
@@ -648,28 +651,6 @@ plt.legend()
 plt.title(r"$H_2$ STO-3G - exact time evolution")
 plt.xlabel("iteration $m$")
 plt.ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
-
-# %%
-epsilon = 0.02
-M = int(np.ceil(np.log2(1 / epsilon)))
-n_shot_list = [2, 3, 1000]
-t0 = 1.0
-theta_exact_H2 = E0_H2 * t0
-
-# n_shot stays small, result depends a lot on seed
-rng = np.random.default_rng(5)
-for n_shots in n_shot_list:
-    theta_values = qpe.robust_phase_estimation(
-        H_H2, psi0_H2, M, EXACT, n_shots, t0=t0, rng=rng
-    )
-    distances = qpe.angular_distance(theta_values, theta_exact_H2)
-    plt.semilogy(distances, "-o", label=f"$n_{{\\rm shots}}={n_shots}$")
-
-plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
-plt.legend()
-plt.title(r"$H_2$ STO-3G - exact time evolution")
-plt.xlabel("iteration $m$")
-plt.ylabel("$d(\\theta_m, \\theta_{\\rm exact})$");
 
 # %% [markdown]
 # ### Trotterized Time Evolution
@@ -689,7 +670,7 @@ thetas_trotter_H2 = qpe.robust_phase_estimation(
 distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, theta_exact_H2)
 
 # %% [markdown]
-# ... and fails to get the desired precision
+# Since the number of qubits is small, we still reach the desired precision despite the small number of Trotter steps.
 
 # %%
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
@@ -698,9 +679,6 @@ plt.legend()
 plt.title(f"$n_{{\\rm shots}}={n_shots}$")
 plt.xlabel("iteration $m$")
 plt.ylabel("error");
-
-# %% [markdown]
-# If you want to reach the expected precision, what would you try to increase first? $n_{\rm shots}$ or $n_{\rm steps}$?
 
 # %% [markdown]
 # ### Chemical Accuracy?
