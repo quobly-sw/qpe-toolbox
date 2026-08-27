@@ -354,7 +354,7 @@ theta_values = qpe.robust_phase_estimation(
 
 # %%
 # pick a carefully selected seed
-# this simulation introduces an error at step 6
+# this simulation introduces an error at step 7
 # consequently `theta_m` converge to a wrong value
 print(f"Target phase {theta_exact=:.4f}")
 rng = np.random.default_rng(31)
@@ -381,16 +381,16 @@ for i in range(n_samples):
 # %%
 def success_prob(thetas, *, verbosity=0):
     M = thetas.shape[1]
-    mode, success_prob = np.empty(M), np.empty(M)
+    mode, success_probs = np.empty(M), np.empty(M)
     for m in range(M):
         unique_vals, counts = np.unique(thetas[:, m], return_counts=True)
         mode_index = counts.argmax()
         mode[m] = unique_vals[mode_index]
         success = qpe.angular_distance(unique_vals, theta_exact) < (np.pi / 3 / 2**m)
-        success_prob[m] = counts[success].sum() / n_samples
+        success_probs[m] = counts[success].sum() / thetas.shape[0]
         if verbosity > 0:
             print(f"{m = }, mode = {mode[m]: .6f}, count = {counts[mode_index]}")
-    return mode, success_prob
+    return mode, success_probs
 
 
 # %%
@@ -406,7 +406,7 @@ ax.set_xlim(-np.pi, np.pi)
 ax.set_xticks(
     np.pi * np.linspace(-1, 1, 5), [r"$-\pi$", r"$-\pi/2$", 0, r"$\pi/2$", r"$\pi$"]
 )
-ax.set_ylabel(r"$\theta_7$")
+ax.set_ylabel(r"$\theta_7$ counts")
 ax.legend();
 
 # %% [markdown]
@@ -491,10 +491,7 @@ ax.plot(success_prob3, "-x", label=r"$n_{\rm shots} = 3$")
 ax.set_ylim(0, 1.0)
 ax.set_xlim(0, M - 1)
 ax.set_xlabel("iteration $m$")
-ax.set_ylabel("success rate")
-ax.set_ylabel(
-    r"$\mathbb{P} \left( d(\theta, \theta_{\rm ex}) < 2^{-m} \cdot \pi / 3 \right)$"
-)
+ax.set_ylabel("success rate at iteration $m$")
 ax.legend(loc="lower left", title=f"Heisenberg chain\n{n_qubits = }")
 ax.set_title(f"{n_samples = }");
 
