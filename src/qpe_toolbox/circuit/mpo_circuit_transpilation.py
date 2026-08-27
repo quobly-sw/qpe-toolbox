@@ -496,7 +496,7 @@ def state_preparation_mpo(state_mps):
     return qtn.MatrixProductOperator(arrays=arrays)
 
 
-def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
+def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
     r"""
     Initialize the tensor network used for optimization.
 
@@ -523,8 +523,9 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
         If ``True``, ket indices are contracted (trace contraction).
-    seed : int
-        Guarantee reproducibility.
+    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
+        Random number generator to generate gate parameters.
+        If ``None``, a default generator is created.
 
     Returns
     -------
@@ -534,7 +535,6 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     """
 
     n_qubits = ref_mpo.num_tensors
-    rng = np.random.default_rng(seed=seed)
     TN = TensorNetwork()
 
     # -----------------------------------------

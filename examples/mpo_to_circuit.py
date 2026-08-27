@@ -50,6 +50,7 @@ os.environ["MKL_NUM_THREADS"] = "1"
 
 import copy
 
+import numpy as np
 from quimb.tensor import DMRG2, MPS_rand_state
 
 from qpe_toolbox.circuit.mpo_circuit_transpilation import (
@@ -100,6 +101,7 @@ for boundary_bool in [False, True]:
         depth=depth,
         param_scaling=1e-1,
         closed=boundary_bool,
+        rng=np.random.default_rng(42),
     )
     cost_tn.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tags=False)
 
@@ -165,14 +167,14 @@ opt_circuit_tn.delete(tags=("MPO"))
 # *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
 
 # %%
-list_seeds = [1, 2, 3]
-for seed in list_seeds:
+seeds = [1, 2, 3]
+for seed in seeds:
     cost_tn = init_cost_tn(
         ref_mpo=trotter_mpo_ham_NNIM,
         depth=depth,
         param_scaling=1e-1,
         closed=True,
-        seed=seed,
+        rng=np.random.default_rng(seed),
     )
 
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
@@ -219,14 +221,11 @@ GS_mpo = state_preparation_mpo(state_mps=GS)
 # We feed the new reference MPO into the same routine as above
 n_sweeps_max = 1000
 rtol = 1e-6
-list_depths = [1, 2, 3, 4]
-for depth in list_depths:
+depths = [1, 2, 3, 4]
+rng = np.random.default_rng(37)
+for depth in depths:
     cost_tn_closed = init_cost_tn(
-        ref_mpo=GS_mpo,
-        depth=depth,
-        param_scaling=1e-1,
-        closed=True,
-        seed=37,
+        ref_mpo=GS_mpo, depth=depth, param_scaling=1e-1, closed=True, rng=rng
     )
 
     dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
