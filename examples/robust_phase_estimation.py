@@ -350,7 +350,7 @@ theta_values = qpe.robust_phase_estimation(
 )
 
 # %% [markdown]
-# It may look surprising that the algorithm can succeed with such an imprecise sampling. At each step `m`, the measured phase `phi_m` is indeed far away from the exact sampling result (as could be classically simulated using `marginal`). Let us look closer at what is happening. The outcome of each measurement gives exactly 1 bit of information. Applying `n_shots=1` for both real and complex values therefore gives 2 bit of information, reducing the reachable phases $\phi_m \in \{\pi/4,-\pi/4,-3\pi/4,3\pi/4\}$. This happens to be enough most of the time: convergence only requires that at each step, $d(\phi_m, 2^m \theta_{\rm ex}) < \pi/3$, which can be achieved with 4 points on the circle only. However, there are cases where the sampling does *not* stay within this error margin. We exhibit such a case below, where we can see that even with exact time evolution, $\theta_m$ converges to a wrong value that is not $\theta_{\rm ex}$.
+# It may look surprising that the algorithm can succeed with such an imprecise sampling. At each step `m`, the measured phase `phi_m` is indeed far away from the exact sampling result (as could be classically simulated using `compute_marginal`). Let us look closer at what is happening. The outcome of each measurement gives exactly 1 bit of information. Applying `n_shots=1` for both real and complex values therefore gives 2 bits of information, reducing the reachable phases $\phi_m \in \{\pi/4,-\pi/4,-3\pi/4,3\pi/4\}$. This happens to be enough most of the time: convergence only requires that at each step, $d(\phi_m, 2^m \theta_{\rm ex}) < \pi/3$, which can be achieved with 4 points on the circle only. However, there are cases where the sampling does *not* stay within this error margin. We exhibit such a case below, where we can see that even with exact time evolution, $\theta_m$ converges to a wrong value that is not $\theta_{\rm ex}$.
 
 # %%
 # pick a carefully selected seed
@@ -364,7 +364,7 @@ errored_theta = qpe.robust_phase_estimation(
 
 # %% [markdown]
 # \
-# Let us do a statistical study to check how often this happens. Here we generate `n_samples=400` independent runs of the full robust phase estimation algorithm, each of them with `n_shots=1`. We emphasizes that this is **not** the same as running a single robust phase estimation with `n_shots=400`. The motivation here is pedagogical: in a realistic experiment, one should always use all available circuit realizations to evaluate $\theta_m$, or in other words keep `n_samples=1`.
+# Let us do a statistical study to check how often this happens. Here we generate `n_samples=400` independent runs of the full robust phase estimation algorithm, each of them with `n_shots=1`. We emphasize that this is **not** the same as running a single robust phase estimation with `n_shots=400`. The motivation here is pedagogical: in a realistic experiment, one should always use all available circuit realizations to evaluate $\theta_m$, or in other words keep `n_samples=1`.
 
 # %%
 # %%time
@@ -422,13 +422,13 @@ M = dist1.shape[1]
 
 fig, ax = plt.subplots(layout="tight")
 ax.plot(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
-for u, c in zip(unique, count, strict=False):
+for u, c in zip(unique, count, strict=True):
     ax.plot(np.arange(M), u, "-", alpha=c / cmax, lw=2 * c / cmax, color="tab:blue")
 
 for m in range(M):
     unique_m, count_m = np.unique(dist1[:, m], return_counts=True)
     cmax_m = count_m.max()
-    for u, c in zip(unique_m, count_m, strict=False):
+    for u, c in zip(unique_m, count_m, strict=True):
         ax.plot(m, u, "o", alpha=c / cmax_m, ms=10, color="tab:blue")
 
 ax.set_yscale("log")
