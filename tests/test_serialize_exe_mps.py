@@ -34,9 +34,7 @@ def _run_build_save_load_quimb():
     n_qubits = 4
     depth = 2
     rng = np.random.default_rng(666)
-    circ_quimb = generate_rand_circuit(
-        n_qubits, depth, "rx", "cu3", 4, 0.75, start_ent=True, rng=rng
-    )
+    circ_quimb = generate_rand_circuit(n_qubits, depth, "rx", "cu3", 4, 0.75, rng=rng)
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
 
     savefile_rad = "quimb_circuit"

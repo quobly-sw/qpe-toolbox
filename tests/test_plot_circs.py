@@ -29,9 +29,7 @@ def test_drawings():
     assert isinstance(draw_layered_circuit(circ, max_depth=depth), plt.Figure)
     assert isinstance(draw_layered_expval((1, 2), circ), plt.Figure)
 
-    circ_quimb = generate_brickwall_circuit(
-        5, depth, "rz", "cx", start_ent=True, rng=rng
-    )
+    circ_quimb = generate_brickwall_circuit(5, depth, "rz", "cx", rng=rng)
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
     circ = deserialize_to_quimb_Circuit(circ_dict)
     depth = max(gate.round for gate in circ.gates) + 1

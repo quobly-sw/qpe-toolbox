@@ -276,7 +276,6 @@ def generate_brickwall_circuit(
     one_qubit_gate_label,
     two_qubit_gate_label,
     *,
-    start_ent=False,
     include_1qubit_gates=True,
     param_scaling=1.0,
     rng=None,
@@ -289,7 +288,7 @@ def generate_brickwall_circuit(
     arranged in a brickwall pattern. Each circuit layer is assigned a
     distinct circuit round.
 
-    Circuit structure (one layer, ``start_ent=False``)::
+    Circuit structure (one layer)::
 
         q0 ──[]───●───────
                   │
@@ -323,10 +322,6 @@ def generate_brickwall_circuit(
 
     two_qubit_gate_label : str
         Label identifying the two-body entangling gate.
-
-    start_ent : bool, optional
-        If ``True``, each layer starts with the brickwall entangling layer.
-        Otherwise (default ``False``), the single-body layer is applied first.
 
     include_1qubit_gates : bool, optional
         If ``True``, each layer includes both single-body and entangling rotations.
@@ -368,30 +363,17 @@ def generate_brickwall_circuit(
 
     circ = qtn.Circuit(n_qubits)
     for k in range(depth):
-        if start_ent:
-            for start in range(2):
-                two_qubit_nn_layer(
-                    circ,
-                    start,
-                    two_qubit_gate_label,
-                    param_scaling=param_scaling,
-                    gate_round=k,
-                    rng=rng,
-                )
-            if include_1qubit_gates:
-                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-        else:
-            if include_1qubit_gates:
-                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-            for start in range(2):
-                two_qubit_nn_layer(
-                    circ,
-                    start,
-                    two_qubit_gate_label,
-                    param_scaling=param_scaling,
-                    gate_round=k,
-                    rng=rng,
-                )
+        if include_1qubit_gates:
+            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
+        for start in range(2):
+            two_qubit_nn_layer(
+                circ,
+                start,
+                two_qubit_gate_label,
+                param_scaling=param_scaling,
+                gate_round=k,
+                rng=rng,
+            )
 
     return circ
 
@@ -404,7 +386,6 @@ def generate_rand_circuit(
     two_qubit_gate_range,
     two_qubit_gate_prob,
     *,
-    start_ent=False,
     param_scaling=1.0,
     rng=None,
 ):
@@ -416,7 +397,7 @@ def generate_rand_circuit(
     Entangling gates are applied probabilistically between qubits within
     a finite interaction range.
 
-    Circuit structure (one layer, ``start_ent=False``)::
+    Circuit structure (one layer)::
 
         q0 ──[]───●───────
                   │
@@ -459,10 +440,6 @@ def generate_rand_circuit(
         Probability threshold controlling the application of an entangling
         gate for a given qubit.
 
-    start_ent : bool, optional
-        If ``True``, each layer starts with the random entangling layer.
-        Otherwise (default ``False``), the single-body layer is applied first.
-
     param_scaling : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
@@ -495,28 +472,16 @@ def generate_rand_circuit(
     circ = qtn.Circuit(n_qubits)
 
     for k in range(depth):
-        if start_ent:
-            two_qubit_rand_layer(
-                circ,
-                two_qubit_gate_label,
-                gate_range=two_qubit_gate_range,
-                gate_prob=two_qubit_gate_prob,
-                param_scaling=param_scaling,
-                gate_round=k,
-                rng=rng,
-            )
-            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-        else:
-            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-            two_qubit_rand_layer(
-                circ,
-                two_qubit_gate_label,
-                gate_range=two_qubit_gate_range,
-                gate_prob=two_qubit_gate_prob,
-                param_scaling=param_scaling,
-                gate_round=k,
-                rng=rng,
-            )
+        one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
+        two_qubit_rand_layer(
+            circ,
+            two_qubit_gate_label,
+            gate_range=two_qubit_gate_range,
+            gate_prob=two_qubit_gate_prob,
+            param_scaling=param_scaling,
+            gate_round=k,
+            rng=rng,
+        )
 
     return circ
 

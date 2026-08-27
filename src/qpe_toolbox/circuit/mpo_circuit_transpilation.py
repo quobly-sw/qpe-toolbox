@@ -545,7 +545,6 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
         depth=depth,
         one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
         two_qubit_gate_label="SU4",
-        start_ent=True,
         include_1qubit_gates=False,  # whether or not to do 1-spin rotations
         param_scaling=param_scaling,  # initialize close to identity
         rng=rng,
