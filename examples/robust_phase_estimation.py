@@ -517,9 +517,6 @@ ax.set_title(f"{n_samples = }, most likely outcome");
 # To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. Let us mention that it is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
 
 # %% [markdown]
-# For such a small system with `n_qubits=4`, Trotter approximation stays close to the exact time evolution result.
-
-# %% [markdown]
 # ## Heisenberg Scaling
 #
 # The experimental time is proportional to $n_{\rm shots} \cdot \sum_{m=0}^{M-1}  2^m$, i.e. it scales like $2^M$. With $M = \lceil \log_2 \varepsilon^{-1} \rceil$ iterations, the RPE algorithm reaches a precision of order $\varepsilon$ (the guaranteed bound is $2^{-(M-1)}\pi/3 \simeq 2\varepsilon$).
