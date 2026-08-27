@@ -15,9 +15,9 @@
 # %% [markdown]
 # # MPO to circuit transpilation
 #
-# The code executed in this notebook reproduces that of [Causer et al.](https://arxiv.org/abs/2312.14245), which itself builds on the method of [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions and contains the appropriate information to follow the procedure).
+# This notebook reproduces the algorithms of [Causer et al.](https://arxiv.org/abs/2312.14245), which itself builds on the method of [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions and contains the appropriate information to follow the procedure).
 #
-# Other teams built on top of it, adding variants and state preparation, in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616).
+# Other teams built on top of it, adding variants and state preparation, in [Kanno et al., 2024](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [Kanno et al., 2026](https://arxiv.org/abs/2601.15616).
 #
 # ---
 
