@@ -107,9 +107,9 @@ To convert a given example and execute it as a notebook, open `jupyterlab`, righ
 
 8. [`performance_mps`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/performance_mps.html) compares the performance of `quimb` and `qiskit` when contracting and sampling circuits with Matrix Product States.
 
-9. [`hyperoptimization`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/hyperoptimization.html) presents advanced contraction schemes provided by `quimb`.
+9. [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html) finds an initial guess state with variational circuit optimization.
 
-10. [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html) finds an initial guess state with variational circuit optimization.
+10. [`mpo_to_circuit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/mpo_to_circuit.html) transpiles an MPO unitary operator into a nearest-neighbor brickwall circuit.
 
 # Basic workflow
 
@@ -135,7 +135,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
    - `make_circ` to create a Tensor Network representation of the circuit.
    - `make_circMPS` to store the state as an MPS and iteratively apply the gates.
 
-   See the tutorials on [`building_circuits`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/building_circuits.html), [`performance_mps`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/performance_mps.html) and [`hyperoptimization`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/hyperoptimization.html) for an introduction on circuit simulation with `quimb`.
+   See the tutorials on [`building_circuits`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/building_circuits.html) and [`performance_mps`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/performance_mps.html) for an introduction on circuit simulation with `quimb`.
 
 5. Run QPE: in the `estimation` module, choose between
 

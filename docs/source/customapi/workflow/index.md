@@ -27,8 +27,8 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 
    4.2. `make_circMPS` to store the state as an MPS and iteratively apply the gates.
 
-   See the tutorials on {doc}`Building circuits <../tutorials/building_circuits>`, {doc}`MPS performance <../tutorials/performance_mps>`
-    and {doc}`Hyperoptimization <../tutorials/hyperoptimization>` for an introduction on circuit simulation with `quimb`.
+   See the tutorials on {doc}`Building circuits <../tutorials/building_circuits>` and {doc}`MPS performance <../tutorials/performance_mps>`
+    for an introduction on circuit simulation with `quimb`.
 
 5. Run QPE: in `estimation` module, chose between
 
