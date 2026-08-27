@@ -15,20 +15,20 @@
 # %% [markdown]
 # # MPO to circuit transpilation
 #
-# The code executed in this notebook reproduces that of an [original paper](https://arxiv.org/abs/2312.14245), which at the same time uses the method from [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions and contains the appropriate information to follow the procedure).
+# The code executed in this notebook reproduces that of [Causer et al.](https://arxiv.org/abs/2312.14245), which itself builds on the method of [Vidal](https://arxiv.org/abs/0707.1454v1) (note that we reference the first version because it is substantially different from the later versions and contains the appropriate information to follow the procedure).
 #
-# Other teams built on top of it adding some variants and state preparation in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616)
+# Other teams built on top of it, adding variants and state preparation, in [paper 1](https://www.pnas.org/doi/abs/10.1073/pnas.2425026122) and [paper 2](https://arxiv.org/abs/2601.15616).
 #
 # ---
 
 # %% [markdown]
-# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($\mathrm{M}_{\mathrm{ref}}$ representing the unitary time evolution induced by some Hamiltonian during a time $\Delta t$) into a nearest-neighbor brickwall circuit that can be run on some QPU ($U_{\mathrm{bw}}$):
+# The goal of this notebook is to illustrate the transpilation of an MPO unitary operator ($\mathrm{M}_{\mathrm{ref}}$ representing the unitary time evolution induced by a Hamiltonian during a time $\Delta t$) into a nearest-neighbor brickwall circuit that can be run on a QPU ($U_{\mathrm{bw}}$):
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Uref.svg" align="center">
 
 # %% [markdown]
-# We impose an Ansatz circuit made out of three rows of entangling gates on even-odd-even links. Note that in some references the prescription for increasing the depth/layer counting is just a row of even or of odd entangling gates, while other references consider than two consecutive rows even-odd constitute a layer
+# We impose an Ansatz circuit made out of three rows of entangling gates on even-odd-even links. Note that in some references the prescription for increasing the depth/layer counting is just a row of even or of odd entangling gates, while other references consider that two consecutive rows even-odd constitute a layer
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_Ubw.svg" align="center">
@@ -36,7 +36,7 @@
 # %% [markdown]
 # In order to translate the circuit that best reproduces the action of the unitary MPO, we maximize the overlap between the two unitaries. If this cost function is maximized, then $U_{\mathrm{bw}}$ will act on another state or operator in the same way as $\mathrm{M}_{\mathrm{ref}}$ does.
 #
-# In this case, the cost function can be computed as a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the formerly introduced ansatz circuit is:
+# In this case, the cost function can be computed as a fully contracted tensor network with a cylindrical topology. An illustration of such a cost function for the previously introduced ansatz circuit is:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_cost.svg" align="center">
@@ -50,7 +50,7 @@ os.environ["MKL_NUM_THREADS"] = "1"
 
 import copy
 
-from quimb.tensor import DMRG2
+from quimb.tensor import DMRG2, MPS_rand_state
 
 from qpe_toolbox.circuit.mpo_circuit_transpilation import (
     build_first_sweep,
@@ -61,8 +61,6 @@ from qpe_toolbox.circuit.mpo_circuit_transpilation import (
     trotter_approx_as_MPO,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian
-
-list_paulis = ["I", "X", "Y", "Z"]
 
 # %% [markdown]
 # ## Dynamics induced by the next-nearest-neighbor Ising model
@@ -80,9 +78,6 @@ for x in range(L - 2):
 
 ham_NNIM = Hamiltonian(terms_NNIM, L)
 
-# %% [markdown]
-# in the following function: do we keep the verbose? if we keep it, do we change it?
-
 # %%
 trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
     ham_NNIM,
@@ -94,7 +89,7 @@ trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
 )
 
 # %% [markdown]
-# in the following I initialize the cost function
+# We now initialize the cost function.
 
 # %%
 depth = 3
@@ -109,7 +104,7 @@ for boundary_bool in [False, True]:
     cost_tn.draw([f"ROUND_{i}" for i in range(depth)], show_inds=True, show_tags=False)
 
 # %% [markdown]
-# Now we optimize the overlap as suggested in the context of [algorithms for entanglement renormalization](https://arxiv.org/abs/0707.1454v1): to solve the *Constrained Linear* problem where the isometry to be found decomposes in a given circuit structure, we solve a series of *Unconstrained Linear* problems for each of the gates forming the circuit. The later is known to have an analytical solution.
+# Now we optimize the overlap as suggested in the context of [algorithms for entanglement renormalization](https://arxiv.org/abs/0707.1454v1): to solve the *Constrained Linear* problem where the isometry to be found decomposes in a given circuit structure, we solve a series of *Unconstrained Linear* problems for each of the gates forming the circuit. The latter is known to have an analytical solution.
 #
 # The procedure goes as follows: first, we select a given qubit (say, site 0) and target the optimization of all the gates exposed to that qubit. In the following picture we highlight in yellow the set of gates we are referring to:
 
@@ -117,13 +112,13 @@ for boundary_bool in [False, True]:
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_opt_pos0.svg" align="center">
 
 # %% [markdown]
-# Second, we contract the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built at the same time from the right environment of qubit 1, $R_1$, and so until the last qubit:
+# Second, we contract the subnetwork that is not being updated. That contraction is the right environment of qubit 0, $R_0$; such an environment can be built recursively, starting from the right environment of qubit 1, $R_1$, and so on until the last qubit:
 
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_build_Rs_1st_sweep.svg" align="center">
 
 # %% [markdown]
-# By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $\mathrm{M}_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Conversely, this can be done for left environments:
+# By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $\mathrm{M}_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Similarly, this can be done for left environments:
 
 # %%
 dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
@@ -146,11 +141,8 @@ dict_contr_envs = build_first_sweep(
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu2.svg" align="center">
 
 # %%
-# note that we optimize for an ansatz the
-# "depth" parameters is twice that of Causer et al.
-
 rtol = 1e-6
-n_sweeps_max = int(1e2)
+n_sweeps_max = 100
 
 cp_cost_tn = cost_tn.copy(deep=True)
 cp_dict_transf = copy.deepcopy(dict_transf)
@@ -170,7 +162,7 @@ opt_circuit_tn = opt_cost_tn.copy(deep=True)
 opt_circuit_tn.delete(tags=("MPO"))
 
 # %% [markdown]
-# In *Causer et al.* they find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
+# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
 
 # %%
 list_seeds = [1, 2, 3]
@@ -199,7 +191,7 @@ for seed in list_seeds:
     )
 
 # %% [markdown]
-# The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second order Trotter expansion of the circuit, where some SWAPs are fixed and only a subset of gates needs to be fixed.
+# The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
 
 
 # %% [markdown]
@@ -208,14 +200,16 @@ for seed in list_seeds:
 # %% [markdown]
 # With the same cost function we can target also the problem of finding a good preparation circuit for some initial state in the form of an MPS. We just need to build $\text{M}_{\mathrm{ref}}$ to represent the transition from an empty quantum register into the target MPS $|0 \rangle^{\otimes L} \langle \Psi_{\mathrm{ref}} |$.
 #
-# Note that in this case, the the cost function will unfold into a square tensor network with open boundary conditions, since the outer product used to build the reference MPO is just an encoding of the tensors.
+# Note that in this case, the cost function will unfold into a square tensor network with open boundary conditions, since the outer product used to build the reference MPO is just an encoding of the tensors.
 #
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_state_prep.svg" align="center">
 
 # %%
-# We pick a target state: the ground state of some local spin Hamiltonian in MPS form
+# We pick a target state: the ground state of the next-nearest-neighbor Ising Hamiltonian defined above, in MPS form.
+# `DMRG2` itself takes no seed; we seed reproducibility through its `p0` starting guess instead.
 ham_NNIM_mpo = ham_NNIM.to_mpo()
-dmrg = DMRG2(ham_NNIM_mpo)
+p0 = MPS_rand_state(L, bond_dim=2, seed=42)
+dmrg = DMRG2(ham_NNIM_mpo, p0=p0)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12)
 GS = dmrg.state
 
