@@ -60,7 +60,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %%
 # --- Hamiltonian definition ---
-n_qubits = 8
+n_qubits = 4
 gx, gzz = -1.1, -1.0
 terms = []
 for x in range(n_qubits):
@@ -276,12 +276,19 @@ print(
     f"Depth = {1:2d}   Energy = {ene:12.8f}   Error = {err:10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
 )
 
-for ii in range(2, depth + 1):
-    circ = ansatz_circuit_su4(n_qubits, ii, param_scaling=1.0, parametrize=False)
+new_layer_eps = 1e-2  # deviation of the new layer from the identity
+rng = np.random.default_rng()
 
-    tn_old = tn
-    tn = circ.psi
-    tn.set_params(tn_old.get_params())  # reuse tensor entries
+for ii in range(2, depth + 1):
+    # grow the optimized network by one brickwall layer, each new gate being the
+    # nearest unitary to I + eps * G so the layer starts close to the identity
+
+    tags = ["SU4", f"ROUND_{ii - 1}"]
+    for start in range(2):
+        for q in range(start, n_qubits - 1, 2):
+            g = rng.normal(size=(4, 4)) + 1j * rng.normal(size=(4, 4))
+            u, _, vh = np.linalg.svd(np.eye(4) + new_layer_eps * g)
+            tn.gate_(u @ vh, (q, q + 1), tags=tags, contract=False)
 
     tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
 

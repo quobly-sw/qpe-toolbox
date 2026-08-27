@@ -26,7 +26,7 @@
 # 2. Build an initial random SU(4) brick-wall circuit of a given depth.
 # 3. Perform an **initial sweep** (down then up) that optimizes the parameters layer by layer, reusing the partially optimized MPS from previous layers.
 # 4. After each full sweep, compute the energy and fidelity of the current circuit against the DMRG target.
-# 5. Repeat for a number of sweeps (500 in this example) to converge.
+# 5. Repeat for a number of sweeps (1000 in this example) to converge.
 #
 # This approach is inspired by the **local optimization** idea but applies it in a sequential, sweep-based fashion, which often leads to faster convergence for deep circuits.
 
@@ -64,7 +64,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 #
 # This approach is very similar to the DMRG sweep algorithm, but with the roles of the Hamiltonian and the unitary gates interchanged. It allows us to efficiently optimize deep circuits while keeping bond dimensions manageable.
 #
-# We run 500 sweeps; the algorithm should converge to a state that closely approximates the ground state.
+# We run 1000 sweeps; the algorithm should converge to a state that closely approximates the ground state.
 
 # %% [markdown]
 # ### 1. Hamiltonian and DMRG Reference
