@@ -632,7 +632,7 @@ plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_steps}$")
 plt.legend()
 plt.title(f"$n_{{\\rm shots}}={n_shots}$")
 plt.xlabel("iteration $m$")
-plt.ylabel("error");
+plt.ylabel(r"$d(\theta_m, \theta_{\rm ex})$");
 
 # %% [markdown]
 # ### Chemical Accuracy?
