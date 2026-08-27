@@ -22,8 +22,6 @@ robust_phase_estimation.ipynb
 
 performance_mps.ipynb
 
-variational_circuit_preparation.ipynb
-
 mpo_to_circuit.ipynb
 
 circuit_preparation_opt.ipynb
