@@ -8,7 +8,6 @@ from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
 
 def test_tn_fit():
     rng = np.random.default_rng(42)
-
     circ = ansatz_circuit_su4(2, 1, param_scaling=1.0, parametrize=False, rng=rng)
     tn1 = circ.psi
     tn2 = qtn.MPS_rand_state(2, 4)
