@@ -364,7 +364,7 @@ def generate_brickwall_circuit(
     circ = qtn.Circuit(n_qubits)
     for k in range(depth):
         if include_1qubit_gates:
-            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
+            one_qubit_layer(circ, one_qubit_gate_label, gate_round=k, rng=rng)
         for start in range(2):
             two_qubit_nn_layer(
                 circ,
@@ -472,7 +472,7 @@ def generate_rand_circuit(
     circ = qtn.Circuit(n_qubits)
 
     for k in range(depth):
-        one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
+        one_qubit_layer(circ, one_qubit_gate_label, gate_round=k, rng=rng)
         two_qubit_rand_layer(
             circ,
             two_qubit_gate_label,
