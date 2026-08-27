@@ -543,7 +543,8 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     bw_circ = generate_brickwall_circuit(
         n_qubits=n_qubits,
         depth=depth,
-        one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
+        # unused when include_1qubit_gates=False, but still validated as a 1-qubit gate
+        one_qubit_gate_label="U1",
         two_qubit_gate_label="SU4",
         include_1qubit_gates=False,  # whether or not to do 1-spin rotations
         param_scaling=param_scaling,  # initialize close to identity
