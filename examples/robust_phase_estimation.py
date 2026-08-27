@@ -517,50 +517,6 @@ ax.set_title(f"{n_samples = }, most likely outcome");
 # To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. Let us mention that it is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
 
 # %% [markdown]
-# ### RPE with Trotter Approximation
-#
-# We now apply the same algorithm but replace the exact time evolution operator by a second order Trotter approximation.
-#
-# The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
-#
-# The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative of the most likely case.
-
-# %%
-epsilon = 0.02
-M = int(np.ceil(np.log2(1 / epsilon)))
-print(f"{epsilon = }, {M = }")
-
-n_shots = 2
-trotter_order = 2
-rng = np.random.default_rng(42)
-
-thetas_ttr1 = qpe.robust_phase_estimation(
-    H, psi0, M, 1, n_shots, t0=t0, trotter_order=trotter_order, rng=rng
-)
-thetas_ttr2 = qpe.robust_phase_estimation(
-    H, psi0, M, 2, n_shots, t0=t0, trotter_order=trotter_order, rng=rng
-)
-
-# %%
-plt.semilogy(
-    qpe.angular_distance(thetas_ttr1, theta_exact),
-    "-o",
-    label="$n_{\\rm steps} = 1$",
-)
-plt.semilogy(
-    qpe.angular_distance(thetas_ttr2, theta_exact),
-    "-s",
-    label="$n_{\\rm steps} = 2$",
-)
-plt.semilogy(
-    np.pi / 3 / 2 ** np.arange(thetas_ttr1.size), "k--", label="$2^{-m}~\\pi/3$"
-)
-plt.legend()
-plt.title(r"$n_{\rm shots}=2$")
-plt.xlabel("iteration $m$")
-plt.ylabel("error");
-
-# %% [markdown]
 # For such a small system with `n_qubits=4`, Trotter approximation stays close to the exact time evolution result.
 
 # %% [markdown]
@@ -653,7 +609,11 @@ plt.ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 # ### Trotterized Time Evolution
 
 # %% [markdown]
-# The Trotter decomposition of the molecular Hamiltonian is longer, and simulations become harder. The following run will take a minute...
+# We now apply the same algorithm but replace the exact time evolution operator by a second order Trotter approximation.
+#
+# The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
+#
+# The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative of the most likely case. The following run will take a minute.
 
 # %%
 # %%time
