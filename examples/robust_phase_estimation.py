@@ -367,14 +367,13 @@ errored_theta = qpe.robust_phase_estimation(
 # Let us do a statistical study to check how often this happens. Here we generate `n_samples=400` independent runs of the full robust phase estimation algorithm, each of them with `n_shots=1`. We emphasize that this is **not** the same as running a single robust phase estimation with `n_shots=400`. The motivation here is pedagogical: in a realistic experiment, one should always use all available circuit realizations to evaluate $\theta_m$, or in other words keep `n_samples=1`.
 
 # %%
-# %%time
 M = 10
 n_shots = 1
 n_samples = 400
 rng = np.random.default_rng(42)
 
 thetas1 = np.zeros((n_samples, M))
-for i in range(n_samples):
+for i in tqdm.tqdm(range(n_samples)):
     thetas1[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
 
 
@@ -446,7 +445,7 @@ n_samples, M = thetas1.shape
 
 thetas2 = np.zeros((n_samples, M))
 thetas3 = np.zeros((n_samples, M))
-for i in range(n_samples):
+for i in tqdm.tqdm(range(n_samples)):
     thetas2[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 2, rng=rng)
     thetas3[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 3, rng=rng)
 
