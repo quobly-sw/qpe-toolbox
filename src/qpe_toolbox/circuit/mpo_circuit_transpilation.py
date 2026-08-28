@@ -148,17 +148,17 @@ def trotter1_approx_as_MPO(
         init_term = 0
         trange_counter = tqdm(range(1, len(ham_terms)))
 
-    U_trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], -dt, n_qubits)
+    trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], -dt, n_qubits)
     for i in trange_counter:
         new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], -dt, n_qubits)
-        U_trotter1_mpo = U_trotter1_mpo.apply(
+        trotter1_mpo = trotter1_mpo.apply(
             new_factor_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
         )
         trange_counter.set_description(
-            f"{'': <4}Bond dimension (Trotter 1): {U_trotter1_mpo.max_bond()}"
+            f"{'': <4}Bond dimension (Trotter 1): {trotter1_mpo.max_bond()}"
         )
 
-    return U_trotter1_mpo
+    return trotter1_mpo
 
 
 def trotter2_approx_as_MPO(
@@ -290,16 +290,16 @@ def trotter4_approx_as_MPO(
     if verbosity >= 1:
         print(f"{'': <2}Multiplying the 3 MPO layers")
 
-    U_trotter4_mpo = layer1_3_mpo.apply(
+    trotter4_mpo = layer1_3_mpo.apply(
         layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
-    U_trotter4_mpo = U_trotter4_mpo.apply(
+    trotter4_mpo = trotter4_mpo.apply(
         layer1_3_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
     if verbosity >= 1:
-        print(f"{'': <4}Final bond dimension:", U_trotter4_mpo.max_bond())
+        print(f"{'': <4}Final bond dimension:", trotter4_mpo.max_bond())
 
-    return U_trotter4_mpo
+    return trotter4_mpo
 
 
 def trotter_approx_as_MPO(
@@ -463,7 +463,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
         param_scaling=param_scaling,  # initialize close to identity
         rng=rng,
     )
-    TN = qtn.TensorNetwork() & bw_circ.get_uni()
+    cost_tn = qtn.TensorNetwork() & bw_circ.get_uni()
 
     # -----------------------------------
     # Add the MPO in the network
@@ -487,9 +487,9 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
             )
 
         reind_tens.modify(inds=inds, tags=(f"I{x}", f"Uref{x}", "MPO"))
-        TN &= reind_tens
+        cost_tn &= reind_tens
 
-    return TN
+    return cost_tn
 
 
 def get_envs_tns(n_qubits, site_index, cost_tn):
@@ -689,15 +689,13 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
     contracted_envs = {"L": {}, "R": {}}
 
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
-    L_init = cost_tn.select(tags="Uref0", which="all").tensors[0]
-    L_init.add_tag(tag="L1")
-    R_init = cost_tn.select(tags=f"Uref{n_qubits - 1}", which="all").tensors[0]
-    R_init.add_tag(tag=f"R{n_qubits - 2}")
+    left_env = cost_tn.select(tags="Uref0", which="all").tensors[0]
+    left_env.add_tag(tag="L1")
+    right_env = cost_tn.select(tags=f"Uref{n_qubits - 1}", which="all").tensors[0]
+    right_env.add_tag(tag=f"R{n_qubits - 2}")
 
-    contracted_envs["L"]["L1"] = L_init
-    contracted_envs["R"][f"R{n_qubits - 2}"] = R_init
-    L_next = L_init.copy(deep=True)
-    R_next = R_init.copy(deep=True)
+    contracted_envs["L"]["L1"] = left_env
+    contracted_envs["R"][f"R{n_qubits - 2}"] = right_env
 
     for counter, transf_tags in enumerate(
         zip(
@@ -706,21 +704,17 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
             strict=True,
         )
     ):
-        L_next = L_next.copy(deep=True)
-        L_transf_tn = cost_tn.select(tags=transf_tags[0], which="any")
-        L_next = L_next & L_transf_tn
-        L_next = qtn.tensor_contract(*L_next.tensors, drop_tags=drop_tags)
-        L_next.add_tag(tag=f"L{counter + 2}")
+        left_env &= cost_tn.select(tags=transf_tags[0], which="any")
+        left_env = qtn.tensor_contract(*left_env.tensors, drop_tags=drop_tags)
+        left_env.add_tag(tag=f"L{counter + 2}")
 
-        contracted_envs["L"][f"L{counter + 2}"] = L_next
+        contracted_envs["L"][f"L{counter + 2}"] = left_env
 
-        R_next = R_next.copy(deep=True)
-        R_transf_tn = cost_tn.select(tags=transf_tags[1], which="any")
-        R_next = R_next & R_transf_tn
-        R_next = qtn.tensor_contract(*R_next.tensors, drop_tags=drop_tags)
-        R_next.add_tag(tag=f"R{n_qubits - 3 - counter}")
+        right_env &= cost_tn.select(tags=transf_tags[1], which="any")
+        right_env = qtn.tensor_contract(*right_env.tensors, drop_tags=drop_tags)
+        right_env.add_tag(tag=f"R{n_qubits - 3 - counter}")
 
-        contracted_envs["R"][f"R{n_qubits - 3 - counter}"] = R_next
+        contracted_envs["R"][f"R{n_qubits - 3 - counter}"] = right_env
 
     return contracted_envs
 
@@ -857,7 +851,7 @@ def update_cost_tn(cost_tn, gate_tensors):
         # the first tag is "GATE_{n}" by construction
         tag_tens = next(iter(tens.tags))
         cost_tn.delete(tags=tag_tens)  # delete the old tensor with same tags
-        cost_tn = cost_tn & tens  # add the new tensor
+        cost_tn &= tens  # add the new tensor
 
     return cost_tn
 
@@ -935,7 +929,7 @@ def update_contracted_envs(
         transf_tens = cost_tn.select(
             tags=transfer_structure[side][f"{from_key}_to_{to_key}"], which="any"
         )
-        new_env = contracted_envs[side][from_key].copy(deep=True) & transf_tens
+        new_env = contracted_envs[side][from_key] & transf_tens
         contracted_envs[side][to_key] = new_env.contract()
 
     return contracted_envs
@@ -1051,7 +1045,7 @@ def optimize_single_gate_update(
                     )
 
                     # do the SVD
-                    prc_loc_cost_UsVh = qtn.tensor_split(
+                    svd_factors = qtn.tensor_split(
                         T=prc_loc_cost_tens,
                         # recall index ordering in Gate class:
                         # (OUT_LEFT, OUT_RIGHT, IN_LEFT, IN_RIGHT)
@@ -1061,13 +1055,12 @@ def optimize_single_gate_update(
                     )
 
                     # retain isometries
-                    new_overlap = np.sum(prc_loc_cost_UsVh.tensors[1].data)
+                    new_overlap = np.sum(svd_factors.tensors[1].data)
                     trange_counter.set_description(
                         f"overlap: {(new_overlap / 2**n_qubits):.8f}"
                     )
                     new_gate_tens = (
-                        prc_loc_cost_UsVh.tensors[0].conj()
-                        & prc_loc_cost_UsVh.tensors[2].conj()
+                        svd_factors.tensors[0].conj() & svd_factors.tensors[2].conj()
                     ) ^ ...
 
                     # ensure index order
