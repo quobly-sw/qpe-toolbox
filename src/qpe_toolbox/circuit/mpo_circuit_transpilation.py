@@ -1017,7 +1017,7 @@ def optimize_single_gate_update(
 
     instr = [
         ("LR", range(n_qubits - 2)),
-        ("RL", list(reversed(range(2, n_qubits)))),
+        ("RL", range(n_qubits - 1, 1, -1)),
     ]
 
     prev_overlap = None
