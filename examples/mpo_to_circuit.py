@@ -131,6 +131,14 @@ for boundary_bool in [False, True]:
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu2.svg" align="center">
 
 # %%
+def print_final_overlap(cost_tn, n_qubits, label):
+    # cost_tn is closed (no dangling indices), so its full contraction is the
+    # achieved overlap; normalize by 2**n_qubits as in the optimizer's own progress bar
+    overlap = abs(cost_tn.contract(all, optimize="auto-hq")) / 2**n_qubits
+    print(f"{label}: overlap = {overlap:.6f}")
+
+
+# %%
 rtol = 1e-6
 n_sweeps_max = 100
 
@@ -143,6 +151,7 @@ opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
     closed=True,
     rng=np.random.default_rng(42),
 )
+print_final_overlap(opt_cost_tn, L, "Trotter reference")
 
 # retrieve the optimal circuit tensor network
 opt_circuit_tn = opt_cost_tn.copy(deep=True)
@@ -163,6 +172,7 @@ for seed in seeds:
         closed=True,
         rng=np.random.default_rng(seed),
     )
+    print_final_overlap(opt_cost_tn, L, f"seed {seed}")
 
 # %% [markdown]
 # The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
@@ -196,7 +206,7 @@ rtol = 1e-6
 depths = [1, 2, 3, 4]
 rng = np.random.default_rng(37)
 for depth in depths:
-    print(f"Best overlap for depth {depth}:")
     opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
         GS_mpo, depth, rtol, n_sweeps_max, param_scaling=1e-1, closed=True, rng=rng
     )
+    print_final_overlap(opt_cost_tn, L, f"depth {depth}")
