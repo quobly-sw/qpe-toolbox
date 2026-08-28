@@ -59,7 +59,7 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
 
     Returns
     -------
-    qtn.MatrixProductOperator
+    qtn.MatrixProductOperator in lrud format
         MPO representing the operator:
 
             exp(i * theta * coeff * P)
@@ -71,25 +71,9 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     ValueError
         If the length of ``pauli_string`` does not match the number of
         ``active_qubits``.
-
-    Notes
-    -----
-    - The MPO is constructed in left-right-up-down index ordering.
-    - The Pauli string MPO has bond dimension 1 before summation.
-    - After combining the identity and Pauli MPOs, the result should not
-      exceed a maximum bond dimension of 2.
-
-    Examples
-    --------
-    >>> ham_term = (-0.345, "ZYXXZ", [0, 2, 3, 6, 9])
-    >>> mpo = exp_Pauli_string_as_MPO(ham_term, n_qubits=10, theta=0.1)
-    >>> mpo
-    <MatrixProductOperator ...>
     """
 
-    string_coeff = ham_term[0]
-    pauli_string = ham_term[1]
-    active_qubits = ham_term[2]
+    string_coeff, pauli_string, active_qubits = ham_term
     id4 = qu.identity(2).reshape(1, 1, 2, 2)
 
     pauli_string_tensors = []
@@ -163,10 +147,10 @@ def trotter1_approx_as_MPO(
 
     if reverse_order:
         init_term = len(ham_terms) - 1
-        trange_counter = tqdm(list(reversed(range(len(ham_terms) - 1))))
+        trange_counter = tqdm(reversed(range(len(ham_terms) - 1)))
     else:
         init_term = 0
-        trange_counter = tqdm(list(range(1, len(ham_terms))))
+        trange_counter = tqdm(range(1, len(ham_terms)))
 
     U_trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], n_qubits, theta=-dt)
     for i in trange_counter:
@@ -425,29 +409,28 @@ def state_preparation_mpo(state_mps):
     """
 
     n_qubits = state_mps.num_tensors
-    arrays = []
     ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
-    for i in range(n_qubits):
+
+    # DMRG2's output orders boundary-tensor legs as (phys, bond) at the first
+    # site and (bond, phys) at the last site
+    first_array = state_mps.tensors[0].data
+    arrays = [
+        np.outer(first_array, ket0)
+        .reshape(2, first_array.shape[1], 2)
+        .transpose(1, 0, 2)  # transpose to lpp'
+    ]
+
+    for i in range(1, n_qubits - 1):
         array = state_mps.tensors[i].data
         dims = np.shape(array)
-        # WARNING: it seems that dmrg spits a state with index order different from lrp or lrud
-        # print(dims, np.shape(np.outer(array, ket0)))
-        if i == 0:
-            # array had order pl then get plp' so transpose to lpp'
-            arrays.append(
-                np.outer(array, ket0).reshape(2, dims[1], 2).transpose(1, 0, 2)
-            )
-        elif i == n_qubits - 1:
-            # assume array had order rp then get rpp' so no transpose
-            arrays.append(np.outer(array, ket0).reshape(dims[0], 2, 2))
+        # assume array had order lpr then get lprp' so transpose to lrpp'
+        arrays.append(
+            np.outer(array, ket0).reshape(dims[0], 2, dims[2], 2).transpose(0, 2, 1, 3)
+        )
 
-        else:
-            # assume array had order lpr then get lprp' so transpose to lrpp'
-            arrays.append(
-                np.outer(array, ket0)
-                .reshape(dims[0], 2, dims[2], 2)
-                .transpose(0, 2, 1, 3)
-            )
+    last_array = state_mps.tensors[n_qubits - 1].data
+    # assume array had order rp then get rpp' so no transpose
+    arrays.append(np.outer(last_array, ket0).reshape(last_array.shape[0], 2, 2))
 
     return qtn.MatrixProductOperator(arrays=arrays)
 
