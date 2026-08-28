@@ -11,6 +11,12 @@
 from .controls import shift_control_gates
 from .gate_count import count_gates, count_gates_by_qb
 from .initialization import make_circ, make_circMPS
+from .mpo_circuit_transpilation import (
+    init_cost_tn,
+    state_preparation_mpo,
+    transpile_mpo_to_circuit,
+    trotter_approx_as_MPO,
+)
 from .parametrized_circuits import (
     ansatz_circuit,
     ansatz_circuit_su4,

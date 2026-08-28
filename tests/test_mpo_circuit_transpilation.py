@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import quimb as qu
 
-from qpe_toolbox.circuit.mpo_circuit_transpilation import trotter_approx_as_MPO
+from qpe_toolbox.circuit import trotter_approx_as_MPO
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 ham = heisenberg_hamiltonian(3)

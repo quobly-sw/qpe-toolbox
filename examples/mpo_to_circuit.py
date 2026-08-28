@@ -48,17 +48,13 @@ os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
-import copy
-
 import numpy as np
 from quimb.tensor import DMRG2, MPS_rand_state
 
-from qpe_toolbox.circuit.mpo_circuit_transpilation import (
-    build_first_sweep,
-    find_transfer_structure,
+from qpe_toolbox.circuit import (
     init_cost_tn,
-    optimize_single_gate_update,
     state_preparation_mpo,
+    transpile_mpo_to_circuit,
     trotter_approx_as_MPO,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian
@@ -122,14 +118,6 @@ for boundary_bool in [False, True]:
 # %% [markdown]
 # By knowing the first right environment (that of the second-to-last qubit, $R_{\mathrm{n_qubits-1}}$, which coincides with the last tensor of $\mathrm{M}_{\mathrm{ref}}$ ) and the tensors required to transfer from one environment to another, we can build all the right environments for the first sweep. Similarly, this can be done for left environments:
 
-# %%
-dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
-
-# %%
-dict_contr_envs = build_first_sweep(
-    n_qubits=L, cost_tn=cost_tn, dict_transf=dict_transf, drop_tags=True
-)
-
 # %% [markdown]
 # Once the environment structure is found, we need to find the optimal gate to update a particular two-qubit unitary. To do so, we contract all the tensors around it. For example, say we want to update the first unitary at depth 0 between qubits 0 and 1, $U^{(0)}_{0,1}$; we contract all the tensors around it into its environment $E^{(0)}_{0,1}$ (this $E$ environment contains the $L$ and $R$ of each site, together with the corresponding tensor from the reference unitary at that site).
 
@@ -146,17 +134,14 @@ dict_contr_envs = build_first_sweep(
 rtol = 1e-6
 n_sweeps_max = 100
 
-cp_cost_tn = cost_tn.copy(deep=True)
-cp_dict_transf = copy.deepcopy(dict_transf)
-cp_dict_contr_envs = copy.deepcopy(dict_contr_envs)
-
-opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
-    n_qubits=L,
-    cost_tn=cp_cost_tn,
-    rtol=rtol,
-    n_sweeps_max=n_sweeps_max,
-    dict_transf=cp_dict_transf,
-    dict_contr_envs=cp_dict_contr_envs,
+opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
+    trotter_mpo_ham_NNIM,
+    depth,
+    rtol,
+    n_sweeps_max,
+    param_scaling=1e-1,
+    closed=True,
+    rng=np.random.default_rng(42),
 )
 
 # retrieve the optimal circuit tensor network
@@ -169,27 +154,14 @@ opt_circuit_tn.delete(tags=("MPO"))
 # %%
 seeds = [1, 2, 3]
 for seed in seeds:
-    cost_tn = init_cost_tn(
-        ref_mpo=trotter_mpo_ham_NNIM,
-        depth=depth,
+    opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
+        trotter_mpo_ham_NNIM,
+        depth,
+        rtol,
+        n_sweeps_max,
         param_scaling=1e-1,
         closed=True,
         rng=np.random.default_rng(seed),
-    )
-
-    dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn)
-
-    dict_contr_envs = build_first_sweep(
-        n_qubits=L, cost_tn=cost_tn, dict_transf=dict_transf, drop_tags=True
-    )
-
-    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
-        n_qubits=L,
-        cost_tn=cost_tn,
-        rtol=rtol,
-        n_sweeps_max=n_sweeps_max,
-        dict_transf=dict_transf,
-        dict_contr_envs=dict_contr_envs,
     )
 
 # %% [markdown]
@@ -224,21 +196,7 @@ rtol = 1e-6
 depths = [1, 2, 3, 4]
 rng = np.random.default_rng(37)
 for depth in depths:
-    cost_tn_closed = init_cost_tn(
-        ref_mpo=GS_mpo, depth=depth, param_scaling=1e-1, closed=True, rng=rng
-    )
-
-    dict_transf = find_transfer_structure(n_qubits=L, cost_tn=cost_tn_closed)
-
-    dict_contr_envs = build_first_sweep(
-        n_qubits=L, cost_tn=cost_tn_closed, dict_transf=dict_transf, drop_tags=True
-    )
     print(f"Best overlap for depth {depth}:")
-    opt_cost_tn, opt_dict_contr_envs = optimize_single_gate_update(
-        n_qubits=L,
-        cost_tn=cost_tn_closed,
-        rtol=rtol,
-        n_sweeps_max=n_sweeps_max,
-        dict_transf=dict_transf,
-        dict_contr_envs=dict_contr_envs,
+    opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
+        GS_mpo, depth, rtol, n_sweeps_max, param_scaling=1e-1, closed=True, rng=rng
     )
