@@ -296,7 +296,7 @@ def trotter4_approx_as_MPO(
     U_trotter4_mpo = U_trotter4_mpo.apply(
         layer1_3_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
-    if verbosity == 1:
+    if verbosity >= 1:
         print(f"{'': <4}Final bond dimension:", U_trotter4_mpo.max_bond())
 
     return U_trotter4_mpo
@@ -492,19 +492,19 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
     return TN
 
 
-def get_envs_tns(n_qubits, x, cost_tn):
+def get_envs_tns(n_qubits, site_index, cost_tn):
     r"""
     Extract the left and right environment TNs associated to a given site.
 
-    This function removes the tensors tagged with ``I{x}`` from the full
-    cost tensor network and partitions the remaining network into left and/or
-    right environments relative to site ``x``.
+    This function removes the tensors tagged with ``I{site_index}`` from the
+    full cost tensor network and partitions the remaining network into
+    left and/or right environments relative to ``site_index``.
 
     Parameters
     ----------
     n_qubits : int
         Number of qubits (sites) in the tensor network.
-    x : int
+    site_index : int
         Site index for which the environments are constructed.
     cost_tn : :quimb-api:`TensorNetwork`
         Full cost tensor network.
@@ -514,8 +514,9 @@ def get_envs_tns(n_qubits, x, cost_tn):
     list of :quimb-api:`TensorNetwork`
         List containing the environment tensor networks.
 
-        - If ``x == 0``, only the right environment is returned.
-        - If ``x == n_qubits - 1``, only the left environment is returned.
+        - If ``site_index == 0``, only the right environment is returned.
+        - If ``site_index == n_qubits - 1``, only the left environment is
+          returned.
         - Otherwise, the list is ordered as ``[left_env, right_env]``.
 
     Notes
@@ -523,20 +524,21 @@ def get_envs_tns(n_qubits, x, cost_tn):
     The environments are obtained by selecting tensors according to their
     ``I{i}`` tags:
 
-    - left environment: tensors tagged with ``I0`` through ``I{x-1}``,
-    - right environment: tensors tagged with ``I{x+1}`` through
+    - left environment: tensors tagged with ``I0`` through
+      ``I{site_index - 1}``,
+    - right environment: tensors tagged with ``I{site_index + 1}`` through
       ``I{n_qubits-1}``.
     """
 
-    env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
+    env_tn = cost_tn.select(tags=[f"I{site_index}"], which="!any")
 
-    left_tags = [f"I{x}" for x in range(x)]
-    right_tags = [f"I{x}" for x in range(x + 1, n_qubits)]
+    left_tags = [f"I{i}" for i in range(site_index)]
+    right_tags = [f"I{i}" for i in range(site_index + 1, n_qubits)]
 
     env_tns = []
-    if x > 0:
+    if site_index > 0:
         env_tns.append(env_tn.select(tags=left_tags, which="any"))
-    if x < n_qubits - 1:
+    if site_index < n_qubits - 1:
         env_tns.append(env_tn.select(tags=right_tags, which="any"))
 
     return env_tns
@@ -612,22 +614,14 @@ def find_transfer_structure(n_qubits, cost_tn):
     for x in range(1, n_qubits - 1):
         # left transfer
         transf_tn = left_uncontracted[f"I{x + 1}"].select(tags=(f"I{x}"), which="any")
-        transf_tags = transf_tn.tags
-        filtered_tags = []
-        for tag in transf_tags:
-            if tag[0] == "G" or tag[0] == "U":
-                filtered_tags.append(tag)
+        filtered_tags = [tag for tag in transf_tn.tags if tag[0] in ("G", "U")]
         transfer_structure["L"][f"L{x}_to_L{x + 1}"] = filtered_tags
 
         # right transfer
         transf_tn = right_uncontracted[f"I{n_qubits - 2 - x}"].select(
             tags=(f"I{n_qubits - 1 - x}"), which="any"
         )
-        transf_tags = transf_tn.tags
-        filtered_tags = []
-        for tag in transf_tags:
-            if tag[0] == "G" or tag[0] == "U":
-                filtered_tags.append(tag)
+        filtered_tags = [tag for tag in transf_tn.tags if tag[0] in ("G", "U")]
         transfer_structure["R"][f"R{n_qubits - 1 - x}_to_R{n_qubits - 2 - x}"] = (
             filtered_tags
         )
@@ -696,9 +690,9 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
 
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
     L_init = cost_tn.select(tags="Uref0", which="all").tensors[0]
-    L_init.add_tag(tag=("L1"))
+    L_init.add_tag(tag="L1")
     R_init = cost_tn.select(tags=f"Uref{n_qubits - 1}", which="all").tensors[0]
-    R_init.add_tag(tag=(f"R{n_qubits - 2}"))
+    R_init.add_tag(tag=f"R{n_qubits - 2}")
 
     contracted_envs["L"]["L1"] = L_init
     contracted_envs["R"][f"R{n_qubits - 2}"] = R_init
@@ -716,7 +710,7 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
         L_transf_tn = cost_tn.select(tags=transf_tags[0], which="any")
         L_next = L_next & L_transf_tn
         L_next = qtn.tensor_contract(*L_next.tensors, drop_tags=drop_tags)
-        L_next.add_tag(tag=(f"L{counter + 2}"))
+        L_next.add_tag(tag=f"L{counter + 2}")
 
         contracted_envs["L"][f"L{counter + 2}"] = L_next
 
@@ -724,7 +718,7 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
         R_transf_tn = cost_tn.select(tags=transf_tags[1], which="any")
         R_next = R_next & R_transf_tn
         R_next = qtn.tensor_contract(*R_next.tensors, drop_tags=drop_tags)
-        R_next.add_tag(tag=(f"R{n_qubits - 3 - counter}"))
+        R_next.add_tag(tag=f"R{n_qubits - 3 - counter}")
 
         contracted_envs["R"][f"R{n_qubits - 3 - counter}"] = R_next
 
@@ -788,10 +782,7 @@ def build_loc_cost_tn(n_qubits, site_index, contracted_envs, cost_tn):
     gates_to_opt = cost_tn.select(tags=f"I{site_index}", which="any")
     tags_to_opt = gates_to_opt.tags
 
-    filtered_tags = []
-    for tag in tags_to_opt:
-        if tag[0] == "G":
-            filtered_tags.append(tag)
+    filtered_tags = [tag for tag in tags_to_opt if tag[0] == "G"]
 
     if site_index == 0:
         loc_cost_tn = gates_to_opt & contracted_envs["R"][f"R{site_index}"]
@@ -863,9 +854,8 @@ def update_cost_tn(cost_tn, gate_tensors):
     """
 
     for tens in gate_tensors:
-        tag_tens = next(
-            iter(tens.tags)
-        )  # list(tens.tags)[0]  # the first tag is "GATE_{n}" by construction
+        # the first tag is "GATE_{n}" by construction
+        tag_tens = next(iter(tens.tags))
         cost_tn.delete(tags=tag_tens)  # delete the old tensor with same tags
         cost_tn = cost_tn & tens  # add the new tensor
 
@@ -1032,7 +1022,7 @@ def optimize_single_gate_update(
     """
 
     instr = [
-        ("LR", list(range(n_qubits - 2))),
+        ("LR", range(n_qubits - 2)),
         ("RL", list(reversed(range(2, n_qubits)))),
     ]
 
@@ -1071,10 +1061,9 @@ def optimize_single_gate_update(
                     )
 
                     # retain isometries
-                    overlap = np.sum(prc_loc_cost_UsVh.tensors[1].data)
-                    new_overlap = overlap
+                    new_overlap = np.sum(prc_loc_cost_UsVh.tensors[1].data)
                     trange_counter.set_description(
-                        f"overlap: {(overlap / pow(2, n_qubits)):.8f}"
+                        f"overlap: {(new_overlap / 2**n_qubits):.8f}"
                     )
                     new_gate_tens = (
                         prc_loc_cost_UsVh.tensors[0].conj()
