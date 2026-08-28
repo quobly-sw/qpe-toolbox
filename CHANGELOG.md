@@ -19,6 +19,8 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 - `init_cost_tn`: replaced `seed` (int) with an `rng` (`numpy.random.Generator`)
   argument, consistent with the rest of the codebase.
+- `trotter_approx_as_MPO`: renamed `order` to `trotter_order`, consistent with
+  `Hamiltonian.get_trotter_step` and every QPE/RPE function in the codebase.
 - `robust_phase_estimation`: replaced `epsilon` with `n_repetitions`, removed
   `sign_E0`, added an `rng` argument for deterministic sampling, and changed
   the `trotter_order` default from 2 to 1. The returned list now has length

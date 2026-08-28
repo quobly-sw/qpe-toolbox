@@ -78,7 +78,7 @@ ham_NNIM = Hamiltonian(terms_NNIM, L)
 # %%
 trotter_mpo_ham_NNIM = trotter_approx_as_MPO(
     ham_NNIM,
-    order=4,
+    trotter_order=4,
     dt=0.5,
     cutoff=1e-12,
     max_bond=64,

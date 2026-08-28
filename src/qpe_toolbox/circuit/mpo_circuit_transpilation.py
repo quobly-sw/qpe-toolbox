@@ -309,7 +309,9 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     return U_trotter4_mpo
 
 
-def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity=0):
+def trotter_approx_as_MPO(
+    hamiltonian, *, dt, trotter_order, cutoff, max_bond, verbosity=0
+):
     r"""
     Construct a Trotter-Suzuki approximation of a Hamiltonian evolution operator as an MPO.
 
@@ -317,15 +319,15 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     according to the requested approximation order. The Hamiltonian is assumed
     to provide a decomposition into elementary terms through ``hamiltonian.terms``.
 
-    Depending on ``order``, the approximation is built using:
+    Depending on ``trotter_order``, the approximation is built using:
 
     .. math::
 
         U(dt) \approx
         \begin{cases}
-            \text{1st-order product formula}, & \text{if } order = 1, \\
-            \text{2nd-order symmetric formula}, & \text{if } order = 2, \\
-            \text{4th-order Suzuki formula}, & \text{if } order = 4.
+            \text{1st-order product formula}, & \text{if trotter\_order} = 1, \\
+            \text{2nd-order symmetric formula}, & \text{if trotter\_order} = 2, \\
+            \text{4th-order Suzuki formula}, & \text{if trotter\_order} = 4.
         \end{cases}
 
     The resulting operator is returned as a compressed MPO.
@@ -336,7 +338,7 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
         Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
-    order : {1, 2, 4}
+    trotter_order : {1, 2, 4}
         Order of the Trotter-Suzuki decomposition.
     cutoff : float
         Singular value truncation threshold used during MPO compression.
@@ -353,9 +355,9 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     Raises
     ------
     ValueError
-        If the requested ``order`` is not implemented.
+        If the requested ``trotter_order`` is not implemented.
     """
-    if order == 1:
+    if trotter_order == 1:
         return trotter1_approx_as_MPO(
             hamiltonian.terms,
             hamiltonian.n_qubits,
@@ -364,7 +366,7 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
             max_bond=max_bond,
         )
 
-    if order == 2:
+    if trotter_order == 2:
         return trotter2_approx_as_MPO(
             hamiltonian.terms,
             hamiltonian.n_qubits,
@@ -374,7 +376,7 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
             verbosity=verbosity,
         )
 
-    if order == 4:
+    if trotter_order == 4:
         return trotter4_approx_as_MPO(
             hamiltonian.terms,
             hamiltonian.n_qubits,
@@ -383,7 +385,7 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
             max_bond=max_bond,
             verbosity=verbosity,
         )
-    raise ValueError(f"Order {order} not implemented")
+    raise ValueError(f"Order {trotter_order} not implemented")
 
 
 def state_preparation_mpo(state_mps):
