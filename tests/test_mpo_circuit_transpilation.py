@@ -3,8 +3,13 @@
 import numpy as np
 import pytest
 import quimb as qu
+import quimb.tensor as qtn
 
-from qpe_toolbox.circuit import trotter_approx_as_MPO
+from qpe_toolbox.circuit import (
+    state_preparation_mpo,
+    transpile_mpo_to_circuit,
+    trotter_approx_as_MPO,
+)
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 ham = heisenberg_hamiltonian(3)
@@ -44,7 +49,68 @@ def test_trotter_order4_scaling():
     assert 4.5 < slope < 5.5
 
 
+def test_state_preparation_mpo():
+    # state_preparation_mpo expects the boundary-tensor leg order DMRG2
+    # produces (phys, bond) / (bond, phys) -- not MPS_rand_state's (bond, phys)
+    dmrg = qtn.DMRG2(
+        ham.to_mpo(), p0=qtn.MPS_rand_state(ham.n_qubits, bond_dim=2, seed=42)
+    )
+    dmrg.solve(max_sweeps=8, bond_dims=16, verbosity=0, cutoffs=1e-10)
+    gs = dmrg.state
+    gs_vec = gs.to_dense().reshape(-1)
+
+    dense = state_preparation_mpo(state_mps=gs).to_dense()
+
+    n = ham.n_qubits
+    e0 = np.zeros(2**n, dtype=complex)
+    e0[0] = 1.0
+    assert np.allclose(dense @ e0, 2**n * gs_vec, atol=1e-8)
+
+    e1 = np.zeros(2**n, dtype=complex)
+    e1[1] = 1.0
+    assert np.allclose(dense @ e1, 0, atol=1e-8)
+
+
+def test_transpile_mpo_to_circuit_converges_to_identity():
+    # fitting a brickwall ansatz (initialized close to identity) against the
+    # identity MPO should recover perfect overlap
+    n_qubits = 4
+    ref_mpo = qtn.MPO_identity(n_qubits)
+    cost_tn, _ = transpile_mpo_to_circuit(
+        ref_mpo,
+        1,
+        1e-8,
+        20,
+        param_scaling=1e-1,
+        closed=True,
+        rng=np.random.default_rng(42),
+    )
+    overlap = abs(cost_tn.contract(all, optimize="auto-hq")) / 2**n_qubits
+    assert np.isclose(overlap, 1.0, atol=1e-6)
+
+
+def test_transpile_mpo_to_circuit_multi_sweep():
+    # force several full LR+RL sweeps, exercising the rtol early-stopping
+    # path and reusing the "RL" reversed-range site sequence multiple times
+    n_qubits = 4
+    ref_mpo = qtn.MPO_identity(n_qubits)
+    cost_tn, _ = transpile_mpo_to_circuit(
+        ref_mpo,
+        2,
+        1e-10,
+        10,
+        param_scaling=1e-1,
+        closed=True,
+        rng=np.random.default_rng(1),
+    )
+    overlap = abs(cost_tn.contract(all, optimize="auto-hq")) / 2**n_qubits
+    assert np.isclose(overlap, 1.0, atol=1e-6)
+
+
 if __name__ == "__main__":
     test_trotter_invalid_order_raises()
     test_trotter_order_accuracy_ranking()
     test_trotter_order4_scaling()
+    test_state_preparation_mpo()
+    test_transpile_mpo_to_circuit_converges_to_identity()
+    test_transpile_mpo_to_circuit_multi_sweep()
