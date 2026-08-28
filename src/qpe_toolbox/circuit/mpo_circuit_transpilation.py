@@ -161,12 +161,6 @@ def trotter1_approx_as_MPO(
     -------
     MPO
         MPO representation of the first-order Trotter approximation.
-
-    Notes
-    -----
-    The resulting MPO is built iteratively using compressed MPO products via
-    ``apply(..., compress=True)``. Truncation errors may accumulate depending
-    on ``cutoff`` and ``max_bond``.
     """
 
     if reverse_order:
@@ -217,25 +211,17 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         Singular value truncation threshold used during MPO compression.
     max_bond : int
         Maximum allowed bond dimension during MPO compression.
-    verbosity : int, optional
-        If set to ``1``, prints progress information. Default is ``0``.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print progress.
 
     Returns
     -------
     MPO
         MPO representation of the second-order Trotter approximation.
-
-    Notes
-    -----
-    Two first-order MPO approximants with half time step are constructed and
-    then multiplied together using compression.
     """
 
-    if verbosity == 1:
-        print(
-            f"{'': <2}Building 2nd order Trotter",
-            "\n",
-        )
+    if verbosity >= 1:
+        print(f"{'': <2}Building 2nd order Trotter")
         print(f"{'': <4}Building 1st order Trotter (1st half)")
 
     layer1_mpo = trotter1_approx_as_MPO(
@@ -246,8 +232,7 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         max_bond=max_bond,
     )
 
-    if verbosity == 1:
-        print("\n")
+    if verbosity >= 1:
         print(rf"{'': <4}Building 1st order Trotter (2nd half)")
 
     layer2_mpo = trotter1_approx_as_MPO(
@@ -258,10 +243,6 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         max_bond=max_bond,
         reverse_order=True,
     )
-
-    if verbosity == 1:
-        print("\n")
-
     return layer1_mpo.apply(layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
 
 
@@ -301,28 +282,19 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         Singular value truncation threshold used during MPO compression.
     max_bond : int
         Maximum allowed bond dimension during MPO compression.
-    verbosity : int, optional
-        If set to ``1``, prints progress information. Default is ``0``.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print progress.
 
     Returns
     -------
     MPO
         MPO representation of the fourth-order Trotter approximation.
-
-    Notes
-    -----
-    The method constructs three second-order MPO approximants and combines
-    them through compressed MPO multiplication. Intermediate bond dimensions
-    may grow significantly depending on the system and truncation parameters.
     """
 
     sym_factor = 1.0 / (2.0 - 2 ** (1.0 / 3.0))
 
-    if verbosity == 1:
-        print(
-            "Building 4th order Trotter",
-            "\n",
-        )
+    if verbosity >= 1:
+        print("Building 4th order Trotter")
         print(rf"{'': <2}Building 2nd order Trotter (1st and 3rd layers)")
 
     layer1_3_mpo = trotter2_approx_as_MPO(
@@ -334,7 +306,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         verbosity=verbosity,
     )
 
-    if verbosity == 1:
+    if verbosity >= 1:
         print(rf"{'': <2}Building 2nd order Trotter (2nd layer)")
 
     layer2_mpo = trotter2_approx_as_MPO(
@@ -346,8 +318,8 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         verbosity=verbosity,
     )
 
-    if verbosity == 1:
-        print(f"{'': <2}Multiplying the 3 MPO layers", "\n")
+    if verbosity >= 1:
+        print(f"{'': <2}Multiplying the 3 MPO layers")
 
     U_trotter4_mpo = layer1_3_mpo.apply(
         layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
@@ -394,9 +366,8 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
         Singular value truncation threshold used during MPO compression.
     max_bond : int
         Maximum allowed MPO bond dimension during compression.
-    verbosity : int, optional
-        Verbosity level forwarded to higher-order routines.
-        Default is ``0``.
+    verbosity : int, default ``0``
+        Verbosity level. If >= 1, print progress.
 
     Returns
     -------
@@ -407,49 +378,36 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     ------
     ValueError
         If the requested ``order`` is not implemented.
-
-    Notes
-    -----
-    Compression is performed during MPO manipulations, so the final accuracy
-    depends on the chosen ``cutoff`` and ``max_bond`` values.
     """
-
-    ham_terms = hamiltonian.terms
-    n_qubits = hamiltonian.n_qubits
-
-    # list_bondims = []
     if order == 1:
-        U_trotter_mpo = trotter1_approx_as_MPO(
-            ham_terms,
-            n_qubits,
+        return trotter1_approx_as_MPO(
+            hamiltonian.terms,
+            hamiltonian.n_qubits,
             dt=dt,
             cutoff=cutoff,
             max_bond=max_bond,
         )
 
-    elif order == 2:
-        U_trotter_mpo = trotter2_approx_as_MPO(
-            ham_terms,
-            n_qubits,
-            dt=dt,
-            cutoff=cutoff,
-            max_bond=max_bond,
-            verbosity=verbosity,
-        )
-
-    elif order == 4:
-        U_trotter_mpo = trotter4_approx_as_MPO(
-            ham_terms,
-            n_qubits,
+    if order == 2:
+        return trotter2_approx_as_MPO(
+            hamiltonian.terms,
+            hamiltonian.n_qubits,
             dt=dt,
             cutoff=cutoff,
             max_bond=max_bond,
             verbosity=verbosity,
         )
-    else:
-        raise ValueError(f"Order {order} not implemented")
 
-    return U_trotter_mpo
+    if order == 4:
+        return trotter4_approx_as_MPO(
+            hamiltonian.terms,
+            hamiltonian.n_qubits,
+            dt=dt,
+            cutoff=cutoff,
+            max_bond=max_bond,
+            verbosity=verbosity,
+        )
+    raise ValueError(f"Order {order} not implemented")
 
 
 def state_preparation_mpo(state_mps):
