@@ -897,7 +897,7 @@ def update_cost_tn(cost_tn, gate_tensors):
     return cost_tn
 
 
-def update_dict_contr_envs(
+def update_contracted_envs(
     mode, gate_tensors, cost_tn, transfer_structure, contracted_envs
 ):
     r"""
@@ -953,23 +953,25 @@ def update_dict_contr_envs(
     This local update strategy avoids rebuilding all environments from
     scratch after each optimization step.
     """
+    if mode == "LR":  # sweeping L to R only requires updating L's
+        side, shift1, shift2 = "L", 1, 2
+    elif mode == "RL":  # sweeping R to L only requires updating R's
+        side, shift1, shift2 = "R", 0, -1
+    else:
+        raise ValueError(f"Unknown sweep mode {mode!r}")
+
     for tens in gate_tensors:
         gate_tags = list(tens.tags)
         n = int(re.search(r"\d+", gate_tags[3]).group())
 
-        if mode == "LR":  # sweeping L to R only requires updating L's
-            transf_tens = cost_tn.select(
-                tags=transfer_structure["L"][f"L{n + 1}_to_L{n + 2}"], which="any"
-            )
-            new_env = contracted_envs["L"][f"L{n + 1}"].copy(deep=True) & transf_tens
-            contracted_envs["L"][f"L{n + 2}"] = new_env.contract()
+        from_key = f"{side}{n + shift1}"
+        to_key = f"{side}{n + shift2}"
 
-        if mode == "RL":  # sweeping R to L only requires updating R's
-            transf_tens = cost_tn.select(
-                tags=transfer_structure["R"][f"R{n}_to_R{n - 1}"], which="any"
-            )
-            new_env = contracted_envs["R"][f"R{n}"].copy(deep=True) & transf_tens
-            contracted_envs["R"][f"R{n - 1}"] = new_env.contract()
+        transf_tens = cost_tn.select(
+            tags=transfer_structure[side][f"{from_key}_to_{to_key}"], which="any"
+        )
+        new_env = contracted_envs[side][from_key].copy(deep=True) & transf_tens
+        contracted_envs[side][to_key] = new_env.contract()
 
     return contracted_envs
 
@@ -1116,7 +1118,7 @@ def optimize_single_gate_update(
                     )
 
                     # update transfer tensors and environments
-                    contracted_envs = update_dict_contr_envs(
+                    contracted_envs = update_contracted_envs(
                         mode,
                         [original_gate_tens],
                         cost_tn,
