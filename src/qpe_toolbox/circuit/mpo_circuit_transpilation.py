@@ -449,7 +449,6 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
     """
 
     n_qubits = ref_mpo.num_tensors
-    TN = qtn.TensorNetwork()
 
     # -----------------------------------------
     # Define the Ansatz as a brickwall circuit
@@ -464,10 +463,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
         param_scaling=param_scaling,  # initialize close to identity
         rng=rng,
     )
-
-    bw_unitary_tn = bw_circ.get_uni()
-
-    TN = TN & bw_unitary_tn
+    TN = qtn.TensorNetwork() & bw_circ.get_uni()
 
     # -----------------------------------
     # Add the MPO in the network
@@ -491,8 +487,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
             )
 
         reind_tens.modify(inds=inds, tags=(f"I{x}", f"Uref{x}", "MPO"))
-
-        TN = TN & reind_tens
+        TN &= reind_tens
 
     return TN
 
