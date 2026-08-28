@@ -11,7 +11,7 @@ from qpe_toolbox.circuit.parametrized_circuits import (
 
 
 # --------------------------------------------------------------------------
-def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
+def exp_Pauli_string_as_MPO(term, dt, n_qubits):
     r"""
     Construct the MPO representation of the unitary exponential of a Pauli string.
 
@@ -23,7 +23,7 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     operators acting on a subset of qubits, this function builds the Matrix
     Product Operator (MPO) corresponding to:
 
-        exp(i * theta * c * P)
+        exp(i * dt * c * P)
 
     using the identity:
 
@@ -36,7 +36,7 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
 
     Parameters
     ----------
-    ham_term : tuple
+    term : tuple
         A tuple ``(coeff, pauli_string, active_qubits)`` where:
 
         - ``coeff`` (float): Scalar coefficient multiplying the Pauli string.
@@ -44,18 +44,18 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
         - ``active_qubits`` (list[int]): Indices of qubits where the Pauli
           operators act. The length must match ``pauli_string``.
 
+    dt : float
+        Evolution parameter (e.g. time or rotation angle).
+
     n_qubits : int
         Total number of qubits in the system.
-
-    theta : float
-        Evolution parameter (e.g. time or rotation angle).
 
     Returns
     -------
     qtn.MatrixProductOperator in lrud format
         MPO representing the operator:
 
-            exp(i * theta * coeff * P)
+            exp(i * dt * coeff * P)
 
         where ``P`` is the full Pauli string embedded in the ``n_qubits`` system.
 
@@ -66,7 +66,7 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
         ``active_qubits``.
     """
 
-    string_coeff, pauli_string, active_qubits = ham_term
+    string_coeff, pauli_string, active_qubits = term
     id4 = qu.identity(2).reshape(1, 1, 2, 2)
 
     pauli_string_tensors = []
@@ -86,8 +86,8 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     string_mpo = qtn.MatrixProductOperator(arrays=pauli_string_tensors)
     id_mpo = string_mpo.identity()
 
-    id_mpo[0] *= np.cos(theta * string_coeff)
-    string_mpo[0] *= 1j * np.sin(theta * string_coeff)
+    id_mpo[0] *= np.cos(dt * string_coeff)
+    string_mpo[0] *= 1j * np.sin(dt * string_coeff)
 
     exp_pauli_string_mpo = id_mpo.add_MPO(string_mpo)
     exp_pauli_string_mpo.compress(cutoff=1e-6, max_bond=2)
@@ -96,7 +96,7 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
 
 
 def trotter1_approx_as_MPO(
-    ham_terms, n_qubits, *, dt, cutoff, max_bond, reverse_order=False
+    hamiltonian, dt, *, cutoff=1e-10, max_bond=None, reverse_order=False
 ):
     r"""
     Construct the first-order Trotter-Suzuki approximation as a Matrix Product Operator (MPO).
@@ -108,8 +108,9 @@ def trotter1_approx_as_MPO(
 
         U(dt) \approx \prod_j e^{-i dt \, H_j},
 
-    where ``ham_terms = [H_0, H_1, ..., H_{m-1}]`` is a decomposition of the
-    Hamiltonian into terms that can each be exponentiated individually as MPOs.
+    where ``hamiltonian.terms = [H_0, H_1, ..., H_{m-1}]`` is a decomposition
+    of the Hamiltonian into terms that can each be exponentiated individually
+    as MPOs.
 
     Each exponential factor is generated with
     :func:`exp_Pauli_string_as_MPO`, and factors are successively multiplied
@@ -117,17 +118,16 @@ def trotter1_approx_as_MPO(
 
     Parameters
     ----------
-    ham_terms : sequence
-        Sequence of Hamiltonian terms. Each element must be compatible with
-        :func:`exp_Pauli_string_as_MPO`.
-    n_qubits : int
-        Number of qubits (sites) in the system.
+    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+        Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
-    cutoff : float
+    cutoff : float, optional
         Singular value truncation threshold used during MPO compression.
-    max_bond : int
+        Default is ``1e-10``.
+    max_bond : int, optional
         Maximum allowed bond dimension during MPO compression.
+        Default is ``None`` (no limit).
     reverse_order : bool, optional
         If ``False`` (default), terms are applied in forward order.
         after the first term. If ``True``, terms are applied in reverse index order.
@@ -138,6 +138,9 @@ def trotter1_approx_as_MPO(
         MPO representation of the first-order Trotter approximation.
     """
 
+    ham_terms = hamiltonian.terms
+    n_qubits = hamiltonian.n_qubits
+
     if reverse_order:
         init_term = len(ham_terms) - 1
         trange_counter = tqdm(reversed(range(len(ham_terms) - 1)))
@@ -145,9 +148,9 @@ def trotter1_approx_as_MPO(
         init_term = 0
         trange_counter = tqdm(range(1, len(ham_terms)))
 
-    U_trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], n_qubits, theta=-dt)
+    U_trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], -dt, n_qubits)
     for i in trange_counter:
-        new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], n_qubits, theta=-dt)
+        new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], -dt, n_qubits)
         U_trotter1_mpo = U_trotter1_mpo.apply(
             new_factor_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
         )
@@ -158,7 +161,9 @@ def trotter1_approx_as_MPO(
     return U_trotter1_mpo
 
 
-def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity=0):
+def trotter2_approx_as_MPO(
+    hamiltonian, dt, *, cutoff=1e-10, max_bond=None, verbosity=0
+):
     r"""
     Construct the second-order symmetric Trotter-Suzuki approximation as an MPO.
 
@@ -175,17 +180,16 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
     Parameters
     ----------
-    ham_terms : sequence
-        Sequence of Hamiltonian terms. Each term must be compatible with
-        :func:`exp_Pauli_string_as_MPO`.
-    n_qubits : int
-        Number of qubits (sites) in the system.
+    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+        Includes Pauli strings, positions and couplings.
     dt : float or complex
         Time step used in the Trotter approximation.
-    cutoff : float
+    cutoff : float, optional
         Singular value truncation threshold used during MPO compression.
-    max_bond : int
+        Default is ``1e-10``.
+    max_bond : int, optional
         Maximum allowed bond dimension during MPO compression.
+        Default is ``None`` (no limit).
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress.
 
@@ -200,28 +204,21 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         print(f"{'': <4}Building 1st order Trotter (1st half)")
 
     layer1_mpo = trotter1_approx_as_MPO(
-        ham_terms,
-        n_qubits,
-        dt=dt / 2,
-        cutoff=cutoff,
-        max_bond=max_bond,
+        hamiltonian, dt / 2, cutoff=cutoff, max_bond=max_bond
     )
 
     if verbosity >= 1:
         print(rf"{'': <4}Building 1st order Trotter (2nd half)")
 
     layer2_mpo = trotter1_approx_as_MPO(
-        ham_terms,
-        n_qubits,
-        dt=dt / 2,
-        cutoff=cutoff,
-        max_bond=max_bond,
-        reverse_order=True,
+        hamiltonian, dt / 2, cutoff=cutoff, max_bond=max_bond, reverse_order=True
     )
     return layer1_mpo.apply(layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond)
 
 
-def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosity=0):
+def trotter4_approx_as_MPO(
+    hamiltonian, dt, *, cutoff=1e-10, max_bond=None, verbosity=0
+):
     r"""
     Construct the fourth-order Trotter-Suzuki approximation as an MPO.
 
@@ -246,17 +243,16 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
     Parameters
     ----------
-    ham_terms : sequence
-        Sequence of Hamiltonian terms. Each term must be compatible with
-        :func:`exp_Pauli_string_as_MPO`.
-    n_qubits : int
-        Number of qubits (sites) in the system.
+    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+        Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
-    cutoff : float
+    cutoff : float, optional
         Singular value truncation threshold used during MPO compression.
-    max_bond : int
+        Default is ``1e-10``.
+    max_bond : int, optional
         Maximum allowed bond dimension during MPO compression.
+        Default is ``None`` (no limit).
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress.
 
@@ -273,9 +269,8 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         print(rf"{'': <2}Building 2nd order Trotter (1st and 3rd layers)")
 
     layer1_3_mpo = trotter2_approx_as_MPO(
-        ham_terms,
-        n_qubits,
-        dt=dt * sym_factor,
+        hamiltonian,
+        dt * sym_factor,
         cutoff=cutoff,
         max_bond=max_bond,
         verbosity=verbosity,
@@ -285,9 +280,8 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         print(rf"{'': <2}Building 2nd order Trotter (2nd layer)")
 
     layer2_mpo = trotter2_approx_as_MPO(
-        ham_terms,
-        n_qubits,
-        dt=dt * (1 - 2 * sym_factor),
+        hamiltonian,
+        dt * (1 - 2 * sym_factor),
         cutoff=cutoff,
         max_bond=max_bond,
         verbosity=verbosity,
@@ -309,7 +303,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
 
 
 def trotter_approx_as_MPO(
-    hamiltonian, *, dt, trotter_order, cutoff, max_bond, verbosity=0
+    hamiltonian, dt, *, trotter_order=1, cutoff=1e-10, max_bond=None, verbosity=0
 ):
     r"""
     Construct a Trotter-Suzuki approximation of a Hamiltonian evolution operator as an MPO.
@@ -337,12 +331,14 @@ def trotter_approx_as_MPO(
         Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
-    trotter_order : {1, 2, 4}
-        Order of the Trotter-Suzuki decomposition.
-    cutoff : float
+    trotter_order : {1, 2, 4}, optional
+        Order of the Trotter-Suzuki decomposition. Default is ``1``.
+    cutoff : float, optional
         Singular value truncation threshold used during MPO compression.
-    max_bond : int
+        Default is ``1e-10``.
+    max_bond : int, optional
         Maximum allowed MPO bond dimension during compression.
+        Default is ``None`` (no limit).
     verbosity : int, default ``0``
         Verbosity level. If >= 1, print progress.
 
@@ -357,32 +353,16 @@ def trotter_approx_as_MPO(
         If the requested ``trotter_order`` is not implemented.
     """
     if trotter_order == 1:
-        return trotter1_approx_as_MPO(
-            hamiltonian.terms,
-            hamiltonian.n_qubits,
-            dt=dt,
-            cutoff=cutoff,
-            max_bond=max_bond,
-        )
+        return trotter1_approx_as_MPO(hamiltonian, dt, cutoff=cutoff, max_bond=max_bond)
 
     if trotter_order == 2:
         return trotter2_approx_as_MPO(
-            hamiltonian.terms,
-            hamiltonian.n_qubits,
-            dt=dt,
-            cutoff=cutoff,
-            max_bond=max_bond,
-            verbosity=verbosity,
+            hamiltonian, dt, cutoff=cutoff, max_bond=max_bond, verbosity=verbosity
         )
 
     if trotter_order == 4:
         return trotter4_approx_as_MPO(
-            hamiltonian.terms,
-            hamiltonian.n_qubits,
-            dt=dt,
-            cutoff=cutoff,
-            max_bond=max_bond,
-            verbosity=verbosity,
+            hamiltonian, dt, cutoff=cutoff, max_bond=max_bond, verbosity=verbosity
         )
     raise ValueError(f"Order {trotter_order} not implemented")
 

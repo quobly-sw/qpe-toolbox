@@ -14,14 +14,14 @@ ham_dense = ham.to_dense()
 def _trotter_error(trotter_order, dt):
     exact = qu.expm(-1j * dt * ham_dense)
     approx = trotter_approx_as_MPO(
-        ham, dt=dt, trotter_order=trotter_order, cutoff=1e-12, max_bond=64
+        ham, dt, trotter_order=trotter_order, cutoff=1e-12, max_bond=64
     ).to_dense()
     return np.linalg.norm(approx - exact)
 
 
 def test_trotter_invalid_order_raises():
     with pytest.raises(ValueError):
-        trotter_approx_as_MPO(ham, dt=0.1, trotter_order=3, cutoff=1e-12, max_bond=64)
+        trotter_approx_as_MPO(ham, 0.1, trotter_order=3, cutoff=1e-12, max_bond=64)
 
 
 def test_trotter_order_accuracy_ranking():
