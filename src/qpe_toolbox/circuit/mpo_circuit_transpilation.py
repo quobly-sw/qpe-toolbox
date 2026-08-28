@@ -353,7 +353,7 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
         layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
     U_trotter4_mpo = U_trotter4_mpo.apply(
-        layer2_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
+        layer1_3_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
     )
     if verbosity == 1:
         print(f"{'': <4}Final bond dimension:", U_trotter4_mpo.max_bond())
