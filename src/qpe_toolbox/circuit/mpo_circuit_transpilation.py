@@ -4,12 +4,6 @@ import cotengra as ctg
 import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
-from quimb.tensor.tensor_core import (
-    TensorNetwork,
-    get_tags,
-    tensor_contract,
-    tensor_split,
-)
 from tqdm import tqdm
 
 from qpe_toolbox.circuit.parametrized_circuits import (
@@ -474,7 +468,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
     """
 
     n_qubits = ref_mpo.num_tensors
-    TN = TensorNetwork()
+    TN = qtn.TensorNetwork()
 
     # -----------------------------------------
     # Define the Ansatz as a brickwall circuit
@@ -642,7 +636,7 @@ def find_transfer_structure(n_qubits, cost_tn):
     for x in range(1, n_qubits - 1):
         # left transfer
         transf_tn = left_uncontracted[f"I{x + 1}"].select(tags=(f"I{x}"), which="any")
-        transf_tags = get_tags(transf_tn)
+        transf_tags = transf_tn.tags
         filtered_tags = []
         for tag in transf_tags:
             if tag[0] == "G" or tag[0] == "U":
@@ -653,7 +647,7 @@ def find_transfer_structure(n_qubits, cost_tn):
         transf_tn = right_uncontracted[f"I{n_qubits - 2 - x}"].select(
             tags=(f"I{n_qubits - 1 - x}"), which="any"
         )
-        transf_tags = get_tags(transf_tn)
+        transf_tags = transf_tn.tags
         filtered_tags = []
         for tag in transf_tags:
             if tag[0] == "G" or tag[0] == "U":
@@ -745,7 +739,7 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
         L_next = L_next.copy(deep=True)
         L_transf_tn = cost_tn.select(tags=transf_tags[0], which="any")
         L_next = L_next & L_transf_tn
-        L_next = tensor_contract(*L_next.tensors, drop_tags=drop_tags)
+        L_next = qtn.tensor_contract(*L_next.tensors, drop_tags=drop_tags)
         L_next.add_tag(tag=(f"L{counter + 2}"))
 
         contracted_envs["L"][f"L{counter + 2}"] = L_next
@@ -753,7 +747,7 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
         R_next = R_next.copy(deep=True)
         R_transf_tn = cost_tn.select(tags=transf_tags[1], which="any")
         R_next = R_next & R_transf_tn
-        R_next = tensor_contract(*R_next.tensors, drop_tags=drop_tags)
+        R_next = qtn.tensor_contract(*R_next.tensors, drop_tags=drop_tags)
         R_next.add_tag(tag=(f"R{n_qubits - 3 - counter}"))
 
         contracted_envs["R"][f"R{n_qubits - 3 - counter}"] = R_next
@@ -815,7 +809,7 @@ def build_loc_cost_tn(n_qubits, x, contracted_envs, cost_tn):
     """
 
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
-    tags_to_opt = get_tags(gates_to_opt)
+    tags_to_opt = gates_to_opt.tags
 
     filtered_tags = []
     for tag in tags_to_opt:
@@ -1087,7 +1081,7 @@ def optimize_single_gate_update(
                     )
 
                     # do the SVD
-                    prc_loc_cost_UsVh = tensor_split(
+                    prc_loc_cost_UsVh = qtn.tensor_split(
                         T=prc_loc_cost_tens,
                         # recall index ordering in Gate class:
                         # (OUT_LEFT, OUT_RIGHT, IN_LEFT, IN_RIGHT)
