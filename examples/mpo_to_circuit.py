@@ -51,13 +51,9 @@ os.environ["MKL_NUM_THREADS"] = "1"
 import numpy as np
 from quimb.tensor import DMRG2, MPS_rand_state
 
-from qpe_toolbox.circuit import (
-    init_cost_tn,
-    state_preparation_mpo,
-    transpile_mpo_to_circuit,
-    trotter_approx_as_MPO,
-)
-from qpe_toolbox.hamiltonian import Hamiltonian
+from qpe_toolbox.circuit import init_cost_tn, transpile_mpo_to_circuit
+from qpe_toolbox.hamiltonian import Hamiltonian, trotter_approx_as_MPO
+from qpe_toolbox.tensor import state_preparation_mpo
 
 # %% [markdown]
 # ## Dynamics induced by the next-nearest-neighbor Ising model

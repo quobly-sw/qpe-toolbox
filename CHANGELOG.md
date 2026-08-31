@@ -12,8 +12,13 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `transpile_mpo_to_circuit`: convenience wrapper chaining `init_cost_tn`,
   `find_transfer_structure`, `build_first_sweep` and `optimize_single_gate_update`
   to fit a brickwall circuit ansatz to a reference MPO in one call.
-- `init_cost_tn`, `state_preparation_mpo`, `transpile_mpo_to_circuit` and
-  `trotter_approx_as_MPO` are now re-exported from `qpe_toolbox.circuit`.
+- `init_cost_tn` and `transpile_mpo_to_circuit` are now re-exported from
+  `qpe_toolbox.circuit`.
+- `state_preparation_mpo` is now re-exported from `qpe_toolbox.tensor`.
+- `hamiltonian/trotterization.py`: Trotter-Suzuki decompositions
+  (`trotter_approx_as_MPO` and friends, plus `rotation_gates`) now live
+  together in one module. `trotter_approx_as_MPO` is re-exported from
+  `qpe_toolbox.hamiltonian`.
 
 ### Changed
 

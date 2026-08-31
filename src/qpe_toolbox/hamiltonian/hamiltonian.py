@@ -13,6 +13,8 @@ import quimb.tensor as qtn
 import scipy.sparse
 from quimb.operator import SparseOperatorBuilder
 
+from .trotterization import rotation_gates
+
 
 def heisenberg_hamiltonian(n_qubits, *, coupling_strength=1.0):
     """
@@ -250,64 +252,3 @@ class Hamiltonian:
                 program += rotation_gates(term, dt / 2, data_reg)
             return program
         raise ValueError(f"order {trotter_order} not implemented")
-
-
-def rotation_gates(term, dt, qubit_reg):
-    """
-    Generate a gate sequence for exponentiating a Pauli-string term.
-
-    Implements
-
-    .. math::
-        e^{-i dt \\theta P}
-
-    where :math:`P` is a tensor product of Pauli operators and :math:`\\theta` is the associated
-    coefficient in the term. The implementation uses basis rotations, ``CNOT`` chains, and a
-    single ``RZ`` rotation.
-
-    Parameters
-    ----------
-    term : tuple
-        Hamiltonian term ``(theta, pauli_string, qubits)``.
-    dt : float
-        Time step or Trotter slice.
-    qubit_reg : sequence of int
-        Mapping from logical qubit indices to circuit qubits.
-
-    Returns
-    -------
-    list
-        Abstract quantum gate instructions suitable for circuit construction.
-    """
-    (theta, pauli_string, qubits) = term
-    routine = []
-
-    # Rotations: H for X gates and RX(pi/2) for Y gates
-    for op, qubit in zip(pauli_string, qubits, strict=True):
-        if op.upper() == "X":
-            routine.append(("H", qubit_reg[qubit]))
-        if op.upper() == "Y":
-            routine.append(("RX", np.pi / 2, qubit_reg[qubit]))
-
-    # CNOTs
-    for j in range(len(pauli_string) - 1):
-        routine.append(("CNOT", qubit_reg[qubits[j]], qubit_reg[qubits[j + 1]]))
-
-    # RZ gate
-    routine.append(
-        ("RZ", 2 * theta * dt, qubit_reg[qubits[-1]])
-    )  ## RZ(alpha) = exp(-1j * alpha/2 * sigma_z)
-
-    # CNOTs back
-    for j in range(len(pauli_string) - 1, 0, -1):
-        routine.append(("CNOT", qubit_reg[qubits[j - 1]], qubit_reg[qubits[j]]))
-
-    # Rotations back
-    for op, qubit in zip(pauli_string, qubits, strict=True):
-        if op.upper() == "X":
-            routine.append(("H", qubit_reg[qubit]))
-
-        if op.upper() == "Y":
-            routine.append(("RX", -np.pi / 2, qubit_reg[qubit]))
-
-    return routine

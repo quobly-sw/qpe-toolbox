@@ -10,6 +10,52 @@
 import numpy as np
 import quimb.tensor as qtn
 
+##### State preparation #######################################################
+
+
+def state_preparation_mpo(state_mps):
+    r"""
+    Perform outer product between an MPS and the state 0.
+
+    Parameters
+    ----------
+    state_mps : :quimb-api:`MatrixProductState`
+        Target MPS to be reproduced by some circuit Ansatz.
+
+    Returns
+    -------
+    :quimb-api:`TensorNetwork`
+        Tensor network containing both the reference MPO
+        for some variational procedure.
+    """
+
+    n_qubits = state_mps.num_tensors
+    ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
+
+    # DMRG2's output orders boundary-tensor legs as (phys, bond) at the first
+    # site and (bond, phys) at the last site
+    first_array = state_mps.tensors[0].data
+    arrays = [
+        np.outer(first_array, ket0)
+        .reshape(2, first_array.shape[1], 2)
+        .transpose(1, 0, 2)  # transpose to lpp'
+    ]
+
+    for i in range(1, n_qubits - 1):
+        array = state_mps.tensors[i].data
+        dims = np.shape(array)
+        # assume array had order lpr then get lprp' so transpose to lrpp'
+        arrays.append(
+            np.outer(array, ket0).reshape(dims[0], 2, dims[2], 2).transpose(0, 2, 1, 3)
+        )
+
+    last_array = state_mps.tensors[n_qubits - 1].data
+    # assume array had order rp then get rpp' so no transpose
+    arrays.append(np.outer(last_array, ket0).reshape(last_array.shape[0], 2, 2))
+
+    return qtn.MatrixProductOperator(arrays=arrays)
+
+
 ##### Kronecker products ######################################################
 
 
