@@ -1,9 +1,9 @@
 import re
 
-import numpy as np
 import quimb.tensor as qtn
 from tqdm import tqdm
 
+from qpe_toolbox.circuit.circuits_opt import svd_optimal_gate_update
 from qpe_toolbox.circuit.parametrized_circuits import (
     generate_brickwall_circuit,
 )
@@ -549,21 +549,13 @@ def optimize_one_gate(
     # and rehearse the contraction for later sweeps
     prc_loc_cost_tens = PRC_loc_cost_tn(loc_cost_tn, tag, optimize)
 
-    # do the SVD
-    svd_factors = qtn.tensor_split(
-        T=prc_loc_cost_tens,
+    # do the SVD, retaining isometries
+    new_gate_tens, overlap = svd_optimal_gate_update(
+        prc_loc_cost_tens,
         # recall index ordering in Gate class:
         # (OUT_LEFT, OUT_RIGHT, IN_LEFT, IN_RIGHT)
         left_inds=(inds[0], inds[1]),
-        method="svd",
-        absorb=None,
     )
-
-    # retain isometries
-    overlap = np.sum(svd_factors.tensors[1].data)
-    new_gate_tens = (
-        svd_factors.tensors[0].conj() & svd_factors.tensors[2].conj()
-    ) ^ ...
 
     # ensure index order
     new_gate_tens.transpose(inds[2], inds[3], inds[0], inds[1])

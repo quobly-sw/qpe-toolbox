@@ -7,9 +7,44 @@
 #
 # --------------------------------------------------------------------------------------
 
-import autoray
+import numpy as np
 import quimb.tensor as qtn
 import tqdm
+
+
+def svd_optimal_gate_update(tensor, left_inds):
+    r"""
+    Solve for the SVD-optimal isometric update of a variational tensor.
+
+    ``tensor`` is the environment of a variational tensor: the rest of a
+    tensor network, fully contracted, with that tensor removed. This is the
+    closed-form solution of the associated *unconstrained linear* problem:
+    the isometry $X$ maximizing $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$ is
+    $X = U V^\dagger$, obtained by discarding the singular values of the SVD
+    $B = U S V^\dagger$.
+
+    Parameters
+    ----------
+    tensor : :quimb-api:`Tensor`
+        Contracted environment tensor.
+    left_inds : sequence of str
+        Subset of ``tensor``'s indices forming the left side of the SVD
+        bipartition; the remaining indices form the right side.
+
+    Returns
+    -------
+    new_isometry : :quimb-api:`Tensor`
+        Optimal isometric tensor, carrying the same indices as ``tensor``.
+    objective : float
+        Sum of the discarded singular values, i.e. the achieved value of
+        $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$.
+    """
+    svd_factors = qtn.tensor_split(
+        T=tensor, left_inds=left_inds, method="svd", absorb=None
+    )
+    objective = np.sum(svd_factors.tensors[1].data)
+    new_isometry = (svd_factors.tensors[0].conj() & svd_factors.tensors[2].conj()) ^ ...
+    return new_isometry, objective
 
 
 def _tn_fit_core(
@@ -31,9 +66,9 @@ def _tn_fit_core(
 
     Parameters
     ----------
-    var_tags : list of hashable
+    var_tags : iterable of hashable
         Tags identifying the variable tensors in the network (each must also carry the
-        tag "__KET__").
+        tag "__KET__"). Consumed by a single pass, so any iterable works.
     tnAB : TensorNetwork-like object
         The full tensor network containing both the variable tensors and the fixed
         environment. It must support selection by tags and contraction to dense arrays.
@@ -55,37 +90,24 @@ def _tn_fit_core(
     -----
     The algorithm assumes that each variable tensor is associated with the tag "__KET__"
     and one of the `var_tags`. The environment for a given variable is the rest of the
-    network after contracting all other tensors. The optimal update is derived from the
-    SVD of the environment reshaped as a matrix: if the environment is B, and we seek
-    a tensor X (same shape as the variable) that maximizes the real part of the inner
-    product ⟨X|B⟩ (or equivalent), the solution is given by X = U V^†, where B = U S V^†.
-    The implementation uses the conjugate of this update to conform to the network's
-    contraction conventions.
+    network after contracting all other tensors. Each update is the closed-form SVD
+    solution computed by :func:`svd_optimal_gate_update`.
     """
-    xp = tnAB.get_namespace()  # Get the array module (e.g., numpy, cupy)
-
     # --------------------------------------------------------------------------
-    # Precompute environment contractions for each variable tensor.
-    # For each variable, we store:
-    #   - the tensor object itself
-    #   - the environment network (all tensors except this one)
-    #   - the left and right indices that define the matrix reshaping
+    # Precompute the environment sub-network and left/right bipartition for each
+    # variable tensor.
     # --------------------------------------------------------------------------
     env_contractions = []
     for tg in var_tags:
         # The variable tensor is identified by the tag "__KET__" and the variable tag.
         tb = tnAB["__KET__", tg]
-        # Determine left (outer) and right (inner) indices for matrix reshaping.
-        # Typically, left_inds are the indices that connect to the environment on one side.
-        lix = tb.left_inds
-        rix = tuple(x for x in tb.inds if x not in tb.left_inds)
         # The rest of the network (all tensors except this one) forms the environment.
         b_tn = tnAB.select((tg,), "!all")  # select all except those with tag tg
-        env_contractions.append((tb, b_tn, lix, rix))
+        env_contractions.append((tb, b_tn, tb.left_inds))
 
     # Initialize objective value for convergence tracking if needed.
     if tol != 0.0 or progbar:
-        old_d = float("inf")
+        old_objective = float("inf")
 
     # Set up progress bar if requested.
     if progbar:
@@ -98,55 +120,27 @@ def _tn_fit_core(
     # --------------------------------------------------------------------------
     for _ in pbar:
         # Sweep over all variable tensors.
-        for tb, b_tn, lix, rix in env_contractions:
-            # Contract the environment (all other tensors) to a dense matrix.
-            # The contraction is performed with the indices ordered as (rix, lix)
-            # so that the resulting matrix B has shape compatible with the tensor.
-            b = b_tn.to_dense(rix, lix)
-
-            # Perform SVD of the environment matrix: B = U S V^†.
-            # In most libraries, svd returns U, S, Vh (V conjugate transpose).
-            u, _, v = xp.linalg.svd(b)  # v is Vh
-
-            # Optimal unitary update: X = U V^† (i.e., U @ Vh).
-            # This maximizes the overlap with the environment under a unitary constraint.
-            x = u @ v
-
-            # Reshape the matrix back to the original tensor shape.
-            x_r = xp.reshape(x, tb.shape)
-
-            # Update the tensor in-place with the conjugate of the optimal matrix.
-            # The conjugation accounts for the fact that the network contraction
-            # may involve complex conjugation of the variable (depending on the
-            # bra/ket convention).
-            tb.modify(data=xp.conj(x_r))
+        for tb, b_tn, left_inds in env_contractions:
+            # Contract the environment (all other tensors) into a single tensor,
+            # then replace the variable tensor with its SVD-optimal update.
+            b_tensor = b_tn ^ ...
+            new_isometry, objective = svd_optimal_gate_update(b_tensor, left_inds)
+            tb.modify(data=new_isometry.transpose_like(tb).data)
 
         # ----------------------------------------------------------------------
-        # Convergence check: compute the objective value for the last updated tensor.
-        # The objective is the real part of the Frobenius inner product between the
-        # updated tensor and its environment (or trace for a matrix).
-        # We use the last `x` and `b` from the loop; if the network is consistent,
-        # this gives a measure of the total energy/overlap.
+        # Convergence check: `objective` is the value reached by the last
+        # updated tensor of the sweep; if the network is consistent, this
+        # gives a measure of the total energy/overlap.
         # ----------------------------------------------------------------------
         if (tol != 0.0) or progbar:
-            dagx = autoray.dag(x)  # conjugate transpose of x (matrix form)
-            d = float(0)
-            if x.ndim == 2:
-                # For matrix-shaped tensors, the objective is the trace of dag(x) @ b.
-                d = xp.trace(xp.real(dagx @ b))
-            else:
-                # For higher-order tensors, the objective is the full contraction
-                # (real part of the inner product).
-                d = xp.real(dagx @ b)
-
             # Check if the change in objective is below tolerance.
-            if abs(d - old_d) < tol:
+            if abs(objective - old_objective) < tol:
                 break
-            old_d = d
+            old_objective = objective
 
         # Update progress bar description with current objective value.
         if progbar:
-            pbar.set_description(f"{d:.4g}")
+            pbar.set_description(f"{objective:.4g}")
 
 
 def tn_fit(
