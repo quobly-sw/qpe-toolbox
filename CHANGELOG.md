@@ -22,11 +22,18 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `trotter_approx_as_MPO`: renamed `order` to `trotter_order`, consistent with
   `Hamiltonian.get_trotter_step` and every QPE/RPE function in the codebase.
 - `robust_phase_estimation`: replaced `epsilon` with `n_repetitions`, removed
-  `sign_E0`, added an `rng` argument for deterministic sampling, and changed
-  the `trotter_order` default from 2 to 1. The returned list now has length
+  `sign_E0`, added an `rng` argument for deterministic sampling, added a `t0`
+  argument setting the base evolution time, and changed the `trotter_order`
+  default from 2 to 1. The estimated phase is now `E0 * t0`, so the
+  energy is recovered as `theta / t0`. The returned list now has length
   `n_repetitions` (no leading placeholder).
 - `run_hadamard_test` / `rpe_get_hadamard_output`: replaced `seed` with an
   `rng` (`numpy.random.Generator`) argument.
+- `build_hadamard_test_circuit` / `run_hadamard_test`: renamed the `theta`
+  argument to `phase_gate_angle`.
+- `rpe_get_hadamard_output`: renamed the `m` argument to `evolution_time`. It
+  now takes the evolution time itself instead of the exponent `m`; callers
+  passing `m` positionally must pass `2**m` to keep the previous behaviour.
 - Renamed `rpe_distance` to `angular_distance`; it is now vectorized.
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now
   returning a single angle.
