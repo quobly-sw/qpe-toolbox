@@ -374,7 +374,7 @@ rng = np.random.default_rng(42)
 
 thetas1 = np.zeros((n_samples, M))
 for i in tqdm.tqdm(range(n_samples)):
-    thetas1[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, rng=rng)
+    thetas1[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, t0=t0, rng=rng)
 
 
 # %%
@@ -446,8 +446,8 @@ n_samples, M = thetas1.shape
 thetas2 = np.zeros((n_samples, M))
 thetas3 = np.zeros((n_samples, M))
 for i in tqdm.tqdm(range(n_samples)):
-    thetas2[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 2, rng=rng)
-    thetas3[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 3, rng=rng)
+    thetas2[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 2, t0=t0, rng=rng)
+    thetas3[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 3, t0=t0, rng=rng)
 
 mode2, success_prob2 = success_prob(thetas2)
 mode3, success_prob3 = success_prob(thetas3)
