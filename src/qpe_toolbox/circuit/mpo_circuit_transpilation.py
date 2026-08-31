@@ -336,11 +336,7 @@ def build_loc_cost_tn(n_qubits, site_index, contracted_envs, cost_tn):
     - for ``site_index = 0``, only the right environment is included,
     - for ``site_index = n_qubits - 1``, only the left environment is included.
     """
-
     gates_to_opt = cost_tn.select(tags=f"I{site_index}", which="any")
-    tags_to_opt = gates_to_opt.tags
-
-    filtered_tags = [tag for tag in tags_to_opt if tag[0] == "G"]
 
     if site_index == 0:
         loc_cost_tn = gates_to_opt & contracted_envs["R"][f"R{site_index}"]
@@ -353,8 +349,8 @@ def build_loc_cost_tn(n_qubits, site_index, contracted_envs, cost_tn):
             & contracted_envs["R"][f"R{site_index}"]
         )
 
+    filtered_tags = [tag for tag in gates_to_opt.tags if tag[0] == "G"]
     gate_to_opt_tags = sorted(filtered_tags, key=lambda s: int(s.split("_")[1]))
-
     return loc_cost_tn, gate_to_opt_tags
 
 
