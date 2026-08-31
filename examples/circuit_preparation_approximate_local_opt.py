@@ -167,7 +167,10 @@ for sweep in range(n_sweeps):
     ## Sweep down: optimize layers from top to bottom.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK (layers below) + gates of this layer.
-        trial = qtn.Circuit(psi0=mpsK.pop())
+        # gate_contract=False: the default 'auto-split-gate' can silently split a gate
+        # into two fragments when the neighboring bond is small, which breaks tn_fit's
+        # assumption that each tagged tensor is one whole gate.
+        trial = qtn.Circuit(psi0=mpsK.pop(), gate_contract=False)
         gates = [gate for gate in circ_G if gate.round == depth - 1 - ii]
         for gate in gates:
             trial.apply_gate(gate)
@@ -209,7 +212,8 @@ for sweep in range(n_sweeps):
     ## Sweep up: optimize layers from bottom to top.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK[-1] (which has all layers below) + gates of this layer.
-        trial = qtn.Circuit(psi0=mpsK[-1])
+        # gate_contract=False: see the sweep-down loop above for why this matters here.
+        trial = qtn.Circuit(psi0=mpsK[-1], gate_contract=False)
         gates = [gate for gate in circ_G if gate.round == ii]
         for gate in gates:
             trial.apply_gate(gate)

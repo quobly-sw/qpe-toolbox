@@ -172,6 +172,16 @@ def tn_fit(
         Contraction strategy for the environments.
     progbar : bool
         Whether to show a progress bar.
+
+    Notes
+    -----
+    Each tensor selected by `tags` must be a single, whole gate tensor. If
+    `tn` comes from a :quimb-api:`Circuit` built with the default
+    ``gate_contract='auto-split-gate'``, a gate can be silently split into
+    two fragments when the neighboring bond dimension is small (e.g. the
+    circuit is converging toward a low-entanglement state) -- pass
+    ``gate_contract=False`` when constructing that :quimb-api:`Circuit` to
+    avoid it.
     """
     tn_fit = tn.copy()
     tn_fit.add_tag("__KET__")
