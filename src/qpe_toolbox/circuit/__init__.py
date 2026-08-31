@@ -8,6 +8,7 @@
 # --------------------------------------------------------------------------------------
 """This subpackage provides a set of functions for creating and manipulating quimb circuits."""
 
+from .circuits_opt import tn_fit
 from .controls import shift_control_gates
 from .gate_count import count_gates, count_gates_by_qb
 from .initialization import make_circ, make_circMPS
@@ -21,6 +22,7 @@ from .parametrized_circuits import (
     ansatz_circuit,
     ansatz_circuit_su4,
     ansatz_circuit_sym,
+    ansatz_circuit_tfi,
     generate_brickwall_circuit,
     generate_rand_circuit,
 )
