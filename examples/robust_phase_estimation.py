@@ -18,7 +18,7 @@
 # In the previous notebooks, we used the "textbook" (sometimes called "canonical") version of QPE, which requires multiple qubits in the phase register as well as an inverse Quantum Fourier Transform. Logical qubits are expected to remain a scarce resource on early fault-tolerant quantum computers, therefore we are interested in a formulation that requires less qubits. Over the years, many single-ancilla variants of QPE have been proposed, starting with [Kitaev's Iterative Quantum Phase Estimation (IQPE)](https://arxiv.org/abs/quant-ph/9511026). In this notebook, we introduce one such variant: Robust Phase Estimation (RPE). Like IQPE, RPE requires only a single ancilla qubit. However, it differs in how it reconstructs the phase from the measurement outcomes. Our implementation is inspired by [J. Günther et al., Phase Estimation with Partially Randomized Time Evolution, PRX Quantum 7, 020332](https://arxiv.org/abs/2503.05647).
 #
 # In this notebook we explain the idea of the algorithm and apply it to simple models: the Heisenberg model with $4$ spins, the H$_2$ molecule in the minimal basis.
-# We study the Trotter and statistical errors, and check that the RPE algorithm satisfies Heisenberg scaling, i.e. the ability to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
+# We study the statistical errors and check that the RPE algorithm satisfies Heisenberg scaling, i.e. the ability to measure the energy with precision $\varepsilon$ in time $\mathcal{O}(1/\varepsilon)$.
 
 # %%
 import time
@@ -153,12 +153,12 @@ print(f"error = {abs(np.angle(Z) / t0 + E0):.2g}")
 #
 
 # %%
-shots_list = np.array([10, 50, 100, 200, 400, 500, 800, 1000, 1500, 2000])
+shot_counts = np.array([10, 50, 100, 200, 400, 500, 800, 1000, 1500, 2000])
 errors = []
 durations = []
 rng = np.random.default_rng(42)
 
-for n_shots in tqdm.tqdm(shots_list):
+for n_shots in tqdm.tqdm(shot_counts):
     st = time.time()
     X = qpe.run_hadamard_test(psi0, U, 0, n_shots, rng=rng)
     Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots, rng=rng)
@@ -174,26 +174,26 @@ for n_shots in tqdm.tqdm(shots_list):
 # The statistical error decreases as $1/\sqrt{n_{\rm shots}}$ while the computation time increases linearly with $n_{\rm shots}$.
 
 # %%
-log_prefactor = np.log(errors) + np.log(shots_list) / 2
+log_prefactor = np.log(errors) + np.log(shot_counts) / 2
 mean = np.exp(log_prefactor.mean())
 std = np.exp(log_prefactor.std())
 fig, (ax_e, ax_t) = plt.subplots(nrows=2)
 fig.subplots_adjust(hspace=0.4)
 ax_e.loglog(
-    shots_list,
-    mean / np.sqrt(shots_list),
+    shot_counts,
+    mean / np.sqrt(shot_counts),
     "--",
     label="$\\propto 1/\\sqrt{n_{\\rm shots}}$",
 )
 ax_e.fill_between(
-    shots_list,
-    mean / std / np.sqrt(shots_list),
-    mean * std / np.sqrt(shots_list),
+    shot_counts,
+    mean / std / np.sqrt(shot_counts),
+    mean * std / np.sqrt(shot_counts),
     alpha=0.2,
 )
-ax_e.loglog(shots_list, errors, "-o")
+ax_e.loglog(shot_counts, errors, "-o")
 
-ax_t.plot(shots_list, durations, "-o")
+ax_t.plot(shot_counts, durations, "-o")
 ax_e.legend(loc="lower left")
 ax_e.set_xlabel("number of shots")
 ax_t.set_xlabel("number of shots")
@@ -527,12 +527,12 @@ ax.set_title(f"{n_samples = }, most likely outcome");
 epsilon_values = 0.1 / 2 ** np.arange(11)
 n_shots = 5
 
-cost_list = []
-final_thetas = np.empty(epsilon_values.shape)
+cost_values = np.empty_like(epsilon_values)
+final_thetas = np.empty_like(epsilon_values)
 rng = np.random.default_rng(42)
 for i, epsilon in enumerate(epsilon_values):
     M = int(np.ceil(np.log2(1 / epsilon)))
-    cost_list.append(sum([n_shots * 2**m for m in range(M)]))
+    cost_values[i] = sum([n_shots * 2**m for m in range(M)])
     thetas_iter = qpe.robust_phase_estimation(
         H, psi0, M, EXACT, n_shots, t0=t0, rng=rng
     )
@@ -542,9 +542,9 @@ for i, epsilon in enumerate(epsilon_values):
 xfit = np.array([0.2, 0.1 / 2**15])
 plt.loglog(xfit**-2, xfit, "k:", label=r"$t_{tot}=1/\epsilon^2$")
 plt.loglog(xfit**-1, xfit, "b:", label=r"$t_{tot}=1/\epsilon$")
-plt.loglog(cost_list, epsilon_values, "rd", label=r"target $\epsilon$")
+plt.loglog(cost_values, epsilon_values, "rd", label=r"target $\epsilon$")
 plt.loglog(
-    cost_list,
+    cost_values,
     qpe.angular_distance(final_thetas, theta_exact) / t0,
     "-o",
     label="RPE",
@@ -581,14 +581,14 @@ print(f"E_DMRG : {E0_H2 + H_H2.e_const:.10f}")
 # %%
 epsilon = 0.02
 M = int(np.ceil(np.log2(1 / epsilon)))
-n_shot_list = [2, 3, 1000]
+shot_counts_H2 = [2, 3, 1000]
 t0 = 1.0
 theta_exact_H2 = E0_H2 * t0
 
 # results are seed dependent when n_shot is small
 # Here we pick a seed representative of the most common case.
 rng = np.random.default_rng(2)
-for n_shots in n_shot_list:
+for n_shots in shot_counts_H2:
     theta_values = qpe.robust_phase_estimation(
         H_H2, psi0_H2, M, EXACT, n_shots, t0=t0, rng=rng
     )
