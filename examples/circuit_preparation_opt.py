@@ -222,6 +222,14 @@ plt.show()
 #
 # We first optimise a fixed depth-6 circuit, and then demonstrate a **sequential depth optimisation** that starts from depth 1 and increases depth, reusing the tensor entries from the previous depth.
 
+# %% [markdown]
+# Note that `tn_fit` implements the same local gate update as the
+# [`mpo_to_circuit`](./mpo_to_circuit.ipynb) tutorial. The difference is the handling of the _environment_:
+# here, we use a general-purpose routine that works for any tensor network topology. This comes at the cost
+# of re-contracting each tensor's full environment from scratch every sweep. On the other hand,
+# `mpo_to_circuit`'s implementation is specialized for a 1D topology and caches left/right partial
+# contractions instead, updating only the environment adjacent to the gate just optimized.
+
 # %%
 # --- Fixed depth 6 ---
 print("*** Local optimization")
@@ -327,3 +335,9 @@ plt.show()
 # - **Local optimisation** (tensor-network fitting) yields very high fidelity (low infidelity) and energies very close to the DMRG reference. The sequential depth variant further improves convergence.
 #
 # Both approaches provide a classical pre-processing step to generate a high-quality initial state for quantum algorithms such as QPE. The choice between them depends on the available infrastructure (automatic differentiation, global vs local optimizers) and the desired accuracy
+#
+# ### A note on contraction cost
+#
+# Both local-optimization sweeps above contract the *exact* environment of each gate down to a dense matrix at every single-gate update. For a shallow circuit this is cheap, but as the circuit grows deeper, the environment itself is a nontrivial tensor network with no fixed bond dimension. As contracting a generic tensor network is hard, this becomes the actual bottleneck for scaling local optimization to deep circuits, independent of how efficiently the sweep itself is implemented.
+#
+# The [`circuit_preparation_approximate_local_opt`](./circuit_preparation_approximate_local_opt.ipynb) tutorial addresses this directly. Instead of contracting each gate's environment exactly, it approximates the rest of the circuit as a finite-bond-dimension MPS before each layer update, capping the per-step cost at a chosen bond dimension rather than letting it grow with depth.

@@ -130,6 +130,16 @@ for boundary_bool in [False, True]:
 # %% [markdown]
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu2.svg" align="center">
 
+# %% [markdown]
+# **Relation to other local-optimization tutorials**: the single-gate update above — contract the
+# environment, take its SVD, discard the singular values, keep $UV^\dagger$ — is the same update
+# used by the generic `tn_fit` routine in the [`circuit_preparation_opt`](./circuit_preparation_opt.ipynb)
+# tutorial's Local Optimization section. The two implementations differ in scope: `tn_fit` handles an
+# arbitrary tensor-network topology by fully re-contracting each tensor's environment from scratch on
+# every sweep, while this notebook is specialized for a 1D chain and caches the left/right partial
+# contractions (`contracted_envs`), updating only the one environment adjacent to each optimized gate.
+# That locality is what a 1D topology buys, at the cost of only working for a 1D chain.
+
 # %%
 def print_final_overlap(cost_tn, n_qubits, label):
     # cost_tn is closed (no dangling indices), so its full contraction is the

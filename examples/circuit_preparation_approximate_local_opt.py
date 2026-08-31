@@ -15,7 +15,7 @@
 # %% [markdown]
 # # Variational Circuit Preparation II
 #
-# This script implements a local optimization to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Unlike the straightforward global fitting of the entire circuit (as in `circuit_preparation_opt.py`), this version performs a **sweeping algorithm** that optimizes the circuit layer by layer, sweeping from the bottom (first layer) to the top (last layer) and back.
+# This notebook implements a local optimization to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Unlike the straightforward global fitting of the entire circuit (as in [`circuit_preparation_opt`](./circuit_preparation_opt.ipynb)), this version performs a **sweeping algorithm** that optimizes the circuit layer by layer, sweeping from the bottom (first layer) to the top (last layer) and back.
 # The method is useful when the circuit is deep. By sequentially updating each layer while approximating the rest of the circuit with finite bond dimensions MPSs, we can efficiently achieve high fidelity with the target MPS.
 # Ref: Gibbs and Cincio, [Quantum 9, 1789 (2025)](https://doi.org/10.22331/q-2025-07-09-1789).
 #
