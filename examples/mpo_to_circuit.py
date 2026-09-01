@@ -56,7 +56,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian, trotter_approx_as_MPO
 from qpe_toolbox.tensor import state_preparation_mpo
 
 # %% [markdown]
-# ## Dynamics induced by the next-nearest-neighbor Ising model
+# ## Dynamics Induced by the Next-Nearest-Neighbor Ising Model
 
 # %%
 L = 11

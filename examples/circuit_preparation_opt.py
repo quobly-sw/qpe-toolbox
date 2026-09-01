@@ -48,7 +48,7 @@ from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %% [markdown]
-# ## Hamiltonian: 1D Transverse-Field Ising (TFI) model
+# ## Hamiltonian: 1D Transverse-Field Ising Model
 #
 # We consider a chain of $n$ spins with open boundaries. The Hamiltonian reads
 #
@@ -121,7 +121,7 @@ def make_circuit_optimizer(circ, mpo):
     )
 
 # %% [markdown]
-# ### 1. Direct L-BFGS optimization
+# ### Direct L-BFGS Optimization
 
 # %%
 print("*** Global L-BFGS optimization")
@@ -139,7 +139,7 @@ print(
 print()
 
 # %% [markdown]
-# ### 2. Basin-hopping optimization
+# ### Basin-hopping Optimization
 #
 # Basin-hopping performs random steps in parameter space followed by a local minimization. Here we use 5000 iterations with 10 hops per step and a temperature of 0.1.
 
@@ -159,7 +159,7 @@ print(
 print()
 
 # %% [markdown]
-# ### 3. Sequential layer-wise optimization
+# ### Sequential Layer-wise Optimization
 #
 # We start from depth 1 and increase the depth one layer at a time, always reusing the parameters from the shallower circuit as initial guess.
 
@@ -200,17 +200,15 @@ for ii in range(2, depth + 1):
 print()
 
 # %% [markdown]
-# #### Plot: Error vs depth for global sequential optimization
+# #### Plot: Error vs Depth for Global Sequential Optimization
 # %%
-plt.figure(figsize=(6, 4))
+plt.figure(figsize=(6, 4), layout="tight")
 plt.plot(depths_global, errors_global, marker="o", linestyle="-")
 plt.xlabel("Circuit depth")
 plt.ylabel("Energy error $|1 - E/E_{DMRG}|$")
 plt.title("Global L-BFGS sequential optimisation")
 plt.yscale("log")
-plt.grid(visible=True, alpha=0.3)
-plt.tight_layout()
-plt.show()
+plt.grid(visible=True, alpha=0.3);
 
 
 # %% [markdown]
@@ -254,7 +252,7 @@ print(
 print()
 
 # %% [markdown]
-# ### Sequential depth optimization (local)
+# ### Sequential Depth Optimization (local)
 #
 # Starting from a depth-1 circuit, we optimise it, then add a layer, reusing the tensor entries from the previous circuit as initialisation.
 
@@ -315,7 +313,7 @@ for ii in range(2, depth + 1):
 print()
 
 # %% [markdown]
-# #### Plot: Error vs depth for local sequential optimization
+# #### Plot: Error vs Depth for Local Sequential Optimization
 # %%
 plt.figure(figsize=(6, 4))
 plt.plot(depths_local, errors_local, marker="s", linestyle="-", color="green")
@@ -336,8 +334,10 @@ plt.show()
 #
 # Both approaches provide a classical pre-processing step to generate a high-quality initial state for quantum algorithms such as QPE. The choice between them depends on the available infrastructure (automatic differentiation, global vs local optimizers) and the desired accuracy
 #
-# ### A note on contraction cost
+# ### Contraction Cost
 #
 # Both local-optimization sweeps above contract the *exact* environment of each gate down to a dense matrix at every single-gate update. For a shallow circuit this is cheap, but as the circuit grows deeper, the environment itself is a nontrivial tensor network with no fixed bond dimension. As contracting a generic tensor network is hard, this becomes the actual bottleneck for scaling local optimization to deep circuits, independent of how efficiently the sweep itself is implemented.
 #
 # The [`circuit_preparation_approximate_local_opt`](./circuit_preparation_approximate_local_opt.ipynb) tutorial addresses this directly. Instead of contracting each gate's environment exactly, it approximates the rest of the circuit as a finite-bond-dimension MPS before each layer update, capping the per-step cost at a chosen bond dimension rather than letting it grow with depth.
+
+# %%

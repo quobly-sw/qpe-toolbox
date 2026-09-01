@@ -67,7 +67,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 # We run 1000 sweeps; the algorithm should converge to a state that closely approximates the ground state.
 
 # %% [markdown]
-# ### 1. Hamiltonian and DMRG Reference
+# ### Hamiltonian and DMRG Reference
 # We set up the 1D transverse-field Ising model:
 #
 # $$ H = g_x \sum_{i} X_i + g_{zz} \sum_{i} Z_i Z_{i+1}, $$
@@ -78,7 +78,6 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 # %%
 ## hamiltonian
 n_qubits = 4
-list_paulis = ["I", "X", "Y", "Z"]
 gx, gzz = -1.1, -1.0
 terms = []
 for x in range(n_qubits):
@@ -94,10 +93,9 @@ dmrg.solve(max_sweeps=16, tol=1e-8, bond_dims=64, verbosity=0)
 GS = dmrg.state
 dmrg_energy = np.real(dmrg.energy)
 print("*** DMRG reference energy:", dmrg_energy)
-print()
 
 # %% [markdown]
-# ### 2. Circuit Initialization and Layer Preparation
+# ### Circuit Initialization and Layer Preparation
 #
 # We build an ansatz circuit of a given `depth` (here 6). The circuit is a brick-wall of SU(4) gates.
 # We also build an initial product state `psi0 = |0...0>`.
@@ -132,7 +130,7 @@ for ii in range(depth - 1):
     mpsK.append(tmp)
 
 # %% [markdown]
-# ### 3. Sweeping Optimization
+# ### Sweeping Optimization
 #
 # We perform a number of full sweeps (`sweep` from 0 to 499). Each sweep consists of two phases:
 #
@@ -150,7 +148,6 @@ for ii in range(depth - 1):
 
 # %%
 # Initialize lists to store convergence data
-sweep_numbers = []
 energy_errors = []
 infidelities = []
 energies = []
@@ -162,8 +159,9 @@ print("------------------------------------------------")
 ene_old = float("nan")
 ene = float("nan")
 
-n_sweeps = 1000
-for sweep in range(n_sweeps):
+n_sweeps_max = 1000
+sweep = 0
+while sweep < n_sweeps_max:
     ## Sweep down: optimize layers from top to bottom.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK (layers below) + gates of this layer.
@@ -263,24 +261,26 @@ for sweep in range(n_sweeps):
     infidelity = 1 - np.abs(ovlp) ** 2
 
     # Store data for plotting
-    sweep_numbers.append(sweep)
     energies.append(ene)
     energy_errors.append(error)
     infidelities.append(np.abs(infidelity))
 
     print(f"{sweep:5d}   {ene:12.8f}   {error:10.3e}   {infidelity:10.3e}")
+    sweep += 1
 
     if abs(1 - ene / ene_old) < 1e-8:
         break
     else:
         ene_old = ene
 
+sweep_numbers = np.arange(sweep)
+
 # %% [markdown]
-# ### 5. Plot Convergence
+# ### Plot Convergence
 # Plot energy error and infidelity versus sweep number.
 
 # %%
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), layout="tight")
 
 ax1.semilogy(sweep_numbers, energy_errors, "b-", label="Energy error")
 ax1.set_xlabel("Sweep")
@@ -294,7 +294,4 @@ ax2.set_xlabel("Sweep")
 ax2.set_ylabel("Infidelity (1 - |<GS|ψ>|²)")
 ax2.set_title("Infidelity vs Sweep")
 ax2.grid(visible=True)
-ax2.legend()
-
-plt.tight_layout()
-plt.show()
+ax2.legend();
