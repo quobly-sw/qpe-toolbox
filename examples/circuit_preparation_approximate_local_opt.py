@@ -38,6 +38,9 @@ os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
+# tn_fit is called many times per outer sweep below; silence its per-call progress bar.
+os.environ["TQDM_DISABLE"] = "1"
+
 import autoray
 import matplotlib.pyplot as plt
 import numpy as np
@@ -129,6 +132,7 @@ for ii in range(depth - 1):
         tmp = tmp.gate_with_submpo(jj, transpose=False, max_bond=32, cutoff=1e-10)
     mpsK.append(tmp)
 
+
 # %% [markdown]
 # ### Sweeping Optimization
 #
@@ -147,6 +151,18 @@ for ii in range(depth - 1):
 # After each full sweep, we contract the full circuit with the MPO to compute the energy and the overlap with the DMRG state. This gives a measure of convergence.
 
 # %%
+def evaluate_fit(dmrg, mpo, tn):
+    ovlp = (dmrg.state.H & tn).contract()
+    tnH = tn.H
+    tn.align_(mpo, tnH)
+    energy_tn = tnH & mpo & tn
+    ene = autoray.do("real", energy_tn.contract(all))
+    err = np.abs(1 - ene / np.real(dmrg.energy))
+    infidelity = 1 - np.abs(ovlp) ** 2
+    return ene, err, infidelity
+
+
+# %%
 # Initialize lists to store convergence data
 energy_errors = []
 infidelities = []
@@ -158,10 +174,10 @@ print("------------------------------------------------")
 
 ene_old = float("nan")
 ene = float("nan")
-
 n_sweeps_max = 1000
 sweep = 0
-while sweep < n_sweeps_max:
+
+while 1:
     ## Sweep down: optimize layers from top to bottom.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK (layers below) + gates of this layer.
@@ -250,15 +266,8 @@ while sweep < n_sweeps_max:
     # We contract the full circuit MPS `tn = circ_P` with the Hamiltonian MPO to compute the energy,
     # and also compute the overlap with the DMRG target state to get the fidelity.
     # These numbers indicate how well the circuit approximates the ground state.
-
     tn = circ_P
-    ovlp = (dmrg.state.H & tn).contract()
-    tnH = tn.H
-    tn.align_(mpo, tnH)
-    energy_tn = tnH & mpo & tn
-    ene = autoray.do("real", energy_tn.contract(all))
-    error = np.abs(1 - ene / dmrg_energy)
-    infidelity = 1 - np.abs(ovlp) ** 2
+    ene, error, infidelity = evaluate_fit(dmrg, mpo, tn)
 
     # Store data for plotting
     energies.append(ene)
@@ -268,7 +277,7 @@ while sweep < n_sweeps_max:
     print(f"{sweep:5d}   {ene:12.8f}   {error:10.3e}   {infidelity:10.3e}")
     sweep += 1
 
-    if abs(1 - ene / ene_old) < 1e-8:
+    if (sweep == n_sweeps_max) or (abs(1 - ene / ene_old) < 1e-8):
         break
     else:
         ene_old = ene
