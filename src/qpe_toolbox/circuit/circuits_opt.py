@@ -52,8 +52,6 @@ def _tn_fit_core(
     tnAB,
     tol,
     steps,
-    *,
-    progbar=False,
 ):
     """
     Core optimization loop for fitting a tensor network using alternating least squares (ALS).
@@ -78,8 +76,6 @@ def _tn_fit_core(
         check is performed (runs for exactly `steps` iterations).
     steps : int
         Maximum number of full sweeps (each sweep updates all variable tensors once).
-    progbar : bool, optional
-        If True, display a progress bar showing the current objective value.
 
     Returns
     -------
@@ -91,7 +87,8 @@ def _tn_fit_core(
     The algorithm assumes that each variable tensor is associated with the tag "__KET__"
     and one of the `var_tags`. The environment for a given variable is the rest of the
     network after contracting all other tensors. Each update is the closed-form SVD
-    solution computed by :func:`svd_optimal_gate_update`.
+    solution computed by :func:`svd_optimal_gate_update`. Progress is shown via a
+    :mod:`tqdm` bar; set the ``TQDM_DISABLE`` environment variable to silence it.
     """
     # --------------------------------------------------------------------------
     # Precompute the environment sub-network and left/right bipartition for each
@@ -106,14 +103,10 @@ def _tn_fit_core(
         env_contractions.append((tb, b_tn, tb.left_inds))
 
     # Initialize objective value for convergence tracking if needed.
-    if tol != 0.0 or progbar:
+    if tol != 0.0:
         old_objective = float("inf")
 
-    # Set up progress bar if requested.
-    if progbar:
-        pbar = tqdm.trange(steps)
-    else:
-        pbar = range(steps)
+    pbar = tqdm.trange(steps)
 
     # --------------------------------------------------------------------------
     # Main sweep loop: each iteration updates all variable tensors once.
@@ -132,15 +125,13 @@ def _tn_fit_core(
         # updated tensor of the sweep; if the network is consistent, this
         # gives a measure of the total energy/overlap.
         # ----------------------------------------------------------------------
-        if (tol != 0.0) or progbar:
+        if tol != 0.0:
             # Check if the change in objective is below tolerance.
             if abs(objective - old_objective) < tol:
                 break
             old_objective = objective
 
-        # Update progress bar description with current objective value.
-        if progbar:
-            pbar.set_description(f"{objective:.4g}")
+        pbar.set_description(f"{objective:.4g}")
 
 
 def tn_fit(
@@ -150,8 +141,6 @@ def tn_fit(
     steps=100,
     tol=1e-8,
     contract_optimize="auto-hq",
-    *,
-    progbar=False,
 ):
     """
     Fit tensor network `tn` to target tensor network `tn_target`.
@@ -170,8 +159,6 @@ def tn_fit(
         Convergence tolerance on the change of the overlap.
     contract_optimize : str
         Contraction strategy for the environments.
-    progbar : bool
-        Whether to show a progress bar.
 
     Notes
     -----
@@ -182,6 +169,9 @@ def tn_fit(
     circuit is converging toward a low-entanglement state) -- pass
     ``gate_contract=False`` when constructing that :quimb-api:`Circuit` to
     avoid it.
+
+    Progress is shown via a :mod:`tqdm` bar; set the ``TQDM_DISABLE``
+    environment variable to silence it.
     """
     tn_fit = tn.copy()
     tn_fit.add_tag("__KET__")
@@ -208,7 +198,6 @@ def tn_fit(
             tnAB=tnAB,
             tol=tol,
             steps=steps,
-            progbar=progbar,
         )
 
     # Copy optimized data back to the original tensor network.

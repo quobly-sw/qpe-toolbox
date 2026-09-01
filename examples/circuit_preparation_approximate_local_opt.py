@@ -184,7 +184,6 @@ for sweep in range(n_sweeps):
             steps=10,  # inner ALS sweeps per layer update
             tol=1e-12,
             contract_optimize="auto-hq",
-            progbar=False,
         )
 
         # Copy the optimized tensor data back into the master circuit tensors.
@@ -227,7 +226,6 @@ for sweep in range(n_sweeps):
             steps=10,
             tol=1e-12,
             contract_optimize="auto-hq",
-            progbar=False,
         )
 
         # Copy optimized data back to master circuit.
