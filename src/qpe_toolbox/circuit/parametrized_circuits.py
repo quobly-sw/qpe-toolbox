@@ -110,7 +110,6 @@ def two_qubit_nn_layer(
     param_scaling=1.0,
     gate_round=None,
     parametrize=False,
-    reverse=False,
     rng=None,
 ):
     """
@@ -142,10 +141,6 @@ def two_qubit_nn_layer(
         Activate the possibility of using the layer as a parametrized Ansatz
         on some variational scheme.
 
-    reverse : bool, default ``False``
-        Possibility to invert direction of the layer.
-        Relevant when using controlled gates.
-
     rng : :numpy-random:`numpy.random.Generator <generator>`, default ``None``
         Random number generator for gate parameters. If None a new
         Generator is initialized.
@@ -169,11 +164,7 @@ def two_qubit_nn_layer(
     else:
         raise KeyError(f"Unknown gate_label: {gate_label}")
 
-    if reverse:
-        order = reversed(range(start, circ.N - 1, 2))
-    else:
-        order = range(start, circ.N - 1, 2)
-    for i in order:
+    for i in range(start, circ.N - 1, 2):
         circ.apply_gate(
             gate_id=gate_label,
             params=params,
