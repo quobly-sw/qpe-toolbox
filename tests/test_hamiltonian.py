@@ -108,8 +108,8 @@ def test_U():
     data_reg = list(range(1, n_qubits + 1))
     U_gate = H.get_U_exact(t, data_reg, controls=[0])
     Z = []
-    for theta in [0, -np.pi / 2]:
-        circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)
+    for beta in [0, -np.pi / 2]:
+        circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
         probs = circ.compute_marginal(where=[0])
         Z.append(probs[0] - probs[1])
     phi_ref = -np.angle(Z[0] + 1j * Z[1])
@@ -119,8 +119,8 @@ def test_U():
     dt = t / r
     U_gate = [H.get_trotter_step(dt, data_reg, trotter_order=2)] * r
     Z = []
-    for theta in [0, -np.pi / 2]:
-        circ = build_hadamard_test_circuit(psi0_mps, U_gate, theta)
+    for beta in [0, -np.pi / 2]:
+        circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
         probs = circ.compute_marginal(where=[0])
         Z.append(probs[0] - probs[1])
     phi_ref = np.angle(Z[0] + 1j * Z[1])

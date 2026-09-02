@@ -16,9 +16,10 @@ def test_rpe():
     H = heisenberg_hamiltonian(n_qubits)
     E0, psi0 = do_dmrg(H)
     n_repetitions = 7
+    t0 = 1.0  # |E0| < pi, so t0 = 1 keeps the m=0 phase unambiguous
 
-    theta_list = robust_phase_estimation(H, psi0, n_repetitions, EXACT, EXACT)
-    assert abs(angular_distance(E0, theta_list[-1])) < 2**-n_repetitions
+    theta_list = robust_phase_estimation(H, psi0, n_repetitions, EXACT, EXACT, t0=t0)
+    assert abs(angular_distance(E0 * t0, theta_list[-1])) < 2**-n_repetitions
 
 
 def test_rpe_seed_deterministic():
