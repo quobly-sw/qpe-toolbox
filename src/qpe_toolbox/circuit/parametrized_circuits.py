@@ -537,6 +537,8 @@ def ansatz_circuit(
         circ = qtn.Circuit(n_qubits)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     for r in range(gate_round, gate_round + depth):
         one_qubit_layer(
@@ -613,6 +615,8 @@ def ansatz_circuit_tfi(
             circ.apply_gate("H", i)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     for r in range(gate_round, gate_round + depth):
         for start in range(2):
@@ -683,6 +687,8 @@ def ansatz_circuit_su4(
         circ = qtn.Circuit(n_qubits)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     for r in range(gate_round, gate_round + depth):
         for start in range(2):
@@ -747,6 +753,8 @@ def ansatz_circuit_sym(
         circ = qtn.Circuit(n_qubits)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     if gate_round == 0:
         for i in range(circ.N // 2):
