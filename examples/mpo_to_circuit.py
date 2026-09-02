@@ -48,12 +48,16 @@ os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
+import matplotlib.pyplot as plt
 import numpy as np
 from quimb.tensor import DMRG2, MPS_rand_state
 
 from qpe_toolbox.circuit import init_cost_tn, transpile_mpo_to_circuit
 from qpe_toolbox.hamiltonian import Hamiltonian, trotter_approx_as_MPO
 from qpe_toolbox.tensor import state_preparation_mpo
+
+# %%
+plt.rcParams.update({"font.size": 12})
 
 # %% [markdown]
 # ## Dynamics Induced by the Next-Nearest-Neighbor Ising Model
@@ -127,49 +131,24 @@ for boundary_bool in [False, True]:
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_sgu2.svg" align="center">
 
 # %% [markdown]
-# **Relation to other local-optimization tutorials**: the single-gate update above — contract the
-# environment, take its SVD, discard the singular values, keep $UV^\dagger$ — is the same update
+# Note that the single-gate update above is the same update
 # used by the generic `tn_fit` routine in the [`circuit_preparation_opt`](./circuit_preparation_opt.ipynb)
-# tutorial's Local Optimization section. The two implementations differ in scope: `tn_fit` handles an
-# arbitrary tensor-network topology by fully re-contracting each tensor's environment from scratch on
-# every sweep, while this notebook is specialized for a 1D chain and caches the left/right partial
+# tutorial's Local Optimization section. `tn_fit` handles an
+# arbitrary tensor-network topology at the cost of fully re-contracting each tensor's environment from scratch on
+# every sweep. On this other hand, this notebook is specialized for a 1D chain and caches the left/right partial
 # contractions (`contracted_envs`), updating only the one environment adjacent to each optimized gate.
-# That locality is what a 1D topology buys, at the cost of only working for a 1D chain.
-
-# %%
-def print_final_overlap(cost_tn, n_qubits, label):
-    # cost_tn is closed (no dangling indices), so its full contraction is the
-    # achieved overlap; normalize by 2**n_qubits as in the optimizer's own progress bar
-    overlap = abs(cost_tn.contract(all, optimize="auto-hq")) / 2**n_qubits
-    print(f"{label}: overlap = {overlap:.6f}")
-
+#
+# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits. We will take care of this this by running the same optimization with different seeds of the Ansatz:
 
 # %%
 rtol = 1e-6
-n_sweeps_max = 100
+n_sweeps_max = 250
+n_seeds = 4
+depth = 5
+overlaps5 = np.empty(n_seeds)
 
-opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
-    trotter_mpo_ham_NNIM,
-    depth,
-    rtol,
-    n_sweeps_max,
-    param_scaling=1e-1,
-    closed=True,
-    rng=np.random.default_rng(42),
-)
-print_final_overlap(opt_cost_tn, L, "Trotter reference")
-
-# retrieve the optimal circuit tensor network
-opt_circuit_tn = opt_cost_tn.copy(deep=True)
-opt_circuit_tn.delete(tags=("MPO"))
-
-# %% [markdown]
-# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits by changing the seed of the Ansatz:
-
-# %%
-seeds = [1, 2, 3]
-for seed in seeds:
-    opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
+for seed in range(n_seeds):
+    cost_tn, contracted_envs, overlaps5[seed] = transpile_mpo_to_circuit(
         trotter_mpo_ham_NNIM,
         depth,
         rtol,
@@ -178,11 +157,43 @@ for seed in seeds:
         closed=True,
         rng=np.random.default_rng(seed),
     )
-    print_final_overlap(opt_cost_tn, L, f"seed {seed}")
+    print(f"seed {seed}: overlap = {overlaps5[seed]:.6f}")
 
 # %% [markdown]
-# The way *Causer et al.* overcome this issue is by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
+# Indeed here we observe that for one seed, the optimization gets stuck at a small overlap `~0.7`. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
+#
+# Let us now consider different dephts:
 
+
+# %%
+depths = np.arange(1, 6)
+overlaps = np.zeros((5, n_seeds))
+for i in range(4):
+    print(f"depth = {depths[i]}")
+    for seed in range(n_seeds):
+        cost_tn, contracted_envs, overlaps[i, seed] = transpile_mpo_to_circuit(
+            trotter_mpo_ham_NNIM,
+            depths[i],
+            rtol,
+            n_sweeps_max,
+            param_scaling=1e-1,
+            closed=True,
+            rng=np.random.default_rng(seed),
+        )
+
+print("depths = 5")
+print(f"overlaps = {overlaps5}")
+overlaps[4] = overlaps5
+
+# %%
+fig, ax = plt.subplots()
+ax.plot(depths, 1 - overlaps, ls="", color="k", marker="o", ms=4)
+ax.plot(depths, 1 - overlaps.max(axis=1), "rv-", ms=6)
+ax.set_ylim(0, 0.012)  # cannot display overlap=0.7 on scale
+ax.grid(visible=True, alpha=0.3)
+ax.set_xlabel("depth")
+ax.set_ylabel("1 - overlap")
+ax.set_title(f"MPO transpilation L = {L}");
 
 # %% [markdown]
 # ## State Preparation
@@ -195,24 +206,36 @@ for seed in seeds:
 # <img src="./figures/MPO_to_circuit_transpilation/transpil_state_prep.svg" align="center">
 
 # %%
-# We pick a target state: the ground state of the next-nearest-neighbor Ising Hamiltonian defined above, in MPS form.
-# `DMRG2` itself takes no seed; we seed reproducibility through its `p0` starting guess instead.
+# Let us pick a target state: the ground state of the next-nearest-neighbor Ising Hamiltonian defined above, in MPS form.
 ham_NNIM_mpo = ham_NNIM.to_mpo()
 p0 = MPS_rand_state(L, bond_dim=2, seed=42)
 dmrg = DMRG2(ham_NNIM_mpo, p0=p0)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12)
 GS = dmrg.state
 
-# We build the transition MPO from the empty register to the target MPS
+# build an MPO by taking the outer producht with an empty register
 GS_mpo = state_preparation_mpo(state_mps=GS)
 
-# We feed the new reference MPO into the same routine as above
-n_sweeps_max = 1000
+# %%
+# optimize the reference MPO using the same routine as above
+n_sweeps_max = 100
 rtol = 1e-6
-depths = [1, 2, 3, 4]
-rng = np.random.default_rng(37)
-for depth in depths:
-    opt_cost_tn, opt_dict_contr_envs = transpile_mpo_to_circuit(
-        GS_mpo, depth, rtol, n_sweeps_max, param_scaling=1e-1, closed=True, rng=rng
-    )
-    print_final_overlap(opt_cost_tn, L, f"depth {depth}")
+state_depths = np.arange(1, 6)
+n_seeds = 4
+state_overlaps = np.empty((state_depths.size, n_seeds))
+for i, depth in enumerate(state_depths):
+    print(f"{depth =}")
+    for seed in range(n_seeds):
+        rng = np.random.default_rng(seed)
+        cost_tn, contracted_envs, state_overlaps[i, seed] = transpile_mpo_to_circuit(
+            GS_mpo, depth, rtol, n_sweeps_max, param_scaling=1e-1, closed=True, rng=rng
+        )
+
+# %%
+fig, ax = plt.subplots()
+ax.plot(state_depths, 1 - state_overlaps, ls="", color="k", marker="o", ms=4)
+ax.plot(state_depths, 1 - state_overlaps.max(axis=1), "rv-", ms=6)
+ax.set_xlabel("depth")
+ax.set_ylabel("1 - overlap")
+ax.grid(visible=True, alpha=0.3)
+ax.set_title(f"State Preparation L = {L}");

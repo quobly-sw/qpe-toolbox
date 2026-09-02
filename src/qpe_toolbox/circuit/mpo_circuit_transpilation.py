@@ -714,8 +714,7 @@ def optimize_single_gate_update(
     in order to iteratively improve all variational gates.
     """
 
-    prev_overlap = None
-
+    overlap = None
     trange_counter = tqdm(range(n_sweeps_max))
     for _ in trange_counter:
         cost_tn, contracted_envs, _ = sweep_direction(
@@ -736,15 +735,15 @@ def optimize_single_gate_update(
         )
         trange_counter.set_description(f"overlap: {(new_overlap / 2**n_qubits):.8f}")
 
-        if prev_overlap is not None:
-            rel_change = abs(new_overlap - prev_overlap) / abs(prev_overlap)
+        if overlap is not None:
+            rel_change = abs(new_overlap - overlap) / abs(overlap)
 
             if rel_change < rtol:
                 break
 
-        prev_overlap = new_overlap
+        overlap = new_overlap
 
-    return cost_tn, contracted_envs
+    return cost_tn, contracted_envs, overlap / 2**n_qubits
 
 
 def transpile_mpo_to_circuit(
