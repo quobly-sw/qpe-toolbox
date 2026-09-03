@@ -14,4 +14,5 @@ from .mpomps_tools import (
     controlled_mpo,
     kron_mpos,
     kron_mps,
+    state_preparation_mpo,
 )

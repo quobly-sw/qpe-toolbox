@@ -7,8 +7,25 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ## [Unreleased]
 
+### Added
+
+- `transpile_mpo_to_circuit`: convenience wrapper chaining `init_cost_tn`,
+  `find_transfer_structure`, `build_first_sweep` and `optimize_single_gate_update`
+  to fit a brickwall circuit ansatz to a reference MPO in one call.
+- `init_cost_tn` and `transpile_mpo_to_circuit` are now re-exported from
+  `qpe_toolbox.circuit`.
+- `state_preparation_mpo` is now re-exported from `qpe_toolbox.tensor`.
+- `hamiltonian/trotterization.py`: Trotter-Suzuki decompositions
+  (`trotter_approx_as_MPO` and friends, plus `rotation_gates`) now live
+  together in one module. `trotter_approx_as_MPO` is re-exported from
+  `qpe_toolbox.hamiltonian`.
+
 ### Changed
 
+- `init_cost_tn`: replaced `seed` (int) with an `rng` (`numpy.random.Generator`)
+  argument, consistent with the rest of the codebase.
+- `trotter_approx_as_MPO`: renamed `order` to `trotter_order`, consistent with
+  `Hamiltonian.get_trotter_step` and every QPE/RPE function in the codebase.
 - `robust_phase_estimation`: replaced `epsilon` with `n_repetitions`, removed
   `sign_E0`, added an `rng` argument for deterministic sampling, added a `t0`
   argument setting the base evolution time, and changed the `trotter_order`
@@ -34,6 +51,13 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
   `src/qpe_toolbox/circuit/qaoa.py` and `tests/test_qaoa.py`. This removes
   `brute_force_maxcut`, `compute_qaoa_contraction_costs` and
   `study_optimization_time_costs` from `qpe_toolbox.circuit`.
+
+### Fixed
+
+- `trotter4_approx_as_MPO`: the 4th-order Suzuki "triple-jump" composition applied
+  its middle-layer factor twice instead of sandwiching it between two applications
+  of the outer-layer factor, so `order=4` was less accurate than `order=1`. Global
+  error now scales as `dt**5` as documented.
 
 ## [1.1.0] - 2026-04-02
 

@@ -12,6 +12,7 @@ from .circuits_opt import tn_fit
 from .controls import shift_control_gates
 from .gate_count import count_gates, count_gates_by_qb
 from .initialization import make_circ, make_circMPS
+from .mpo_circuit_transpilation import init_cost_tn, transpile_mpo_to_circuit
 from .parametrized_circuits import (
     ansatz_circuit,
     ansatz_circuit_su4,
