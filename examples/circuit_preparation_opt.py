@@ -167,8 +167,9 @@ print()
 print("*** Global L-BFGS sequential optimization ")
 depths_global = []
 errors_global = []
+rng = np.random.default_rng(42)
 
-circ = ansatz_circuit_su4(n_qubits, 1)
+circ = ansatz_circuit_su4(n_qubits, 1, rng=rng)
 circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
@@ -183,9 +184,18 @@ print(
 )
 
 for ii in range(2, depth + 1):
-    circ = ansatz_circuit_su4(n_qubits, ii, param_scaling=1e-1)
-    circ.set_params(optimal_circ.get_params())
-    circ_opt = make_circuit_optimizer(circ, mpo)
+    # grow the optimized circuit by one SU4SWAP layer initialized close to identity
+    for start in range(2):
+        for q in range(start, n_qubits - 1, 2):
+            optimal_circ.apply_gate(
+                "SU4SWAP",
+                *(0.1 * rng.random(15)),
+                q,
+                q + 1,
+                gate_round=ii - 1,
+                parametrize=True,
+            )
+    circ_opt = make_circuit_optimizer(optimal_circ, mpo)
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
     err = np.abs(1 - circ_opt.loss / dmrg_energy)
