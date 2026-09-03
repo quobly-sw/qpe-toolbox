@@ -103,7 +103,7 @@ To perform Quantum Phase Estimation with the toolbox, take the following steps:
 2. Prepare an initial state as a Matrix Product State. Two methods are available:
 
    - Density Matrix Renormalization Group (DMRG) - see the [`chemistry_to_qubit`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/chemistry_to_qubit.html) tutorial.
-   - Parametrized circuit optimization - see the tutorial on [`variational_circuit_preparation`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/variational_circuit_preparation.html).
+   - Parametrized circuit optimization - see the tutorials on [`circuit_preparation_opt`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/circuit_preparation_opt.html) and [`circuit_preparation_approximate_local_opt`](https://quobly-sw.github.io/qpe-toolbox/customapi/tutorials/circuit_preparation_approximate_local_opt.html).
 
 3. Encode the Hamiltonian into a unitary via either:
 
