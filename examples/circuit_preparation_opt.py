@@ -232,7 +232,7 @@ circ = ansatz_circuit_su4(
 )
 
 tn = circ.psi
-tn_fit(tn, GS, tags="SU4", steps=100000, tol=1e-8)
+tn_fit(tn, GS, tags="SU4SWAP", steps=100000, tol=1e-8)
 
 ovlp = (dmrg.state.H & tn).contract()
 tnH = tn.H
@@ -261,7 +261,7 @@ circ = ansatz_circuit_su4(
 )
 
 tn = circ.psi
-tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
+tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
 
 ovlp = (dmrg.state.H & tn).contract()
 tnH = tn.H
@@ -283,14 +283,14 @@ for ii in range(2, depth + 1):
     # grow the optimized network by one brickwall layer, each new gate being the
     # nearest unitary to I + eps * G so the layer starts close to the identity
 
-    tags = ["SU4", f"ROUND_{ii - 1}"]
+    tags = ["SU4SWAP", f"ROUND_{ii - 1}"]
     for start in range(2):
         for q in range(start, n_qubits - 1, 2):
             g = rng.normal(size=(4, 4)) + 1j * rng.normal(size=(4, 4))
             u, _, vh = np.linalg.svd(np.eye(4) + new_layer_eps * g)
             tn.gate_(u @ vh, (q, q + 1), tags=tags, contract=False)
 
-    tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
+    tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
 
     ovlp = (dmrg.state.H & tn).contract()
     tnH = tn.H

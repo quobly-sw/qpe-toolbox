@@ -506,10 +506,10 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     2. A reference target unitary (or state x zero) register represented as an MPO.
 
     The ansatz is generated as a layered brickwall circuit of two-qubit
-    ``SU4`` gates initialized close to a SWAP: quimb's ``SU4`` gate tends to
-    SWAP, not the identity, as its parameters go to zero. The resulting unitary
-    tensor network is then combined with the target MPO into a single tensor
-    network suitable for overlap evaluation.
+    ``SU4SWAP`` gates initialized close to the identity: unlike quimb's ``SU4``
+    (which tends to SWAP), ``SU4SWAP`` tends to the identity as its parameters go
+    to zero. The resulting unitary tensor network is then combined with the target
+    MPO into a single tensor network suitable for overlap evaluation.
 
     Parameters
     ----------
@@ -519,8 +519,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
         Depth of the brickwall circuit ansatz (even and odd count as 1).
     param_scaling : float, optional
         Scale of the random initialization parameters for the gates.
-        Smaller values initialize each gate closer to a SWAP (quimb's ``SU4``
-        tends to SWAP, not the identity, as its parameters vanish).
+        Smaller values initialize each ``SU4SWAP`` gate closer to the identity.
         Default is ``1e-1``.
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
@@ -547,9 +546,9 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
         depth=depth,
         # unused when include_1qubit_gates=False, but still validated as a 1-qubit gate
         one_qubit_gate_label="U1",
-        two_qubit_gate_label="SU4",
+        two_qubit_gate_label="SU4SWAP",
         include_1qubit_gates=False,  # whether or not to do 1-spin rotations
-        # small scale: each SU4 initialized close to a SWAP (not the identity)
+        # small scale: each SU4SWAP gate is initialized close to the identity
         param_scaling=param_scaling,
         rng=rng,
     )

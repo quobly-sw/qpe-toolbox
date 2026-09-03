@@ -10,6 +10,7 @@
 
 from .circuits_opt import tn_fit
 from .controls import shift_control_gates
+from .custom_gates import register_su4swap_gate, su4swap_gate_param_gen
 from .gate_count import count_gates, count_gates_by_qb
 from .initialization import make_circ, make_circMPS
 from .parametrized_circuits import (

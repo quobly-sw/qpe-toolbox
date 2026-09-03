@@ -36,6 +36,7 @@ _gate_parameter_numbers = {
     "FSIM": 2,
     "FSIMG": 5,
     "SU4": 15,
+    "SU4SWAP": 15,
 }
 
 
@@ -652,7 +653,11 @@ def ansatz_circuit_su4(
     psi0=None,
 ):
     """
-    Construct an ansatz circuit using SU(4) two-qubit gates.
+    Construct an ansatz circuit using ``SU4SWAP`` two-qubit gates.
+
+    Uses the ``SU4SWAP`` gate (a general two-qubit gate rooted at the identity)
+    rather than quimb's ``SU4`` (rooted at SWAP), so a small ``param_scaling``
+    initializes the circuit close to the identity.
 
     Parameters
     ----------
@@ -695,7 +700,7 @@ def ansatz_circuit_su4(
             two_qubit_nn_layer(
                 circ,
                 start=start,
-                gate_label="SU4",
+                gate_label="SU4SWAP",
                 param_scaling=param_scaling,
                 gate_round=r,
                 parametrize=parametrize,

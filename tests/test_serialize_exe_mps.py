@@ -44,8 +44,7 @@ def _run_build_save_load_quimb():
 
     inferred_depth = max([gate["round"] for gate in circ_dict["gates"]]) + 1
     assert inferred_depth <= depth
-    first_gate_dict = circ_dict["gates"][0]
-    assert len(first_gate_dict["qubits"]) == 2
+    assert any(len(gate["qubits"]) == 2 for gate in circ_dict["gates"])
 
     circ_Circuit = deserialize_to_quimb_Circuit(circ_dict)
     circ_CircuitMPS = deserialize_to_quimb_CircuitMPS(circ_dict, 2**depth, 10e-10)

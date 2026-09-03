@@ -138,7 +138,7 @@ for ii in range(depth - 1):
 #
 # - **Sweep down**: from the top layer (`depth-1`) down to layer 0.
 #     - For a given layer `ii` (top to bottom), we construct a trial circuit `trial` from `mpsK[-1]` (which contains all layers below) and the gates of that layer.
-#     - We call `tn_fit` to optimize the tensors of that layer (tagged `'SU4'`) so that the trial MPS matches the current `mpsB[-1]` (which contains all layers above, already optimized).
+#     - We call `tn_fit` to optimize the tensors of that layer (tagged `'SU4SWAP'`) so that the trial MPS matches the current `mpsB[-1]` (which contains all layers above, already optimized).
 #     - We then copy the optimized tensor data back into the main circuit representation (`circ_P` and `circ_G`).
 #     - We update `mpsB` by applying the **conjugated** gates (as MPOs) to move the boundary one layer down.
 #
