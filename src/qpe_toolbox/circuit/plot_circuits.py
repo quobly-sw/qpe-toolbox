@@ -7,7 +7,6 @@
 #
 # --------------------------------------------------------------------------------------
 
-import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -553,10 +552,6 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
     The resulting circuit contains only the gates that
     causally influence the selected edge, ordered by their round.
 
-    The reconstruction is performed by parsing tensor tags from the reverse
-    light-cone TN representation and re-applying the corresponding
-    single- and two-qubit gates to a new circuit.
-
     Parameters
     ----------
     selected_edge : tuple[int, int]
@@ -570,71 +565,22 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
     circ_revlc : :quimb-api:`Circuit`
         A new circuit containing only the gates in the reverse light cone of
         ``selected_edge``, acting on the same number of qubits as ``circ``.
-
-    Notes
-    -----
-    - Gate information is recovered from tensor tags.
-    - Gate parameters are set to zero when reconstructing the circuit, as the
-      function is intended for structural and visualization purposes rather
-      than numerical simulation.
     """
-    n_qubits = circ.N
+    # Gates in the reverse light cone of the selected edge, identified by their
+    # quimb gate tag (avoids assuming any particular tag string format).
+    lc_tags = set(circ.get_reverse_lightcone_tags(selected_edge))
 
-    # Get the reverse light cone of the particular edge
-    psi_edge = circ.get_psi_reverse_lightcone(where=selected_edge)
-
-    # Build a reverse light cone Circuit instance
-    circ_revlc = qtn.Circuit(N=n_qubits)
-
-    for tensor in psi_edge.tensors:
-        tags = list(tensor.tags)
-
-        if tensor.shape == (2,):  # edge tensor
-            pass
-
-        elif tensor.shape == (2, 2):  # it is a single-qubit gate
+    circ_revlc = qtn.Circuit(circ.N)
+    for i, gate in enumerate(circ.gates):
+        if circ.gate_tag(i) in lc_tags:
             circ_revlc.apply_gate(
-                gate_id=next(
-                    tag
-                    for tag in tags
-                    if any(tag.startswith(g) for g in qtn.circuit.ONE_QUBIT_GATES)
-                ),
-                qubits=[
-                    int(re.fullmatch(r"I(\d+)", tag).group(1))
-                    for tag in tags
-                    if re.fullmatch(r"I(\d+)", tag)
-                ],
-                params=[0.0] * 3,
-                gate_round=next(
-                    int(re.fullmatch(r"ROUND_(\d+)", tag).group(1))
-                    for tag in tags
-                    if re.fullmatch(r"ROUND_(\d+)", tag)
-                ),
+                gate.label,
+                params=gate.params,
+                qubits=gate.qubits,
+                controls=gate.controls or (),
+                gate_round=gate.round,
+                contract=False,
             )
-
-        elif tensor.shape == (2, 2, 2, 2):  # it is a two-qubit gate
-            circ_revlc.apply_gate(
-                gate_id=next(
-                    tag
-                    for tag in tags
-                    if any(tag.startswith(g) for g in qtn.circuit.TWO_QUBIT_GATES)
-                ),
-                qubits=[
-                    int(m.group(1))
-                    for tag in tags
-                    if (m := re.fullmatch(r"I(\d+)", tag))
-                ],
-                params=[0.0] * 3,
-                gate_round=next(
-                    int(re.fullmatch(r"ROUND_(\d+)", tag).group(1))
-                    for tag in tags
-                    if re.fullmatch(r"ROUND_(\d+)", tag)
-                ),
-            )
-
-        else:
-            msg = f"Invalid gate shape: {tensor.shape}"
-            raise ValueError(msg)
 
     return circ_revlc
 
