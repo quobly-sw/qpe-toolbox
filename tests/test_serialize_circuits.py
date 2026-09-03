@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import os
+import pathlib
 import tempfile
 from collections import Counter
 
 import numpy as np
+import quimb.tensor as qtn
 from qiskit_aer import AerSimulator
 
 from qpe_toolbox.circuit import (
@@ -14,33 +15,71 @@ from qpe_toolbox.circuit import (
     dump_quimb_Circuit_to_qasm,
     generate_brickwall_circuit,
     generate_rand_circuit,
+    load_qasm_to_quimb_Circuit,
     serialize_from_quimb_Circuit,
 )
 
 tol = 1e-2
 
 
-def test_build_save_load_quimb():
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        orig = os.getcwd()
-        os.chdir(tmp_dir)
-        try:
-            _run_build_save_load_quimb()
-        finally:
-            os.chdir(orig)
+def _build_circuit():
+    circ = qtn.Circuit(3)
+    circ.apply_gate("RX", 0.3, 0, gate_round=0)
+    circ.apply_gate("CX", 0, 1, gate_round=0)
+    circ.apply_gate("RZZ", 0.7, 1, 2, gate_round=1)
+    return circ
 
 
-def _run_build_save_load_quimb():
+def test_load_qasm_round_trip(tmp_path):
+    circ = _build_circuit()
+    base = str(tmp_path / "circ")
+    dump_quimb_Circuit_to_qasm(circ, base, save_rounds=True)
+
+    # default: register size read from the QASM header
+    rc = load_qasm_to_quimb_Circuit(base)
+    assert rc.N == 3
+    assert [g.label for g in rc.gates] == ["RX", "CX", "RZZ"]
+    assert [g.qubits for g in rc.gates] == [(0,), (0, 1), (1, 2)]
+    overlap = abs(circ.psi.to_dense().conj().T @ rc.psi.to_dense())
+    assert abs(overlap - 1.0) < 1e-8
+
+
+def test_load_qasm_with_rounds(tmp_path):
+    circ = _build_circuit()
+    base = str(tmp_path / "circ")
+    dump_quimb_Circuit_to_qasm(circ, base, save_rounds=True)
+
+    # rounds restored from the sidecar file
+    rc = load_qasm_to_quimb_Circuit(base, with_rounds=True)
+    assert [g.round for g in rc.gates] == [0, 0, 1]
+
+    # max_depth keeps only gates with round < max_depth
+    rc_trunc = load_qasm_to_quimb_Circuit(base, with_rounds=True, max_depth=1)
+    assert [g.round for g in rc_trunc.gates] == [0, 0]
+
+
+def test_load_qasm_min_layout(tmp_path):
+    circ = _build_circuit()
+    base = str(tmp_path / "circ")
+    dump_quimb_Circuit_to_qasm(circ, base, save_rounds=True)
+
+    # register size inferred from the maximum qubit index in the gates
+    rc = load_qasm_to_quimb_Circuit(base, min_layout=True)
+    assert rc.N == 3
+    assert [g.label for g in rc.gates] == ["RX", "CX", "RZZ"]
+
+
+def test_build_save_load_quimb(tmp_path):
     n_qubits = 4
     depth = 2
     rng = np.random.default_rng(666)
     circ_quimb = generate_rand_circuit(n_qubits, depth, "rx", "cu3", 4, 0.75, rng=rng)
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
 
-    savefile_rad = "quimb_circuit"
-    dump_quimb_Circuit_to_qasm(circ_quimb, savefile_rad, save_rounds=True)
-    assert os.path.exists(savefile_rad + ".qasm")
-    assert os.path.exists(savefile_rad + "_rounds.txt")
+    base = str(tmp_path / "quimb_circuit")
+    dump_quimb_Circuit_to_qasm(circ_quimb, base, save_rounds=True)
+    assert (tmp_path / "quimb_circuit.qasm").exists()
+    assert (tmp_path / "quimb_circuit_rounds.txt").exists()
 
     inferred_depth = max([gate["round"] for gate in circ_dict["gates"]]) + 1
     assert inferred_depth <= depth
@@ -88,5 +127,12 @@ def test_sample_quimb_qiskit():
 
 
 if __name__ == "__main__":
-    test_build_save_load_quimb()
+    for _test in (
+        test_load_qasm_round_trip,
+        test_load_qasm_with_rounds,
+        test_load_qasm_min_layout,
+        test_build_save_load_quimb,
+    ):
+        with tempfile.TemporaryDirectory() as _d:
+            _test(pathlib.Path(_d))
     test_sample_quimb_qiskit()
