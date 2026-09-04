@@ -23,10 +23,7 @@ uv run jupytext -q --to ../jupyter_execute//ipynb "$@"
 uv run ruff format jupyter_execute/*ipynb
 uv run jupytext -q --to ../examples//py jupyter_execute/*ipynb
 
-# report reformatting as a failure so this doubles as a CI check: pre-commit
-# detects modified files by itself, a direct caller needs the exit status
+# fail if the round-trip rewrote the examples, so this doubles as a CI check:
+# pre-commit detects modified files by itself, a direct caller needs the status
 after=$(sha256sum "$@")
-if [[ "$before" != "$after" ]]; then
-  echo "examples were reformatted, stage the changes"
-  exit 1
-fi
+[[ "$before" == "$after" ]]
