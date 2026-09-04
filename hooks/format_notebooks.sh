@@ -7,6 +7,8 @@
 
 set -euo pipefail
 
+before=$(sha256sum "$@")
+
 # pre-commit always runs in project root directory
 # jupyter_execute is the standard jupyter workdir, already in .gitignore
 mkdir -p jupyter_execute
@@ -17,6 +19,14 @@ mkdir -p jupyter_execute
 rm -f jupyter_execute/*ipynb
 
 # jupytext working dir is the one of the notebook, need relative  path from examples/
-uv run jupytext -q --to ../jupyter_execute//ipynb $@
+uv run jupytext -q --to ../jupyter_execute//ipynb "$@"
 uv run ruff format jupyter_execute/*ipynb
 uv run jupytext -q --to ../examples//py jupyter_execute/*ipynb
+
+# report reformatting as a failure so this doubles as a CI check: pre-commit
+# detects modified files by itself, a direct caller needs the exit status
+after=$(sha256sum "$@")
+if [[ "$before" != "$after" ]]; then
+  echo "examples were reformatted, stage the changes"
+  exit 1
+fi

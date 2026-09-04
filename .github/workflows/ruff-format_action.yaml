@@ -21,6 +21,5 @@ jobs:
     - name: format src
       run: uv run ruff format --check
 
-    # use pre-commit as task runner to get clean pass/fail status
     - name: format notebooks
-      run: uv run pre-commit run format-examples --all-files
+      run: hooks/format_notebooks.sh examples/*py
