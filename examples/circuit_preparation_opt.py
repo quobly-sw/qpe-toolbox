@@ -40,7 +40,6 @@ os.environ["JAX_ENABLE_X64"] = "True"
 import autoray
 import matplotlib.pyplot as plt
 import numpy as np
-import quimb as qu
 import quimb.tensor as qtn
 
 # Local imports from qpe_toolbox
@@ -236,7 +235,6 @@ plt.show()
 # --- Fixed depth 6 ---
 print("*** Local optimization")
 depth = 6
-circ = qu.tensor.Circuit(n_qubits)
 circ = ansatz_circuit_su4(
     n_qubits=n_qubits, depth=depth, param_scaling=1.0, parametrize=False
 )
