@@ -230,7 +230,6 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     Two first-order MPO approximants with half time step are constructed and
     then multiplied together using compression.
     """
-
     if verbosity == 1:
         print(
             f"{'': <2}Building 2nd order Trotter",
@@ -467,7 +466,6 @@ def state_preparation_mpo(state_mps):
         Tensor network containing both the reference MPO
         for some variational procedure.
     """
-
     n_qubits = state_mps.num_tensors
     arrays = []
     ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
@@ -532,7 +530,6 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
         Tensor network containing both the variational circuit ansatz and
         the target MPO.
     """
-
     n_qubits = ref_mpo.num_tensors
     rng = np.random.default_rng(seed=seed)
     TN = TensorNetwork()
@@ -618,7 +615,6 @@ def get_envs_tns(n_qubits, x, cost_tn):
     - right environment: tensors tagged with ``I{x+1}`` through
       ``I{n_qubits-1}``.
     """
-
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
 
     left_tags = [f"I{x}" for x in range(x)]
@@ -685,7 +681,6 @@ def find_transfer_structure(n_qubits, cost_tn):
     The transfer structures can be used to optimize sequential contraction
     strategies or environment updates in tensor-network algorithms.
     """
-
     dict_uncontr_envs = {"L": {}, "R": {}}
     for x in range(n_qubits):
         list_envs_tns = get_envs_tns(n_qubits, x, cost_tn)
@@ -781,7 +776,6 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
     These environments are typically reused during local optimization sweeps
     to avoid repeated large tensor contractions.
     """
-
     dict_contr_envs = {"L": {}, "R": {}}
 
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
@@ -919,7 +913,6 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     :quimb-api:`Tensor`
         Contracted tensor obtained after removing the specified tensors.
     """
-
     p_loc_cost_tn = loc_cost_tn.copy(deep=True)
     p_loc_cost_tn.delete(tags=tags)
 
@@ -945,7 +938,6 @@ def update_cost_tn(cost_tn, list_opt_gate_tens):
     :quimb-api:`TensorNetwork`
         Updated cost tensor network containing the optimized gate tensors.
     """
-
     for tens in list_opt_gate_tens:
         tag_tens = next(
             iter(tens.tags)
@@ -1099,7 +1091,6 @@ def optimize_single_gate_update(
 
     in order to iteratively improve all variational gates.
     """
-
     hyperopt = ctg.ReusableHyperOptimizer(
         max_repeats=32,
         methods=["greedy"],

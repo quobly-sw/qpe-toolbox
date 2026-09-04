@@ -91,8 +91,7 @@ print()
 
 # %%
 def loss_circ(circ, mpo):
-    """
-    Loss function: expectation value of the MPO Hamiltonian with respect to
+    """Loss function: expectation value of the MPO Hamiltonian with respect to
     the state produced by the circuit.
     """
     psi = circ.psi

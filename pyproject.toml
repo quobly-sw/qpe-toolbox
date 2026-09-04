@@ -105,12 +105,6 @@ build-backend = "hatchling.build"
   skip_covered = true
   fail_under = 70
 
-  [tool.docformatter]
-  pre-summary-newline = true
-  close-quotes-on-newline = true
-  wrap-summaries = 0
-  wrap-descriptions = 0
-
   [tool.numpydoc_validation]
   checks = [
       "all",   # report on all checks, except the below

@@ -77,7 +77,6 @@ def one_qubit_layer(
     -----
     - The same set of parameters is used for all qubits in the layer.
     """
-
     gate_label = gate_label.upper()
     extra_kwargs = {}
     if gate_label in qtn.circuit.ONE_QUBIT_PARAM_GATES:
