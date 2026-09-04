@@ -68,6 +68,7 @@ jupytext = ["jupytext>=1.18.1"]  # used in format hook
 docs = [
   "furo>=2024.6.29",
   "myst-nb>=1.3.0",
+  "numpydoc>=1.10",  # docstring validation, run by the Documentation CI
   "sphinx-autoapi>=3.6",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
@@ -104,12 +105,6 @@ build-backend = "hatchling.build"
   show_missing = true
   skip_covered = true
   fail_under = 70
-
-  [tool.docformatter]
-  pre-summary-newline = true
-  close-quotes-on-newline = true
-  wrap-summaries = 0
-  wrap-descriptions = 0
 
   [tool.numpydoc_validation]
   checks = [
@@ -153,6 +148,7 @@ build-backend = "hatchling.build"
         "C",
         "C90",
         "D209",
+        "D202",
         "D403",
         "D405",
         "E",

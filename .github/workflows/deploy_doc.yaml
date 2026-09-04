@@ -28,6 +28,8 @@ jobs:
     needs: check-if-main-changed
     if: needs.check-if-main-changed.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
+    env:
+      UV_NO_SYNC: 1  # prefer explicit sync
 
     steps:
       - name: Checkout repository
@@ -45,13 +47,13 @@ jobs:
       - name: Run examples
         run: |
           export TQDM_DISABLE=1
-          uv run --no-sync jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
+          uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
 
       - name: Copy figures
         run: cp -r examples/figures docs/source/customapi/tutorials
 
       - name: Build doc
-        run: uv run --no-sync sphinx-build -b html -W docs/source docs/build
+        run: uv run sphinx-build -b html -W docs/source docs/build
 
       - name: Upload doc
         id: deployment

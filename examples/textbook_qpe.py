@@ -455,7 +455,6 @@ def qpe_with_prob_success(
 
     Return the energy, probability and probability of success as defined by Nielsen and Chuang
     """
-
     E_shift, evolution_time, global_phase = qpe.set_search_window(
         hamiltonian, E_target, size_interval
     )

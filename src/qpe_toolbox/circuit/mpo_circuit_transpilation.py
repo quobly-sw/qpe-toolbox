@@ -88,7 +88,6 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     >>> mpo
     <MatrixProductOperator ...>
     """
-
     string_coeff = ham_term[0]
     pauli_string = ham_term[1]
     active_qubits = ham_term[2]
@@ -168,7 +167,6 @@ def trotter1_approx_as_MPO(
     ``apply(..., compress=True)``. Truncation errors may accumulate depending
     on ``cutoff`` and ``max_bond``.
     """
-
     if reverse_order:
         init_term = len(ham_terms) - 1
         trange_counter = tqdm(list(reversed(range(len(ham_terms) - 1))))
@@ -230,7 +228,6 @@ def trotter2_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     Two first-order MPO approximants with half time step are constructed and
     then multiplied together using compression.
     """
-
     if verbosity == 1:
         print(
             f"{'': <2}Building 2nd order Trotter",
@@ -315,7 +312,6 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     them through compressed MPO multiplication. Intermediate bond dimensions
     may grow significantly depending on the system and truncation parameters.
     """
-
     sym_factor = 1.0 / (2.0 - 2 ** (1.0 / 3.0))
 
     if verbosity == 1:
@@ -413,7 +409,6 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     Compression is performed during MPO manipulations, so the final accuracy
     depends on the chosen ``cutoff`` and ``max_bond`` values.
     """
-
     ham_terms = hamiltonian.terms
     n_qubits = hamiltonian.n_qubits
 
@@ -467,7 +462,6 @@ def state_preparation_mpo(state_mps):
         Tensor network containing both the reference MPO
         for some variational procedure.
     """
-
     n_qubits = state_mps.num_tensors
     arrays = []
     ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
@@ -532,7 +526,6 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
         Tensor network containing both the variational circuit ansatz and
         the target MPO.
     """
-
     n_qubits = ref_mpo.num_tensors
     rng = np.random.default_rng(seed=seed)
     TN = TensorNetwork()
@@ -618,7 +611,6 @@ def get_envs_tns(n_qubits, x, cost_tn):
     - right environment: tensors tagged with ``I{x+1}`` through
       ``I{n_qubits-1}``.
     """
-
     env_tn = cost_tn.select(tags=[f"I{x}"], which="!any")
 
     left_tags = [f"I{x}" for x in range(x)]
@@ -685,7 +677,6 @@ def find_transfer_structure(n_qubits, cost_tn):
     The transfer structures can be used to optimize sequential contraction
     strategies or environment updates in tensor-network algorithms.
     """
-
     dict_uncontr_envs = {"L": {}, "R": {}}
     for x in range(n_qubits):
         list_envs_tns = get_envs_tns(n_qubits, x, cost_tn)
@@ -781,7 +772,6 @@ def build_first_sweep(n_qubits, cost_tn, dict_transf, *, drop_tags=True):
     These environments are typically reused during local optimization sweeps
     to avoid repeated large tensor contractions.
     """
-
     dict_contr_envs = {"L": {}, "R": {}}
 
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
@@ -869,7 +859,6 @@ def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
     - for ``x = 0``, only the right environment is included,
     - for ``x = n_qubits - 1``, only the left environment is included.
     """
-
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
     tags_to_opt = get_tags(gates_to_opt)
 
@@ -919,7 +908,6 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, hyperopt):
     :quimb-api:`Tensor`
         Contracted tensor obtained after removing the specified tensors.
     """
-
     p_loc_cost_tn = loc_cost_tn.copy(deep=True)
     p_loc_cost_tn.delete(tags=tags)
 
@@ -945,7 +933,6 @@ def update_cost_tn(cost_tn, list_opt_gate_tens):
     :quimb-api:`TensorNetwork`
         Updated cost tensor network containing the optimized gate tensors.
     """
-
     for tens in list_opt_gate_tens:
         tag_tens = next(
             iter(tens.tags)
@@ -1099,7 +1086,6 @@ def optimize_single_gate_update(
 
     in order to iteratively improve all variational gates.
     """
-
     hyperopt = ctg.ReusableHyperOptimizer(
         max_repeats=32,
         methods=["greedy"],

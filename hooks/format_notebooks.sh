@@ -7,16 +7,35 @@
 
 set -euo pipefail
 
-# pre-commit always runs in project root directory
+# all the paths below are relative to the repo root, so this script can be
+# called from any directory
+root=$(git rev-parse --show-toplevel)  # fails the script when called outside the repo
+cd "$root"
+
+# if given arguments, format only them
+# without argument, format all notebooks
+if (($#)); then
+    examples=("$@")
+else
+    mapfile -t examples < <(git ls-files 'examples/*.py')
+fi
+
+before=$(sha256sum "${examples[@]}")
+
 # jupyter_execute is the standard jupyter workdir, already in .gitignore
 mkdir -p jupyter_execute
 
 # remove previously existing notebooks
-# jupytext would overwrite, but there may be notebooks absent from hook arguments
-# we do not want to convert them back
+# jupytext would overwrite, but a renamed or deleted example may leave one
+# behind, we do not want to convert it back
 rm -f jupyter_execute/*ipynb
 
 # jupytext working dir is the one of the notebook, need relative  path from examples/
-uv run jupytext -q --to ../jupyter_execute//ipynb $@
+uv run jupytext -q --to ../jupyter_execute//ipynb "${examples[@]}"
 uv run ruff format jupyter_execute/*ipynb
 uv run jupytext -q --to ../examples//py jupyter_execute/*ipynb
+
+# fail if the round-trip rewrote the examples, so this doubles as a CI check:
+# pre-commit detects modified files by itself, a direct caller needs the status
+after=$(sha256sum "${examples[@]}")
+[[ "$before" == "$after" ]]
