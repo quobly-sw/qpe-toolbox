@@ -5,6 +5,8 @@ on: [pull_request]
 jobs:
   pre-commit:
     runs-on: ubuntu-slim
+    env:
+      UV_NO_SYNC: 1  # avoid auto sync in nested uv run calls
     steps:
     - uses: actions/checkout@v6
 
@@ -17,4 +19,4 @@ jobs:
       run: uv sync --locked --only-group=lint
 
     - name: Run pre-commit
-      run: SKIP=ruff-check,ruff-format,format-examples uv run --no-sync pre-commit run --all-files
+      run: SKIP=ruff-check,ruff-format,format-examples uv run pre-commit run --all-files
