@@ -540,7 +540,8 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
     """
     Extract the reverse light-cone circuit around a selected two-qubit interaction edge.
 
-    The input circuit must be made of one- and two-qubit gates only (as e.g. QAOA)
+    The input circuit must be made of one- and two-qubit gates only (as e.g. QAOA),
+    and must not contain ``SWAP`` gates. ``IDEN`` gates are dropped.
 
     .. math::
 
@@ -566,6 +567,13 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
         A new circuit containing only the gates in the reverse light cone of
         ``selected_edge``, acting on the same number of qubits as ``circ``.
     """
+    # quimb folds SWAP gates into the light cone as an index permutation and
+    # emits no tag for them, so they cannot be replayed here: the rebuilt
+    # circuit would keep the gates a SWAP brought into the cone but drop the
+    # rewiring that connects them to the selected edge.
+    if any(gate.label == "SWAP" for gate in circ.gates):
+        raise ValueError("SWAP gates are not supported")
+
     # Gates in the reverse light cone of the selected edge, identified by their
     # quimb gate tag (avoids assuming any particular tag string format).
     lc_tags = set(circ.get_reverse_lightcone_tags(selected_edge))
