@@ -4,15 +4,27 @@
 repos:
   # --------------------------------------------------
   # 1. Ruff — fast linter and formatter
+  #    Local hooks, so they run the ruff pinned in uv.lock — the one CI uses.
+  #    Bump ruff in pyproject.toml/uv.lock; there is no hook rev to keep in sync.
+  #    --force-exclude is required: pre-commit passes explicit filenames, which
+  #    ruff would otherwise check even when [tool.ruff.format] excludes them.
   # --------------------------------------------------
-  #    rev is kept equal to the version in uv.lock by the sync-with-uv hook below,
-  #    so the hook and CI (which uses the locked version) never diverge.
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.7
+  - repo: local
     hooks:
       - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude
         args: [--fix]
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
       - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
 
   # --------------------------------------------------
   # 2. uv hooks
@@ -21,12 +33,6 @@ repos:
     rev: 0.12.9
     hooks:
       - id: uv-lock
-
-  #    Rewrites the revs above to match uv.lock. Must run after uv-lock.
-  - repo: https://github.com/tsvikas/sync-with-uv
-    rev: v0.6.0
-    hooks:
-      - id: sync-with-uv
 
   # --------------------------------------------------
   # 3. Documentation hook (numpydoc-validation)

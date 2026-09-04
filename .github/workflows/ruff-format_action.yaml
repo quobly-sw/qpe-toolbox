@@ -5,6 +5,10 @@ on: [pull_request]
 jobs:
   ruff-format:
     runs-on: ubuntu-slim
+    # format_notebooks.sh calls uv run itself, and --no-sync does not propagate
+    # to nested calls: without this the hook would re-sync the whole dev group.
+    env:
+      UV_NO_SYNC: 1
     steps:
     - uses: actions/checkout@v6
 
