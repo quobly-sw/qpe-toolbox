@@ -5,8 +5,10 @@ repos:
   # --------------------------------------------------
   # 1. Ruff — fast linter and formatter
   # --------------------------------------------------
+  #    rev is kept equal to the version in uv.lock by the sync-with-uv hook below,
+  #    so the hook and CI (which uses the locked version) never diverge.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.6
+    rev: v0.15.7
     hooks:
       - id: ruff-check
         args: [--fix]
@@ -19,6 +21,12 @@ repos:
     rev: 0.12.9
     hooks:
       - id: uv-lock
+
+  #    Rewrites the revs above to match uv.lock. Must run after uv-lock.
+  - repo: https://github.com/tsvikas/sync-with-uv
+    rev: v0.6.0
+    hooks:
+      - id: sync-with-uv
 
   # --------------------------------------------------
   # 3. Documentation hook (numpydoc-validation)
