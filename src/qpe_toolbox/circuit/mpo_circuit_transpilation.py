@@ -88,7 +88,6 @@ def exp_Pauli_string_as_MPO(ham_term, n_qubits, *, theta):
     >>> mpo
     <MatrixProductOperator ...>
     """
-
     string_coeff = ham_term[0]
     pauli_string = ham_term[1]
     active_qubits = ham_term[2]
@@ -168,7 +167,6 @@ def trotter1_approx_as_MPO(
     ``apply(..., compress=True)``. Truncation errors may accumulate depending
     on ``cutoff`` and ``max_bond``.
     """
-
     if reverse_order:
         init_term = len(ham_terms) - 1
         trange_counter = tqdm(list(reversed(range(len(ham_terms) - 1))))
@@ -314,7 +312,6 @@ def trotter4_approx_as_MPO(ham_terms, n_qubits, *, dt, cutoff, max_bond, verbosi
     them through compressed MPO multiplication. Intermediate bond dimensions
     may grow significantly depending on the system and truncation parameters.
     """
-
     sym_factor = 1.0 / (2.0 - 2 ** (1.0 / 3.0))
 
     if verbosity == 1:
@@ -412,7 +409,6 @@ def trotter_approx_as_MPO(hamiltonian, *, dt, order, cutoff, max_bond, verbosity
     Compression is performed during MPO manipulations, so the final accuracy
     depends on the chosen ``cutoff`` and ``max_bond`` values.
     """
-
     ham_terms = hamiltonian.terms
     n_qubits = hamiltonian.n_qubits
 
@@ -863,7 +859,6 @@ def build_loc_cost_tn(n_qubits, x, dict_contr_envs, cost_tn):
     - for ``x = 0``, only the right environment is included,
     - for ``x = n_qubits - 1``, only the left environment is included.
     """
-
     gates_to_opt = cost_tn.select(tags=f"I{x}", which="any")
     tags_to_opt = get_tags(gates_to_opt)
 
