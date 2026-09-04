@@ -16,20 +16,22 @@ from qpe_toolbox.circuit import (
 )
 
 tol = 1e-2
-rng = np.random.default_rng(37)
 
 
 def test_drawings():
-    depth = 8
-    circ = generate_brickwall_circuit(5, depth, "rz", "cx", rng=rng)
+    rng = np.random.default_rng(37)
+    circ = generate_brickwall_circuit(5, 8, "rz", "cx", rng=rng)
     depth = max(gate.round for gate in circ.gates) + 1
-    assert isinstance(draw_layered_circuit(circ, max_depth=depth), plt.Figure)
-    assert isinstance(draw_layered_expval((1, 2), circ), plt.Figure)
 
-    circ = generate_brickwall_circuit(5, depth, "rz", "cx", rng=rng)
-    depth = max(gate.round for gate in circ.gates) + 1
-    assert isinstance(draw_layered_circuit(circ, max_depth=depth // 2), plt.Figure)
+    fig_full = draw_layered_circuit(circ, max_depth=depth)
+    fig_trunc = draw_layered_circuit(circ, max_depth=depth // 2)
+    assert isinstance(fig_full, plt.Figure)
+    assert isinstance(fig_trunc, plt.Figure)
+    # truncation actually drops layers from the drawing
+    assert len(fig_trunc.axes[0].patches) < len(fig_full.axes[0].patches)
+
     assert isinstance(draw_layered_expval((1, 2), circ), plt.Figure)
+    plt.close("all")
 
 
 def _build_ent_then_rot_circuit(n_qubits, depth, rng):
