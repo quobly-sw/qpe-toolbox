@@ -18,6 +18,11 @@ jobs:
     - name: Install the project
       run: uv sync --locked --only-group=docs
 
+    # numpydoc lint takes files, not directories; tests and examples are
+    # filtered out by exclude_files in [tool.numpydoc_validation]
+    - name: Validate docstrings
+      run: uv run numpydoc lint $(git ls-files '*.py')
+
     # This job does not run the notebooks as it is expensive
     # it just checks the doc can be constructed
     # docs/Makefile contains the same steps. We do not use make here to get

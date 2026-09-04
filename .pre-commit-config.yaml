@@ -35,10 +35,11 @@ repos:
       - id: uv-lock
 
   # --------------------------------------------------
-  # 3. Documentation hook (numpydoc-validation)
-  #    Moved to .pre-commit-config-doc.yaml — too demanding for every commit.
-  #    The Format CI runs it on pull requests instead. (docformatter was dropped:
-  #    it conflicts with ruff format on blank lines after module docstrings.)
+  # 3. Documentation hook (numpydoc)
+  #    Not a hook: too demanding for every commit. numpydoc is a docs dependency
+  #    and the Documentation CI calls `numpydoc lint` directly on pull requests.
+  #    (docformatter was dropped: it conflicts with ruff format on blank lines
+  #    after module docstrings.)
   # --------------------------------------------------
 
   # --------------------------------------------------

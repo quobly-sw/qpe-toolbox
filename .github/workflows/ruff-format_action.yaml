@@ -24,8 +24,3 @@ jobs:
     # use pre-commit as task runner to get clean pass/fail status
     - name: format notebooks
       run: uv run pre-commit run format-examples --all-files
-
-    # numpydoc validation lives outside .pre-commit-config.yaml so it does not
-    # run on every commit; run it here on pull requests only
-    - name: numpydoc validation
-      run: uv run pre-commit run -c .pre-commit-config-doc.yaml --all-files
