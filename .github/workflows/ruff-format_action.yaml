@@ -5,10 +5,8 @@ on: [pull_request]
 jobs:
   ruff-format:
     runs-on: ubuntu-slim
-    # format_notebooks.sh calls uv run itself, and --no-sync does not propagate
-    # to nested calls: without this the hook would re-sync the whole dev group.
     env:
-      UV_NO_SYNC: 1
+      UV_NO_SYNC: 1  # avoid auto sync in nested uv run calls
     steps:
     - uses: actions/checkout@v6
 
@@ -21,13 +19,13 @@ jobs:
       run: uv sync --locked --only-group={jupytext,lint}
 
     - name: format src
-      run: uv run --no-sync ruff format --check
+      run: uv run ruff format --check
 
     # use pre-commit as task runner to get clean pass/fail status
     - name: format notebooks
-      run: uv run --no-sync pre-commit run format-examples --all-files
+      run: uv run pre-commit run format-examples --all-files
 
     # numpydoc validation lives outside .pre-commit-config.yaml so it does not
     # run on every commit; run it here on pull requests only
     - name: numpydoc validation
-      run: uv run --no-sync pre-commit run -c .pre-commit-config-doc.yaml --all-files
+      run: uv run pre-commit run -c .pre-commit-config-doc.yaml --all-files

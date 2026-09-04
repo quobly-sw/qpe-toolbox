@@ -5,6 +5,8 @@ on: [pull_request]
 jobs:
   build-doc:
     runs-on: ubuntu-slim
+    env:
+      UV_NO_SYNC: 1  # prefer explicit sync
     steps:
     - uses: actions/checkout@v6
 
@@ -22,13 +24,13 @@ jobs:
     # well separated steps and cleaner logs.
     # // is fine here, this is jupytext syntax
     - name: Convert examples
-      run: uv run --no-sync jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb
+      run: uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb
 
     - name: Copy figures to docs
       run: cp -r examples/figures docs/source/customapi/tutorials
 
     - name: Build doc
-      run: uv run --no-sync sphinx-build -b html -W docs/source docs/build
+      run: uv run sphinx-build -b html -W docs/source docs/build
 
       # upload doc as artifact to be able to check result.
       # doc is not deployed: working document available for 2 days from job link
