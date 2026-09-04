@@ -160,7 +160,7 @@ def two_qubit_nn_layer(
             rng = np.random.default_rng()
         params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
-    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
+    elif gate_label in qtn.circuit.TWO_QUBIT_GATES:
         params = np.empty(0)
     else:
         raise KeyError(f"Unknown gate_label: {gate_label}")
