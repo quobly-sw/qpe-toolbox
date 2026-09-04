@@ -49,7 +49,7 @@ from qpe_toolbox.circuit import (
 # First, we need to specify how wide the circuit is, i.e. the number of qubits on which the protocol will be executed. We then instantiate the `Circuit` class to obtain an empty circuit, and append the gates of interest according to the quantum algorithm we aim to execute. $\texttt{quimb}$ includes a list of fixed and parametrized one- and two-qubit gates that can be used for gate-by-gate construction. For example:
 
 # %%
-rng = np.random.default_rng(42 )
+rng = np.random.default_rng(42)
 n_qubits = 5  # total number of qubits
 circ = qtn.Circuit(n_qubits)  # instantiate the class, get an empty circuit
 
