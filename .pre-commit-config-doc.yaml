@@ -1,0 +1,17 @@
+# Documentation hooks — run in CI on pull requests only, NOT on every commit.
+# These live outside .pre-commit-config.yaml so `pre-commit` on `git commit`
+# does not run them; the Format CI invokes this file with
+# `pre-commit run -c .pre-commit-config-doc.yaml --all-files`.
+
+repos:
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
+    hooks:
+      - id: docformatter
+        additional_dependencies: [tomli]
+        args: [--in-place]
+
+  - repo: https://github.com/numpy/numpydoc
+    rev: v1.10.0
+    hooks:
+      - id: numpydoc-validation

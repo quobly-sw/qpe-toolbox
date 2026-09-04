@@ -22,3 +22,8 @@ jobs:
     # use pre-commit as task runner to get clean pass/fail status
     - name: format notebooks
       run: uv run --no-sync pre-commit run format-examples --all-files
+
+    # doc hooks live outside .pre-commit-config.yaml so they do not run on every
+    # commit; run them here on pull requests only
+    - name: doc formatting and numpydoc validation
+      run: uv run --no-sync pre-commit run -c .pre-commit-config-doc.yaml --all-files
