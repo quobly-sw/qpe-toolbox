@@ -119,6 +119,7 @@ def two_qubit_nn_layer(
     neighbors in a brickwork pattern. The starting qubit index determines
     the parity of the layer.
 
+    Parameters
     ----------
     circ : :quimb-api:`Circuit`
         The ``quimb`` circuit to which the layer is applied.
