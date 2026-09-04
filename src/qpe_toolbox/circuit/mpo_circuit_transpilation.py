@@ -506,9 +506,10 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     2. A reference target unitary (or state x zero) register represented as an MPO.
 
     The ansatz is generated as a layered brickwall circuit of two-qubit
-    ``SU4`` gates initialized close to the identity. The resulting unitary
-    tensor network is then combined with the target MPO into a single tensor
-    network suitable for overlap evaluation.
+    ``SU4SWAP`` gates initialized close to the identity: unlike quimb's ``SU4``
+    (which tends to SWAP), ``SU4SWAP`` tends to the identity as its parameters go
+    to zero. The resulting unitary tensor network is then combined with the target
+    MPO into a single tensor network suitable for overlap evaluation.
 
     Parameters
     ----------
@@ -518,7 +519,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
         Depth of the brickwall circuit ansatz (even and odd count as 1).
     param_scaling : float, optional
         Scale of the random initialization parameters for the gates.
-        Smaller values initialize the circuit closer to the identity.
+        Smaller values initialize each ``SU4SWAP`` gate closer to the identity.
         Default is ``1e-1``.
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
@@ -543,11 +544,12 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, seed=42):
     bw_circ = generate_brickwall_circuit(
         n_qubits=n_qubits,
         depth=depth,
-        one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
-        two_qubit_gate_label="SU4",
-        start_ent=True,
+        # unused when include_1qubit_gates=False, but still validated as a 1-qubit gate
+        one_qubit_gate_label="U1",
+        two_qubit_gate_label="SU4SWAP",
         include_1qubit_gates=False,  # whether or not to do 1-spin rotations
-        param_scaling=param_scaling,  # initialize close to identity
+        # small scale: each SU4SWAP gate is initialized close to the identity
+        param_scaling=param_scaling,
         rng=rng,
     )
 

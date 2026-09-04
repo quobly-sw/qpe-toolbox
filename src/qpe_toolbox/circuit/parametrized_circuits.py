@@ -36,6 +36,7 @@ _gate_parameter_numbers = {
     "FSIM": 2,
     "FSIMG": 5,
     "SU4": 15,
+    "SU4SWAP": 15,
 }
 
 
@@ -110,7 +111,6 @@ def two_qubit_nn_layer(
     param_scaling=1.0,
     gate_round=None,
     parametrize=False,
-    reverse=False,
     rng=None,
 ):
     """
@@ -142,10 +142,6 @@ def two_qubit_nn_layer(
         Activate the possibility of using the layer as a parametrized Ansatz
         on some variational scheme.
 
-    reverse : bool, default ``False``
-        Possibility to invert direction of the layer.
-        Relevant when using controlled gates.
-
     rng : :numpy-random:`numpy.random.Generator <generator>`, default ``None``
         Random number generator for gate parameters. If None a new
         Generator is initialized.
@@ -164,16 +160,12 @@ def two_qubit_nn_layer(
             rng = np.random.default_rng()
         params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
-    elif gate_label.upper() in qtn.circuit.TWO_QUBIT_GATES:
+    elif gate_label in qtn.circuit.TWO_QUBIT_GATES:
         params = np.empty(0)
     else:
         raise KeyError(f"Unknown gate_label: {gate_label}")
 
-    if reverse:
-        order = reversed(range(start, circ.N - 1, 2))
-    else:
-        order = range(start, circ.N - 1, 2)
-    for i in order:
+    for i in range(start, circ.N - 1, 2):
         circ.apply_gate(
             gate_id=gate_label,
             params=params,
@@ -276,7 +268,6 @@ def generate_brickwall_circuit(
     one_qubit_gate_label,
     two_qubit_gate_label,
     *,
-    start_ent=False,
     include_1qubit_gates=True,
     param_scaling=1.0,
     rng=None,
@@ -289,7 +280,7 @@ def generate_brickwall_circuit(
     arranged in a brickwall pattern. Each circuit layer is assigned a
     distinct circuit round.
 
-    Circuit structure (one layer, ``start_ent=False``)::
+    Circuit structure (one layer)::
 
         q0 ──[]───●───────
                   │
@@ -323,10 +314,6 @@ def generate_brickwall_circuit(
 
     two_qubit_gate_label : str
         Label identifying the two-body entangling gate.
-
-    start_ent : bool, optional
-        If ``True``, each layer starts with the brickwall entangling layer.
-        Otherwise (default ``False``), the single-body layer is applied first.
 
     include_1qubit_gates : bool, optional
         If ``True``, each layer includes both single-body and entangling rotations.
@@ -368,30 +355,23 @@ def generate_brickwall_circuit(
 
     circ = qtn.Circuit(n_qubits)
     for k in range(depth):
-        if start_ent:
-            for start in range(2):
-                two_qubit_nn_layer(
-                    circ,
-                    start,
-                    two_qubit_gate_label,
-                    param_scaling=param_scaling,
-                    gate_round=k,
-                    rng=rng,
-                )
-            if include_1qubit_gates:
-                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-        else:
-            if include_1qubit_gates:
-                one_qubit_layer(circ, one_qubit_gate_label, gate_round=k)
-            for start in range(2):
-                two_qubit_nn_layer(
-                    circ,
-                    start,
-                    two_qubit_gate_label,
-                    param_scaling=param_scaling,
-                    gate_round=k,
-                    rng=rng,
-                )
+        if include_1qubit_gates:
+            one_qubit_layer(
+                circ,
+                one_qubit_gate_label,
+                param_scaling=param_scaling,
+                gate_round=k,
+                rng=rng,
+            )
+        for start in range(2):
+            two_qubit_nn_layer(
+                circ,
+                start,
+                two_qubit_gate_label,
+                param_scaling=param_scaling,
+                gate_round=k,
+                rng=rng,
+            )
 
     return circ
 
@@ -404,7 +384,6 @@ def generate_rand_circuit(
     two_qubit_gate_range,
     two_qubit_gate_prob,
     *,
-    start_ent=False,
     param_scaling=1.0,
     parametrize=False,
     rng=None,
@@ -417,7 +396,7 @@ def generate_rand_circuit(
     Entangling gates are applied probabilistically between qubits within
     a finite interaction range.
 
-    Circuit structure (one layer, ``start_ent=False``)::
+    Circuit structure (one layer)::
 
         q0 ──[]───●───────
                   │
@@ -460,10 +439,6 @@ def generate_rand_circuit(
         Probability threshold controlling the application of an entangling
         gate for a given qubit.
 
-    start_ent : bool, optional
-        If ``True``, each layer starts with the random entangling layer.
-        Otherwise (default ``False``), the single-body layer is applied first.
-
     param_scaling : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
@@ -501,34 +476,24 @@ def generate_rand_circuit(
     circ = qtn.Circuit(n_qubits)
 
     for k in range(depth):
-        if start_ent:
-            two_qubit_rand_layer(
-                circ,
-                two_qubit_gate_label,
-                gate_range=two_qubit_gate_range,
-                gate_prob=two_qubit_gate_prob,
-                param_scaling=param_scaling,
-                gate_round=k,
-                parametrize=parametrize,
-                rng=rng,
-            )
-            one_qubit_layer(
-                circ, one_qubit_gate_label, gate_round=k, parametrize=parametrize
-            )
-        else:
-            one_qubit_layer(
-                circ, one_qubit_gate_label, gate_round=k, parametrize=parametrize
-            )
-            two_qubit_rand_layer(
-                circ,
-                two_qubit_gate_label,
-                gate_range=two_qubit_gate_range,
-                gate_prob=two_qubit_gate_prob,
-                param_scaling=param_scaling,
-                gate_round=k,
-                parametrize=parametrize,
-                rng=rng,
-            )
+        one_qubit_layer(
+            circ,
+            one_qubit_gate_label,
+            param_scaling=param_scaling,
+            gate_round=k,
+            parametrize=parametrize,
+            rng=rng,
+        )
+        two_qubit_rand_layer(
+            circ,
+            two_qubit_gate_label,
+            gate_range=two_qubit_gate_range,
+            gate_prob=two_qubit_gate_prob,
+            param_scaling=param_scaling,
+            parametrize=parametrize,
+            gate_round=k,
+            rng=rng,
+        )
 
     return circ
 
@@ -579,6 +544,8 @@ def ansatz_circuit(
         circ = qtn.Circuit(n_qubits)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     for r in range(gate_round, gate_round + depth):
         one_qubit_layer(
@@ -602,83 +569,6 @@ def ansatz_circuit(
     return circ
 
 
-def ansatz_circuit_tfi(
-    n_qubits,
-    depth,
-    *,
-    gate_round=0,
-    param_scaling=1.0,
-    parametrize=True,
-    rng=None,
-    psi0=None,
-):
-    """
-    Construct an ansatz circuit inspired by the transverse-field Ising model.
-
-    The circuit consists of alternating layers of RZZ entangling gates and
-    single-qubit RX rotations, starting with a layer of Hadamard gates on
-    all qubits if no initial state is provided.
-
-    Parameters
-    ----------
-    n_qubits : int
-        Number of qubits in the circuit.
-    depth : int
-        Number of repeated ansatz layers.
-    gate_round : int, default ``0``
-        Starting gate round index.
-    param_scaling : float, default ``1.0``
-        Scaling factor for random parameter initialization.
-    parametrize : bool, default ``True``
-        If ``True``, gate parameters are marked as variational (parametrized)
-        for use in an Ansatz. When ``False``, the circuit is fixed with random
-        parameters (not trainable).
-    rng : :numpy-random:`numpy.random.Generator <generator>`, optional
-        Random number generator to generate gate parameters.
-        If ``None``, a default generator is created.
-    psi0 : optional
-        Initial state (e.g., a vector or MPS) to initialize the circuit.
-        If provided, the circuit is built on top of this state; otherwise
-        a Hadamard layer is applied to all qubits to prepare a product state.
-
-    Returns
-    -------
-    :quimb-api:`Circuit`
-        Parametrized TFI-style ansatz circuit.
-    """
-    if rng is None:
-        rng = np.random.default_rng()
-
-    if psi0 is None:
-        circ = qtn.Circuit(n_qubits)
-        for i in range(n_qubits):
-            circ.apply_gate("H", i)
-    else:
-        circ = qtn.Circuit(psi0=psi0)
-
-    for r in range(gate_round, gate_round + depth):
-        for start in range(2):
-            two_qubit_nn_layer(
-                circ,
-                start=start,
-                gate_label="RZZ",
-                param_scaling=param_scaling,
-                gate_round=r,
-                parametrize=parametrize,
-                rng=rng,
-            )
-
-        one_qubit_layer(
-            circ,
-            "RX",
-            param_scaling=param_scaling,
-            gate_round=r,
-            parametrize=parametrize,
-            rng=rng,
-        )
-    return circ
-
-
 def ansatz_circuit_su4(
     n_qubits,
     depth,
@@ -690,7 +580,11 @@ def ansatz_circuit_su4(
     psi0=None,
 ):
     """
-    Construct an ansatz circuit using SU(4) two-qubit gates.
+    Construct an ansatz circuit using ``SU4SWAP`` two-qubit gates.
+
+    Uses the ``SU4SWAP`` gate (a general two-qubit gate rooted at the identity)
+    rather than quimb's ``SU4`` (rooted at SWAP), so a small ``param_scaling``
+    initializes the circuit close to the identity.
 
     Parameters
     ----------
@@ -725,13 +619,15 @@ def ansatz_circuit_su4(
         circ = qtn.Circuit(n_qubits)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     for r in range(gate_round, gate_round + depth):
         for start in range(2):
             two_qubit_nn_layer(
                 circ,
                 start=start,
-                gate_label="SU4",
+                gate_label="SU4SWAP",
                 param_scaling=param_scaling,
                 gate_round=r,
                 parametrize=parametrize,
@@ -789,6 +685,8 @@ def ansatz_circuit_sym(
         circ = qtn.Circuit(n_qubits)
     else:
         circ = qtn.Circuit(psi0=psi0)
+    if n_qubits != circ.N:
+        raise ValueError(f"psi0 has {circ.N} qubits, expected n_qubits={n_qubits}")
 
     if gate_round == 0:
         for i in range(circ.N // 2):
