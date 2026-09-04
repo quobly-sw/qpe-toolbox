@@ -138,7 +138,7 @@ for ii in range(depth - 1):
 #
 # - **Sweep down**: from the top layer (`depth-1`) down to layer 0.
 #     - For a given layer `ii` (top to bottom), we construct a trial circuit `trial` from `mpsK[-1]` (which contains all layers below) and the gates of that layer.
-#     - We call `tn_fit` to optimize the tensors of that layer (tagged `'SU4SWAP'`) so that the trial MPS matches the current `mpsB[-1]` (which contains all layers above, already optimized).
+#     - We call `tn_fit` to optimize the tensors of that layer, selected by their layer tag `ROUND_{depth-1-ii}`, so that the trial MPS matches the current `mpsB[-1]` (which contains all layers above, already optimized).
 #     - We then copy the optimized tensor data back into the main circuit representation (`circ_P` and `circ_G`).
 #     - We update `mpsB` by applying the **conjugated** gates (as MPOs) to move the boundary one layer down.
 #
@@ -173,7 +173,7 @@ for sweep in range(n_sweeps):
             trial.apply_gate(gate)
 
         tn = trial.psi
-        # Fit the SU4 tensors of this layer to match the current mpsB (layers above).
+        # Fit the SU4SWAP tensors of this layer to match the current mpsB (layers above).
         tn_fit(
             tn,
             mpsB[-1].H,  # note: mpsB stores the conjugate, so we use its adjoint.
@@ -215,7 +215,7 @@ for sweep in range(n_sweeps):
             trial.apply_gate(gate)
 
         tn = trial.psi
-        # Fit the SU4 tensors of this layer to match the current mpsB (top part, already optimized).
+        # Fit the SU4SWAP tensors of this layer to match the current mpsB (top part, already optimized).
         tn_fit(
             tn,
             mpsB.pop().H,  # use the top part; pop removes the last element (which corresponds to the layer just below)
