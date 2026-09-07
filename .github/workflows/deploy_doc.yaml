@@ -28,17 +28,11 @@ jobs:
     needs: check-if-main-changed
     if: needs.check-if-main-changed.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
-    env:
-      UV_NO_SYNC: 1  # prefer explicit sync
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: "3.13"
+      - uses: ./.github/actions/setup
 
       - name: Install the project
         run: uv sync --locked --no-default-groups --group={docs,examples}
