@@ -17,7 +17,7 @@ cd "$root"
 if (($#)); then
     examples=("$@")
 else
-    mapfile -t examples < <(git ls-files 'examples/*.py')
+    examples=(examples/*.py)
 fi
 
 # jupyter_execute is the standard jupyter workdir, already in .gitignore
@@ -31,14 +31,17 @@ rm -f jupyter_execute/*ipynb
 # jupytext working dir is the one of the notebook, need relative  path from examples/
 uv run jupytext -q --to ../jupyter_execute//ipynb "${examples[@]}"
 
-# --check writes nothing and lists the notebooks it would rewrite, one per line
-mapfile -t unformatted < <(uv run ruff format -q --check jupyter_execute/*ipynb)
-((${#unformatted[@]})) || exit 0
+# ruff leaves an already formatted notebook untouched, so a stamp file dates the
+# run and find -newer names the rewritten ones, with no report to parse
+stamp=jupyter_execute/.ruff-stamp
+touch "$stamp"
+uv run ruff format -q jupyter_execute/*ipynb
+notebooks=$(find jupyter_execute -name '*.ipynb' -newer "$stamp")
+[[ -n $notebooks ]] || exit 0
 
 # convert back only those, so an already formatted example keeps its mtime
-# the report is the only log left, the exit status doubles as a CI check
-printf "%s\n" "${unformatted[@]}"
-notebooks=("${unformatted[@]#reformat: }")  # a wording change fails below
-uv run ruff format -q "${notebooks[@]}"
-uv run jupytext -q --to ../examples//py "${notebooks[@]}"
+# the list is the only log left, the exit status doubles as a CI check
+printf '%s\n' "$notebooks"
+find jupyter_execute -name '*.ipynb' -newer "$stamp" -exec \
+    uv run jupytext -q --to ../examples//py {} +
 exit 1
