@@ -20,8 +20,6 @@ else
     mapfile -t examples < <(git ls-files 'examples/*.py')
 fi
 
-before=$(sha256sum "${examples[@]}")
-
 # jupyter_execute is the standard jupyter workdir, already in .gitignore
 mkdir -p jupyter_execute
 
@@ -32,10 +30,15 @@ rm -f jupyter_execute/*ipynb
 
 # jupytext working dir is the one of the notebook, need relative  path from examples/
 uv run jupytext -q --to ../jupyter_execute//ipynb "${examples[@]}"
-uv run ruff format jupyter_execute/*ipynb
-uv run jupytext -q --to ../examples//py jupyter_execute/*ipynb
 
-# fail if the round-trip rewrote the examples, so this doubles as a CI check:
-# pre-commit detects modified files by itself, a direct caller needs the status
-after=$(sha256sum "${examples[@]}")
-[[ "$before" == "$after" ]]
+# --check writes nothing and lists the notebooks it would rewrite, one per line
+mapfile -t unformatted < <(uv run ruff format -q --check jupyter_execute/*ipynb)
+((${#unformatted[@]})) || exit 0
+
+# convert back only those, so an already formatted example keeps its mtime
+# the report is the only log left, the exit status doubles as a CI check
+printf "%s\n" "${unformatted[@]}"
+notebooks=("${unformatted[@]#reformat: }")  # a wording change fails below
+uv run ruff format -q "${notebooks[@]}"
+uv run jupytext -q --to ../examples//py "${notebooks[@]}"
+exit 1
