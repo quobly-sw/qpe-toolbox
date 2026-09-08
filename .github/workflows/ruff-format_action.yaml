@@ -8,17 +8,13 @@ jobs:
     steps:
     - uses: actions/checkout@v6
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-      with:
-        python-version: "3.13"
+    - uses: ./.github/actions/setup
 
     - name: Install the project
       run: uv sync --locked --only-group={jupytext,lint}
 
     - name: format src
-      run: uv run --no-sync ruff format --check
+      run: uv run ruff format --check
 
-    # use pre-commit as task runner to get clean pass/fail status
     - name: format notebooks
-      run: uv run --no-sync pre-commit run format-examples --all-files
+      run: hooks/format_notebooks.sh

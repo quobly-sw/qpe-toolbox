@@ -4,36 +4,43 @@
 repos:
   # --------------------------------------------------
   # 1. Ruff — fast linter and formatter
+  #    Local hooks, so they run the ruff pinned in uv.lock — the one CI uses.
+  #    Bump ruff in pyproject.toml/uv.lock; there is no hook rev to keep in sync.
+  #    --force-exclude is required: pre-commit passes explicit filenames, which
+  #    ruff would otherwise check even when [tool.ruff.format] excludes them.
   # --------------------------------------------------
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.6
+  - repo: local
     hooks:
       - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude
         args: [--fix]
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
       - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
 
   # --------------------------------------------------
   # 2. uv hooks
   # --------------------------------------------------
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.10.10
+    rev: 0.12.9
     hooks:
       - id: uv-lock
 
   # --------------------------------------------------
-  # 3. Documentation hooks
+  # 3. Documentation hook (numpydoc)
+  #    Not a hook: too demanding for every commit. numpydoc is a docs dependency
+  #    and the Documentation CI calls `numpydoc lint` directly on pull requests.
+  #    (docformatter was dropped: it conflicts with ruff format on blank lines
+  #    after module docstrings.)
   # --------------------------------------------------
-  - repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.7
-    hooks:
-      - id: docformatter
-        additional_dependencies: [tomli]
-        args: [--in-place]
-
-  - repo: https://github.com/numpy/numpydoc
-    rev: v1.10.0
-    hooks:
-      - id: numpydoc-validation
 
   # --------------------------------------------------
   # 4. Maintenance hooks (whitespace, yaml, EOF)
