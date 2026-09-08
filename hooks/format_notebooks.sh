@@ -32,16 +32,21 @@ rm -f jupyter_execute/*ipynb
 uv run jupytext -q --to ../jupyter_execute//ipynb "${examples[@]}"
 
 # ruff leaves an already formatted notebook untouched, so a stamp file dates the
-# run and find -newer names the rewritten ones, with no report to parse
+# run and -nt collects the ones it rewrote, with no report to parse
 stamp=jupyter_execute/.ruff-stamp
 touch "$stamp"
 uv run ruff format -q jupyter_execute/*ipynb
-notebooks=$(find jupyter_execute -name '*.ipynb' -newer "$stamp")
-[[ -n $notebooks ]] || exit 0
+notebooks=()
+for nb in jupyter_execute/*ipynb; do
+    [[ $nb -nt $stamp ]] && notebooks+=("$nb")
+done
+((${#notebooks[@]})) || exit 0
 
 # convert back only those, so an already formatted example keeps its mtime
-# the list is the only log left, the exit status doubles as a CI check
-printf '%s\n' "$notebooks"
-find jupyter_execute -name '*.ipynb' -newer "$stamp" -exec \
-    uv run jupytext -q --to ../examples//py {} +
+# report the examples rather than the intermediate notebooks: this list is the
+# only log left, and the exit status doubles as a CI check
+stems=("${notebooks[@]##*/}")
+echo "Will be formatted:"
+printf 'examples/%s.py\n' "${stems[@]%.ipynb}"
+uv run jupytext -q --to ../examples//py "${notebooks[@]}"
 exit 1
