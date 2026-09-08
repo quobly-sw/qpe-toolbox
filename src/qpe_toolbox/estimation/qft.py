@@ -129,7 +129,6 @@ def iqft(wires):
     - The angles of controlled-phase gates are negated relative to the QFT.
     - Bit ordering should be checked if interfacing with other routines.
     """
-
     qft_routine = qft(wires)
     depth = len(qft_routine)
     iqft_routine = []
