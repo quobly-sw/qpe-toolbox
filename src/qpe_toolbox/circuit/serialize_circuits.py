@@ -83,7 +83,6 @@ def apply_gate_qiskit(qc, label, qubits, params):
 
     >>> apply_gate_qiskit(qc, "rxx", [0, 1], [0.3])
     """
-
     label = label.lower()
     if label == "cnot":
         label = "cx"
