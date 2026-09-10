@@ -48,7 +48,7 @@ def test_ansatz_circuit_su4():
     circ = ansatz_circuit_su4(n_qubits, depth, rng=rng)
     c = 0
     for g in circ.gates:
-        if g.label == "SU4":
+        if g.label == "SU4SWAP":
             c += 1
     assert c == depth * (n_qubits - 1)
 

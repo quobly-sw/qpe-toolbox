@@ -40,11 +40,10 @@ os.environ["JAX_ENABLE_X64"] = "True"
 import autoray
 import matplotlib.pyplot as plt
 import numpy as np
-import quimb as qu
 import quimb.tensor as qtn
 
 # Local imports from qpe_toolbox
-from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
+from qpe_toolbox.circuit import ansatz_circuit_su4, su4swap_gate_param_gen, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %% [markdown]
@@ -167,8 +166,9 @@ print()
 print("*** Global L-BFGS sequential optimization ")
 depths_global = []
 errors_global = []
+rng = np.random.default_rng(42)
 
-circ = ansatz_circuit_su4(n_qubits, 1)
+circ = ansatz_circuit_su4(n_qubits, 1, rng=rng)
 circ_opt = make_circuit_optimizer(circ, mpo)
 optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
 ovlp = (dmrg.state.H & optimal_circ.psi).contract()
@@ -183,9 +183,18 @@ print(
 )
 
 for ii in range(2, depth + 1):
-    circ = ansatz_circuit_su4(n_qubits, ii, param_scaling=1e-1)
-    circ.set_params(optimal_circ.get_params())
-    circ_opt = make_circuit_optimizer(circ, mpo)
+    # grow the optimized circuit by one SU4SWAP layer initialized close to identity
+    for start in range(2):
+        for q in range(start, n_qubits - 1, 2):
+            optimal_circ.apply_gate(
+                "SU4SWAP",
+                *(0.1 * rng.random(15)),
+                q,
+                q + 1,
+                gate_round=ii - 1,
+                parametrize=True,
+            )
+    circ_opt = make_circuit_optimizer(optimal_circ, mpo)
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
     err = np.abs(1 - circ_opt.loss / dmrg_energy)
@@ -226,13 +235,12 @@ plt.show()
 # --- Fixed depth 6 ---
 print("*** Local optimization")
 depth = 6
-circ = qu.tensor.Circuit(n_qubits)
 circ = ansatz_circuit_su4(
     n_qubits=n_qubits, depth=depth, param_scaling=1.0, parametrize=False
 )
 
 tn = circ.psi
-tn_fit(tn, GS, tags="SU4", steps=100000, tol=1e-8)
+tn_fit(tn, GS, tags="SU4SWAP", steps=100000, tol=1e-8)
 
 ovlp = (dmrg.state.H & tn).contract()
 tnH = tn.H
@@ -261,7 +269,7 @@ circ = ansatz_circuit_su4(
 )
 
 tn = circ.psi
-tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
+tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
 
 ovlp = (dmrg.state.H & tn).contract()
 tnH = tn.H
@@ -276,21 +284,18 @@ print(
     f"Depth = {1:2d}   Energy = {ene:12.8f}   Error = {err:10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
 )
 
-new_layer_eps = 1e-2  # deviation of the new layer from the identity
-rng = np.random.default_rng()
+rng = np.random.default_rng(42)
 
 for ii in range(2, depth + 1):
-    # grow the optimized network by one brickwall layer, each new gate being the
-    # nearest unitary to I + eps * G so the layer starts close to the identity
-
-    tags = ["SU4", f"ROUND_{ii - 1}"]
+    # grow the optimized network by one brick-wall layer of SU4SWAP gates,
+    # initialized close to the identity (small parameters)
+    tags = ["SU4SWAP", f"ROUND_{ii - 1}"]
     for start in range(2):
         for q in range(start, n_qubits - 1, 2):
-            g = rng.normal(size=(4, 4)) + 1j * rng.normal(size=(4, 4))
-            u, _, vh = np.linalg.svd(np.eye(4) + new_layer_eps * g)
-            tn.gate_(u @ vh, (q, q + 1), tags=tags, contract=False)
+            gate = su4swap_gate_param_gen(1e-2 * rng.random(15))
+            tn.gate_(gate, (q, q + 1), tags=tags, contract=False)
 
-    tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
+    tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
 
     ovlp = (dmrg.state.H & tn).contract()
     tnH = tn.H
