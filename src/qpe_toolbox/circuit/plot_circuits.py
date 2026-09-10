@@ -427,7 +427,36 @@ def _determine_layout_depth(circ):
     return X_end - X_init
 
 
-def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
+def _layer_labels(labels, depth, name):
+    """
+    Normalize a per-layer label list, defaulting to empty labels.
+
+    Parameters
+    ----------
+    labels : list of str or None
+        Labels provided by the caller, one per circuit layer.
+
+    depth : int
+        Number of circuit layers to be drawn.
+
+    name : str
+        Argument name, used in the error message.
+
+    Returns
+    -------
+    list of str
+        Labels to use, of length at least ``depth``.
+    """
+    if labels is None:
+        return [""] * depth
+    if len(labels) < depth:
+        raise ValueError(f"{name} must have at least {depth} entries")
+    return labels
+
+
+def draw_layered_circuit(
+    circ, *, max_depth=np.inf, state_label="", labels_1qubit=None, labels_2qubit=None
+):
     """
     Draw a layered quantum circuit using Matplotlib.
 
@@ -444,18 +473,18 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
         Maximum number of circuit layers to draw. Default is inf, the full circuit
         is drawn.
 
-    list_names : list, optional
-        Labels used for annotating different parts of the circuit.
-        Expected structure:
+    state_label : str, optional
+        Label for the initial product state. Default is an empty label.
 
-        - ``list_names[0]`` : str
-            Label for the initial product state.
-        - ``list_names[1]`` : list of str
-            Labels for single-qubit layers, one per circuit layer.
-            e.g. for QAOA: ``[f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, p + 1)]``
-            where ``p`` is the depth of the Ansatz and ``i`` indicates the layer.
-        - ``list_names[2]`` : list of str
-            Labels for two-qubit layers, one per circuit layer.
+    labels_1qubit : list of str, optional
+        Labels for the single-qubit layers, one per circuit layer.
+        e.g. for QAOA: ``[f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, p + 1)]``
+        where ``p`` is the depth of the Ansatz and ``i`` indicates the layer.
+        Default is empty labels.
+
+    labels_2qubit : list of str, optional
+        Labels for the two-qubit layers, one per circuit layer.
+        Default is empty labels.
 
     Returns
     -------
@@ -469,8 +498,8 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
         raise ValueError("Gate round information required.")
     true_max_depth = max(gate_rounds) + 1
     depth = min(max_depth, true_max_depth)
-    if list_names is None:
-        list_names = [[""], [""] * depth, [""] * depth]  # empty labels
+    labels_1qubit = _layer_labels(labels_1qubit, depth, "labels_1qubit")
+    labels_2qubit = _layer_labels(labels_2qubit, depth, "labels_2qubit")
 
     width = _determine_layout_depth(circ)
 
@@ -488,7 +517,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
         ax=ax,
         n_qubits=n_qubits,
         X=-1,
-        state_label=list_names[0],
+        state_label=state_label,
         fontsize=fontsize,
         col_face=col_psi,
     )
@@ -506,7 +535,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
                     ax=ax,
                     n_qubits=n_qubits,
                     X=X,
-                    gate_label=list_names[1][layer],
+                    gate_label=labels_1qubit[layer],
                     fontsize=fontsize,
                     col_face=col_U1,
                     active_qubits=list(range(n_qubits)),
@@ -520,7 +549,7 @@ def draw_layered_circuit(circ, *, max_depth=np.inf, list_names=None):
                     X=X,
                     sublayers=sublayers,
                     dict_sublayer=dict_sublayer,
-                    gate_label=list_names[2][layer],
+                    gate_label=labels_2qubit[layer],
                     fontsize=fontsize,
                     col_face=col_U2,
                     active_qubits=list(range(n_qubits)),
@@ -600,7 +629,15 @@ def build_reverse_light_cone_circuit(selected_edge, circ):
     return circ_revlc
 
 
-def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=True):
+def draw_layered_expval(
+    selected_edge,
+    circ,
+    *,
+    state_label="",
+    labels_1qubit=None,
+    labels_2qubit=None,
+    commutation=True,
+):
     """
     Draw the tensor-network representation of an expectation value.
 
@@ -621,15 +658,17 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
     circ : :quimb-api:`Circuit`
         Quantum circuit.
 
-    list_names : list, optional
-        Labels used for annotating the diagram. Expected structure:
+    state_label : str, optional
+        Label for the product state. Default is an empty label.
 
-        - ``list_names[0]`` : str
-            Label for the product state.
-        - ``list_names[1]`` : list of str
-            Labels for single-qubit layers (indexed by layer).
-        - ``list_names[2]`` : list of str
-            Labels for two-qubit layers (indexed by layer).
+    labels_1qubit : list of str, optional
+        Labels for the single-qubit layers, one per circuit layer, ordered
+        from the outermost layer to the one touching the observable.
+        Default is empty labels.
+
+    labels_2qubit : list of str, optional
+        Labels for the two-qubit layers, ordered as ``labels_1qubit``.
+        Default is empty labels.
 
     commutation : bool, optional
         If the entangling gates commute with themselves when overlapping
@@ -651,8 +690,8 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
         # without this information, no packing of gates within a layer
         raise ValueError("Gate round information required.")
     depth = max(gate_rounds) + 1
-    if list_names is None:
-        list_names = [[""], [""] * depth, [""] * depth]  # empty labels
+    labels_1qubit = _layer_labels(labels_1qubit, depth, "labels_1qubit")
+    labels_2qubit = _layer_labels(labels_2qubit, depth, "labels_2qubit")
     width = 2 * _determine_layout_depth(circ_revlc) - 5
     list_dict_gates_to_sublayers, list_sublayers = assign_sublayers(circ_revlc)
 
@@ -679,7 +718,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
             ax=ax,
             n_qubits=n_qubits,
             X=X,
-            state_label=list_names[0],
+            state_label=state_label,
             fontsize=fontsize,
             col_face=col_psi,
             is_right_side=is_right_side,
@@ -715,7 +754,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
                     ax=ax,
                     n_qubits=n_qubits,
                     X=X,
-                    gate_label=list_names[1][rev_layer],
+                    gate_label=labels_1qubit[rev_layer],
                     fontsize=fontsize,
                     col_face=col_U1,
                     active_qubits=active_qubits,
@@ -731,7 +770,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
                     X=X,
                     sublayers=list_sublayers[rev_layer],
                     dict_sublayer=list_dict_gates_to_sublayers[rev_layer],
-                    gate_label=list_names[2][layer],
+                    gate_label=labels_2qubit[rev_layer],
                     fontsize=fontsize,
                     col_face=col_U2,
                     active_qubits=active_qubits,
@@ -774,7 +813,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
                     X=X,
                     sublayers=list_sublayers[rev_layer],
                     dict_sublayer=list_dict_gates_to_sublayers[rev_layer],
-                    gate_label=list_names[2][layer],
+                    gate_label=labels_2qubit[rev_layer],
                     fontsize=fontsize,
                     col_face=col_U2,
                     active_qubits=active_qubits,
@@ -790,7 +829,7 @@ def draw_layered_expval(selected_edge, circ, *, list_names=None, commutation=Tru
                     ax=ax,
                     n_qubits=n_qubits,
                     X=X,
-                    gate_label=list_names[1][rev_layer],
+                    gate_label=labels_1qubit[rev_layer],
                     fontsize=fontsize,
                     col_face=col_U1,
                     active_qubits=active_qubits,

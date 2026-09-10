@@ -26,6 +26,10 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now
   returning a single angle.
 - `optuna` dependency moved from core dependency to recommended.
+- `draw_layered_circuit` / `draw_layered_expval`: replaced the `list_names`
+  argument with three keyword-only arguments `state_label`, `labels_1qubit` and
+  `labels_2qubit`. A label list shorter than the circuit depth now raises
+  `ValueError` instead of failing with an `IndexError` while drawing.
 
 ### Removed
 
@@ -34,6 +38,17 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
   `src/qpe_toolbox/circuit/qaoa.py` and `tests/test_qaoa.py`. This removes
   `brute_force_maxcut`, `compute_qaoa_contraction_costs` and
   `study_optimization_time_costs` from `qpe_toolbox.circuit`.
+- `two_qubit_rand_layer`: the `reverse` argument. It only changed the order in
+  which overlapping gates were applied, and never the control direction its
+  documentation claimed.
+
+### Fixed
+
+- `draw_layered_expval`: two-qubit layer labels were indexed in the opposite
+  direction to single-qubit ones, so the two label lists disagreed on which
+  layer they were naming.
+- `draw_layered_circuit` / `draw_layered_expval`: unlabelled diagrams drew
+  `['']` next to every qubit instead of nothing.
 
 ## [1.1.0] - 2026-04-02
 
