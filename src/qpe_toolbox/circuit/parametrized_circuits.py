@@ -335,14 +335,6 @@ def generate_brickwall_circuit(
     ValueError
         If ``one_qubit_gate_label`` does not correspond to a valid single-body gate,
         or if ``two_qubit_gate_label`` is not a valid two-body gate.
-
-    Notes
-    -----
-    - Separate random number generators are used for single-body and
-      two-body gate parameters to ensure reproducibility and decoupled
-      randomness.
-    - The same gate parameters are reused across all gates within a
-      given layer.
     """
     if one_qubit_gate_label.upper() not in qtn.circuit.ONE_QUBIT_GATES:
         raise ValueError(f"Expected a single-body gate: {one_qubit_gate_label}")
