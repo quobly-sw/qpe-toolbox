@@ -183,7 +183,6 @@ def two_qubit_rand_layer(
     param_scaling=1.0,
     gate_round=None,
     parametrize=False,
-    reverse=False,
 ):
     """
     Apply a random two-body entangling layer to a ``quimb`` :quimb-api:`Circuit`.
@@ -222,10 +221,6 @@ def two_qubit_rand_layer(
         Activate the possibility of using the layer as a parametrized Ansatz
         on some variational scheme.
 
-    reverse : bool, default ``False``
-        Possibility to invert direction of the layer.
-        Relevant when using controlled gates.
-
     Notes
     -----
     - The same parameters are reused for all entangling gates in the layer.
@@ -246,8 +241,7 @@ def two_qubit_rand_layer(
         raise KeyError(f"Unknown gate_label: {gate_label}")
 
     n_qubits = circ.N
-    order = reversed(range(n_qubits)) if reverse else range(n_qubits)
-    for i in order:
+    for i in range(n_qubits):
         if rng.random() < gate_prob:
             j = i + 1 + rng.integers(gate_range)
             if j < n_qubits:
