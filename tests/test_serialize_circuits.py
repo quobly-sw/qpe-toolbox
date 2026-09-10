@@ -68,6 +68,15 @@ def test_load_qasm_min_layout(tmp_path):
     assert rc.N == 3
     assert [g.label for g in rc.gates] == ["RX", "CX", "RZZ"]
 
+    # idle top qubits: the inferred size is smaller than the one in the header
+    circ_idle = qtn.Circuit(4)
+    circ_idle.apply_gate("RX", 0.3, 0, gate_round=0)
+    circ_idle.apply_gate("CX", 0, 1, gate_round=0)
+    base_idle = str(tmp_path / "circ_idle")
+    dump_quimb_Circuit_to_qasm(circ_idle, base_idle, save_rounds=True)
+    assert load_qasm_to_quimb_Circuit(base_idle).N == 4
+    assert load_qasm_to_quimb_Circuit(base_idle, min_layout=True).N == 2
+
 
 def test_build_save_load_quimb(tmp_path):
     n_qubits = 4
@@ -104,9 +113,7 @@ def test_sample_quimb_qiskit():
     circ_quimb = generate_brickwall_circuit(n_qubits, depth, "rx", "cnot", rng=rng)
 
     circ_dict = serialize_from_quimb_Circuit(circ_quimb)
-    circ_quimb = deserialize_to_quimb_CircuitMPS(
-        full_gate_dict=circ_dict, max_bond=2**depth, cutoff=10e-8, perm=True
-    )
+    circ_quimb = deserialize_to_quimb_CircuitMPS(circ_dict, 2**depth, 10e-8, perm=True)
 
     num_samples = 10**4
     circ_qiskit = deserialize_to_qiskit_QuantumCircuit(circ_dict, measure=True)
