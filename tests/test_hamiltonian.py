@@ -7,7 +7,11 @@ import scipy.sparse
 from pyscf import gto
 
 from qpe_toolbox.estimation import build_hadamard_test_circuit
-from qpe_toolbox.hamiltonian import chemistry_hamiltonian, heisenberg_hamiltonian
+from qpe_toolbox.hamiltonian import (
+    Hamiltonian,
+    chemistry_hamiltonian,
+    heisenberg_hamiltonian,
+)
 
 h_str = """Hamiltonian(n_qubits=2, n_terms=3) with terms:
    +0.25 XX @ [0, 1]
@@ -33,6 +37,19 @@ def test_heisenberg():
         heis_mpo = heis_ham.to_mpo()
         heis_dense = heis_ham.to_dense()
         assert np.max(abs(heis_dense - heis_mpo.to_dense())) < 1e-12
+
+
+def test_to_mpo_padding():
+    # regression test: a term touching neither boundary qubit must still pad
+    # to the declared n_qubits, not just the qubits the terms happen to touch
+    n_qubits = 5
+    h = Hamiltonian([(1.0, "xy", [1, 3])], n_qubits)
+    dense = h.to_dense()
+    mpo = h.to_mpo()
+    assert mpo.num_tensors == n_qubits
+    assert dense.shape == h.shape
+    assert h.to_sparse_matrix().shape == h.shape
+    assert np.max(abs(dense - mpo.to_dense())) < 1e-12
 
 
 def test_sparse():
@@ -129,6 +146,7 @@ def test_U():
 
 if __name__ == "__main__":
     test_heisenberg()
+    test_to_mpo_padding()
     test_sparse()
     test_molecule_h2()
     test_U()
