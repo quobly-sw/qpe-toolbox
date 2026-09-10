@@ -17,8 +17,9 @@ def su4swap_gate_param_gen(params):
     Return the ``SU4SWAP`` gate array, a general two-qubit gate rooted at identity.
 
     Equivalent to swapping the two output legs of quimb's 15-parameter ``SU4`` gate,
-    allows to tend to Id as params go to zero. The gate spans the SU(4) manifolds, but
-    it carries a free phase and its determinant is not 1 (not literally an SU(4) gate)
+    so it tends to the identity as its parameters go to zero. It spans the same
+    manifold as ``SU4`` (a subset of U(4)) and carries a free phase, so its
+    determinant is not 1 (not literally an SU(4) gate).
 
     Parameters
     ----------
