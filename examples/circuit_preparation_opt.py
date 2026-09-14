@@ -40,12 +40,11 @@ os.environ["JAX_ENABLE_X64"] = "True"
 import autoray
 import matplotlib.pyplot as plt
 import numpy as np
-import quimb as qu
 import quimb.tensor as qtn
 from tqdm import notebook as tqdm
 
 # Local imports from qpe_toolbox
-from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
+from qpe_toolbox.circuit import ansatz_circuit_su4, su4swap_gate_param_gen, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %% [markdown]
@@ -163,13 +162,23 @@ print(
 
 # %%
 print("*** Global L-BFGS sequential optimization ")
-optimal_circ = ansatz_circuit_su4(n_qubits, 1)
+rng = np.random.default_rng(42)
+optimal_circ = ansatz_circuit_su4(n_qubits, 1, rng=rng)
 errors_global = []
 
 for ii in tqdm.tqdm(range(depth)):
-    circ = ansatz_circuit_su4(n_qubits, ii + 1, param_scaling=1e-1)
-    circ.set_params(optimal_circ.get_params())
-    circ_opt = make_circuit_optimizer(circ, mpo)
+    # grow the optimized circuit by one SU4SWAP layer initialized close to identity
+    for start in range(2):
+        for q in range(start, n_qubits - 1, 2):
+            optimal_circ.apply_gate(
+                "SU4SWAP",
+                *(0.1 * rng.random(15)),
+                q,
+                q + 1,
+                gate_round=ii - 1,
+                parametrize=True,
+            )
+    circ_opt = make_circuit_optimizer(optimal_circ, mpo)
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
     err = np.abs(1 - circ_opt.loss / dmrg_energy)
@@ -232,13 +241,12 @@ def evaluate_fit(dmrg, mpo, tn, *, depth=1):
 # --- Fixed depth 6 ---
 print("*** Local optimization")
 depth = 6
-circ = qu.tensor.Circuit(n_qubits)
 circ = ansatz_circuit_su4(
     n_qubits=n_qubits, depth=depth, param_scaling=1.0, parametrize=False
 )
 
 tn = circ.psi
-tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
+tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
 print("Completed!")
 ene, err, ovlp = evaluate_fit(dmrg, mpo, tn, depth=depth)
 
@@ -255,14 +263,15 @@ rng = np.random.default_rng()
 errors_local = []
 
 for ii in range(depth):
-    tags = ["SU4", f"ROUND_{ii}"]
+    # grow the optimized network by one brick-wall layer of SU4SWAP gates,
+    # initialized close to the identity (small parameters)
+    tags = ["SU4SWAP", f"ROUND_{ii - 1}"]
     for start in range(2):
         for q in range(start, n_qubits - 1, 2):
-            g = rng.normal(size=(4, 4)) + 1j * rng.normal(size=(4, 4))
-            u, _, vh = np.linalg.svd(np.eye(4) + new_layer_eps * g)
-            tn.gate_(u @ vh, (q, q + 1), tags=tags, contract=False)
+            gate = su4swap_gate_param_gen(1e-2 * rng.random(15))
+            tn.gate_(gate, (q, q + 1), tags=tags, contract=False)
 
-    tn_fit(tn, GS, tags="SU4", steps=10000, tol=1e-8)
+    tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
     ene, err, ovlp = evaluate_fit(dmrg, mpo, tn, depth=ii + 1)
     errors_local.append(err)
 

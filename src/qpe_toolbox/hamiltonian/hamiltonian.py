@@ -11,7 +11,7 @@ import numpy as np
 import quimb as qu
 import quimb.tensor as qtn
 import scipy.sparse
-from quimb.operator import SparseOperatorBuilder
+from quimb.operator import HilbertSpace, SparseOperatorBuilder
 
 from .trotterization import rotation_gates
 
@@ -158,7 +158,9 @@ class Hamiltonian:
         :quimb:`quimb.operator.SparseOperatorBuilder <autoapi/quimb/operator/index.html#quimb.operator.SparseOperatorBuilder>`
             Builder object that can generate sparse matrices or MPOs.
         """
-        builder = SparseOperatorBuilder()
+        builder = SparseOperatorBuilder(
+            hilbert_space=HilbertSpace(range(self.n_qubits))
+        )
         for coeff, paulis, qubits in self.terms:
             builder.add_term(
                 coeff,

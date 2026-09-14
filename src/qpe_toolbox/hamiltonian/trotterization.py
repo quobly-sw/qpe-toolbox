@@ -69,7 +69,6 @@ def exp_Pauli_string_as_MPO(term, dt, n_qubits):
         If the length of ``pauli_string`` does not match the number of
         ``active_qubits``.
     """
-
     string_coeff, pauli_string, active_qubits = term
     id4 = qu.identity(2).reshape(1, 1, 2, 2)
 
@@ -137,7 +136,6 @@ def trotter1_approx_as_MPO(
     :quimb-api:`MatrixProductOperator`
         MPO representation of the first-order Trotter approximation.
     """
-
     ham_terms = hamiltonian.terms
     n_qubits = hamiltonian.n_qubits
 
@@ -196,7 +194,6 @@ def trotter2_approx_as_MPO(
     :quimb-api:`MatrixProductOperator`
         MPO representation of the second-order Trotter approximation.
     """
-
     if verbosity >= 1:
         print(f"{'': <2}Building 2nd order Trotter")
         print(f"{'': <4}Building 1st order Trotter (1st half)")
@@ -257,7 +254,6 @@ def trotter4_approx_as_MPO(
     :quimb-api:`MatrixProductOperator`
         MPO representation of the fourth-order Trotter approximation.
     """
-
     sym_factor = 1.0 / (2.0 - 2 ** (1.0 / 3.0))
 
     if verbosity >= 1:

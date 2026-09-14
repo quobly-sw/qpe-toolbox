@@ -30,13 +30,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          python-version: "3.13"
+      - uses: ./.github/actions/setup
 
       - name: Install the project
         run: uv sync --locked --no-default-groups --group={docs,examples}
@@ -45,13 +41,13 @@ jobs:
       - name: Run examples
         run: |
           export TQDM_DISABLE=1
-          uv run --no-sync jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
+          uv run jupytext examples/*py --to ../docs/source/customapi/tutorials//ipynb --execute --run-path examples
 
       - name: Copy figures
         run: cp -r examples/figures docs/source/customapi/tutorials
 
       - name: Build doc
-        run: uv run --no-sync sphinx-build -b html -W docs/source docs/build
+        run: uv run sphinx-build -b html -W docs/source docs/build
 
       - name: Upload doc
         id: deployment

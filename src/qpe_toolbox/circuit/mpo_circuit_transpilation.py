@@ -19,9 +19,10 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
     2. A reference target unitary (or state x zero) register represented as an MPO.
 
     The ansatz is generated as a layered brickwall circuit of two-qubit
-    ``SU4`` gates initialized close to the identity. The resulting unitary
-    tensor network is then combined with the target MPO into a single tensor
-    network suitable for overlap evaluation.
+    ``SU4SWAP`` gates initialized close to the identity: unlike quimb's ``SU4``
+    (which tends to SWAP), ``SU4SWAP`` tends to the identity as its parameters go
+    to zero. The resulting unitary tensor network is then combined with the target
+    MPO into a single tensor network suitable for overlap evaluation.
 
     Parameters
     ----------
@@ -31,7 +32,7 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
         Depth of the brickwall circuit ansatz (even and odd count as 1).
     param_scaling : float, optional
         Scale of the random initialization parameters for the gates.
-        Smaller values initialize the circuit closer to the identity.
+        Smaller values initialize each ``SU4SWAP`` gate closer to the identity.
         Default is ``1e-1``.
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
@@ -46,7 +47,6 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
         Tensor network containing both the variational circuit ansatz and
         the target MPO.
     """
-
     n_qubits = ref_mpo.num_tensors
 
     # -----------------------------------------
@@ -55,11 +55,12 @@ def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
     bw_circ = generate_brickwall_circuit(
         n_qubits=n_qubits,
         depth=depth,
-        one_qubit_gate_label="U1",  # it is irrelevant (purely_ent cancels its effect)
-        two_qubit_gate_label="SU4",
-        start_ent=True,
+        # unused when include_1qubit_gates=False, but still validated as a 1-qubit gate
+        one_qubit_gate_label="U1",
+        two_qubit_gate_label="SU4SWAP",
         include_1qubit_gates=False,  # whether or not to do 1-spin rotations
-        param_scaling=param_scaling,  # initialize close to identity
+        # small scale: each SU4SWAP gate is initialized close to the identity
+        param_scaling=param_scaling,
         rng=rng,
     )
     cost_tn = qtn.TensorNetwork() & bw_circ.get_uni()
@@ -118,7 +119,6 @@ def get_envs_tns(n_qubits, site_index, cost_tn):
           returned.
         - Otherwise, the list is ordered as ``[left_env, right_env]``.
     """
-
     env_tn = cost_tn.select(tags=[f"I{site_index}"], which="!any")
 
     left_tags = [f"I{i}" for i in range(site_index)]
@@ -173,7 +173,6 @@ def find_transfer_structure(n_qubits, cost_tn):
         where each value is a list of tensor tags participating in the
         corresponding transfer operation.
     """
-
     left_uncontracted = {}
     right_uncontracted = {}
     for x in range(n_qubits):
@@ -249,7 +248,6 @@ def build_first_sweep(n_qubits, cost_tn, transfer_structure, *, drop_tags=True):
 
         Each entry corresponds to an effective contracted environment tensor.
     """
-
     contracted_envs = {"L": {}, "R": {}}
 
     # the first environments are L{1} and R{n_qubits-1}, which are the edge tensors on the MPO
@@ -406,7 +404,6 @@ def update_cost_tn(cost_tn, gate_tens):
     :quimb-api:`TensorNetwork`
         Updated cost tensor network containing the optimized gate tensor.
     """
-
     # the first tag is "GATE_{n}" by construction
     tag_tens = next(iter(gate_tens.tags))
     cost_tn.delete(tags=tag_tens)  # delete the old tensor with same tags
@@ -537,7 +534,6 @@ def optimize_one_gate(
     overlap : float
         Cost-function value reached after this gate update.
     """
-
     original_gate_tens = cost_tn.select(tags=tag).tensors[0]
     inds = original_gate_tens.inds
 
@@ -611,7 +607,6 @@ def sweep_direction(
     overlap : float
         Cost-function value reached after the last gate update of the sweep.
     """
-
     n_qubits = len(site_indices) + 2
     overlap = None
     for site_index in site_indices:
@@ -713,7 +708,6 @@ def optimize_single_gate_update(
 
     in order to iteratively improve all variational gates.
     """
-
     overlap = None
     trange_counter = tqdm(range(n_sweeps_max))
     for _ in trange_counter:
@@ -776,7 +770,7 @@ def transpile_mpo_to_circuit(
         Maximum number of optimization sweeps.
     param_scaling : float, optional
         Scale of the random initialization parameters for the gates.
-        Smaller values initialize the circuit closer to the identity.
+        Smaller values initialize each ``SU4SWAP`` closer to the identity.
         Default is ``1e-1``.
     closed : bool, optional
         If ``False`` (default), the bra indices of the MPO remain open.
@@ -796,7 +790,6 @@ def transpile_mpo_to_circuit(
     contracted_envs : dict
         Updated dictionary of contracted environments.
     """
-
     n_qubits = ref_mpo.num_tensors
     cost_tn = init_cost_tn(
         ref_mpo, depth, param_scaling=param_scaling, closed=closed, rng=rng

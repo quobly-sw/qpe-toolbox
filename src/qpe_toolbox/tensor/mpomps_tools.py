@@ -28,7 +28,6 @@ def state_preparation_mpo(state_mps):
         Tensor network containing both the reference MPO
         for some variational procedure.
     """
-
     n_qubits = state_mps.num_tensors
     ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
 

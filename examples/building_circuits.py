@@ -121,11 +121,9 @@ random_circuit.psi.draw(color=["PSI0", "RX", "CX"], layout="kamada_kawai")
 depth = max([gate.round for gate in random_circuit.gates]) + 1
 fig = draw_layered_circuit(
     random_circuit,
-    list_names=[
-        r"$0$",
-        [f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, depth + 1)],
-        [r"$\mathrm{CNOT}$"] * depth,
-    ],
+    state_label=r"$0$",
+    labels_1qubit=[f"$\\mathrm{{R_x^{{({i})}} }}$" for i in range(1, depth + 1)],
+    labels_2qubit=[r"$\mathrm{CNOT}$"] * depth,
     max_depth=depth,
 )
 
