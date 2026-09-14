@@ -81,11 +81,9 @@ for ctype in circuit_types:
     depth = max([gate.round for gate in circ.gates]) + 1
     fig = draw_layered_circuit(
         circ,
-        list_names=[
-            r"$0$",
-            [f"$\\mathrm{{R_y^{{({j})}} }}$" for j in range(1, depth + 1)],
-            [r"$\mathrm{CNOT}$"] * depth,
-        ],
+        state_label=r"$0$",
+        labels_1qubit=[f"$\\mathrm{{R_y^{{({j})}} }}$" for j in range(1, depth + 1)],
+        labels_2qubit=[r"$\mathrm{CNOT}$"] * depth,
         max_depth=depth,
     )
 
