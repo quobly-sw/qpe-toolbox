@@ -162,7 +162,7 @@ for seed in range(n_seeds):
 # %% [markdown]
 # Indeed here we observe that for one seed, the optimization gets stuck at a small overlap `~0.7`. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
 #
-# Let us now consider different dephts:
+# Let us now consider different depths:
 
 
 # %%
