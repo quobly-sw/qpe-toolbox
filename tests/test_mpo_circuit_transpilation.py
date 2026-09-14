@@ -11,7 +11,7 @@ def test_transpile_mpo_to_circuit_converges_to_identity():
     # identity MPO should recover perfect overlap
     n_qubits = 4
     ref_mpo = qtn.MPO_identity(n_qubits)
-    cost_tn, _ = transpile_mpo_to_circuit(
+    _, _, overlap = transpile_mpo_to_circuit(
         ref_mpo,
         1,
         1e-8,
@@ -20,7 +20,6 @@ def test_transpile_mpo_to_circuit_converges_to_identity():
         closed=True,
         rng=np.random.default_rng(42),
     )
-    overlap = abs(cost_tn.contract(all, optimize="auto-hq")) / 2**n_qubits
     assert np.isclose(overlap, 1.0, atol=1e-6)
 
 
@@ -29,16 +28,15 @@ def test_transpile_mpo_to_circuit_multi_sweep():
     # path and reusing the "RL" reversed-range site sequence multiple times
     n_qubits = 4
     ref_mpo = qtn.MPO_identity(n_qubits)
-    cost_tn, _ = transpile_mpo_to_circuit(
+    _, _, overlap = transpile_mpo_to_circuit(
         ref_mpo,
         2,
         1e-10,
-        10,
+        100,
         param_scaling=1e-1,
         closed=True,
         rng=np.random.default_rng(1),
     )
-    overlap = abs(cost_tn.contract(all, optimize="auto-hq")) / 2**n_qubits
     assert np.isclose(overlap, 1.0, atol=1e-6)
 
 
