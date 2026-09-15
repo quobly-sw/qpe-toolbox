@@ -135,10 +135,10 @@ for boundary_bool in [False, True]:
 # used by the generic `tn_fit` routine in the [`circuit_preparation_opt`](./circuit_preparation_opt.ipynb)
 # tutorial's Local Optimization section. `tn_fit` handles an
 # arbitrary tensor-network topology at the cost of fully re-contracting each tensor's environment from scratch on
-# every sweep. On this other hand, this notebook is specialized for a 1D chain and caches the left/right partial
+# every sweep. On the other hand, this notebook is specialized for a 1D chain and caches the left/right partial
 # contractions (`contracted_envs`), updating only the one environment adjacent to each optimized gate.
 #
-# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits. We will check this this by running the same optimization with different seeds of the Ansatz:
+# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits. We will check this by running the same optimization with different seeds of the Ansatz:
 
 # %%
 rtol = 1e-5
@@ -161,7 +161,7 @@ for i, seed in enumerate(ss.spawn(n_seeds)):
     print(f"seed key {seed.spawn_key}: overlap = {overlaps5[i]:.6f}")
 
 # %% [markdown]
-# We observe some dependence in the initial state, however for such a simple problem the effect is small and the algorithms converges to very high fidelity. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
+# We observe some dependence in the initial state, however for such a simple problem the effect is small and the algorithm converges to very high fidelity. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
 #
 # Let us now consider different depths:
 
@@ -219,7 +219,7 @@ dmrg = DMRG2(ham_NNIM_mpo, p0=p0)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12)
 GS = dmrg.state
 
-# build an MPO by taking the outer producht with an empty register
+# build an MPO by taking the outer product with an empty register
 GS_mpo = state_preparation_mpo(state_mps=GS)
 
 # %%
@@ -236,9 +236,10 @@ for i, depth in enumerate(state_depths):
         cost_tn, contracted_envs, state_overlaps[i, seed] = transpile_mpo_to_circuit(
             GS_mpo, depth, rtol, n_sweeps_max, param_scaling=1e-1, closed=True, rng=rng
         )
+    print(f"depth {depth}: overlaps = {state_overlaps[i]}")
 
 # %% [markdown]
-# The problem is simpler than MPO transpilation above and we logically reach very high fidelity with lower runtimes. We could raise it slightly more with lower `rtol`, at the cost of more iterations / longer runtimes.
+# The problem is simpler than MPO transpilation above, so it is unsurprising that we reach very high fidelity with lower runtimes. We could raise it slightly more with a lower `rtol`, at the cost of more iterations / longer runtimes.
 
 # %%
 fig, ax = plt.subplots()
