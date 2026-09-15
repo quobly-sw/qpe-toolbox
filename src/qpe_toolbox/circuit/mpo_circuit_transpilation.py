@@ -356,7 +356,7 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, optimize):
     r"""
     Perform a Pop-Rehearse-Contract step on a local cost tensor network.
 
-    This function removes a set of tensors from a local cost tensor network
+    This function excludes a set of tensors from a local cost tensor network
     and contracts the remaining network using a specified contraction strategy.
 
     The procedure is intended to support efficient repeated contractions during
@@ -368,7 +368,7 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, optimize):
     loc_cost_tn : :quimb-api:`TensorNetwork`
         Local cost tensor network.
     tags : sequence of str
-        Tags identifying the tensors to remove before contraction.
+        Tags identifying the tensors to exclude before contraction.
         Typically corresponds to the variational gates currently being optimized.
     optimize : str or :cotengra-api:`HyperOptimizer`
         Contraction optimization strategy passed to
@@ -378,11 +378,10 @@ def PRC_loc_cost_tn(loc_cost_tn, tags, optimize):
     Returns
     -------
     :quimb-api:`Tensor`
-        Contracted tensor obtained after removing the specified tensors.
+        Contracted tensor obtained after excluding the specified tensors.
     """
-    p_loc_cost_tn = loc_cost_tn.copy(deep=True)
-    p_loc_cost_tn.delete(tags=tags)
-    return p_loc_cost_tn.contract(optimize=optimize)
+    env_tn = loc_cost_tn.select(tags=tags, which="!any")
+    return env_tn.contract(optimize=optimize)
 
 
 def update_cost_tn(cost_tn, gate_tens):

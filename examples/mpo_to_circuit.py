@@ -146,9 +146,10 @@ n_sweeps_max = 250
 n_seeds = 4
 depth = 5
 overlaps5 = np.empty(n_seeds)
+ss = np.random.SeedSequence(12)
 
-for seed in range(n_seeds):
-    cost_tn, contracted_envs, overlaps5[seed] = transpile_mpo_to_circuit(
+for i, seed in enumerate(ss.spawn(n_seeds)):
+    cost_tn, contracted_envs, overlaps5[i] = transpile_mpo_to_circuit(
         trotter_mpo_ham_NNIM,
         depth,
         rtol,
@@ -157,7 +158,7 @@ for seed in range(n_seeds):
         closed=True,
         rng=np.random.default_rng(seed),
     )
-    print(f"seed {seed}: overlap = {overlaps5[seed]:.6f}")
+    print(f"seed key {seed.spawn_key}: overlap = {overlaps5[i]:.6f}")
 
 # %% [markdown]
 # Indeed here we observe that for one seed, the optimization gets stuck at a small overlap `~0.7`. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
@@ -167,32 +168,37 @@ for seed in range(n_seeds):
 
 # %%
 depths = np.arange(1, 6)
+n_seeds = 4
 overlaps = np.zeros((5, n_seeds))
-for i in range(4):
-    print(f"depth = {depths[i]}")
-    for seed in range(n_seeds):
-        cost_tn, contracted_envs, overlaps[i, seed] = transpile_mpo_to_circuit(
+ss = np.random.SeedSequence(42)
+rngs = [np.random.default_rng(seed) for seed in ss.spawn(n_seeds)]
+
+for i_depth in range(4):
+    print(f"depth = {depths[i_depth]}")
+    for i_seed in range(n_seeds):
+        cost_tn, contracted_envs, overlaps[i_depth, i_seed] = transpile_mpo_to_circuit(
             trotter_mpo_ham_NNIM,
-            depths[i],
+            depths[i_depth],
             rtol,
             n_sweeps_max,
             param_scaling=1e-1,
             closed=True,
-            rng=np.random.default_rng(seed),
+            rng=rngs[i_seed],
         )
 
+overlaps[4] = overlaps5
 print("depths = 5")
 print(f"overlaps = {overlaps5}")
-overlaps[4] = overlaps5
 
 # %%
 fig, ax = plt.subplots()
 ax.plot(depths, 1 - overlaps, ls="", color="k", marker="o", ms=4)
 ax.plot(depths, 1 - overlaps.max(axis=1), "rv-", ms=6)
-ax.set_ylim(0, 0.012)  # cannot display overlap=0.7 on scale
+ax.set_ylim(0, 0.012)
 ax.grid(visible=True, alpha=0.3)
 ax.set_xlabel("depth")
 ax.set_ylabel("1 - overlap")
+ax.set_xticks(depths)
 ax.set_title(f"MPO transpilation L = {L}");
 
 # %% [markdown]
@@ -238,4 +244,6 @@ ax.plot(state_depths, 1 - state_overlaps.max(axis=1), "rv-", ms=6)
 ax.set_xlabel("depth")
 ax.set_ylabel("1 - overlap")
 ax.grid(visible=True, alpha=0.3)
+ax.set_xticks(state_depths)
+ax.set_ylim(0, 6e-4)
 ax.set_title(f"State Preparation L = {L}");
