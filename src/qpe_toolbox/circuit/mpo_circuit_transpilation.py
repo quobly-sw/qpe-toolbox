@@ -352,38 +352,6 @@ def build_loc_cost_tn(n_qubits, site_index, contracted_envs, cost_tn):
     return loc_cost_tn, gate_to_opt_tags
 
 
-def PRC_loc_cost_tn(loc_cost_tn, tags, optimize):
-    r"""
-    Perform a Pop-Rehearse-Contract step on a local cost tensor network.
-
-    This function excludes a set of tensors from a local cost tensor network
-    and contracts the remaining network using a specified contraction strategy.
-
-    The procedure is intended to support efficient repeated contractions during
-    sweeping optimization algorithms, where contraction paths may be rehearsed
-    and reused across iterations.
-
-    Parameters
-    ----------
-    loc_cost_tn : :quimb-api:`TensorNetwork`
-        Local cost tensor network.
-    tags : sequence of str
-        Tags identifying the tensors to exclude before contraction.
-        Typically corresponds to the variational gates currently being optimized.
-    optimize : str or :cotengra-api:`HyperOptimizer`
-        Contraction optimization strategy passed to
-        :meth:`TensorNetwork.contract`, e.g. ``"auto-hq"`` or a
-        :cotengra-api:`ReusableHyperOptimizer` instance.
-
-    Returns
-    -------
-    :quimb-api:`Tensor`
-        Contracted tensor obtained after excluding the specified tensors.
-    """
-    env_tn = loc_cost_tn.select(tags=tags, which="!any")
-    return env_tn.contract(optimize=optimize)
-
-
 def update_cost_tn(cost_tn, gate_tens):
     r"""
     Update a cost tensor network with a newly optimized gate tensor.
@@ -520,7 +488,7 @@ def optimize_one_gate(
         :func:`build_first_sweep`.
     optimize : str or :cotengra-api:`HyperOptimizer`, optional
         Contraction optimization strategy passed to
-        :func:`PRC_loc_cost_tn`. Default is ``"auto-hq"``.
+        :meth:`TensorNetwork.contract`. Default is ``"auto-hq"``.
 
     Returns
     -------
@@ -536,9 +504,10 @@ def optimize_one_gate(
     original_gate_tens = cost_tn.select(tags=tag).tensors[0]
     inds = original_gate_tens.inds
 
-    # contract the local cost to a 4-legged non-unitary tensor
-    # and rehearse the contraction for later sweeps
-    prc_loc_cost_tens = PRC_loc_cost_tn(loc_cost_tn, tag, optimize)
+    # exclude the gate tensor from its local environment, then contract the
+    # rest to a 4-legged non-unitary tensor
+    env_tn = loc_cost_tn.select(tags=tag, which="!any")
+    prc_loc_cost_tens = env_tn.contract(optimize=optimize)
 
     # do the SVD, retaining isometries
     new_gate_tens, overlap = svd_optimal_gate_update(
@@ -690,22 +659,6 @@ def optimize_single_gate_update(
     3. Perform an SVD of the resulting effective tensor,
     4. Reconstruct the optimal unitary gate from the isometric factors,
     5. Update the tensor network and cached environments.
-
-    The effective local contraction is computed using
-    :func:`PRC_loc_cost_tn`.
-
-    The gate update is obtained from an SVD decomposition.
-
-    The overlap displayed in the progress bar corresponds to the
-    cost-function value and can be verified independently from the singular
-    values of the effective environment tensor.
-
-    The sweeping schedule alternates between:
-
-    - left-to-right (``"LR"``),
-    - right-to-left (``"RL"``),
-
-    in order to iteratively improve all variational gates.
     """
     overlap = None
     trange_counter = tqdm(range(n_sweeps_max))
