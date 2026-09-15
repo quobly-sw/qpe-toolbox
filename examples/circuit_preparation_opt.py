@@ -41,13 +41,14 @@ import autoray
 import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
+from tqdm import notebook as tqdm
 
 # Local imports from qpe_toolbox
 from qpe_toolbox.circuit import ansatz_circuit_su4, su4swap_gate_param_gen, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
 
 # %% [markdown]
-# ## Hamiltonian: 1D Transverse-Field Ising (TFI) model
+# ## Hamiltonian: 1D Transverse-Field Ising Model
 #
 # We consider a chain of $n$ spins with open boundaries. The Hamiltonian reads
 #
@@ -74,8 +75,7 @@ dmrg = qtn.DMRG2(mpo)
 dmrg.solve(max_sweeps=16, tol=1e-8, bond_dims=64, verbosity=0)
 GS = dmrg.state
 dmrg_energy = np.real(dmrg.energy)
-print(f"*** DMRG reference energy: {dmrg_energy:12.10f}")
-print()
+print(f"*** DMRG reference energy: {dmrg_energy:12.10f}\n")
 
 # %% [markdown]
 # ## Global Optimization
@@ -120,7 +120,7 @@ def make_circuit_optimizer(circ, mpo):
     )
 
 # %% [markdown]
-# ### 1. Direct L-BFGS optimization
+# ### Direct L-BFGS Optimization
 
 # %%
 print("*** Global L-BFGS optimization")
@@ -133,12 +133,11 @@ print(
     f" # parameters = {circ_opt.d: 4d}",
     f" Energy = {circ_opt.loss: >12.8f}",
     f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
-    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
+    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}\n",
 )
-print()
 
 # %% [markdown]
-# ### 2. Basin-hopping optimization
+# ### Basin-hopping Optimization
 #
 # Basin-hopping performs random steps in parameter space followed by a local minimization. Here we use 5000 iterations with 10 hops per step and a temperature of 0.1.
 
@@ -153,36 +152,21 @@ print(
     f" # parameters = {circ_opt.d: 4d}",
     f" Energy = {circ_opt.loss: >12.8f}",
     f" Error = {np.abs(1 - circ_opt.loss / dmrg_energy): >10.3e}",
-    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
+    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}\n",
 )
-print()
 
 # %% [markdown]
-# ### 3. Sequential layer-wise optimization
+# ### Sequential Layer-wise Optimization
 #
 # We start from depth 1 and increase the depth one layer at a time, always reusing the parameters from the shallower circuit as initial guess.
 
 # %%
 print("*** Global L-BFGS sequential optimization ")
-depths_global = []
-errors_global = []
 rng = np.random.default_rng(42)
+optimal_circ = ansatz_circuit_su4(n_qubits, 1, rng=rng)
+errors_global = []
 
-circ = ansatz_circuit_su4(n_qubits, 1, rng=rng)
-circ_opt = make_circuit_optimizer(circ, mpo)
-optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
-ovlp = (dmrg.state.H & optimal_circ.psi).contract()
-err = np.abs(1 - circ_opt.loss / dmrg_energy)
-depths_global.append(1)
-errors_global.append(err)
-print(
-    f" # parameters = {circ_opt.d: 4d}",
-    f" Energy = {circ_opt.loss: >12.8f}",
-    f" Error = {err: >10.3e}",
-    f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
-)
-
-for ii in range(2, depth + 1):
+for ii in tqdm.tqdm(range(depth)):
     # grow the optimized circuit by one SU4SWAP layer initialized close to identity
     for start in range(2):
         for q in range(start, n_qubits - 1, 2):
@@ -198,10 +182,9 @@ for ii in range(2, depth + 1):
     optimal_circ = circ_opt.optimize(n=10000, tol=1e-8)
     ovlp = (dmrg.state.H & optimal_circ.psi).contract()
     err = np.abs(1 - circ_opt.loss / dmrg_energy)
-    depths_global.append(ii)
     errors_global.append(err)
     print(
-        f" # parameters = {circ_opt.d: 4d}",
+        f" # parameters = {circ_opt.d: 3d}",
         f" Energy = {circ_opt.loss: >12.8f}",
         f" Error = {err: >10.3e}",
         f" 1-F = {1 - np.abs(ovlp) ** 2: >10.3e}",
@@ -209,17 +192,14 @@ for ii in range(2, depth + 1):
 print()
 
 # %% [markdown]
-# #### Plot: Error vs depth for global sequential optimization
+# #### Plot: Error vs Depth for Global Sequential Optimization
 # %%
-plt.figure(figsize=(6, 4))
-plt.plot(depths_global, errors_global, marker="o", linestyle="-")
-plt.xlabel("Circuit depth")
-plt.ylabel("Energy error $|1 - E/E_{DMRG}|$")
-plt.title("Global L-BFGS sequential optimisation")
-plt.yscale("log")
-plt.grid(visible=True, alpha=0.3)
-plt.tight_layout()
-plt.show()
+fig, ax = plt.subplots(figsize=(6, 4), layout="tight")
+ax.semilogy(np.arange(1, depth + 1), errors_global, marker="o", linestyle="-")
+ax.set_xlabel("Circuit depth")
+ax.set_ylabel("Energy error $|1 - E/E_{DMRG}|$")
+ax.set_title("Global L-BFGS sequential optimisation")
+ax.grid(visible=True, alpha=0.3);
 
 
 # %% [markdown]
@@ -231,6 +211,32 @@ plt.show()
 #
 # We first optimise a fixed depth-6 circuit, and then demonstrate a **sequential depth optimisation** that starts from depth 1 and increases depth, reusing the tensor entries from the previous depth.
 
+# %% [markdown]
+# Note that `tn_fit` implements the same local gate update as the
+# [`mpo_to_circuit`](./mpo_to_circuit.ipynb) tutorial. The difference is the handling of the _environment_:
+# here, we use a general-purpose routine that works for any tensor network topology. This comes at the cost
+# of re-contracting each tensor's full environment from scratch every sweep. On the other hand,
+# `mpo_to_circuit`'s implementation is specialized for a 1D topology and caches left/right partial
+# contractions instead, updating only the environment adjacent to the gate just optimized.
+
+# %%
+def evaluate_fit(dmrg, mpo, tn, *, depth=1):
+    ovlp = (dmrg.state.H & tn).contract()
+    tnH = tn.H
+    tn.align_(mpo, tnH)
+    energy_tn = tnH & mpo & tn
+    ene = autoray.do("real", energy_tn.contract(all))
+    err = np.abs(1 - ene / np.real(dmrg.energy))
+    print(
+        f"Depth = {depth:2d}",
+        f"Energy = {ene:12.8f}",
+        f"Error = {err:10.3e}",
+        f"1-F = {1 - np.abs(ovlp) ** 2:10.3e}",
+        sep="   ",
+    )
+    return ene, err, ovlp
+
+
 # %%
 # --- Fixed depth 6 ---
 print("*** Local optimization")
@@ -240,53 +246,23 @@ circ = ansatz_circuit_su4(
 )
 
 tn = circ.psi
-tn_fit(tn, GS, tags="SU4SWAP", steps=100000, tol=1e-8)
-
-ovlp = (dmrg.state.H & tn).contract()
-tnH = tn.H
-tn.align_(mpo, tnH)
-energy_tn = tnH & mpo & tn
-ene = autoray.do("real", energy_tn.contract(all))
-
-print(
-    f"Depth = {depth:2d}   Energy = {ene:12.8f}   Error = {np.abs(1 - ene / dmrg_energy):10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
-)
-print()
+tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
+print("Completed!")
+ene, err, ovlp = evaluate_fit(dmrg, mpo, tn, depth=depth)
 
 # %% [markdown]
-# ### Sequential depth optimization (local)
+# ### Sequential Depth Optimization (local)
 #
 # Starting from a depth-1 circuit, we optimise it, then add a layer, reusing the tensor entries from the previous circuit as initialisation.
 
 # %%
 print("*** Local sequential optimization")
-# --- Modified: store errors vs depth ---
-depths_local = []
+tn = qtn.MPS_computational_state("0" * n_qubits)
+new_layer_eps = 1e-2
+rng = np.random.default_rng()
 errors_local = []
 
-circ = ansatz_circuit_su4(
-    n_qubits=n_qubits, depth=1, param_scaling=1.0, parametrize=False
-)
-
-tn = circ.psi
-tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
-
-ovlp = (dmrg.state.H & tn).contract()
-tnH = tn.H
-tn.align_(mpo, tnH)
-energy_tn = tnH & mpo & tn
-ene = autoray.do("real", energy_tn.contract(all))
-err = np.abs(1 - ene / dmrg_energy)
-depths_local.append(1)
-errors_local.append(err)
-
-print(
-    f"Depth = {1:2d}   Energy = {ene:12.8f}   Error = {err:10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
-)
-
-rng = np.random.default_rng(42)
-
-for ii in range(2, depth + 1):
+for ii in range(depth):
     # grow the optimized network by one brick-wall layer of SU4SWAP gates,
     # initialized close to the identity (small parameters)
     tags = ["SU4SWAP", f"ROUND_{ii - 1}"]
@@ -296,33 +272,20 @@ for ii in range(2, depth + 1):
             tn.gate_(gate, (q, q + 1), tags=tags, contract=False)
 
     tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
-
-    ovlp = (dmrg.state.H & tn).contract()
-    tnH = tn.H
-    tn.align_(mpo, tnH)
-    energy_tn = tnH & mpo & tn
-    ene = autoray.do("real", energy_tn.contract(all))
-    err = np.abs(1 - ene / dmrg_energy)
-    depths_local.append(ii)
+    ene, err, ovlp = evaluate_fit(dmrg, mpo, tn, depth=ii + 1)
     errors_local.append(err)
 
-    print(
-        f"Depth = {ii:2d}   Energy = {ene:12.8f}   Error = {err:10.3e}   1-F = {1 - np.abs(ovlp) ** 2:10.3e}"
-    )
-print()
-
 # %% [markdown]
-# #### Plot: Error vs depth for local sequential optimization
+# #### Plot: Error vs Depth for Local Sequential Optimization
 # %%
-plt.figure(figsize=(6, 4))
-plt.plot(depths_local, errors_local, marker="s", linestyle="-", color="green")
-plt.xlabel("Circuit depth")
-plt.ylabel("Energy error $|1 - E/E_{DMRG}|$")
-plt.title("Local sequential optimisation (tensor-network fitting)")
-plt.yscale("log")
-plt.grid(visible=True, alpha=0.3)
-plt.tight_layout()
-plt.show()
+fig, ax = plt.subplots(figsize=(6, 4), layout="tight")
+ax.semilogy(
+    np.arange(1, depth + 1), errors_local, marker="s", linestyle="-", color="green"
+)
+ax.set_xlabel("Circuit depth")
+ax.set_ylabel("Energy error $|1 - E/E_{DMRG}|$")
+ax.set_title("Local sequential optimisation (tensor-network fitting)")
+ax.grid(visible=True, alpha=0.3);
 
 # %% [markdown]
 # ## Discussion
@@ -332,3 +295,9 @@ plt.show()
 # - **Local optimisation** (tensor-network fitting) yields very high fidelity (low infidelity) and energies very close to the DMRG reference. The sequential depth variant further improves convergence.
 #
 # Both approaches provide a classical pre-processing step to generate a high-quality initial state for quantum algorithms such as QPE. The choice between them depends on the available infrastructure (automatic differentiation, global vs local optimizers) and the desired accuracy
+#
+# ### Contraction Cost
+#
+# Both local-optimization sweeps above contract the *exact* environment of each gate down to a dense matrix at every single-gate update. For a shallow circuit this is cheap, but as the circuit grows deeper, the environment itself is a nontrivial tensor network with no fixed bond dimension. As contracting a generic tensor network is hard, this becomes the actual bottleneck for scaling local optimization to deep circuits, independent of how efficiently the sweep itself is implemented.
+#
+# The [`circuit_preparation_approximate_local_opt`](./circuit_preparation_approximate_local_opt.ipynb) tutorial addresses this directly. Instead of contracting each gate's environment exactly, it approximates the rest of the circuit as a finite-bond-dimension MPS before each layer update, capping the per-step cost at a chosen bond dimension rather than letting it grow with depth.
