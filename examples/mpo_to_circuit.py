@@ -138,11 +138,11 @@ for boundary_bool in [False, True]:
 # every sweep. On this other hand, this notebook is specialized for a 1D chain and caches the left/right partial
 # contractions (`contracted_envs`), updating only the one environment adjacent to each optimized gate.
 #
-# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits. We will take care of this this by running the same optimization with different seeds of the Ansatz:
+# *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits. We will check this this by running the same optimization with different seeds of the Ansatz:
 
 # %%
 rtol = 1e-6
-n_sweeps_max = 250
+n_sweeps_max = 350
 n_seeds = 4
 depth = 5
 overlaps5 = np.empty(n_seeds)
@@ -161,7 +161,7 @@ for i, seed in enumerate(ss.spawn(n_seeds)):
     print(f"seed key {seed.spawn_key}: overlap = {overlaps5[i]:.6f}")
 
 # %% [markdown]
-# Indeed here we observe that for one seed, the optimization gets stuck at a small overlap `~0.7`. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
+# We observe some dependence in the initial state, however for such a simple problem the effect is small and the algorithms converges to very high fidelity. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
 #
 # Let us now consider different depths:
 
@@ -224,18 +224,21 @@ GS_mpo = state_preparation_mpo(state_mps=GS)
 
 # %%
 # optimize the reference MPO using the same routine as above
-n_sweeps_max = 100
-rtol = 1e-6
+n_sweeps_max = 200
+rtol = 1e-7
 state_depths = np.arange(1, 6)
 n_seeds = 4
 state_overlaps = np.empty((state_depths.size, n_seeds))
 for i, depth in enumerate(state_depths):
-    print(f"{depth =}")
+    print(f"depth = {depth}")
     for seed in range(n_seeds):
         rng = np.random.default_rng(seed)
         cost_tn, contracted_envs, state_overlaps[i, seed] = transpile_mpo_to_circuit(
             GS_mpo, depth, rtol, n_sweeps_max, param_scaling=1e-1, closed=True, rng=rng
         )
+
+# %% [markdown]
+# The problem is simpler than MPO transpilation above and we logically reach very high fidelity with lower runtimes.
 
 # %%
 fig, ax = plt.subplots()
