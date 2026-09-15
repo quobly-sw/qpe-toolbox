@@ -141,8 +141,8 @@ for boundary_bool in [False, True]:
 # *Causer et al.* find that the model is prone to get stuck on local minima, even when starting from different initial circuits. We will check this this by running the same optimization with different seeds of the Ansatz:
 
 # %%
-rtol = 1e-6
-n_sweeps_max = 350
+rtol = 1e-5
+n_sweeps_max = 200
 n_seeds = 4
 depth = 5
 overlaps5 = np.empty(n_seeds)
@@ -224,8 +224,8 @@ GS_mpo = state_preparation_mpo(state_mps=GS)
 
 # %%
 # optimize the reference MPO using the same routine as above
-n_sweeps_max = 200
-rtol = 1e-7
+n_sweeps_max = 20
+rtol = 1e-6
 state_depths = np.arange(1, 6)
 n_seeds = 4
 state_overlaps = np.empty((state_depths.size, n_seeds))
@@ -238,7 +238,7 @@ for i, depth in enumerate(state_depths):
         )
 
 # %% [markdown]
-# The problem is simpler than MPO transpilation above and we logically reach very high fidelity with lower runtimes.
+# The problem is simpler than MPO transpilation above and we logically reach very high fidelity with lower runtimes. We could raise it slightly more with lower `rtol`, at the cost of more iterations / longer runtimes.
 
 # %%
 fig, ax = plt.subplots()
