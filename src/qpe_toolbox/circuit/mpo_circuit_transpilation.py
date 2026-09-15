@@ -649,6 +649,9 @@ def optimize_single_gate_update(
         Optimized cost tensor network.
     contracted_envs : dict
         Updated dictionary of contracted environments.
+    overlap : float
+        Overlap with the reference MPO after the last sweep, normalized by
+        ``2**n_qubits``.
 
     Notes
     -----
@@ -689,7 +692,7 @@ def optimize_single_gate_update(
 
         overlap = new_overlap
 
-    return cost_tn, contracted_envs, overlap / 2**n_qubits
+    return cost_tn, contracted_envs, new_overlap / 2**n_qubits
 
 
 def transpile_mpo_to_circuit(
@@ -741,6 +744,9 @@ def transpile_mpo_to_circuit(
         Optimized cost tensor network.
     contracted_envs : dict
         Updated dictionary of contracted environments.
+    overlap : float
+        Overlap with the reference MPO after the last sweep, normalized by
+        ``2**n_qubits``.
     """
     n_qubits = ref_mpo.num_tensors
     cost_tn = init_cost_tn(
