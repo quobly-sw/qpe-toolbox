@@ -40,8 +40,10 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
   take a `Hamiltonian` and a positional `dt` instead of `ham_terms, n_qubits`
   and a keyword-only `dt`. `cutoff` and `max_bond` default to `1e-10` and `None`.
 - `exp_Pauli_string_as_MPO`: signature changed from `(ham_term, n_qubits, *, theta)`
-  to `(term, dt, n_qubits)`. It now raises `ValueError` if a qubit is repeated or
-  out of range.
+  to `(term, dt, n_qubits)`, and it now builds `exp(-i * dt * coeff * P)`, matching
+  `rotation_gates` and the Trotter functions: pass `dt = -theta` to recover the old
+  `exp(i * theta * coeff * P)`. It also raises `ValueError` if a qubit is repeated
+  or out of range.
 - `state_preparation_mpo`: raises `ValueError` unless the MPS arrays are in `'lpr'`
   order (as returned by `DMRG2`), instead of silently building a wrong MPO.
 - `optimize_single_gate_update`: now returns `(cost_tn, contracted_envs, overlap)`,

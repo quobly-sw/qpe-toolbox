@@ -67,7 +67,7 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 #
 # This approach is very similar to the DMRG sweep algorithm, but with the roles of the Hamiltonian and the unitary gates interchanged. It allows us to efficiently optimize deep circuits while keeping bond dimensions manageable.
 #
-# We run 1000 sweeps; the algorithm should converge to a state that closely approximates the ground state.
+# We run up to 1000 sweeps; the algorithm should converge to a state that closely approximates the ground state.
 
 # %% [markdown]
 # ### Hamiltonian and DMRG Reference
@@ -136,7 +136,7 @@ for ii in range(depth - 1):
 # %% [markdown]
 # ### Sweeping Optimization
 #
-# We perform a number of full sweeps (`sweep` from 0 to 499). Each sweep consists of two phases:
+# We perform full sweeps until the relative energy change drops below $10^{-8}$, or `n_sweeps_max` sweeps are reached. Each sweep consists of two phases:
 #
 # - **Sweep down**: from the top layer (`depth-1`) down to layer 0.
 #     - For a given layer `ii` (top to bottom), we construct a trial circuit `trial` from `mpsK[-1]` (which contains all layers below) and the gates of that layer.

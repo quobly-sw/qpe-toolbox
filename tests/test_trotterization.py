@@ -54,6 +54,8 @@ def test_exp_pauli_string_unsorted_qubits():
     exact = qu.expm(-0.7j * unsorted_ham.to_dense())
     approx = trotter_approx_as_MPO(unsorted_ham, 0.7, trotter_order=1).to_dense()
     assert np.allclose(approx, exact)
+    direct = exp_Pauli_string_as_MPO(unsorted_ham.terms[0], 0.7, 3).to_dense()
+    assert np.allclose(direct, exact)
 
     for term in [(0.3, "XZ", [0]), (0.3, "XZ", [1, 1]), (0.3, "XZ", [1, 3])]:
         with pytest.raises(ValueError):

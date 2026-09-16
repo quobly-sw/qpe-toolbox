@@ -20,8 +20,8 @@ def svd_optimal_gate_update(tensor, left_inds):
     tensor network, fully contracted, with that tensor removed. This is the
     closed-form solution of the associated *unconstrained linear* problem:
     the isometry $X$ maximizing $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$ is
-    $X = U V^\dagger$, obtained by discarding the singular values of the SVD
-    $B = U S V^\dagger$.
+    $X = U V^\dagger$, where $B = U S V^\dagger$ is the SVD of the environment.
+    The singular values $S$ are not returned, only their sum.
 
     Parameters
     ----------
@@ -34,10 +34,10 @@ def svd_optimal_gate_update(tensor, left_inds):
     Returns
     -------
     new_isometry : :quimb-api:`Tensor`
-        Optimal unitary (isometric if not square) tensor, carrying the same indices
-        as ``tensor``.
+        Optimal unitary (isometric if not square) tensor, with the same indices
+        as ``tensor`` but not necessarily in the same order.
     objective : float
-        Sum of the discarded singular values, i.e. the achieved value of
+        Sum of the singular values of $B$, i.e. the achieved value of
         $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$.
     """
     # no truncation: a rank-deficient environment (e.g. a gate acting on a product

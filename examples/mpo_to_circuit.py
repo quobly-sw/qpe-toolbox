@@ -161,7 +161,7 @@ for i, seed in enumerate(ss.spawn(n_seeds)):
     print(f"seed key {seed.spawn_key}: overlap = {overlaps5[i]:.6f}")
 
 # %% [markdown]
-# We observe some dependence in the initial state, however for such a simple problem the effect is small and the algorithm converges to very high fidelity. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
+# We observe some dependence on the initial state; however, for such a simple problem the effect is small and the algorithm converges to very high fidelity. *Causer et al.* overcome the local minimum issue by designing a circuit Ansatz that looks like the second-order Trotter expansion of the circuit, where some SWAPs are held fixed and only the remaining gates need to be optimized.
 #
 # Let us now consider different depths:
 

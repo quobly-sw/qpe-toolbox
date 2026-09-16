@@ -27,11 +27,11 @@ def exp_Pauli_string_as_MPO(term, dt, n_qubits):
     operators acting on a subset of qubits, this function builds the Matrix
     Product Operator (MPO) corresponding to:
 
-        exp(i * dt * c * P)
+        exp(-i * dt * c * P)
 
     using the identity:
 
-        exp(i α P) = cos(α) I + i sin(α) P
+        exp(-i α P) = cos(α) I - i sin(α) P
 
     where ``P^2 = I``.
 
@@ -49,17 +49,17 @@ def exp_Pauli_string_as_MPO(term, dt, n_qubits):
           operators act. The length must match ``pauli_string``.
 
     dt : float
-        Evolution parameter (e.g. time or rotation angle).
+        Evolution time.
 
     n_qubits : int
         Total number of qubits in the system.
 
     Returns
     -------
-    qtn.MatrixProductOperator in lrud format
-        MPO representing the operator:
+    :quimb-api:`MatrixProductOperator`
+        MPO, in ``'lrud'`` order, representing the operator:
 
-            exp(i * dt * coeff * P)
+            exp(-i * dt * coeff * P)
 
         where ``P`` is the full Pauli string embedded in the ``n_qubits`` system.
 
@@ -91,7 +91,7 @@ def exp_Pauli_string_as_MPO(term, dt, n_qubits):
     id_mpo = string_mpo.identity()
 
     id_mpo[0] *= np.cos(dt * string_coeff)
-    string_mpo[0] *= 1j * np.sin(dt * string_coeff)
+    string_mpo[0] *= -1j * np.sin(dt * string_coeff)
 
     exp_pauli_string_mpo = id_mpo.add_MPO(string_mpo)
     # I and P are product operators: rank <= 2 across any cut, 1 outside the support
@@ -119,7 +119,7 @@ def trotter1_approx_as_MPO(
 
     Parameters
     ----------
-    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+    hamiltonian : :class:`~qpe_toolbox.hamiltonian.Hamiltonian`
         Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
@@ -130,8 +130,8 @@ def trotter1_approx_as_MPO(
         Maximum allowed bond dimension during MPO compression.
         Default is ``None`` (no limit).
     reverse_order : bool, optional
-        If ``False`` (default), terms are applied in forward order.
-        after the first term. If ``True``, terms are applied in reverse index order.
+        If ``False`` (default), terms are applied in forward order. If ``True``,
+        terms are applied in reverse index order.
 
     Returns
     -------
@@ -148,9 +148,9 @@ def trotter1_approx_as_MPO(
         init_term = 0
         trange_counter = tqdm(range(1, len(ham_terms)))
 
-    trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], -dt, n_qubits)
+    trotter1_mpo = exp_Pauli_string_as_MPO(ham_terms[init_term], dt, n_qubits)
     for i in trange_counter:
-        new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], -dt, n_qubits)
+        new_factor_mpo = exp_Pauli_string_as_MPO(ham_terms[i], dt, n_qubits)
         trotter1_mpo = trotter1_mpo.apply(
             new_factor_mpo, compress=True, cutoff=cutoff, max_bond=max_bond
         )
@@ -178,7 +178,7 @@ def trotter2_approx_as_MPO(
 
     Parameters
     ----------
-    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+    hamiltonian : :class:`~qpe_toolbox.hamiltonian.Hamiltonian`
         Includes Pauli strings, positions and couplings.
     dt : float or complex
         Time step used in the Trotter approximation.
@@ -238,7 +238,7 @@ def trotter4_approx_as_MPO(
 
     Parameters
     ----------
-    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+    hamiltonian : :class:`~qpe_toolbox.hamiltonian.Hamiltonian`
         Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.
@@ -319,7 +319,7 @@ def trotter_approx_as_MPO(
 
     Parameters
     ----------
-    hamiltonian : :class:`~src.hamiltonian.hamiltonian.Hamiltonian`
+    hamiltonian : :class:`~qpe_toolbox.hamiltonian.Hamiltonian`
         Includes Pauli strings, positions and couplings.
     dt : float
         Time step used in the Trotter approximation.

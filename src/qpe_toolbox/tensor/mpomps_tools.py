@@ -15,7 +15,11 @@ import quimb.tensor as qtn
 
 def state_preparation_mpo(state_mps):
     r"""
-    Perform outer product between an MPS and the state 0.
+    Build the MPO mapping the all-zero state to a target MPS.
+
+    The MPO is the outer product $2^n |\psi\rangle\langle 0|$ on $n$ qubits. The
+    $2^n$ factor normalizes the transpilation overlap computed by
+    :func:`~qpe_toolbox.circuit.transpile_mpo_to_circuit`.
 
     Parameters
     ----------
@@ -25,9 +29,8 @@ def state_preparation_mpo(state_mps):
 
     Returns
     -------
-    :quimb-api:`TensorNetwork`
-        Tensor network containing both the reference MPO
-        for some variational procedure.
+    :quimb-api:`MatrixProductOperator`
+        Reference MPO for circuit state preparation.
 
     Raises
     ------
