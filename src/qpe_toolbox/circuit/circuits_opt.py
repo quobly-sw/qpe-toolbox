@@ -153,7 +153,8 @@ def tn_fit(
     tn_target : TensorNetwork
         The target tensor network (usually a state we want to approximate).
     tags : str or list of str, optional
-        Tags selecting which tensors of `tn` to optimize. If None, all tensors are optimized.
+        Tags selecting which tensors of `tn` to optimize. If None, all tensors are
+        optimized.
     steps : int
         Number of sweeps.
     tol : float
@@ -161,16 +162,18 @@ def tn_fit(
     contract_optimize : str
         Contraction strategy for the environments.
 
+    Raises
+    ------
+    TypeError
+        If a tensor selected by `tags` is parametrized.
+    ValueError
+        If a tensor selected by `tags` is not a whole two-qubit gate. A
+        :quimb-api:`Circuit` built with the default
+        ``gate_contract='auto-split-gate'`` splits gates that are not full rank
+        (e.g. identity or CNOT): build it with ``gate_contract=False``.
+
     Notes
     -----
-    Each tensor selected by `tags` must be a single, whole gate tensor. If
-    `tn` comes from a :quimb-api:`Circuit` built with the default
-    ``gate_contract='auto-split-gate'``, a gate can be silently split into
-    two fragments when the neighboring bond dimension is small (e.g. the
-    circuit is converging toward a low-entanglement state) -- pass
-    ``gate_contract=False`` when constructing that :quimb-api:`Circuit` to
-    avoid it.
-
     Progress is shown via a :mod:`tqdm` bar; set the ``TQDM_DISABLE``
     environment variable to silence it.
     """
@@ -182,6 +185,15 @@ def tn_fit(
         to_tag = tn_fit.tensors
     else:
         to_tag = tn_fit.select_tensors(tags, "any")
+
+    for t in to_tag:
+        if isinstance(t, qtn.PTensor):
+            raise TypeError("cannot fit parametrized tensors, use parametrize=False")
+        if t.ndim != 4 or t.left_inds is None or len(t.left_inds) != 2:
+            raise ValueError(
+                "tags must select whole two-qubit gates: build the circuit with "
+                "gate_contract=False to prevent quimb from splitting low-rank gates"
+            )
 
     var_tags = []
     for i, t in enumerate(to_tag):

@@ -181,9 +181,9 @@ while 1:
     ## Sweep down: optimize layers from top to bottom.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK (layers below) + gates of this layer.
-        # gate_contract=False: the default 'auto-split-gate' can silently split a gate
-        # into two fragments when the neighboring bond is small, which breaks tn_fit's
-        # assumption that each tagged tensor is one whole gate.
+        # gate_contract=False: the default 'auto-split-gate' splits gates that are not
+        # full rank (e.g. optimized gates converging to a product or CNOT-like gate)
+        # into two fragments, while tn_fit requires each tagged tensor to be one whole gate.
         trial = qtn.Circuit(psi0=mpsK.pop(), gate_contract=False)
         gates = [gate for gate in circ_G if gate.round == depth - 1 - ii]
         for gate in gates:
