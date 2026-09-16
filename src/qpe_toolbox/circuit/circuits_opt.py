@@ -155,9 +155,9 @@ def tn_fit(
         The tensor network to be optimized (in-place).
     tn_target : TensorNetwork
         The target tensor network (usually a state we want to approximate).
-    tags : str or list of str, optional
-        Tags selecting which tensors of `tn` to optimize. If None, all tensors are
-        optimized.
+    tags : str or sequence of str, optional
+        Tags selecting which tensors of `tn` to optimize (any tag matches).
+        Default is ``"SU4SWAP"``.
     steps : int
         Number of sweeps.
     tol : float
@@ -184,10 +184,7 @@ def tn_fit(
     tn_fit.add_tag("__KET__")
 
     # Tag the tensors to be optimized.
-    if tags is None:
-        to_tag = tn_fit.tensors
-    else:
-        to_tag = tn_fit.select_tensors(tags, "any")
+    to_tag = tn_fit.select_tensors(tags, "any")
 
     for t in to_tag:
         if isinstance(t, qtn.PTensor):

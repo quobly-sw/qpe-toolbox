@@ -35,11 +35,6 @@ def test_tn_fit_rejects_non_gate_tensors():
     with pytest.raises(TypeError, match="parametrize=False"):
         tn_fit(circ.psi, target)
 
-    # tags=None also selects the initial state tensors
-    circ = ansatz_circuit_su4(4, 1, parametrize=False, rng=rng)
-    with pytest.raises(ValueError, match="whole two-qubit gates"):
-        tn_fit(circ.psi, target, tags=None)
-
 
 def _is_unitary(tensor, inds):
     matrix = tensor.transpose(*inds).data.reshape(4, 4)

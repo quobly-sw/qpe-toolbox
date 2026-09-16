@@ -56,7 +56,8 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
   progress bar is always shown; set `TQDM_DISABLE=1` before importing `tqdm` to
   silence it. Raises `TypeError` on parametrized tensors, and `ValueError` if
   `tags` selects anything other than whole two-qubit gates (e.g. gates split by
-  quimb's default `gate_contract`).
+  quimb's default `gate_contract`). `tags=None` is no longer supported,
+  as it never worked on a circuit state.
 - `robust_phase_estimation`: replaced `epsilon` with `n_repetitions`, removed
   `sign_E0`, added an `rng` argument for deterministic sampling, added a `t0`
   argument setting the base evolution time, and changed the `trotter_order`
