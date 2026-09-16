@@ -163,7 +163,7 @@ print(
 # %%
 print("*** Global L-BFGS sequential optimization ")
 rng = np.random.default_rng(42)
-optimal_circ = ansatz_circuit_su4(n_qubits, 0, rng=rng)
+optimal_circ = ansatz_circuit_su4(n_qubits, 0)
 errors_global = []
 
 for ii in tqdm.tqdm(range(depth)):
