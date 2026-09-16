@@ -67,21 +67,22 @@ def exp_Pauli_string_as_MPO(term, dt, n_qubits):
     ------
     ValueError
         If the length of ``pauli_string`` does not match the number of
-        ``active_qubits``.
+        ``active_qubits``, or if ``active_qubits`` contains a repeated or
+        out-of-range qubit.
     """
     string_coeff, pauli_string, active_qubits = term
-    id4 = qu.identity(2).reshape(1, 1, 2, 2)
+    # pair letters with qubits explicitly: active_qubits need not be sorted
+    paulis = dict(zip(active_qubits, pauli_string, strict=True))
+    if len(paulis) != len(active_qubits):
+        raise ValueError(f"repeated qubit in active_qubits {active_qubits}")
+    if not all(0 <= q < n_qubits for q in paulis):
+        raise ValueError(f"active_qubits {active_qubits} out of range")
 
-    pauli_string_tensors = []
-    pauli_weight = 0
-    for qubit in range(n_qubits):
-        if qubit in active_qubits:
-            pauli_string_tensors.append(
-                qu.pauli(pauli_string[pauli_weight]).reshape(1, 1, 2, 2)
-            )
-            pauli_weight += 1
-        else:
-            pauli_string_tensors.append(id4)
+    id4 = qu.identity(2).reshape(1, 1, 2, 2)
+    pauli_string_tensors = [
+        qu.pauli(paulis[q]).reshape(1, 1, 2, 2) if q in paulis else id4
+        for q in range(n_qubits)
+    ]
 
     # Fix the legs on the edges
     pauli_string_tensors[0] = pauli_string_tensors[0].reshape(1, 2, 2)
@@ -93,7 +94,8 @@ def exp_Pauli_string_as_MPO(term, dt, n_qubits):
     string_mpo[0] *= 1j * np.sin(dt * string_coeff)
 
     exp_pauli_string_mpo = id_mpo.add_MPO(string_mpo)
-    exp_pauli_string_mpo.compress(cutoff=1e-6, max_bond=2)
+    # I and P are product operators: rank <= 2 across any cut, 1 outside the support
+    exp_pauli_string_mpo.compress(cutoff=1e-12, cutoff_mode="rel", max_bond=2)
 
     return exp_pauli_string_mpo
 

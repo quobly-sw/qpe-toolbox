@@ -4,7 +4,12 @@ import numpy as np
 import pytest
 import quimb as qu
 
-from qpe_toolbox.hamiltonian import heisenberg_hamiltonian, trotter_approx_as_MPO
+from qpe_toolbox.hamiltonian import (
+    Hamiltonian,
+    heisenberg_hamiltonian,
+    trotter_approx_as_MPO,
+)
+from qpe_toolbox.hamiltonian.trotterization import exp_Pauli_string_as_MPO
 
 ham = heisenberg_hamiltonian(3)
 ham_dense = ham.to_dense()
@@ -43,7 +48,20 @@ def test_trotter_order4_scaling():
     assert 4.5 < slope < 5.5
 
 
+def test_exp_pauli_string_unsorted_qubits():
+    # a single term is exponentiated exactly, whatever the order of its qubits
+    unsorted_ham = Hamiltonian([(0.3, "XZ", [2, 0])], 3)
+    exact = qu.expm(-0.7j * unsorted_ham.to_dense())
+    approx = trotter_approx_as_MPO(unsorted_ham, 0.7, trotter_order=1).to_dense()
+    assert np.allclose(approx, exact)
+
+    for term in [(0.3, "XZ", [0]), (0.3, "XZ", [1, 1]), (0.3, "XZ", [1, 3])]:
+        with pytest.raises(ValueError):
+            exp_Pauli_string_as_MPO(term, 0.7, 3)
+
+
 if __name__ == "__main__":
     test_trotter_invalid_order_raises()
+    test_exp_pauli_string_unsorted_qubits()
     test_trotter_order_accuracy_ranking()
     test_trotter_order4_scaling()
