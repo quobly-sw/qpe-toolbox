@@ -517,8 +517,9 @@ def optimize_one_gate(
         left_inds=(inds[0], inds[1]),
     )
 
-    # ensure index order
-    new_gate_tens.transpose(inds[2], inds[3], inds[0], inds[1])
+    # the SVD leaves the input legs in the environment's order: restore the
+    # original (OUT_LEFT, OUT_RIGHT, IN_LEFT, IN_RIGHT) layout
+    new_gate_tens.transpose_(*inds)
     new_gate_tens.modify(tags=original_gate_tens.tags)
 
     # update the (local) cost tensor network
