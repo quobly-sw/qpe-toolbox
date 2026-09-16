@@ -19,9 +19,9 @@ def svd_optimal_gate_update(tensor, left_inds):
     ``tensor`` is the environment of a variational tensor: the rest of a
     tensor network, fully contracted, with that tensor removed. This is the
     closed-form solution of the associated *unconstrained linear* problem:
-    the isometry $X$ maximizing $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$ is
-    $X = U V^\dagger$, where $B = U S V^\dagger$ is the SVD of the environment.
-    The singular values $S$ are not returned, only their sum.
+    the isometry :math:`X` maximizing :math:`\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)` is
+    :math:`X = U V^\dagger`, where :math:`B = U S V^\dagger` is the SVD of the
+    environment. The singular values :math:`S` are not returned, only their sum.
 
     Parameters
     ----------
@@ -37,8 +37,8 @@ def svd_optimal_gate_update(tensor, left_inds):
         Optimal unitary (isometric if not square) tensor, with the same indices
         as ``tensor`` but not necessarily in the same order.
     objective : float
-        Sum of the singular values of $B$, i.e. the achieved value of
-        $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$.
+        Sum of the singular values of :math:`B`, i.e. the achieved value of
+        :math:`\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)`.
     """
     # no truncation: a rank-deficient environment (e.g. a gate acting on a product
     # state) must still yield a unitary, not a projector

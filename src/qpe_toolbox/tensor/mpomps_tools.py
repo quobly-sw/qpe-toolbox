@@ -17,8 +17,8 @@ def state_preparation_mpo(state_mps):
     r"""
     Build the MPO mapping the all-zero state to a target MPS.
 
-    The MPO is the outer product $2^n |\psi\rangle\langle 0|$ on $n$ qubits. The
-    $2^n$ factor normalizes the transpilation overlap computed by
+    The MPO is the outer product :math:`2^n |\psi\rangle\langle 0|` on :math:`n`
+    qubits. The :math:`2^n` factor normalizes the transpilation overlap computed by
     :func:`~qpe_toolbox.circuit.transpile_mpo_to_circuit`.
 
     Parameters
