@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import pytest
 import quimb.tensor as qtn
 
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
@@ -42,8 +43,7 @@ def test_kronmpos():
 
 
 def test_state_preparation_mpo():
-    # state_preparation_mpo expects the boundary-tensor leg order DMRG2
-    # produces (phys, bond) / (bond, phys) -- not MPS_rand_state's (bond, phys)
+    # DMRG2 returns arrays in the 'lpr' order state_preparation_mpo requires
     ham = heisenberg_hamiltonian(3)
     dmrg = qtn.DMRG2(
         ham.to_mpo(), p0=qtn.MPS_rand_state(ham.n_qubits, bond_dim=2, seed=42)
@@ -52,7 +52,7 @@ def test_state_preparation_mpo():
     gs = dmrg.state
     gs_vec = gs.to_dense().reshape(-1)
 
-    dense = state_preparation_mpo(state_mps=gs).to_dense()
+    dense = state_preparation_mpo(gs).to_dense()
 
     n = ham.n_qubits
     e0 = np.zeros(2**n, dtype=complex)
@@ -62,6 +62,14 @@ def test_state_preparation_mpo():
     e1 = np.zeros(2**n, dtype=complex)
     e1[1] = 1.0
     assert np.allclose(dense @ e1, 0, atol=1e-8)
+
+    # any other layout is rejected instead of silently read positionally
+    mps = qtn.MPS_rand_state(n, bond_dim=2, seed=42)
+    with pytest.raises(ValueError, match="'lpr' order"):
+        state_preparation_mpo(mps)
+    mps.permute_arrays("lpr")
+    dense = state_preparation_mpo(mps).to_dense()
+    assert np.allclose(dense @ e0, 2**n * mps.to_dense().reshape(-1), atol=1e-8)
 
 
 # run
