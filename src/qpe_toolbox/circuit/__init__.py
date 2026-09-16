@@ -8,7 +8,9 @@
 # --------------------------------------------------------------------------------------
 """This subpackage provides a set of functions for creating and manipulating quimb circuits."""
 
+from .circuits_opt import tn_fit
 from .controls import add_gate_controls, shift_control_gates
+from .custom_gates import register_su4swap_gate, su4swap_gate_param_gen
 from .gate_count import count_gates, count_gates_by_qb
 from .initialization import make_circ, make_circMPS
 from .parametrized_circuits import (
@@ -19,11 +21,6 @@ from .parametrized_circuits import (
     generate_rand_circuit,
 )
 from .plot_circuits import draw_layered_circuit, draw_layered_expval
-from .qaoa import (
-    brute_force_maxcut,
-    compute_qaoa_contraction_costs,
-    study_optimization_time_costs,
-)
 from .serialize_circuits import (
     deserialize_to_qiskit_QuantumCircuit,
     deserialize_to_quimb_Circuit,

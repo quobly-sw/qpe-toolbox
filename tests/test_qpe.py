@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import contextlib
 import json
 import os
 import tempfile
@@ -45,17 +46,7 @@ def test_qpe_with_e_const():
     assert np.isclose(energy, -0.7375 + e_const_shifted)
 
 
-def test_resource_analysis():
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        orig = os.getcwd()
-        os.chdir(tmp_dir)
-        try:
-            _run_resource_analysis()
-        finally:
-            os.chdir(orig)
-
-
-def _run_resource_analysis():
+def test_resource_analysis(tmp_path):
     n_phase_bits = 5
 
     E_max, evolution_time, global_phase = qpe.set_search_window(
@@ -65,15 +56,20 @@ def _run_resource_analysis():
     trotter_order = 2
 
     filename = f"QPE_ttr{trotter_order}{n_steps}steps_{ham.n_qubits}qubits_{n_phase_bits}phbits.json"
-    gates_count, gates_list = qpe.qpe_gate_list(
-        ham,
-        n_phase_bits,
-        evolution_time,
-        n_steps,
-        global_phase,
-        trotter_order=trotter_order,
-        savefile=filename,
-    )
+    with contextlib.chdir(tmp_path):
+        gates_count, gates_list = qpe.qpe_gate_list(
+            ham,
+            n_phase_bits,
+            evolution_time,
+            n_steps,
+            global_phase,
+            trotter_order=trotter_order,
+            savefile=filename,
+        )
+
+        assert os.path.exists(filename)
+        with open(filename) as infile:
+            gate_dict = json.load(infile)
 
     assert len(gates_list) == 4241
 
@@ -81,10 +77,6 @@ def _run_resource_analysis():
     assert c == len(gates_list)
 
     psi_init = kron_mps(qtn.MPS_computational_state("0" * n_phase_bits), psi0)
-
-    assert os.path.exists(filename)
-    with open(filename) as infile:
-        gate_dict = json.load(infile)
 
     circ2 = deserialize_to_quimb_CircuitMPS(
         gate_dict, max_bond=0, cutoff=1e-10, psi0=psi_init
@@ -121,5 +113,7 @@ def test_gate_list_matches_circuit():
 
 if __name__ == "__main__":
     test_qpe()
-    test_resource_analysis()
+    test_qpe_with_e_const()
+    with tempfile.TemporaryDirectory() as _tmp_dir:
+        test_resource_analysis(_tmp_dir)
     test_gate_list_matches_circuit()

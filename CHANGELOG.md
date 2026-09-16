@@ -19,18 +19,36 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 ### Changed
 
 - **Breaking:** `qpe_sample`, `qpe_first_stage` and `qpe_energy` no longer accept the output-mode flags `run_simulation` / `write_gates`; use `qpe_gate_list` for the gate-tracking and serialization mode.
-- **Breaking:** the Trotter discretization is now specified as an integer number of steps `n_trotter_steps` instead of a step size `dt` (computed internally as `dt = evolution_time / n_trotter_steps`). `qpe_sample` and `qpe_first_stage` replace `dt` with `n_trotter_steps`; `qpe_energy`, `robust_phase_estimation` and `rpe_get_hadamard_output` rename their `n_steps` argument to `n_trotter_steps`.
-- **Breaking:** the Hadamard test (`build_hadamard_test_circuit`, `run_hadamard_test`) is now built on `qpe_circuit` and takes the unitary in the framework convention (argument `U_gate` renamed to `unitary`): either a single gate or an iterable of uncontrolled gates on data-register-local qubit indices. Both functions, as well as `robust_phase_estimation` and `rpe_get_hadamard_output`, now expose the underlying `CircuitMPS` truncation knobs `cutoff` and `max_bond`.
+- **Breaking:** the Trotter discretization is now specified as an integer number of steps `n_trotter_steps` instead of a step size `dt` (computed internally as `dt = evolution_time / n_trotter_steps`). `qpe_sample` and `qpe_first_stage` replace `dt` with `n_trotter_steps`; `qpe_energy` and `robust_phase_estimation` rename their `n_steps` argument to `n_trotter_steps`.
+- **Breaking:** the Hadamard test (`build_hadamard_test_circuit`, `run_hadamard_test`) is now built on `qpe_circuit` and takes the unitary in the framework convention (argument `U_gate` renamed to `unitary`): either a single gate or an iterable of uncontrolled gates on data-register-local qubit indices. Their phase-rotation argument `theta` is renamed to `phase_gate_angle`. Both functions, as well as `rpe_get_hadamard_output`, now expose the underlying `CircuitMPS` truncation knobs `cutoff` and `max_bond`.
+- **Breaking:** `rpe_get_hadamard_output` now takes a prebuilt `unitary` (a single gate or an iterable of gates) together with `n_shots`, instead of building the evolution from the Hamiltonian and an evolution time.
 - **Breaking:** `Hamiltonian.get_U_exact` and `Hamiltonian.get_trotter_step` now take the physical register as a keyword-only `phys_reg` argument (renamed from `data_reg`), defaulting to `range(n_qubits)`. `get_trotter_step` takes `trotter_order` before the keyword-only arguments (`get_trotter_step(dt, trotter_order, *, phys_reg=None)`), and `get_U_exact`'s `controls` is now optional (`get_U_exact(evolution_time, *, phys_reg=None, controls=None)`).
-- **Breaking:** `robust_phase_estimation` replaced `epsilon` with `n_repetitions`, removed `sign_E0`, added an `rng` argument for deterministic sampling, and changed the `trotter_order` default from 2 to 1. The returned list now has length `n_repetitions` (no leading placeholder).
+- **Breaking:** `robust_phase_estimation` replaced `epsilon` with `n_repetitions`, removed `sign_E0`, added an `rng` argument for deterministic sampling, added a `t0` argument setting the base evolution time, and changed the `trotter_order` default from 2 to 1. The estimated phase is now `E0 * t0`, so the energy is recovered as `theta / t0`. The returned list now has length `n_repetitions` (no leading placeholder).
+- **Breaking:** `draw_layered_circuit` / `draw_layered_expval` replaced the `list_names` argument with three keyword-only arguments `state_label`, `labels_1qubit` and `labels_2qubit`. A label list shorter than the circuit depth now raises `ValueError` instead of failing with an `IndexError` while drawing.
 - `run_hadamard_test` / `rpe_get_hadamard_output`: replaced `seed` with an `rng` (`numpy.random.Generator`) argument.
 - Renamed `rpe_distance` to `angular_distance`; it is now vectorized.
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now returning a single angle.
 - `Hamiltonian.to_dense` and `Hamiltonian.get_U_exact` now build through the sparse operator builder (`get_U_exact` uses sparse matrix exponentiation), speeding up construction for larger systems.
+- `optuna` dependency moved from core dependency to recommended.
 
 ### Removed
 
 - `rpe_distance` (renamed to `angular_distance`).
+- `hyperoptimization` example and all QAOA-related code: `examples/hyperoptimization.py`,
+  `src/qpe_toolbox/circuit/qaoa.py` and `tests/test_qaoa.py`. This removes
+  `brute_force_maxcut`, `compute_qaoa_contraction_costs` and
+  `study_optimization_time_costs` from `qpe_toolbox.circuit`.
+- `two_qubit_rand_layer`: the `reverse` argument. It only changed the order in
+  which overlapping gates were applied, and never the control direction its
+  documentation claimed.
+
+### Fixed
+
+- `draw_layered_expval`: two-qubit layer labels were indexed in the opposite
+  direction to single-qubit ones, so the two label lists disagreed on which
+  layer they were naming.
+- `draw_layered_circuit` / `draw_layered_expval`: unlabelled diagrams drew
+  `['']` next to every qubit instead of nothing.
 
 ## [1.1.0] - 2026-04-02
 

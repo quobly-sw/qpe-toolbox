@@ -16,7 +16,7 @@ from .qpe_circuit import qpe_circuit
 
 
 def build_hadamard_test_circuit(
-    init_mps, unitary, theta, *, cutoff=1e-10, max_bond=None
+    init_mps, unitary, phase_gate_angle, *, cutoff=1e-10, max_bond=None
 ):
     r"""
     Construct the quantum circuit implementing the Hadamard test.
@@ -30,7 +30,7 @@ def build_hadamard_test_circuit(
 
     This circuit can be used to estimate the real or imaginary part of
     :math:`\bra{\psi} U \ket{\psi}` by choosing appropriate
-    values of ``theta``.
+    values of ``phase_gate_angle``.
 
     Parameters
     ----------
@@ -44,8 +44,8 @@ def build_hadamard_test_circuit(
         gate decomposition as an iterable of gates (e.g. a Trotterized
         :math:`U`). An iterable may be a one-shot generator, consumed exactly
         once.
-    theta : float
-        Phase angle applied to the ancilla qubit.
+    phase_gate_angle : float
+        Phase angle :math:`\beta` applied to the ancilla qubit.
         Typical values:
         - ``0`` for estimating the real part
         - ``-π/2`` for estimating the imaginary part
@@ -65,22 +65,29 @@ def build_hadamard_test_circuit(
     circ0 = make_circMPS(
         n_phase_bits=1, psi_mps=init_mps, cutoff=cutoff, max_bond=max_bond
     )
-    _, circ = qpe_circuit(circ0, [unitary_gates], global_phase=theta)
+    _, circ = qpe_circuit(circ0, [unitary_gates], global_phase=phase_gate_angle)
     return circ
 
 
 def run_hadamard_test(
-    init_mps, unitary, theta, n_shots, *, cutoff=1e-10, max_bond=None, rng=None
+    init_mps,
+    unitary,
+    phase_gate_angle,
+    n_shots,
+    *,
+    cutoff=1e-10,
+    max_bond=None,
+    rng=None,
 ):
     r"""
-    Run the Hadamard test circuit and estimate the expectation value :math:`Z(\theta)`.
+    Run the Hadamard test circuit and estimate the expectation value :math:`Z(\beta)`.
 
     The returned value is
 
     .. math::
 
-        Z(\theta) = P(0) - P(1)
-                  = \mathrm{Re} \left[e^{i\theta} \bra{\psi} U \ket{\psi} \right]
+        Z(\beta) = P(0) - P(1)
+                  = \mathrm{Re} \left[e^{i\beta} \bra{\psi} U \ket{\psi} \right]
 
     where :math:`P(0)` and :math:`P(1)` are the probabilities of measuring
     the ancilla qubit in states :math:`\ket{0}` and :math:`\ket{1}`.
@@ -95,8 +102,8 @@ def run_hadamard_test(
         gates (e.g. a Trotterized :math:`U`). See
         ``build_hadamard_test_circuit`` for the convention. A one-shot
         generator is consumed by this call; build a fresh one per call.
-    theta : float
-        Phase angle applied to the ancilla qubit.
+    phase_gate_angle : float
+        Phase angle :math:`\beta` applied to the ancilla qubit..
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots. If ``EXACT``, probabilities are computed exactly,
         else probabilities are estimated by sampling.
@@ -113,10 +120,10 @@ def run_hadamard_test(
     Returns
     -------
     Z : float
-        Estimated value of :math:`Z(\theta) = P(0) - P(1)`.
+        Estimated value of :math:`Z(\beta) = P(0) - P(1)`.
     """
     circ = build_hadamard_test_circuit(
-        init_mps, unitary, theta, cutoff=cutoff, max_bond=max_bond
+        init_mps, unitary, phase_gate_angle, cutoff=cutoff, max_bond=max_bond
     )
     aux_ind = 0  # as imposed by make_circMPS
 

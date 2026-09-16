@@ -1,3 +1,4 @@
 Project: qpe-toolbox
 Copyright (c) 2025 Quobly
 Copyright (c) 2025 Hon Hai Precision Industry Co., Ltd.
+function tn_fit is derived from quimb's qtn.fitting._tn_fit_als_core

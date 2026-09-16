@@ -83,7 +83,6 @@ def apply_gate_qiskit(qc, label, qubits, params):
 
     >>> apply_gate_qiskit(qc, "rxx", [0, 1], [0.3])
     """
-
     label = label.lower()
     if label == "cnot":
         label = "cx"
@@ -622,7 +621,7 @@ def load_qasm_to_quimb_Circuit(
     # Find the size of the circuit
     if min_layout:
         # Method I: simpler but assumes that gates act on all qubits
-        N = 1 + max(q for gate in gates for q in gate["qubits"])
+        N = 1 + max(q for gate in gates for q in gate.qubits)
     else:
         # Method II: read the number of qubits from the header
         with open(filename + ".qasm") as f:
