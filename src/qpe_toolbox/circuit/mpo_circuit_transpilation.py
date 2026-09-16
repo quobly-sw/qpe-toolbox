@@ -638,8 +638,8 @@ def optimize_single_gate_update(
         :func:`build_first_sweep`.
     optimize : str or :cotengra-api:`HyperOptimizer`, optional
         Contraction optimization strategy passed to
-        :meth:`TensorNetwork.contract` for every local environment
-        contraction. Default is ``"auto-hq"``; pass e.g. ``"greedy"`` for a
+        :meth:`TensorNetwork.contract` when contracting each gate's local
+        environment. Default is ``"auto-hq"``; pass e.g. ``"greedy"`` for a
         cheaper, deterministic strategy, or a
         :cotengra-api:`ReusableHyperOptimizer` instance for finer control.
 
