@@ -6,6 +6,7 @@ import quimb as qu
 import quimb.tensor as qtn
 
 from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
+from qpe_toolbox.circuit.circuits_opt import svd_optimal_gate_update
 
 
 def test_tn_fit():
@@ -40,6 +41,29 @@ def test_tn_fit_rejects_non_gate_tensors():
         tn_fit(circ.psi, target, tags=None)
 
 
+def _is_unitary(tensor, inds):
+    matrix = tensor.transpose(*inds).data.reshape(4, 4)
+    return np.allclose(matrix.conj().T @ matrix, np.eye(4))
+
+
+def test_svd_optimal_gate_update_is_unitary():
+    # an environment acting on |00> has rank 1: the update must stay unitary
+    rng = np.random.default_rng(42)
+    phi = rng.standard_normal(4) + 1j * rng.standard_normal(4)
+    inds = ("o0", "o1", "i0", "i1")
+    env = qtn.Tensor(np.outer(phi, [1, 0, 0, 0]).reshape(2, 2, 2, 2), inds=inds)
+    new_gate, _ = svd_optimal_gate_update(env, ("o0", "o1"))
+    assert _is_unitary(new_gate, inds)
+
+    # first-layer gates of a fitted circuit act on |0...0>
+    circ = ansatz_circuit_su4(4, 2, parametrize=False, rng=rng)
+    psi = circ.psi
+    tn_fit(psi, qtn.MPS_rand_state(4, 2, seed=42), tags="SU4SWAP", steps=5)
+    for gate in psi.select_tensors("SU4SWAP"):
+        assert _is_unitary(gate, gate.inds)
+
+
 if __name__ == "__main__":
     test_tn_fit()
     test_tn_fit_rejects_non_gate_tensors()
+    test_svd_optimal_gate_update_is_unitary()

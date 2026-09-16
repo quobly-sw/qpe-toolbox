@@ -34,13 +34,16 @@ def svd_optimal_gate_update(tensor, left_inds):
     Returns
     -------
     new_isometry : :quimb-api:`Tensor`
-        Optimal isometric tensor, carrying the same indices as ``tensor``.
+        Optimal unitary (isometric if not square) tensor, carrying the same indices
+        as ``tensor``.
     objective : float
         Sum of the discarded singular values, i.e. the achieved value of
         $\mathrm{Re}\,\mathrm{Tr}(X^\dagger B)$.
     """
+    # no truncation: a rank-deficient environment (e.g. a gate acting on a product
+    # state) must still yield a unitary, not a projector
     svd_factors = qtn.tensor_split(
-        T=tensor, left_inds=left_inds, method="svd", absorb=None
+        T=tensor, left_inds=left_inds, method="svd", absorb=None, cutoff=0.0
     )
     objective = np.sum(svd_factors.tensors[1].data)
     new_isometry = (svd_factors.tensors[0].conj() & svd_factors.tensors[2].conj()) ^ ...
