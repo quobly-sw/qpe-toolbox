@@ -163,7 +163,7 @@ print(
 # %%
 print("*** Global L-BFGS sequential optimization ")
 rng = np.random.default_rng(42)
-optimal_circ = ansatz_circuit_su4(n_qubits, 1, rng=rng)
+optimal_circ = ansatz_circuit_su4(n_qubits, 0, rng=rng)
 errors_global = []
 
 for ii in tqdm.tqdm(range(depth)):
@@ -175,7 +175,7 @@ for ii in tqdm.tqdm(range(depth)):
                 *(0.1 * rng.random(15)),
                 q,
                 q + 1,
-                gate_round=ii - 1,
+                gate_round=ii,
                 parametrize=True,
             )
     circ_opt = make_circuit_optimizer(optimal_circ, mpo)
@@ -259,16 +259,16 @@ ene, err, ovlp = evaluate_fit(dmrg, mpo, tn, depth=depth)
 print("*** Local sequential optimization")
 tn = qtn.MPS_computational_state("0" * n_qubits)
 new_layer_eps = 1e-2
-rng = np.random.default_rng()
+rng = np.random.default_rng(42)
 errors_local = []
 
 for ii in range(depth):
     # grow the optimized network by one brick-wall layer of SU4SWAP gates,
     # initialized close to the identity (small parameters)
-    tags = ["SU4SWAP", f"ROUND_{ii - 1}"]
+    tags = ["SU4SWAP", f"ROUND_{ii}"]
     for start in range(2):
         for q in range(start, n_qubits - 1, 2):
-            gate = su4swap_gate_param_gen(1e-2 * rng.random(15))
+            gate = su4swap_gate_param_gen(new_layer_eps * rng.random(15))
             tn.gate_(gate, (q, q + 1), tags=tags, contract=False)
 
     tn_fit(tn, GS, tags="SU4SWAP", steps=10000, tol=1e-8)
