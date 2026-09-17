@@ -140,20 +140,19 @@ def rpe_get_hadamard_output(
     rng=None,
 ):
     r"""
-    Estimate the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` using Hadamard tests.
+    Estimate minus the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` with Hadamard tests.
 
-    This function computes the phase corresponding to the unitary
-    evolution over time :math:`t` by evaluating real and imaginary parts
-    via Hadamard tests.
+    The sign follows the RPE convention: for :math:`U = e^{-iHt}` and an eigenstate
+    :math:`\ket{\psi_0}` of energy :math:`E_0`, the returned phase is :math:`E_0 t`.
 
     Parameters
     ----------
     psi0 : :quimb-api:`MatrixProductState`
         Initial quantum state :math:`\ket{\psi_0}`.
-    unitary : :quimb-api:Gate or iterable of :quimb-api:Gate
-        The unitary $U$ used in the Hadamard test, either a single gate
-        (e.g. an exact$U$) or its gate decomposition as an iterable of
-        gates (e.g. a Trotterized $U$).
+    unitary : :quimb-api:`Gate` or iterable of :quimb-api:`Gate`
+        The unitary :math:`U` used in the Hadamard test, either a single gate
+        (e.g. an exact :math:`U`) or its gate decomposition as an iterable of
+        gates (e.g. a Trotterized :math:`U`).
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots used in the Hadamard test.
         Use ``EXACT`` to compute probabilities exactly.
