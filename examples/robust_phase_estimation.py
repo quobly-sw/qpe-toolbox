@@ -281,7 +281,7 @@ t0 = 1.0
 theta_exact = E0 * t0
 
 # m = 0, evolution time = t0 * 2**0
-phi_0 = qpe.rpe_get_hadamard_output(psi0, exact_unitary, n_shots, rng=rng)
+phi_0 = qpe.rpe_get_hadamard_output(psi0, H.get_U_exact(t0), n_shots, rng=rng)
 theta_0 = phi_0
 
 m = 1
