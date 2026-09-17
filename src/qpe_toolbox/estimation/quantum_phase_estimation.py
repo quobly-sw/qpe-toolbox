@@ -278,6 +278,9 @@ def qpe_gate_list(
         If ``savefile`` is given together with exact time evolution
         (``n_trotter_steps=EXACT``).
     """
+    if n_trotter_steps is EXACT and savefile is not None:
+        raise ValueError("Cannot write gates for exact time evolution")
+
     unitaries = _evolution_powers(
         hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
     )
@@ -285,8 +288,6 @@ def qpe_gate_list(
     gates_count = count_gates(gates_list)
 
     if savefile is not None:
-        if n_trotter_steps is EXACT:
-            raise ValueError("Cannot write gates for exact time evolution")
         gate_dict = serialize_from_quimb_gates(
             n_phase_bits + hamiltonian.n_qubits, gates_list
         )
