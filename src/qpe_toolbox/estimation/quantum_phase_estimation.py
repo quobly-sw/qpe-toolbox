@@ -78,8 +78,8 @@ def qpe_energy(
     optimize : str, default ``"auto-hq"``
         Optimization strategy when computing marginals with tensor networks.
     verbosity : int, default ``0``
-        Verbosity level. If >= 1, print result summary. If >= 2, print
-        additional debug information.
+        Verbosity level. If >= 1, print timing and progress information and
+        the result summary.
 
     Returns
     -------

@@ -607,7 +607,7 @@ plt.ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 # %% [markdown]
 # We now apply the same algorithm but replace the exact time evolution operator by a second order Trotter approximation.
 #
-# The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
+# The `n_trotter_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
 #
 # The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative of the most likely case. The following run will take a minute.
 
