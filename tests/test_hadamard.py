@@ -8,7 +8,7 @@ from qpe_toolbox.estimation import run_hadamard_test
 
 def _phase_unitary(phi):
     # one-shot generator for U = diag(1, e^{i phi}) on a single data qubit
-    return iter([qtn.Gate("PHASE", params=[phi], qubits=[0])])
+    return iter([qtn.Gate("PHASE", [phi], [0])])
 
 
 def test_hadamard_test_phase_gate():
@@ -25,7 +25,7 @@ def test_hadamard_test_single_gate():
     # a bare Gate and its single-element-list wrapping must give the same result
     phi = np.pi / 6
     psi = qtn.MPS_computational_state("1")
-    gate = qtn.Gate("PHASE", params=[phi], qubits=[0])
+    gate = qtn.Gate("PHASE", [phi], [0])
 
     for theta in [0, -np.pi / 2]:
         z_gate = run_hadamard_test(psi, gate, theta, EXACT)

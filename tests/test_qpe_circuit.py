@@ -9,7 +9,7 @@ from qpe_toolbox.estimation import qpe_circuit, qpe_gates
 def _phase_gate_powers(theta, n_phase_bits):
     """Unitaries [U^(2^k)] for U = PHASE(2*pi*theta) acting on one data qubit."""
     return [
-        [qtn.Gate("PHASE", params=[2 * np.pi * theta * 2**k], qubits=[0])]
+        [qtn.Gate("PHASE", [2 * np.pi * theta * 2**k], [0])]
         for k in range(n_phase_bits)
     ]
 
@@ -27,7 +27,7 @@ def test_qpe_circuit_phase_gate():
 
     circ0 = _one_data_qubit_circ(m)
     traces, circ = qpe_circuit(circ0, _phase_gate_powers(theta, m))
-    probs = np.ravel(circ.compute_marginal(where=list(range(m))))
+    probs = np.ravel(circ.compute_marginal(list(range(m))))
 
     assert np.argmax(probs) == 5
     assert np.isclose(probs[5], 1.0)
@@ -47,7 +47,7 @@ def test_qpe_circuit_global_phase():
     _, circ = qpe_circuit(
         circ0, _phase_gate_powers(theta, m), global_phase=2 * np.pi * shift
     )
-    probs = np.ravel(circ.compute_marginal(where=list(range(m))))
+    probs = np.ravel(circ.compute_marginal(list(range(m))))
 
     assert np.argmax(probs) == 7
     assert np.isclose(probs[7], 1.0)
@@ -59,16 +59,13 @@ def test_qpe_circuit_non_squaring():
     theta = 3 / 8
 
     direct = _phase_gate_powers(theta, m)
-    repeated = [
-        [qtn.Gate("PHASE", params=[2 * np.pi * theta], qubits=[0])] * 2**k
-        for k in range(m)
-    ]
+    repeated = [[qtn.Gate("PHASE", [2 * np.pi * theta], [0])] * 2**k for k in range(m)]
 
     _, circ_direct = qpe_circuit(_one_data_qubit_circ(m), direct)
     _, circ_repeated = qpe_circuit(_one_data_qubit_circ(m), repeated)
 
-    probs_direct = np.ravel(circ_direct.compute_marginal(where=list(range(m))))
-    probs_repeated = np.ravel(circ_repeated.compute_marginal(where=list(range(m))))
+    probs_direct = np.ravel(circ_direct.compute_marginal(list(range(m))))
+    probs_repeated = np.ravel(circ_repeated.compute_marginal(list(range(m))))
     assert np.allclose(probs_direct, probs_repeated)
     assert np.argmax(probs_direct) == 3
 
@@ -122,21 +119,21 @@ def test_qpe_gates_matches_qpe_circuit():
 
 
 def test_add_gate_controls():
-    g = qtn.Gate("X", params=[], qubits=[2])
+    g = qtn.Gate("X", [], [2])
     (cg,) = add_gate_controls([g], [0])
     assert cg.qubits == (2,)
     assert cg.controls == (0,)
     # the original gate is not modified
     assert g.controls is None
 
-    g2 = qtn.Gate("X", params=[], qubits=[3], controls=[1])
+    g2 = qtn.Gate("X", [], [3], [1])
     (cg2,) = add_gate_controls([g2], [0, 2])
     assert cg2.controls == (1, 0, 2)
     assert g2.controls == (1,)
 
     # qubit_shift offsets targets and existing controls, but not the new ones;
     # gate_round is set in the same single copy
-    g3 = qtn.Gate("X", params=[], qubits=[3], controls=[1])
+    g3 = qtn.Gate("X", [], [3], [1])
     (cg3,) = add_gate_controls([g3], [0], qubit_shift=2, gate_round=5)
     assert cg3.qubits == (5,)
     assert cg3.controls == (3, 0)

@@ -82,7 +82,7 @@ def test_resource_analysis(tmp_path):
         gate_dict, max_bond=0, cutoff=1e-10, psi0=psi_init
     )
 
-    probs = circ2.compute_marginal(where=list(range(n_phase_bits)))
+    probs = circ2.compute_marginal(list(range(n_phase_bits)))
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits

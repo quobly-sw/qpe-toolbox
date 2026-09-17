@@ -126,7 +126,7 @@ def test_U():
     Z = []
     for beta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
-        probs = circ.compute_marginal(where=[0])
+        probs = circ.compute_marginal([0])
         Z.append(probs[0] - probs[1])
     phi_ref = -np.angle(Z[0] + 1j * Z[1])
     assert np.isclose(phi_ref, t * dmrg.energy, atol=tol)
@@ -136,7 +136,7 @@ def test_U():
     Z = []
     for beta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
-        probs = circ.compute_marginal(where=[0])
+        probs = circ.compute_marginal([0])
         Z.append(probs[0] - probs[1])
     phi_ref = np.angle(Z[0] + 1j * Z[1])
     assert np.isclose(phi_ref, 1.6068383462530338, rtol=0, atol=1e-15)
