@@ -101,7 +101,7 @@ def robust_phase_estimation(
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
 
     unitaries = _evolution_powers(
-        hamiltonian, 1.0, n_trotter_steps, n_repetitions, trotter_order
+        hamiltonian, t0, n_trotter_steps, n_repetitions, trotter_order
     )
     for m in range(n_repetitions):
         phi_m = rpe_get_hadamard_output(
