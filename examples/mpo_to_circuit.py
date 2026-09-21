@@ -50,7 +50,7 @@ os.environ["MKL_NUM_THREADS"] = "1"
 
 import matplotlib.pyplot as plt
 import numpy as np
-from quimb.tensor import DMRG2, MPS_rand_state
+import quimb.tensor as qtn
 
 from qpe_toolbox.circuit import init_cost_tn, transpile_mpo_to_circuit
 from qpe_toolbox.hamiltonian import Hamiltonian, trotter_approx_as_MPO
@@ -214,8 +214,8 @@ ax.set_title(f"MPO transpilation L = {L}");
 # %%
 # Let us pick a target state: the ground state of the next-nearest-neighbor Ising Hamiltonian defined above, in MPS form.
 ham_NNIM_mpo = ham_NNIM.to_mpo()
-p0 = MPS_rand_state(L, bond_dim=2, seed=42)
-dmrg = DMRG2(ham_NNIM_mpo, p0=p0)
+p0 = qtn.MPS_rand_state(L, bond_dim=2, seed=42)
+dmrg = qtn.DMRG2(ham_NNIM_mpo, p0=p0)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12)
 GS = dmrg.state
 

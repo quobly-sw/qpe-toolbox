@@ -24,9 +24,9 @@
 
 # %%
 import numpy as np
+import quimb.tensor as qtn
 from IPython.display import display
 from pyscf import gto
-from quimb.tensor import DMRG2
 
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian
 
@@ -92,7 +92,7 @@ display(h2_mpo)
 # %%
 # %%time
 
-dmrg = DMRG2(h2_mpo)
+dmrg = qtn.DMRG2(h2_mpo)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12);
 
 # %%
@@ -152,7 +152,7 @@ print(np.sqrt(o2_mpo.H @ o2_mpo_original) / norm)
 
 # %%
 # %%time
-dmrg = DMRG2(o2_mpo)
+dmrg = qtn.DMRG2(o2_mpo)
 dmrg.solve(max_sweeps=16, bond_dims=[200], verbosity=1, cutoffs=1e-12);
 
 # %% [markdown]
@@ -195,7 +195,7 @@ display(h2o_mpo)
 
 # %%
 # %%time
-dmrg = DMRG2(h2o_mpo)
+dmrg = qtn.DMRG2(h2o_mpo)
 dmrg.solve(max_sweeps=16, bond_dims=64, verbosity=1, cutoffs=1e-12);
 
 # %%

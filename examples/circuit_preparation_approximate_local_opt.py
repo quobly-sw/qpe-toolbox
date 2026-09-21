@@ -45,7 +45,6 @@ import autoray
 import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
-from quimb.tensor import DMRG2
 
 from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
@@ -91,7 +90,7 @@ ham = Hamiltonian(terms, n_qubits)
 mpo = ham.to_mpo()
 
 # Run DMRG to get the target state and energy.
-dmrg = DMRG2(mpo)
+dmrg = qtn.DMRG2(mpo)
 dmrg.solve(max_sweeps=16, tol=1e-8, bond_dims=64, verbosity=0)
 GS = dmrg.state
 dmrg_energy = np.real(dmrg.energy)
