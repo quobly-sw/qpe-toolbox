@@ -169,12 +169,11 @@ for i, seed in enumerate(ss.spawn(n_seeds)):
 # %%
 depths = np.arange(1, 6)
 n_seeds = 4
-overlaps = np.zeros((5, n_seeds))
+overlaps = np.zeros((depths.size, n_seeds))
 ss = np.random.SeedSequence(42)
 rngs = [np.random.default_rng(seed) for seed in ss.spawn(n_seeds)]
 
-for i_depth in range(4):
-    print(f"depth = {depths[i_depth]}")
+for i_depth in range(depths.size - 1):
     for i_seed in range(n_seeds):
         cost_tn, contracted_envs, overlaps[i_depth, i_seed] = transpile_mpo_to_circuit(
             trotter_mpo_ham_NNIM,
@@ -185,10 +184,10 @@ for i_depth in range(4):
             closed=True,
             rng=rngs[i_seed],
         )
+    print(f"depth = {depths[i_depth]}: overlaps = {overlaps[i_depth]}")
 
-overlaps[4] = overlaps5
-print("depths = 5")
-print(f"overlaps = {overlaps5}")
+overlaps[-1] = overlaps5
+print(f"depth = {depths[-1]}: overlaps = {overlaps5}")
 
 # %%
 fig, ax = plt.subplots()
@@ -230,7 +229,6 @@ state_depths = np.arange(1, 6)
 n_seeds = 4
 state_overlaps = np.empty((state_depths.size, n_seeds))
 for i, depth in enumerate(state_depths):
-    print(f"depth = {depth}")
     for seed in range(n_seeds):
         rng = np.random.default_rng(seed)
         cost_tn, contracted_envs, state_overlaps[i, seed] = transpile_mpo_to_circuit(
