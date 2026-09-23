@@ -10,6 +10,61 @@
 import numpy as np
 import quimb.tensor as qtn
 
+##### State preparation #######################################################
+
+
+def state_preparation_mpo(state_mps):
+    r"""
+    Build the MPO mapping the all-zero state to a target MPS.
+
+    The MPO is the outer product :math:`2^n |\psi\rangle\langle 0|` on :math:`n`
+    qubits. The :math:`2^n` factor normalizes the transpilation overlap computed by
+    :func:`~qpe_toolbox.circuit.transpile_mpo_to_circuit`.
+
+    Parameters
+    ----------
+    state_mps : :quimb-api:`MatrixProductState`
+        Target MPS to be reproduced by some circuit Ansatz, with arrays in
+        ``'lpr'`` order.
+
+    Returns
+    -------
+    :quimb-api:`MatrixProductOperator`
+        Reference MPO for circuit state preparation.
+
+    Raises
+    ------
+    ValueError
+        If the arrays of ``state_mps`` are not in ``'lpr'`` order.
+    """
+    n_qubits = state_mps.num_tensors
+    sites = [state_mps.site_ind(i) for i in range(n_qubits)]
+    bonds = [state_mps.bond(i, i + 1) for i in range(n_qubits - 1)]
+    # arrays are read positionally: require quimb's "lpr" layout, returned by DMRG2
+    layout_error = (
+        "state_mps arrays must be in 'lpr' order, "
+        "call state_mps.permute_arrays('lpr') first"
+    )
+    ket0 = np.array([2.0, 0])  # normalization of the cost by 2**n_qubits
+
+    if state_mps[0].inds != (sites[0], bonds[0]):
+        raise ValueError(layout_error)
+    arrays = [(state_mps[0].data[:, :, np.newaxis] * ket0).swapaxes(0, 1)]
+
+    for i in range(1, n_qubits - 1):
+        if state_mps[i].inds != (bonds[i - 1], sites[i], bonds[i]):
+            raise ValueError(layout_error)
+        # array has order lpr then get lprp' so transpose to lrpp'
+        arrays.append((state_mps[i].data[:, :, :, np.newaxis] * ket0).swapaxes(1, 2))
+
+    if state_mps[-1].inds != (bonds[-1], sites[-1]):
+        raise ValueError(layout_error)
+    # array has order lp then get lpp' so no transpose
+    arrays.append(state_mps[-1].data[:, :, np.newaxis] * ket0)
+
+    return qtn.MatrixProductOperator(arrays=arrays)
+
+
 ##### Kronecker products ######################################################
 
 

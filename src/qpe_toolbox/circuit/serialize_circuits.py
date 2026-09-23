@@ -13,7 +13,6 @@ import re
 import numpy as np
 import quimb.tensor as qtn
 from qiskit import ClassicalRegister, QuantumCircuit
-from quimb.tensor.circuit import parse_openqasm2_file
 
 
 def apply_gate_qiskit(qc, label, qubits, params):
@@ -615,7 +614,7 @@ def load_qasm_to_quimb_Circuit(
       compatible with quimb.
     """
     # Load the gates
-    parsed_qasm = parse_openqasm2_file(filename + ".qasm")
+    parsed_qasm = qtn.circuit.parse_openqasm2_file(filename + ".qasm")
     gates = parsed_qasm["gates"]
 
     # Find the size of the circuit
