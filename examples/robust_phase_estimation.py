@@ -117,13 +117,12 @@ E0, psi0 = do_dmrg(H)
 
 # %%
 t0 = 1.0  # equivalent to Hamiltonian scaling factor
-data_reg = list(range(1, n_qubits + 1))
-U = H.get_U_exact(t0, data_reg, controls=(0,))
+exact_unitary = H.get_exact_unitary(t0)
 
 n_shots = EXACT  # exact computation (no sampling)
 
-X = qpe.run_hadamard_test(psi0, U, 0, n_shots)
-Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots)
+X = qpe.run_hadamard_test(psi0, exact_unitary, 0, n_shots)
+Y = qpe.run_hadamard_test(psi0, exact_unitary, -np.pi / 2, n_shots)
 Z = X + 1j * Y
 
 print(f"error = {abs(np.angle(Z) / t0 + E0):.2g}")
@@ -160,8 +159,8 @@ rng = np.random.default_rng(42)
 
 for n_shots in tqdm.tqdm(shot_counts):
     st = time.time()
-    X = qpe.run_hadamard_test(psi0, U, 0, n_shots, rng=rng)
-    Y = qpe.run_hadamard_test(psi0, U, -np.pi / 2, n_shots, rng=rng)
+    X = qpe.run_hadamard_test(psi0, exact_unitary, 0, n_shots, rng=rng)
+    Y = qpe.run_hadamard_test(psi0, exact_unitary, -np.pi / 2, n_shots, rng=rng)
     et = time.time() - st
 
     Z = X + 1j * Y
@@ -282,11 +281,14 @@ t0 = 1.0
 theta_exact = E0 * t0
 
 # m = 0, evolution time = t0 * 2**0
-phi_0 = qpe.rpe_get_hadamard_output(H, psi0, t0, EXACT, n_shots, rng=rng)
+phi_0 = qpe.rpe_get_hadamard_output(psi0, H.get_exact_unitary(t0), n_shots, rng=rng)
 theta_0 = phi_0
 
 m = 1
-phi_1 = qpe.rpe_get_hadamard_output(H, psi0, t0 * 2**m, EXACT, n_shots, rng=rng)
+# m = 1, evolution time = t0 * 2**m
+phi_1 = qpe.rpe_get_hadamard_output(
+    psi0, H.get_exact_unitary(t0 * 2**m), n_shots, rng=rng
+)
 possible_phases_looped = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
 # candidate phases, wrapped into (-pi, pi]
 possible_phases = (possible_phases_looped + np.pi) % (2 * np.pi) - np.pi
@@ -607,18 +609,26 @@ plt.ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 # %% [markdown]
 # We now apply the same algorithm but replace the exact time evolution operator by a second order Trotter approximation.
 #
-# The `n_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
+# The `n_trotter_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
 #
 # The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative of the most likely case. The following run will take a minute.
 
 # %%
 # %%time
 n_shots = 2
-n_steps = 1
+n_trotter_steps = 1
 
 rng = np.random.default_rng(42)
 thetas_trotter_H2 = qpe.robust_phase_estimation(
-    H_H2, psi0_H2, M, n_steps, n_shots, t0=t0, trotter_order=2, verbosity=1, rng=rng
+    H_H2,
+    psi0_H2,
+    M,
+    n_trotter_steps,
+    n_shots,
+    t0=t0,
+    trotter_order=2,
+    verbosity=1,
+    rng=rng,
 )
 distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, theta_exact_H2)
 
@@ -627,7 +637,7 @@ distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, theta_exact_H2)
 
 # %%
 plt.semilogy(np.pi / 3 / 2 ** np.arange(M), "k--", label="$2^{-m}~\\pi/3$")
-plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_steps}$")
+plt.semilogy(distances_trotter_H2, "-o", label=f"$n_{{\\rm steps}}={n_trotter_steps}$")
 plt.legend()
 plt.title(f"$n_{{\\rm shots}}={n_shots}$")
 plt.xlabel("iteration $m$")

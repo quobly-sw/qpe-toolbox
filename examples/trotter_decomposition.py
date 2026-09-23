@@ -20,7 +20,7 @@
 #
 # ## Introduction
 #
-# We start by introducing the general idea of Trotterization. We would like to compute the exponential of an operator $H$. For small systems, it can be computed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_U_exact` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems, however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
+# We start by introducing the general idea of Trotterization. We would like to compute the exponential of an operator $H$. For small systems, it can be computed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_exact_unitary` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems, however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
 #
 # Let us decompose the operator as $H = A + B$. In practice, we decompose the Hamiltonian into a sum of operators whose exponentiation can easily be implemented, e.g. Pauli strings. When $A$ and $B$ commute, as scalars do, the exponential of the sum is the product of exponentials:
 #
@@ -57,7 +57,6 @@ n_qubits = 4
 id2n = qu.eye(2**n_qubits)
 h_spin = heisenberg_hamiltonian(n_qubits)
 h_dense = h_spin.to_dense()
-data_reg = list(range(n_qubits))
 
 # %% [markdown]
 # ### First-order Trotter-Suzuki Formula
@@ -86,7 +85,7 @@ data_reg = list(range(n_qubits))
 # %%
 # First-order Trotter
 dt = 1
-trotter_routine = h_spin.get_trotter_step(dt, data_reg, trotter_order=1)
+trotter_routine = h_spin.get_trotter_step(dt, trotter_order=1)
 
 circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
@@ -95,7 +94,7 @@ circ.psi.draw(figsize=(12, 12), color={"PSI0", "H", "RX", "RZ", "CX"})
 
 # %%
 # Second-order Trotter
-trotter_routine = h_spin.get_trotter_step(dt, data_reg, trotter_order=2)
+trotter_routine = h_spin.get_trotter_step(dt, trotter_order=2)
 
 circ = qtn.Circuit(n_qubits)
 circ.apply_gates(trotter_routine)
@@ -125,7 +124,7 @@ def errors_trotter_slice(t_values, n_steps_values, trotter_order, ntype="fro"):
         for j in tqdm.tqdm(range(n_n), leave=False):
             circ = qtn.Circuit(n_qubits)
             dt = t_values[i] / n_steps_values[j]
-            trotter_slice = h_spin.get_trotter_step(dt, data_reg, trotter_order)
+            trotter_slice = h_spin.get_trotter_step(dt, trotter_order)
             for _ in range(n_steps_values[j]):
                 circ.apply_gates(trotter_slice)
             U_trotter = circ.get_uni().to_dense()
@@ -350,7 +349,7 @@ def fidelities_trotter_slice(t_values, n_steps_values, trotter_order):
         for j in tqdm.tqdm(range(n_n), leave=False):
             circ = circ0.copy()
             dt = t_values[i] / n_steps_values[j]
-            trotter_slice = h_spin.get_trotter_step(dt, data_reg, trotter_order)
+            trotter_slice = h_spin.get_trotter_step(dt, trotter_order)
             for _ in range(n_steps_values[j]):
                 circ.apply_gates(trotter_slice)
 

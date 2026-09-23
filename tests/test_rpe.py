@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import quimb.tensor as qtn
+import scipy.linalg
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.estimation import (
@@ -8,7 +10,7 @@ from qpe_toolbox.estimation import (
     robust_phase_estimation,
     rpe_update_theta,
 )
-from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
+from qpe_toolbox.hamiltonian import Hamiltonian, do_dmrg, heisenberg_hamiltonian
 
 
 def test_rpe():
@@ -16,10 +18,60 @@ def test_rpe():
     H = heisenberg_hamiltonian(n_qubits)
     E0, psi0 = do_dmrg(H)
     n_repetitions = 7
-    t0 = 1.0  # |E0| < pi, so t0 = 1 keeps the m=0 phase unambiguous
 
-    theta_list = robust_phase_estimation(H, psi0, n_repetitions, EXACT, EXACT, t0=t0)
-    assert abs(angular_distance(E0 * t0, theta_list[-1])) < 2**-n_repetitions
+    # |E0 * t0| < pi for both values, so the m=0 phase is unambiguous
+    for t0 in [1.0, 0.5]:
+        theta_list = robust_phase_estimation(
+            H, psi0, n_repetitions, EXACT, EXACT, t0=t0
+        )
+        assert abs(angular_distance(E0 * t0, theta_list[-1])) < 2**-n_repetitions
+
+
+def _product_formula(hamiltonian, terms_and_steps):
+    """Dense product of exp(-i dt h_j), applied in the given order."""
+    unitary = np.eye(2**hamiltonian.n_qubits)
+    for term, dt in terms_and_steps:
+        h = Hamiltonian([term], hamiltonian.n_qubits).to_dense()
+        unitary = scipy.linalg.expm(-1j * dt * h) @ unitary
+    return unitary
+
+
+def test_rpe_trotter():
+    # use custom Hamiltonian to get non-commuting terms even on 2 sites
+    # non-commuting terms: the Trotter eigenphase differs from E0 * t0 (by 1.5e-2)
+    # and between orders 1 and 2 (by 3.7e-3)
+    terms = [(0.7, "ZZ", [0, 1]), (0.5, "X", [0]), (0.4, "X", [1]), (0.3, "Z", [0])]
+    hamilt = Hamiltonian(terms, 2)
+    E0 = np.linalg.eigvalsh(hamilt.to_dense())[0]
+    t0 = 1.0
+    n_trotter_steps = 2
+    n_repetitions = 5
+
+    dt = t0 / n_trotter_steps
+    first_order = [(term, dt) for term in terms]
+    half_steps = [(term, dt / 2) for term in terms]
+    slices = {1: first_order, 2: half_steps + half_steps[::-1]}
+    for trotter_order, trotter_slice in slices.items():
+        unitary = np.linalg.matrix_power(
+            _product_formula(hamilt, trotter_slice), n_trotter_steps
+        )
+        eigvals, eigvecs = np.linalg.eig(unitary)
+        phases = -np.angle(eigvals)
+        k = np.argmin(angular_distance(phases, E0 * t0))
+        psi0 = qtn.MatrixProductState.from_dense(eigvecs[:, k])
+
+        theta_list = robust_phase_estimation(
+            hamilt,
+            psi0,
+            n_repetitions,
+            n_trotter_steps,
+            EXACT,
+            t0=t0,
+            trotter_order=trotter_order,
+        )
+        # psi0 is an eigenstate of the Trotterized unitary: with exact
+        # probabilities, RPE recovers its eigenphase up to float32 precision
+        assert angular_distance(phases[k], theta_list[-1]) < 1e-5
 
 
 def test_rpe_seed_deterministic():
@@ -53,5 +105,6 @@ def test_rpe_update_theta_matches_bruteforce():
 
 if __name__ == "__main__":
     test_rpe()
+    test_rpe_trotter()
     test_rpe_seed_deterministic()
     test_rpe_update_theta_matches_bruteforce()

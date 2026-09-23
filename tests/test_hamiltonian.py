@@ -11,6 +11,7 @@ from qpe_toolbox.hamiltonian import (
     Hamiltonian,
     chemistry_hamiltonian,
     heisenberg_hamiltonian,
+    trotter_evolution_gates,
 )
 
 h_str = """Hamiltonian(n_qubits=2, n_terms=3) with terms:
@@ -122,23 +123,21 @@ def test_U():
     assert np.isclose(dmrg.energy, eigvals[0], atol=tol)
     psi0_mps = dmrg.state
 
-    data_reg = list(range(1, n_qubits + 1))
-    U_gate = H.get_U_exact(t, data_reg, controls=[0])
+    U_gate = H.get_exact_unitary(t)
     Z = []
     for beta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
-        probs = circ.compute_marginal(where=[0])
+        probs = circ.compute_marginal([0])
         Z.append(probs[0] - probs[1])
     phi_ref = -np.angle(Z[0] + 1j * Z[1])
     assert np.isclose(phi_ref, t * dmrg.energy, atol=tol)
 
-    r = 1
-    dt = t / r
-    U_gate = [H.get_trotter_step(dt, data_reg, trotter_order=2)] * r
+    n_steps = 1
+    U_gate = list(trotter_evolution_gates(H, t, n_steps, trotter_order=2))
     Z = []
     for beta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
-        probs = circ.compute_marginal(where=[0])
+        probs = circ.compute_marginal([0])
         Z.append(probs[0] - probs[1])
     phi_ref = np.angle(Z[0] + 1j * Z[1])
     assert np.isclose(phi_ref, 1.6068383462530338, rtol=0, atol=1e-15)

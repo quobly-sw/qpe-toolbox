@@ -10,4 +10,8 @@
 
 from .chemistry import chemistry_hamiltonian, do_pyscf, make_qubit_hamiltonian
 from .hamiltonian import Hamiltonian, do_dmrg, heisenberg_hamiltonian
-from .trotterization import trotter_approx_as_MPO
+from .trotterization import (
+    trotter_approx_as_MPO,
+    trotter_evolution_gates,
+    trotter_evolution_powers,
+)
