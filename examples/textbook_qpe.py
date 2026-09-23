@@ -46,9 +46,9 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+import quimb.tensor as qtn
 import scipy.sparse.linalg as sla
 from IPython.display import display
-from quimb.tensor import MatrixProductState
 from tqdm import notebook as tqdm
 
 import qpe_toolbox.estimation as qpe
@@ -98,7 +98,7 @@ E0_dmrg, psi0_mps = do_dmrg(h_spin)
 print(f"E_DMRG : {E0_dmrg:.4f}")
 
 # %%
-F = abs(psi0_mps.H @ MatrixProductState.from_dense(psi0)) ** 2
+F = abs(psi0_mps.H @ qtn.MatrixProductState.from_dense(psi0)) ** 2
 print(f"1 - |<psi_DMRG|psi_ED>|^2 = {abs(1 - F):.4g}")
 
 # %% [markdown]
@@ -632,7 +632,7 @@ for n_qubits in tqdm.tqdm(nqb_list):
     E0 = eigvals[0]
     res["E0"].append(E0)
     psi0 = eigvecs[:, 0]
-    psi0_mps = MatrixProductState.from_dense(psi0)
+    psi0_mps = qtn.MatrixProductState.from_dense(psi0)
     E_target = E0 + 0.1
     size_interval = 2
 
@@ -770,7 +770,7 @@ E_o = []
 p_o = []
 for Omega in Omegas:
     psi_target = np.sqrt(Omega) * psi0 + np.sqrt(1 - Omega) * psi1
-    psi_target_mps = MatrixProductState.from_dense(psi_target)
+    psi_target_mps = qtn.MatrixProductState.from_dense(psi_target)
 
     initial_circ = make_circ(n_phase_bits, psi_target_mps)
     traces_o, energy_o = qpe.qpe_energy(

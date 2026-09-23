@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+import quimb.tensor as qtn
 from pyscf import gto
-from quimb.tensor import CircuitMPS
 
 import qpe_toolbox.estimation as qpe
 from qpe_toolbox.hamiltonian import chemistry_hamiltonian, do_dmrg
@@ -30,7 +30,7 @@ def test_select():
 
     select_gates = qpe.lcu_select_gates(H)
 
-    circ = CircuitMPS(psi0=Lpsi_mps)
+    circ = qtn.CircuitMPS(psi0=Lpsi_mps)
     for gate in select_gates:
         circ.apply_gate(gate)
 

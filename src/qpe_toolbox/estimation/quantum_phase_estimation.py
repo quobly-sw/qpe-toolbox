@@ -11,7 +11,7 @@ import time
 import warnings
 
 import numpy as np
-from quimb.tensor.circuit import parse_to_gate
+import quimb.tensor as qtn
 
 from qpe_toolbox import EXACT
 from qpe_toolbox.circuit import count_gates
@@ -207,7 +207,9 @@ def qpe_sample(
         if run_simulation:
             circ.apply_gate(*gate_id, gate_round=traces["gate_round"])
         else:
-            circ.append(parse_to_gate(*gate_id, gate_round=traces["gate_round"]))
+            circ.append(
+                qtn.circuit.parse_to_gate(*gate_id, gate_round=traces["gate_round"])
+            )
         traces["gate_round"] += 1
     traces["ctimes"].append(time.time() - st)
     traces["gates_count"] = count_gates(circ)
@@ -312,7 +314,9 @@ def qpe_first_stage(
         if run_simulation:
             circ.apply_gate("H", phase_reg[k], gate_round=c_round)
         else:
-            gates_list.append(parse_to_gate("H", phase_reg[k], gate_round=c_round))
+            gates_list.append(
+                qtn.circuit.parse_to_gate("H", phase_reg[k], gate_round=c_round)
+            )
     c_round += 1
     bd_list.append(circ.psi.max_bond())
     ctimes.append(time.time() - st)
@@ -330,7 +334,7 @@ def qpe_first_stage(
             )
         else:
             gates_list.append(
-                parse_to_gate(
+                qtn.circuit.parse_to_gate(
                     "PHASE", global_phase * 2**k, phase_reg[k], gate_round=c_round
                 )
             )
@@ -357,7 +361,7 @@ def qpe_first_stage(
                         )
                     else:
                         gates_list.append(
-                            parse_to_gate(
+                            qtn.circuit.parse_to_gate(
                                 *gate_id, controls=(phase_reg[k],), gate_round=c_round
                             )
                         )

@@ -15,7 +15,7 @@
 # %% [markdown]
 # # Variational Circuit Preparation II
 #
-# This script implements a local optimization to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Unlike the straightforward global fitting of the entire circuit (as in `circuit_preparation_opt.py`), this version performs a **sweeping algorithm** that optimizes the circuit layer by layer, sweeping from the bottom (first layer) to the top (last layer) and back.
+# This notebook implements a local optimization to prepare a quantum circuit that approximates the ground state of a given Hamiltonian. Unlike the straightforward global fitting of the entire circuit (as in [`circuit_preparation_opt`](./circuit_preparation_opt.ipynb)), this version performs a **sweeping algorithm** that optimizes the circuit layer by layer, sweeping from the bottom (first layer) to the top (last layer) and back.
 # The method is useful when the circuit is deep. By sequentially updating each layer while approximating the rest of the circuit with finite bond dimensions MPSs, we can efficiently achieve high fidelity with the target MPS.
 # Ref: Gibbs and Cincio, [Quantum 9, 1789 (2025)](https://doi.org/10.22331/q-2025-07-09-1789).
 #
@@ -38,11 +38,13 @@ os.environ["NUMBA_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
+# tn_fit is called many times per outer sweep below; silence its per-call progress bar.
+os.environ["TQDM_DISABLE"] = "1"
+
 import autoray
 import matplotlib.pyplot as plt
 import numpy as np
 import quimb.tensor as qtn
-from quimb.tensor import DMRG2
 
 from qpe_toolbox.circuit import ansatz_circuit_su4, tn_fit
 from qpe_toolbox.hamiltonian import Hamiltonian
@@ -64,10 +66,10 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 #
 # This approach is very similar to the DMRG sweep algorithm, but with the roles of the Hamiltonian and the unitary gates interchanged. It allows us to efficiently optimize deep circuits while keeping bond dimensions manageable.
 #
-# We run 1000 sweeps; the algorithm should converge to a state that closely approximates the ground state.
+# We run up to 1000 sweeps; the algorithm should converge to a state that closely approximates the ground state.
 
 # %% [markdown]
-# ### 1. Hamiltonian and DMRG Reference
+# ### Hamiltonian and DMRG Reference
 # We set up the 1D transverse-field Ising model:
 #
 # $$ H = g_x \sum_{i} X_i + g_{zz} \sum_{i} Z_i Z_{i+1}, $$
@@ -78,7 +80,6 @@ from qpe_toolbox.hamiltonian import Hamiltonian
 # %%
 ## hamiltonian
 n_qubits = 4
-list_paulis = ["I", "X", "Y", "Z"]
 gx, gzz = -1.1, -1.0
 terms = []
 for x in range(n_qubits):
@@ -89,15 +90,14 @@ ham = Hamiltonian(terms, n_qubits)
 mpo = ham.to_mpo()
 
 # Run DMRG to get the target state and energy.
-dmrg = DMRG2(mpo)
+dmrg = qtn.DMRG2(mpo)
 dmrg.solve(max_sweeps=16, tol=1e-8, bond_dims=64, verbosity=0)
 GS = dmrg.state
 dmrg_energy = np.real(dmrg.energy)
 print("*** DMRG reference energy:", dmrg_energy)
-print()
 
 # %% [markdown]
-# ### 2. Circuit Initialization and Layer Preparation
+# ### Circuit Initialization and Layer Preparation
 #
 # We build an ansatz circuit of a given `depth` (here 6). The circuit is a brick-wall of SU(4) gates.
 # We also build an initial product state `psi0 = |0...0>`.
@@ -131,10 +131,11 @@ for ii in range(depth - 1):
         tmp = tmp.gate_with_submpo(jj, transpose=False, max_bond=32, cutoff=1e-10)
     mpsK.append(tmp)
 
+
 # %% [markdown]
-# ### 3. Sweeping Optimization
+# ### Sweeping Optimization
 #
-# We perform a number of full sweeps (`sweep` from 0 to 499). Each sweep consists of two phases:
+# We perform full sweeps until the relative energy change drops below $10^{-8}$, or `n_sweeps_max` sweeps are reached. Each sweep consists of two phases:
 #
 # - **Sweep down**: from the top layer (`depth-1`) down to layer 0.
 #     - For a given layer `ii` (top to bottom), we construct a trial circuit `trial` from `mpsK[-1]` (which contains all layers below) and the gates of that layer.
@@ -149,8 +150,19 @@ for ii in range(depth - 1):
 # After each full sweep, we contract the full circuit with the MPO to compute the energy and the overlap with the DMRG state. This gives a measure of convergence.
 
 # %%
+def evaluate_fit(dmrg, mpo, tn):
+    ovlp = (dmrg.state.H & tn).contract()
+    tnH = tn.H
+    tn.align_(mpo, tnH)
+    energy_tn = tnH & mpo & tn
+    ene = autoray.do("real", energy_tn.contract(all))
+    err = np.abs(1 - ene / np.real(dmrg.energy))
+    infidelity = 1 - np.abs(ovlp) ** 2
+    return ene, err, infidelity
+
+
+# %%
 # Initialize lists to store convergence data
-sweep_numbers = []
 energy_errors = []
 infidelities = []
 energies = []
@@ -161,13 +173,15 @@ print("------------------------------------------------")
 
 ene_old = float("nan")
 ene = float("nan")
+n_sweeps_max = 1000
+sweep = 0
 
-n_sweeps = 1000
-for sweep in range(n_sweeps):
+while 1:
     ## Sweep down: optimize layers from top to bottom.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK (layers below) + gates of this layer.
-        trial = qtn.Circuit(psi0=mpsK.pop())
+        # tn_fit needs whole gates: the default 'auto-split-gate' may split low-rank ones
+        trial = qtn.Circuit(psi0=mpsK.pop(), gate_contract=False)
         gates = [gate for gate in circ_G if gate.round == depth - 1 - ii]
         for gate in gates:
             trial.apply_gate(gate)
@@ -181,7 +195,6 @@ for sweep in range(n_sweeps):
             steps=10,  # inner ALS sweeps per layer update
             tol=1e-12,
             contract_optimize="auto-hq",
-            progbar=False,
         )
 
         # Copy the optimized tensor data back into the master circuit tensors.
@@ -209,7 +222,8 @@ for sweep in range(n_sweeps):
     ## Sweep up: optimize layers from bottom to top.
     for ii in range(depth - 1):
         # Build trial circuit from current mpsK[-1] (which has all layers below) + gates of this layer.
-        trial = qtn.Circuit(psi0=mpsK[-1])
+        # tn_fit needs whole gates: the default 'auto-split-gate' may split low-rank ones
+        trial = qtn.Circuit(psi0=mpsK[-1], gate_contract=False)
         gates = [gate for gate in circ_G if gate.round == ii]
         for gate in gates:
             trial.apply_gate(gate)
@@ -223,7 +237,6 @@ for sweep in range(n_sweeps):
             steps=10,
             tol=1e-12,
             contract_optimize="auto-hq",
-            progbar=False,
         )
 
         # Copy optimized data back to master circuit.
@@ -250,35 +263,30 @@ for sweep in range(n_sweeps):
     # We contract the full circuit MPS `tn = circ_P` with the Hamiltonian MPO to compute the energy,
     # and also compute the overlap with the DMRG target state to get the fidelity.
     # These numbers indicate how well the circuit approximates the ground state.
-
     tn = circ_P
-    ovlp = (dmrg.state.H & tn).contract()
-    tnH = tn.H
-    tn.align_(mpo, tnH)
-    energy_tn = tnH & mpo & tn
-    ene = autoray.do("real", energy_tn.contract(all))
-    error = np.abs(1 - ene / dmrg_energy)
-    infidelity = 1 - np.abs(ovlp) ** 2
+    ene, error, infidelity = evaluate_fit(dmrg, mpo, tn)
 
     # Store data for plotting
-    sweep_numbers.append(sweep)
     energies.append(ene)
     energy_errors.append(error)
     infidelities.append(np.abs(infidelity))
 
     print(f"{sweep:5d}   {ene:12.8f}   {error:10.3e}   {infidelity:10.3e}")
+    sweep += 1
 
-    if abs(1 - ene / ene_old) < 1e-8:
+    if (sweep == n_sweeps_max) or (abs(1 - ene / ene_old) < 1e-8):
         break
     else:
         ene_old = ene
 
+sweep_numbers = np.arange(sweep)
+
 # %% [markdown]
-# ### 5. Plot Convergence
+# ### Plot Convergence
 # Plot energy error and infidelity versus sweep number.
 
 # %%
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5), layout="tight")
 
 ax1.semilogy(sweep_numbers, energy_errors, "b-", label="Energy error")
 ax1.set_xlabel("Sweep")
@@ -292,7 +300,4 @@ ax2.set_xlabel("Sweep")
 ax2.set_ylabel("Infidelity (1 - |<GS|ψ>|²)")
 ax2.set_title("Infidelity vs Sweep")
 ax2.grid(visible=True)
-ax2.legend()
-
-plt.tight_layout()
-plt.show()
+ax2.legend();
