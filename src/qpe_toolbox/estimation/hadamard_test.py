@@ -103,7 +103,7 @@ def run_hadamard_test(
         ``build_hadamard_test_circuit`` for the convention. A one-shot
         generator is consumed by this call; build a fresh one per call.
     phase_gate_angle : float
-        Phase angle :math:`\beta` applied to the ancilla qubit..
+        Phase angle :math:`\beta` applied to the ancilla qubit.
     n_shots : int or qpe_toolbox.EXACT
         Number of measurement shots. If ``EXACT``, probabilities are computed exactly,
         else probabilities are estimated by sampling.
