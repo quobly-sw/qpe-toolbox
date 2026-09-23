@@ -29,8 +29,6 @@ from .quantum_phase_estimation import (
     qpe_gate_list,
     qpe_sample,
     set_search_window,
-    trotter_evolution_gates,
-    trotter_evolution_powers,
 )
 from .robust_phase_estimation import (
     angular_distance,

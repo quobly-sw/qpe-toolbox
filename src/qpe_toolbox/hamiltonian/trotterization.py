@@ -419,3 +419,95 @@ def rotation_gates(term, dt, phys_reg):
             routine.append(("RX", -np.pi / 2, phys_reg[qubit]))
 
     return routine
+
+
+def trotter_evolution_gates(
+    hamiltonian, evolution_time, n_trotter_steps, *, trotter_order=1
+):
+    """
+    Build the gate sequence of one Trotterized evolution :math:`U(t)`.
+
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Evolution time ``t``.
+    n_trotter_steps : int
+        Number of Trotter steps, a positive integer. The Trotter step size is
+        ``dt = evolution_time / n_trotter_steps``.
+    trotter_order : int, default ``1``
+        Order of the Trotter decomposition.
+
+    Returns
+    -------
+    generator of :quimb-api:`Gate`
+        Lazily yields the gates of the Trotterized :math:`U(t)` on
+        data-register-local qubits, without controls, as expected by
+        ``qpe_circuit``, ``qpe_gates`` and the Hadamard test. The generator
+        is one-shot: it can be consumed only once.
+    """
+    trotter_slice = _trotter_slice(
+        hamiltonian, evolution_time, n_trotter_steps, trotter_order
+    )
+    return _repeat_gates(trotter_slice, n_trotter_steps)
+
+
+def trotter_evolution_powers(
+    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, *, trotter_order=1
+):
+    """
+    Build the Trotterized evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
+
+    The Trotter step size ``dt = evolution_time / n_trotter_steps`` is kept
+    constant across powers: power ``k`` uses ``n_trotter_steps * 2**k`` steps.
+
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Total evolution time ``t``.
+    n_trotter_steps : int
+        Number of Trotter steps for the ``U(t)`` evolution, a positive integer.
+    n_phase_bits : int
+        Number of phase estimation qubits.
+    trotter_order : int, default ``1``
+        Order of the Trotter decomposition.
+
+    Returns
+    -------
+    unitaries : list of generator of :quimb-api:`Gate`
+        ``unitaries[k]`` lazily yields the gates of the Trotterized
+        :math:`U(t \\, 2^k)` on data-register-local qubits, without controls,
+        as expected by ``qpe_circuit`` and ``qpe_gates``. Each generator is
+        one-shot: it can be consumed only once.
+    """
+    # dt = evolution_time / n_trotter_steps is constant across powers, so the
+    # Trotter step is built once and reused for every power.
+    trotter_slice = _trotter_slice(
+        hamiltonian, evolution_time, n_trotter_steps, trotter_order
+    )
+    return [
+        _repeat_gates(trotter_slice, n_trotter_steps * 2**k)
+        for k in range(n_phase_bits)
+    ]
+
+
+def _trotter_slice(hamiltonian, evolution_time, n_trotter_steps, trotter_order):
+    """Build one Trotter step's gates for ``dt = evolution_time / n_trotter_steps``."""
+    if not (isinstance(n_trotter_steps, (int, np.integer)) and n_trotter_steps > 0):
+        raise ValueError(
+            f"n_trotter_steps must be a positive integer, got {n_trotter_steps}"
+        )
+    dt = evolution_time / n_trotter_steps
+    return [
+        qtn.circuit.parse_to_gate(*gate_id)
+        for gate_id in hamiltonian.get_trotter_step(dt, trotter_order)
+    ]
+
+
+def _repeat_gates(gates, n_trotter_steps):
+    """Lazily yield ``n_trotter_steps`` repetitions of a parsed gate sequence."""
+    for _ in range(n_trotter_steps):
+        yield from gates

@@ -6,11 +6,12 @@ import quimb.tensor as qtn
 import scipy.sparse
 from pyscf import gto
 
-from qpe_toolbox.estimation import build_hadamard_test_circuit, trotter_evolution_gates
+from qpe_toolbox.estimation import build_hadamard_test_circuit
 from qpe_toolbox.hamiltonian import (
     Hamiltonian,
     chemistry_hamiltonian,
     heisenberg_hamiltonian,
+    trotter_evolution_gates,
 )
 
 h_str = """Hamiltonian(n_qubits=2, n_terms=3) with terms:
