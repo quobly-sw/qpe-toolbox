@@ -454,7 +454,7 @@ def trotter_evolution_gates(
 
 
 def trotter_evolution_powers(
-    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, *, trotter_order=1
+    hamiltonian, evolution_time, n_trotter_steps, n_powers, *, trotter_order=1
 ):
     """
     Build the Trotterized evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
@@ -470,8 +470,8 @@ def trotter_evolution_powers(
         Total evolution time ``t``.
     n_trotter_steps : int
         Number of Trotter steps for the ``U(t)`` evolution, a positive integer.
-    n_phase_bits : int
-        Number of phase estimation qubits.
+    n_powers : int
+        Number of powers to build, indexed by ``k = 0, ..., n_powers - 1``.
     trotter_order : int, default ``1``
         Order of the Trotter decomposition.
 
@@ -489,8 +489,7 @@ def trotter_evolution_powers(
         hamiltonian, evolution_time, n_trotter_steps, trotter_order
     )
     return [
-        _repeat_gates(trotter_slice, n_trotter_steps * 2**k)
-        for k in range(n_phase_bits)
+        _repeat_gates(trotter_slice, n_trotter_steps * 2**k) for k in range(n_powers)
     ]
 
 

@@ -211,8 +211,12 @@ def qpe_sample(
     phase_reg = list(range(n_phase_bits))
     st = time.time()
 
-    unitaries = _evolution_powers(
-        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+    unitaries = evolution_powers(
+        hamiltonian,
+        evolution_time,
+        n_trotter_steps,
+        n_phase_bits,
+        trotter_order=trotter_order,
     )
     traces, circ = qpe_circuit(
         initial_circ, unitaries, global_phase=global_phase, verbosity=verbosity
@@ -284,8 +288,12 @@ def qpe_gate_list(
     if n_trotter_steps is EXACT and savefile is not None:
         raise ValueError("Cannot write gates for exact time evolution")
 
-    unitaries = _evolution_powers(
-        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+    unitaries = evolution_powers(
+        hamiltonian,
+        evolution_time,
+        n_trotter_steps,
+        n_phase_bits,
+        trotter_order=trotter_order,
     )
     gates_list = list(qpe_gates(unitaries, global_phase=global_phase))
     gates_count = count_gates(gates_list)
@@ -345,8 +353,12 @@ def qpe_first_stage(
         Updated circuit with the first stage applied.
     """
     n_phase_bits = initial_circ.N - hamiltonian.n_qubits
-    unitaries = _evolution_powers(
-        hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+    unitaries = evolution_powers(
+        hamiltonian,
+        evolution_time,
+        n_trotter_steps,
+        n_phase_bits,
+        trotter_order=trotter_order,
     )
     return qpe_circuit(
         initial_circ,
@@ -357,7 +369,7 @@ def qpe_first_stage(
     )
 
 
-def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
+def exact_evolution_powers(hamiltonian, evolution_time, n_powers):
     """
     Build the exact evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
 
@@ -367,8 +379,8 @@ def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
         Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
     evolution_time : float
         Total evolution time ``t``.
-    n_phase_bits : int
-        Number of phase estimation qubits.
+    n_powers : int
+        Number of powers to build, indexed by ``k = 0, ..., n_powers - 1``.
 
     Returns
     -------
@@ -377,22 +389,50 @@ def exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits):
         :math:`U(t \\, 2^k) = e^{-i H t 2^k}` on data-register-local qubits,
         without controls, as expected by ``qpe_circuit`` and ``qpe_gates``.
     """
-    return [
-        [hamiltonian.get_U_exact(evolution_time * 2**k)] for k in range(n_phase_bits)
-    ]
+    return [[hamiltonian.get_U_exact(evolution_time * 2**k)] for k in range(n_powers)]
 
 
-def _evolution_powers(
-    hamiltonian, evolution_time, n_trotter_steps, n_phase_bits, trotter_order
+def evolution_powers(
+    hamiltonian, evolution_time, n_trotter_steps, n_powers, *, trotter_order=1
 ):
-    """Dispatch between exact and Trotterized evolution unitaries."""
+    """
+    Build the evolution unitaries :math:`U(t \\, 2^k)` for the QPE sequence.
+
+    Dispatch to ``exact_evolution_powers`` or ``trotter_evolution_powers``
+    depending on ``n_trotter_steps``.
+
+    Parameters
+    ----------
+    hamiltonian : Hamiltonian
+        Hamiltonian object from the QPE-Toolbox ``Hamiltonian`` class.
+    evolution_time : float
+        Total evolution time ``t``.
+    n_trotter_steps : int or qpe_toolbox.EXACT
+        Number of Trotter steps for the ``U(t)`` evolution; multiplied by
+        ``2**k`` for power ``k`` to keep the Trotter step size constant.
+        Use ``EXACT`` for exact time evolution.
+    n_powers : int
+        Number of powers to build, indexed by ``k = 0, ..., n_powers - 1``.
+        The number of phase bits in textbook QPE, of repetitions in RPE.
+    trotter_order : int, default ``1``
+        Order of the Trotter decomposition. Ignored when
+        ``n_trotter_steps is EXACT``.
+
+    Returns
+    -------
+    unitaries : list of iterable of :quimb-api:`Gate`
+        ``unitaries[k]`` holds the gates of :math:`U(t \\, 2^k)` on
+        data-register-local qubits, without controls, as expected by
+        ``qpe_circuit`` and ``qpe_gates``. Trotterized entries are one-shot
+        generators.
+    """
     if n_trotter_steps is EXACT:
-        return exact_evolution_powers(hamiltonian, evolution_time, n_phase_bits)
+        return exact_evolution_powers(hamiltonian, evolution_time, n_powers)
     return trotter_evolution_powers(
         hamiltonian,
         evolution_time,
         n_trotter_steps,
-        n_phase_bits,
+        n_powers,
         trotter_order=trotter_order,
     )
 

@@ -13,7 +13,7 @@ import numpy as np
 import quimb.tensor as qtn
 
 from .hadamard_test import run_hadamard_test
-from .quantum_phase_estimation import _evolution_powers
+from .quantum_phase_estimation import evolution_powers
 
 
 def robust_phase_estimation(
@@ -100,8 +100,8 @@ def robust_phase_estimation(
     if verbosity >= 1:
         print(f"m \t {'phi_m':<6} \t {'theta_m':<6} \t {'time (s)'}")
 
-    unitaries = _evolution_powers(
-        hamiltonian, t0, n_trotter_steps, n_repetitions, trotter_order
+    unitaries = evolution_powers(
+        hamiltonian, t0, n_trotter_steps, n_repetitions, trotter_order=trotter_order
     )
     for m in range(n_repetitions):
         phi_m = rpe_get_hadamard_output(
