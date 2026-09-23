@@ -182,7 +182,7 @@ class Hamiltonian:
         """
         return self.to_builder().build_mpo()
 
-    def get_U_exact(self, evolution_time, *, phys_reg=None, controls=None):
+    def get_exact_unitary(self, evolution_time, *, phys_reg=None, controls=None):
         """
         Construct the exact time-evolution operator as a quantum gate.
 
@@ -190,8 +190,6 @@ class Hamiltonian:
 
         .. math::
             U(t) = e^{-i H t}
-
-        using dense matrix exponentiation.
 
         Parameters
         ----------

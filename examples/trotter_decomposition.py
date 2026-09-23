@@ -20,7 +20,7 @@
 #
 # ## Introduction
 #
-# We start by introducing the general idea of Trotterization. We would like to compute the exponential of an operator $H$. For small systems, it can be computed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_U_exact` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems, however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
+# We start by introducing the general idea of Trotterization. We would like to compute the exponential of an operator $H$. For small systems, it can be computed exactly by $\texttt{quimb}$ or $\texttt{scipy}$ linear algebra methods. In the $\texttt{qpe-toolbox}$, the method `get_exact_unitary` of the `Hamiltonian` class returns the quantum gate implementing the exact time evolution using $\texttt{quimb}$'s `expm` matrix exponentiation routine. For larger systems, however, computing the exact exponential is too expensive and we need to use approximations such as Trotterization.
 #
 # Let us decompose the operator as $H = A + B$. In practice, we decompose the Hamiltonian into a sum of operators whose exponentiation can easily be implemented, e.g. Pauli strings. When $A$ and $B$ commute, as scalars do, the exponential of the sum is the product of exponentials:
 #

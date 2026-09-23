@@ -117,7 +117,7 @@ E0, psi0 = do_dmrg(H)
 
 # %%
 t0 = 1.0  # equivalent to Hamiltonian scaling factor
-exact_unitary = H.get_U_exact(t0)
+exact_unitary = H.get_exact_unitary(t0)
 
 n_shots = EXACT  # exact computation (no sampling)
 
@@ -281,12 +281,14 @@ t0 = 1.0
 theta_exact = E0 * t0
 
 # m = 0, evolution time = t0 * 2**0
-phi_0 = qpe.rpe_get_hadamard_output(psi0, H.get_U_exact(t0), n_shots, rng=rng)
+phi_0 = qpe.rpe_get_hadamard_output(psi0, H.get_exact_unitary(t0), n_shots, rng=rng)
 theta_0 = phi_0
 
 m = 1
 # m = 1, evolution time = t0 * 2**m
-phi_1 = qpe.rpe_get_hadamard_output(psi0, H.get_U_exact(t0 * 2**m), n_shots, rng=rng)
+phi_1 = qpe.rpe_get_hadamard_output(
+    psi0, H.get_exact_unitary(t0 * 2**m), n_shots, rng=rng
+)
 possible_phases_looped = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
 # candidate phases, wrapped into (-pi, pi]
 possible_phases = (possible_phases_looped + np.pi) % (2 * np.pi) - np.pi

@@ -21,7 +21,7 @@ The assembled circuit places two contiguous registers, phase first:
   physical register; the generic ``qpe_circuit`` layer works in data-register
   local indices ``[0, n_data)`` and shifts them past the phase register.
 
-The Hamiltonian methods ``get_U_exact`` / ``get_trotter_step`` build gates on
+The Hamiltonian methods ``get_exact_unitary`` / ``get_trotter_step`` build gates on
 the **physical register** ``phys_reg`` -- the ``n_qubits`` qubits the
 Hamiltonian acts on. Here ``phys_reg`` coincides with the data register, so the
 default ``phys_reg = range(n_qubits)`` is used. The distinction only matters
@@ -389,7 +389,9 @@ def exact_evolution_powers(hamiltonian, evolution_time, n_powers):
         :math:`U(t \\, 2^k) = e^{-i H t 2^k}` on data-register-local qubits,
         without controls, as expected by ``qpe_circuit`` and ``qpe_gates``.
     """
-    return [[hamiltonian.get_U_exact(evolution_time * 2**k)] for k in range(n_powers)]
+    return [
+        [hamiltonian.get_exact_unitary(evolution_time * 2**k)] for k in range(n_powers)
+    ]
 
 
 def evolution_powers(

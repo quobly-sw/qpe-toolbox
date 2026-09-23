@@ -123,7 +123,7 @@ def test_U():
     assert np.isclose(dmrg.energy, eigvals[0], atol=tol)
     psi0_mps = dmrg.state
 
-    U_gate = H.get_U_exact(t)
+    U_gate = H.get_exact_unitary(t)
     Z = []
     for beta in [0, -np.pi / 2]:
         circ = build_hadamard_test_circuit(psi0_mps, U_gate, beta)
