@@ -85,7 +85,7 @@ def qpe_energy(
     -------
     traces : dict
         Dictionary with computation information, including timing, bond dimensions,
-        gate counts, and highest probability phase values.
+        gate counts, and the phase values sorted by decreasing probability.
     energy : float
         Estimated energy eigenvalue in physical units (Pauli eigenvalue
         plus ``hamiltonian.e_const`` if present).
@@ -123,13 +123,13 @@ def qpe_energy(
     )
 
     probs_flat = np.ravel(probs).astype(float)
-    first_thetas = [(i, probs_flat[i]) for i in probs_flat.argsort()[::-1][:5]]
-    highest_prob_state, highest_prob = first_thetas[0]
-    traces["first_thetas"] = first_thetas
-    traces["prob"] = float(highest_prob)  # float here is for JSON
+    sorted_thetas = [(i, probs_flat[i]) for i in probs_flat.argsort()[::-1]]
+    highest_prob_state, highest_prob = sorted_thetas[0]
+    traces["thetas"] = sorted_thetas
+    traces["prob"] = highest_prob
 
     if verbosity >= 1:
-        for m, p in first_thetas:
+        for m, p in sorted_thetas[:5]:
             print(
                 f"{m:b}".zfill(n_phase_bits),
                 f"|{m}>",
