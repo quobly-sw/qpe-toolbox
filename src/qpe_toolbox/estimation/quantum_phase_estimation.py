@@ -195,6 +195,8 @@ def qpe_sample(
     - To obtain the gate list without simulating the circuit (resource
       analysis), use ``qpe_gate_list``.
     - The QPE quantum circuit can be recovered as ``traces["circuit"]``.
+    - ``traces["gates_count"]`` covers the whole circuit, including any gates
+      carried by ``initial_circ``; circuits built by ``make_circ`` carry none.
     - Whether the circuit is contracted lazily or eagerly is set by the *class*
       of ``initial_circ``: a :quimb-api:`Circuit` accumulates an uncontracted
       tensor network that the final ``compute_marginal`` contracts exactly
@@ -243,8 +245,9 @@ def qpe_gate_list(
     """
     Build the QPE gate list for a Hamiltonian evolution without simulating it.
 
-    This produces the same gate sequence as ``qpe_sample`` but skips the tensor
-    network simulation; use it for resource analysis and circuit serialization.
+    This produces the same QPE gate sequence as ``qpe_sample``, excluding any
+    gates already present in its ``initial_circ``, and skips the tensor network
+    simulation; use it for resource analysis and circuit serialization.
 
     Parameters
     ----------
