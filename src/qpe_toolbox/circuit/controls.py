@@ -30,10 +30,11 @@ def add_gate_controls(gates, controls, *, qubit_shift=0, gate_round=None):
         Gate round assigned to each copy. When ``None`` the existing round is
         left untouched.
 
-    Returns
-    -------
-    controlled_gates : list of :quimb-api:`Gate`
-        New list of gate objects with the additional controls.
+    Yields
+    ------
+    controlled_gate : :quimb-api:`Gate`
+        New gate object with the additional controls. The generator is
+        one-shot: wrap it in ``list`` to iterate more than once.
 
     Notes
     -----
@@ -43,14 +44,10 @@ def add_gate_controls(gates, controls, *, qubit_shift=0, gate_round=None):
     """
     controls = tuple(controls)
     extra = {} if gate_round is None else {"round": gate_round}
-    controlled_gates = []
     for g in gates:
         qubits = tuple(k + qubit_shift for k in g.qubits)
         base = () if g.controls is None else tuple(k + qubit_shift for k in g.controls)
-        controlled_gates.append(
-            g.copy_with(qubits=qubits, controls=(*base, *controls), **extra)
-        )
-    return controlled_gates
+        yield g.copy_with(qubits=qubits, controls=(*base, *controls), **extra)
 
 
 def shift_control_gates(gates, m_aux, k_ctrl, *, gate_round=None):
@@ -77,8 +74,9 @@ def shift_control_gates(gates, m_aux, k_ctrl, *, gate_round=None):
 
     Returns
     -------
-    controlled_gates : list of :quimb-api:`Gate`
-        New list of gate objects with shifted qubit indices and added control.
+    controlled_gates : generator of :quimb-api:`Gate`
+        New gate objects with shifted qubit indices and added control. The
+        generator is one-shot: wrap it in ``list`` to iterate more than once.
 
     Raises
     ------

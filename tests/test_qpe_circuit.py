@@ -140,6 +140,11 @@ def test_add_gate_controls():
     assert cg3.round == 5
     assert g3.qubits == (3,) and g3.controls == (1,)
 
+    # the returned generator is one-shot
+    controlled = add_gate_controls([g], [0])
+    assert len(list(controlled)) == 1
+    assert list(controlled) == []
+
 
 if __name__ == "__main__":
     test_qpe_circuit_phase_gate()
