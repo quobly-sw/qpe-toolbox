@@ -132,44 +132,58 @@ def test_add_cqubit_mpo():
         add_cqubit_mpo(two_site_u(), "sideways")
 
 
-def test_controlled_mpo_single_aux_qubit():
-    # a one-qubit auxiliary register sits on the boundary tensor, which has only
-    # three legs; this is the m_ph = 1 case of LCU QPE
-    def id_times_u():
+def test_controlled_mpo():
+    # U = S+ ⊗ Z, preceded or followed by the identity on the control qubit
+    u_dense = np.kron(SP, Z)
+    eye = np.eye(2, dtype=complex)
+
+    def id_then_u():
         return qtn.MatrixProductOperator(
-            [
-                np.eye(2, dtype=complex).reshape(1, 2, 2),
-                SP.reshape(1, 1, 2, 2),
-                Z.reshape(1, 2, 2),
-            ]
+            [eye.reshape(1, 2, 2), SP.reshape(1, 1, 2, 2), Z.reshape(1, 2, 2)]
         )
 
-    u_dense = np.kron(SP, Z)
+    def u_then_id():
+        return qtn.MatrixProductOperator(
+            [SP.reshape(1, 2, 2), Z.reshape(1, 1, 2, 2), eye.reshape(1, 2, 2)]
+        )
+
     for ctrl, proj, anti in ((0, P0, P1), (1, P1, P0)):
-        res = controlled_mpo(id_times_u(), [1, 2], [0], 0, ctrl=ctrl).to_dense()
+        # control on the first site, whose tensor has only three legs
+        res = controlled_mpo(id_then_u(), 0, ctrl=ctrl).to_dense()
         assert np.allclose(res, np.kron(proj, u_dense) + np.kron(anti, np.eye(4)))
+
+        # control on the last site, likewise a boundary tensor
+        res = controlled_mpo(u_then_id(), 2, ctrl=ctrl).to_dense()
+        assert np.allclose(res, np.kron(u_dense, proj) + np.kron(np.eye(4), anti))
+
+
+def test_controlled_mpo_interior_control():
+    # control on an interior site, whose tensor has four legs
+    eye = np.eye(2, dtype=complex)
+    mpo = qtn.MatrixProductOperator(
+        [SP.reshape(1, 2, 2), eye.reshape(1, 1, 2, 2), Z.reshape(1, 2, 2)]
+    )
+    res = controlled_mpo(mpo, 1).to_dense()
+    expected = np.kron(np.kron(SP, P1), Z) + np.kron(np.kron(eye, P0), eye)
+    assert np.allclose(res, expected)
 
 
 def test_controlled_mpo_guards():
-    # physical register must sit entirely above the auxiliary register
-    with pytest.raises(ValueError, match="min\\(phys_reg\\) > max\\(aux_reg\\)"):
-        controlled_mpo(qtn.MPO_identity(2), [0], [1], 0)
-
-    # an interior auxiliary tensor must carry trivial bonds on both sides
+    # the control tensor must carry trivial bonds on both sides
     eye = np.eye(2, dtype=complex)
     zero = np.zeros((2, 2), dtype=complex)
     mpo_wide = qtn.MatrixProductOperator(
         [np.array([eye, zero]), np.array([[eye], [zero]]), eye.reshape(1, 2, 2)]
     )
     with pytest.raises(ValueError, match="Invalid MPO tensor shape"):
-        controlled_mpo(mpo_wide, [2], [0, 1], 0)
+        controlled_mpo(mpo_wide, 1)
 
-    # the auxiliary tensor must be the identity
+    # the control tensor must be the identity
     mpo_bad = qtn.MatrixProductOperator(
-        [np.eye(2).reshape(1, 2, 2), X.reshape(1, 1, 2, 2), np.eye(2).reshape(1, 2, 2)]
+        [eye.reshape(1, 2, 2), X.reshape(1, 1, 2, 2), eye.reshape(1, 2, 2)]
     )
-    with pytest.raises(ValueError, match="Invalid last MPO tensor"):
-        controlled_mpo(mpo_bad, [2], [1], 0)
+    with pytest.raises(ValueError, match="Invalid control MPO tensor"):
+        controlled_mpo(mpo_bad, 1)
 
 
 # run
@@ -179,5 +193,6 @@ if __name__ == "__main__":
     test_state_preparation_mpo()
     test_kron_weird_shapes()
     test_add_cqubit_mpo()
-    test_controlled_mpo_single_aux_qubit()
+    test_controlled_mpo()
+    test_controlled_mpo_interior_control()
     test_controlled_mpo_guards()

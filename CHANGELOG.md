@@ -23,6 +23,11 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ### Changed
 
+- **Breaking:** `controlled_mpo` no longer takes `phys_reg` and `aux_reg`:
+  its signature is now `controlled_mpo(mpo, k_ctrl, *, ctrl=1)`. Both registers were
+  redundant, the control site and the MPO length being enough to build the result.
+  The register ordering restriction is gone with them, so the control qubit may now
+  sit anywhere in the MPO rather than below every physical qubit.
 - **Breaking:** `qpe_sample`, `qpe_first_stage` and `qpe_energy` no longer accept the output-mode flags `run_simulation` / `write_gates`; use `qpe_gate_list` for the gate-tracking and serialization mode.
 - **Breaking:** the Trotter discretization is now specified as an integer number of steps `n_trotter_steps` instead of a step size `dt` (computed internally as `dt = evolution_time / n_trotter_steps`). `qpe_sample` and `qpe_first_stage` replace `dt` with `n_trotter_steps`; `qpe_energy` and `robust_phase_estimation` rename their `n_steps` argument to `n_trotter_steps`.
 - **Breaking:** the Hadamard test (`build_hadamard_test_circuit`, `run_hadamard_test`) is now built on `qpe_circuit` and takes the unitary in the framework convention (argument `U_gate` renamed to `unitary`): either a single gate or an iterable of uncontrolled gates on data-register-local qubit indices. Their phase-rotation argument `theta` is renamed to `phase_gate_angle`. Both functions, as well as `rpe_get_hadamard_output`, now expose the underlying `CircuitMPS` truncation knobs `cutoff` and `max_bond`.
@@ -64,9 +69,10 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ### Fixed
 
-- `controlled_mpo`: the auxiliary tensor was required to be an interior tensor with
-  four legs, which rejected a single-qubit auxiliary register since its tensor sits
-  at the start of the MPO and has only three. LCU QPE with one phase qubit
+- `controlled_mpo`: the shape and identity checks were applied to the last auxiliary
+  site instead of the control site `k_ctrl` that is actually replaced, and required
+  an interior tensor with four legs. A single-qubit auxiliary register sits at the
+  start of the MPO and has only three, so LCU QPE with one phase qubit
   (`run_qpe_lcu_walk_operator` with `m_ph=1`) raised `ValueError: Invalid MPO tensor
   shape` instead of running.
 - `draw_layered_expval`: two-qubit layer labels were indexed in the opposite

@@ -291,23 +291,19 @@ def add_cqubit_mpo(mpo, location):
 ### control on one qubit being in a given value
 
 
-def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
+def controlled_mpo(mpo, k_ctrl, *, ctrl=1):
     """
-    Construct an MPO controlled on an auxiliary qubit being in a given state.
+    Construct an MPO controlled on one of its qubits being in a given state.
 
-    The MPO is assumed to be of the form ``Id ⊗ U``, where ``Id`` acts on the
-    auxiliary register and ``U`` acts on the physical register.
+    The control qubit must carry the identity in ``mpo``, which is replaced by a
+    projector; the rest of ``mpo`` becomes the controlled operation.
 
     Parameters
     ----------
     mpo : :quimb-api:`MatrixProductOperator`
-        Input MPO in the form ``Id ⊗ U``.
-    phys_reg : list[int]
-        Indices of the physical register qubits.
-    aux_reg : list[int]
-        Indices of the auxiliary (control) register qubits.
+        Input MPO, acting as the identity on site ``k_ctrl``.
     k_ctrl : int
-        Index of the control qubit relative to ``aux_reg``.
+        Site index of the control qubit.
     ctrl : int, default ``1``
         Control value (``0`` or ``1``) conditioning the operation.
 
@@ -319,35 +315,27 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
     Raises
     ------
     ValueError
-        If the register ordering assumption is violated.
-
-    Notes
-    -----
-    This implementation assumes that all auxiliary-register tensors initially
-    correspond to identity operators.
+        If ``mpo`` does not factorize as the identity on site ``k_ctrl``.
     """
     # make sure indices of each tensor in the MPO are in the order left, right, up, down
     mpo.permute_arrays("lrud")
 
     sites = list(mpo.gen_sites_present())
-    if phys_reg[0] < aux_reg[-1]:
-        raise ValueError("only implemented for min(phys_reg) > max(aux_reg)")
-    # the first tensor of the MPO has no left bond, hence only 3 legs
-    shape_aux = (1,) * (aux_reg[-1] != 0) + (1, 2, 2)
-    if mpo[sites[aux_reg[-1]]].data.shape != shape_aux:
+    # the control tensor is replaced by a projector, which is only valid if the MPO
+    # factorizes there: trivial bonds on both sides and the identity acting on it
+    sh = mpo[sites[k_ctrl]].data.shape
+    if sh[:-2] != (1,) * (len(sh) - 2):
         raise ValueError("Invalid MPO tensor shape")
-    if not np.allclose(mpo[sites[aux_reg[-1]]].data, np.eye(2), atol=1e-12):
-        raise ValueError("Invalid last MPO tensor")
+    if not np.allclose(mpo[sites[k_ctrl]].data, np.eye(2), atol=1e-12):
+        raise ValueError("Invalid control MPO tensor")
 
     projectors = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]], dtype=mpo.dtype)
     arrays1 = [mpo[s].data for s in sites]
 
     # due to quimb data structure, need to access tensor.data to avoid aliasing
-    mpo2 = qtn.MPO_identity(len(phys_reg + aux_reg), dtype=mpo.dtype)
+    mpo2 = qtn.MPO_identity(len(sites), dtype=mpo.dtype)
     arrays2 = [mpo2[s].data for s in sites]
 
-    # first site has only 3 legs
-    sh = (1,) * (k_ctrl != aux_reg[0]) + (1, 2, 2)
     arrays1[sites[k_ctrl]] = projectors[ctrl].reshape(sh)
     arrays2[sites[k_ctrl]] = projectors[(ctrl + 1) % 2].reshape(sh)
 
