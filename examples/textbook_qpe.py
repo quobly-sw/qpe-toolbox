@@ -373,7 +373,7 @@ traces, energy = qpe.qpe_energy(
 
 # %%
 prob_1 = traces["prob"]
-theta_1 = traces["first_thetas"][0][0] * 1 / 2**n_phase_bits
+theta_1 = traces["thetas"][0][0] * 1 / 2**n_phase_bits
 energy_1 = -size_interval * theta_1 + E_target + size_interval / 2
 
 print("exact energy =", E0)
@@ -381,8 +381,8 @@ print(f"size_interval / 2**(m+1) = {size_interval / 2 ** (n_phase_bits + 1)}")
 print(f"\nBest guess = {energy_1} with proba {prob_1:.4f}")
 print(f"error = {E0 - energy_1:.4f}")
 
-prob_2 = traces["first_thetas"][1][1]
-theta_2 = traces["first_thetas"][1][0] * 1 / 2**n_phase_bits
+prob_2 = traces["thetas"][1][1]
+theta_2 = traces["thetas"][1][0] * 1 / 2**n_phase_bits
 energy_2 = -size_interval * 0.5 + E_target + size_interval / 2
 print(f"Best guess = {energy_2} with proba {prob_2:.4f}")
 print(f"error = {E0 - energy_2:.4f}")

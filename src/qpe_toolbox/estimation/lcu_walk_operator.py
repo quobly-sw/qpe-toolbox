@@ -500,7 +500,8 @@ def qpe_first_stage_walk(
             RL_mpo, phys_reg=regs["L"] + regs["phys"], aux_reg=regs["phase"], k_ctrl=k
         )
         cRLk_mpo.compress(cutoff=cutoff)
-        cSELECTk = shift_control_gates(select_gates, m_aux=m_ph, k_ctrl=k)
+        # consumed once per repetition below, so the generator must be materialized
+        cSELECTk = list(shift_control_gates(select_gates, m_aux=m_ph, k_ctrl=k))
         for _ in range(2**k):
             # W
             ## SELECT

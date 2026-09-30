@@ -9,76 +9,42 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ### Added
 
-- `transpile_mpo_to_circuit`: convenience wrapper chaining `init_cost_tn`,
-  `find_transfer_structure`, `build_first_sweep` and `optimize_single_gate_update`
-  to fit a brickwall circuit ansatz to a reference MPO in one call.
-- `init_cost_tn` and `transpile_mpo_to_circuit` are now re-exported from
-  `qpe_toolbox.circuit`.
+- Generic QPE circuit construction from arbitrary per-phase-qubit unitaries: `qpe_circuit` (with an optional `with_iqft` flag to stop after the controlled unitaries, i.e. the QPE first stage) and `qpe_gates` in the `estimation` module. Each power `U^(2^k)` is supplied as an independent gate list (possibly lazy), enabling non-squaring implementations such as Shor's algorithm.
+- `exact_evolution_powers` and `trotter_evolution_powers` to build the controlled unitaries from a `Hamiltonian`, and `evolution_powers` dispatching between them according to `n_trotter_steps`.
+- `qpe_gate_list` to build the QPE gate list without simulation, for resource analysis and serialization; gates are written to disk when its `savefile` argument is set.
+- `trotter_evolution_gates` to build the gate sequence of a single Trotterized evolution `U(t)`.
+- `add_gate_controls` in the `circuit` module, lazily yielding the controlled gates.
+- `Hamiltonian.to_sparse_matrix` returning the Hamiltonian as a SciPy sparse matrix.
+- `transpile_mpo_to_circuit`: convenience wrapper chaining `init_cost_tn`, `find_transfer_structure`, `build_first_sweep` and `optimize_single_gate_update` to fit a brickwall circuit ansatz to a reference MPO in one call.
+- `init_cost_tn` and `transpile_mpo_to_circuit` are now re-exported from `qpe_toolbox.circuit`.
 - `state_preparation_mpo` is now re-exported from `qpe_toolbox.tensor`.
 - `trotter_approx_as_MPO` is now re-exported from `qpe_toolbox.hamiltonian`.
-- `optimize_single_gate_update` / `transpile_mpo_to_circuit`: keyword-only
-  `optimize` argument selecting the contraction strategy of each gate's local
-  environment.
+- `optimize_single_gate_update` / `transpile_mpo_to_circuit`: keyword-only `optimize` argument selecting the contraction strategy of each gate's local environment.
 
 ### Changed
 
-- `init_cost_tn`: replaced `seed` (int) with an `rng` (`numpy.random.Generator`)
-  argument, consistent with the rest of the codebase.
-- Trotter-Suzuki MPO functions (`trotter_approx_as_MPO`,
-  `trotter1_approx_as_MPO`, `trotter2_approx_as_MPO`, `trotter4_approx_as_MPO`,
-  `exp_Pauli_string_as_MPO`) moved from `qpe_toolbox.circuit.mpo_circuit_transpilation`
-  to `qpe_toolbox.hamiltonian.trotterization`, and `rotation_gates` moved there from
-  `qpe_toolbox.hamiltonian.hamiltonian`. `state_preparation_mpo` moved to
-  `qpe_toolbox.tensor.mpomps_tools`. Importing the Trotter functions or
-  `state_preparation_mpo` from `qpe_toolbox.circuit.mpo_circuit_transpilation` now
-  raises `ImportError`; `rotation_gates` can still be imported from its old module.
-- `trotter_approx_as_MPO`: renamed `order` to `trotter_order`, consistent with
-  `Hamiltonian.get_trotter_step` and every QPE/RPE function in the codebase. `dt`
-  is now positional, and `trotter_order`, `cutoff` and `max_bond` default to `1`,
-  `1e-10` and `None`.
-- `trotter1_approx_as_MPO` / `trotter2_approx_as_MPO` / `trotter4_approx_as_MPO`:
-  take a `Hamiltonian` and a positional `dt` instead of `ham_terms, n_qubits`
-  and a keyword-only `dt`. `cutoff` and `max_bond` default to `1e-10` and `None`.
-- `exp_Pauli_string_as_MPO`: signature changed from `(ham_term, n_qubits, *, theta)`
-  to `(term, dt, n_qubits)`, and it now builds `exp(-i * dt * coeff * P)`, matching
-  `rotation_gates` and the Trotter functions: pass `dt = -theta` to recover the old
-  `exp(i * theta * coeff * P)`. It also raises `ValueError` if a qubit is repeated
-  or out of range.
-- `state_preparation_mpo`: raises `ValueError` unless the MPS arrays are in `'lpr'`
-  order (as returned by `DMRG2`), instead of silently building a wrong MPO.
-- `optimize_single_gate_update`: now returns `(cost_tn, contracted_envs, overlap)`,
-  where `overlap` is normalized by `2**n_qubits`.
-- `mpo_circuit_transpilation` helpers: `update_dict_contr_envs` renamed to
-  `update_contracted_envs`; it and `update_cost_tn` take a single gate tensor
-  instead of a list. Arguments `dict_transf`, `dict_contr_envs` and `x` renamed to
-  `transfer_structure`, `contracted_envs` and `site_index`.
-- `tn_fit`: `tags`, `steps`, `tol` and `contract_optimize` are now keyword-only. A
-  progress bar is always shown; set `TQDM_DISABLE=1` before importing `tqdm` to
-  silence it. Raises `TypeError` on parametrized tensors, and `ValueError` if
-  `tags` selects anything other than whole two-qubit gates (e.g. gates split by
-  quimb's default `gate_contract`). `tags=None` is no longer supported,
-  as it never worked on a circuit state.
-- `robust_phase_estimation`: replaced `epsilon` with `n_repetitions`, removed
-  `sign_E0`, added an `rng` argument for deterministic sampling, added a `t0`
-  argument setting the base evolution time, and changed the `trotter_order`
-  default from 2 to 1. The estimated phase is now `E0 * t0`, so the
-  energy is recovered as `theta / t0`. The returned list now has length
-  `n_repetitions` (no leading placeholder).
-- `run_hadamard_test` / `rpe_get_hadamard_output`: replaced `seed` with an
-  `rng` (`numpy.random.Generator`) argument.
-- `build_hadamard_test_circuit` / `run_hadamard_test`: renamed the `theta`
-  argument to `phase_gate_angle`.
-- `rpe_get_hadamard_output`: renamed the `m` argument to `evolution_time`. It
-  now takes the evolution time itself instead of the exponent `m`; callers
-  passing `m` positionally must pass `2**m` to keep the previous behaviour.
+- **Breaking:** `qpe_sample`, `qpe_first_stage` and `qpe_energy` no longer accept the output-mode flags `run_simulation` / `write_gates`; use `qpe_gate_list` for the gate-tracking and serialization mode.
+- **Breaking:** the Trotter discretization is now specified as an integer number of steps `n_trotter_steps` instead of a step size `dt` (computed internally as `dt = evolution_time / n_trotter_steps`). `qpe_sample` and `qpe_first_stage` replace `dt` with `n_trotter_steps`; `qpe_energy` and `robust_phase_estimation` rename their `n_steps` argument to `n_trotter_steps`.
+- **Breaking:** the Hadamard test (`build_hadamard_test_circuit`, `run_hadamard_test`) is now built on `qpe_circuit` and takes the unitary in the framework convention (argument `U_gate` renamed to `unitary`): either a single gate or an iterable of uncontrolled gates on data-register-local qubit indices. Their phase-rotation argument `theta` is renamed to `phase_gate_angle`. Both functions, as well as `rpe_get_hadamard_output`, now expose the underlying `CircuitMPS` truncation knobs `cutoff` and `max_bond`.
+- **Breaking:** `rpe_get_hadamard_output` now takes a prebuilt `unitary` (a single gate or an iterable of gates) together with `n_shots`, instead of building the evolution from the Hamiltonian and an evolution time.
+- **Breaking:** `Hamiltonian.get_U_exact` is renamed `Hamiltonian.get_exact_unitary`. It and `Hamiltonian.get_trotter_step` now take the physical register as a keyword-only `phys_reg` argument (renamed from `data_reg`), defaulting to `range(n_qubits)`. `get_trotter_step` takes `trotter_order` before the keyword-only arguments (`get_trotter_step(dt, trotter_order, *, phys_reg=None)`), and `get_exact_unitary`'s `controls` is now optional (`get_exact_unitary(evolution_time, *, phys_reg=None, controls=None)`).
+- **Breaking:** `robust_phase_estimation` replaced `epsilon` with `n_repetitions`, removed `sign_E0`, added an `rng` argument for deterministic sampling, added a `t0` argument setting the base evolution time, and changed the `trotter_order` default from 2 to 1. The estimated phase is now `E0 * t0`, so the energy is recovered as `theta / t0`. The returned list now has length `n_repetitions` (no leading placeholder).
+- **Breaking:** `shift_control_gates` returns a one-shot generator instead of a list, so the controlled copies are built as they are applied rather than all at once. Callers iterating over the result more than once must wrap it in `list`.
+- **Breaking:** `draw_layered_circuit` / `draw_layered_expval` replaced the `list_names` argument with three keyword-only arguments `state_label`, `labels_1qubit` and `labels_2qubit`. A label list shorter than the circuit depth now raises `ValueError` instead of failing with an `IndexError` while drawing.
+- **Breaking:** Trotter-Suzuki MPO functions (`trotter_approx_as_MPO`, `trotter1_approx_as_MPO`, `trotter2_approx_as_MPO`, `trotter4_approx_as_MPO`, `exp_Pauli_string_as_MPO`) moved from `qpe_toolbox.circuit.mpo_circuit_transpilation` to `qpe_toolbox.hamiltonian.trotterization`, and `rotation_gates` moved there from `qpe_toolbox.hamiltonian.hamiltonian`. `state_preparation_mpo` moved to `qpe_toolbox.tensor.mpomps_tools`. Importing the Trotter functions or `state_preparation_mpo` from `qpe_toolbox.circuit.mpo_circuit_transpilation` now raises `ImportError`; `rotation_gates` can still be imported from its old module.
+- **Breaking:** `trotter_approx_as_MPO` renamed `order` to `trotter_order`, consistent with `Hamiltonian.get_trotter_step` and every QPE/RPE function in the codebase. `dt` is now positional, and `trotter_order`, `cutoff` and `max_bond` default to `1`, `1e-10` and `None`.
+- **Breaking:** `trotter1_approx_as_MPO` / `trotter2_approx_as_MPO` / `trotter4_approx_as_MPO` take a `Hamiltonian` and a positional `dt` instead of `ham_terms, n_qubits` and a keyword-only `dt`. `cutoff` and `max_bond` default to `1e-10` and `None`.
+- **Breaking:** `exp_Pauli_string_as_MPO` signature changed from `(ham_term, n_qubits, *, theta)` to `(term, dt, n_qubits)`, and it now builds `exp(-i * dt * coeff * P)`, matching `rotation_gates` and the Trotter functions: pass `dt = -theta` to recover the old `exp(i * theta * coeff * P)`. It also raises `ValueError` if a qubit is repeated or out of range.
+- **Breaking:** `mpo_circuit_transpilation` helpers: `update_dict_contr_envs` renamed to `update_contracted_envs`; it and `update_cost_tn` take a single gate tensor instead of a list. Arguments `dict_transf`, `dict_contr_envs` and `x` renamed to `transfer_structure`, `contracted_envs` and `site_index`.
+- **Breaking:** `tn_fit`: `tags`, `steps`, `tol` and `contract_optimize` are now keyword-only. A progress bar is always shown; set `TQDM_DISABLE=1` before importing `tqdm` to silence it. Raises `TypeError` on parametrized tensors, and `ValueError` if `tags` selects anything other than whole two-qubit gates (e.g. gates split by quimb's default `gate_contract`). `tags=None` is no longer supported, as it never worked on a circuit state.
+- `run_hadamard_test` / `rpe_get_hadamard_output`: replaced `seed` with an `rng` (`numpy.random.Generator`) argument.
+- `init_cost_tn`: replaced `seed` (int) with an `rng` (`numpy.random.Generator`) argument, consistent with the rest of the codebase.
+- `state_preparation_mpo`: raises `ValueError` unless the MPS arrays are in `'lpr'` order (as returned by `DMRG2`), instead of silently building a wrong MPO.
+- `optimize_single_gate_update`: now returns `(cost_tn, contracted_envs, overlap)`, where `overlap` is normalized by `2**n_qubits`.
 - Renamed `rpe_distance` to `angular_distance`; it is now vectorized.
-- `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now
-  returning a single angle.
+- `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now returning a single angle.
+- `Hamiltonian.to_dense` and `Hamiltonian.get_exact_unitary` are faster for larger systems.
 - `optuna` dependency moved from core dependency to recommended.
-- `draw_layered_circuit` / `draw_layered_expval`: replaced the `list_names`
-  argument with three keyword-only arguments `state_label`, `labels_1qubit` and
-  `labels_2qubit`. A label list shorter than the circuit depth now raises
-  `ValueError` instead of failing with an `IndexError` while drawing.
 
 ### Removed
 

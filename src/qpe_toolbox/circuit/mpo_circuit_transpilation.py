@@ -4,9 +4,7 @@ import quimb.tensor as qtn
 from tqdm import tqdm
 
 from qpe_toolbox.circuit.circuits_opt import svd_optimal_gate_update
-from qpe_toolbox.circuit.parametrized_circuits import (
-    generate_brickwall_circuit,
-)
+from qpe_toolbox.circuit.parametrized_circuits import generate_brickwall_circuit
 
 
 def init_cost_tn(ref_mpo, depth, *, param_scaling=1e-1, closed=False, rng=None):
