@@ -232,7 +232,7 @@ def two_qubit_rand_layer(
 
     gate_label = gate_label.upper()
     extra_kwargs = {}
-    if gate_label in qtn.circuit.ALL_PARAM_GATES:
+    if gate_label in qtn.circuit.TWO_QUBIT_PARAM_GATES:
         params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
     elif gate_label in qtn.circuit.TWO_QUBIT_GATES:

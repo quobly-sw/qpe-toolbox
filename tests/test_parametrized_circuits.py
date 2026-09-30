@@ -131,6 +131,12 @@ def test_two_qubit_rand_layer():
     with pytest.raises(KeyError, match="Unknown gate_label"):
         two_qubit_rand_layer(qtn.Circuit(2), "NOTAGATE", 1, 1.0)
 
+    # a one-qubit parametrized gate cannot be applied to a pair of qubits
+    with pytest.raises(KeyError, match="Unknown gate_label"):
+        two_qubit_rand_layer(
+            qtn.Circuit(4), "RX", 2, 1.0, rng=np.random.default_rng(42)
+        )
+
 
 def test_generate_brickwall_circuit():
     # valid build, rng defaulted internally
