@@ -426,7 +426,7 @@ def generate_rand_circuit(
     param_scaling : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
-    parametrize : bool, default ``True``
+    parametrize : bool, default ``False``
         If ``True``, gate parameters are marked as variational (parametrized)
         for use in an Ansatz. When ``False``, the circuit is fixed with random
         parameters (not trainable).
