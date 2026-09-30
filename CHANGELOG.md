@@ -64,6 +64,11 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 
 ### Fixed
 
+- `controlled_mpo`: the auxiliary tensor was required to be an interior tensor with
+  four legs, which rejected a single-qubit auxiliary register since its tensor sits
+  at the start of the MPO and has only three. LCU QPE with one phase qubit
+  (`run_qpe_lcu_walk_operator` with `m_ph=1`) raised `ValueError: Invalid MPO tensor
+  shape` instead of running.
 - `draw_layered_expval`: two-qubit layer labels were indexed in the opposite
   direction to single-qubit ones, so the two label lists disagreed on which
   layer they were naming.

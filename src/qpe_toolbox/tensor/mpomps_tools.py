@@ -332,7 +332,9 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
     sites = list(mpo.gen_sites_present())
     if phys_reg[0] < aux_reg[-1]:
         raise ValueError("only implemented for min(phys_reg) > max(aux_reg)")
-    if mpo[sites[aux_reg[-1]]].data.shape != (1, 1, 2, 2):
+    # the first tensor of the MPO has no left bond, hence only 3 legs
+    shape_aux = (1,) * (aux_reg[-1] != 0) + (1, 2, 2)
+    if mpo[sites[aux_reg[-1]]].data.shape != shape_aux:
         raise ValueError("Invalid MPO tensor shape")
     if not np.allclose(mpo[sites[aux_reg[-1]]].data, np.eye(2), atol=1e-12):
         raise ValueError("Invalid last MPO tensor")
