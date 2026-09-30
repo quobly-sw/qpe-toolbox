@@ -175,10 +175,17 @@ def test_generate_rand_circuit():
 
 def test_ansatz_circuits_with_psi0():
     # psi0 branch + rng defaulted internally, for the three ansatz builders
-    psi0 = qtn.MPS_computational_state("00")
     for builder in (ansatz_circuit, ansatz_circuit_su4, ansatz_circuit_sym):
-        circ = builder(2, 1, psi0=psi0)
-        assert circ.N == 2
+        # identical seeded gates on orthogonal inputs must stay orthogonal: this
+        # fails if psi0 is used only for its size and its amplitudes are dropped
+        circ_00 = builder(
+            2, 1, psi0=qtn.MPS_computational_state("00"), rng=np.random.default_rng(42)
+        )
+        circ_11 = builder(
+            2, 1, psi0=qtn.MPS_computational_state("11"), rng=np.random.default_rng(42)
+        )
+        assert abs(circ_00.psi.overlap(circ_11.psi)) < 1e-10
+
         with pytest.raises(ValueError, match="expected n_qubits=2"):
             builder(2, 1, psi0=qtn.MPS_computational_state("000"))
 
