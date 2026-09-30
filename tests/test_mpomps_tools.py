@@ -17,6 +17,8 @@ X = np.array([[0, 1], [1, 0]], dtype=complex)
 Z = np.diag([1.0, -1.0]).astype(complex)
 P0 = np.array([[1, 0], [0, 0]], dtype=complex)
 P1 = np.array([[0, 0], [0, 1]], dtype=complex)
+# raising operator S+, deliberately non-symmetric to catch a u/d leg swap
+SP = np.array([[0, 1], [0, 0]], dtype=complex)
 
 # define
 
@@ -110,11 +112,11 @@ def test_kron_weird_shapes():
 
 
 def test_add_cqubit_mpo():
-    # U = X ⊗ Z as a two-site MPO
+    # U = S+ ⊗ Z as a two-site MPO
     def two_site_u():
-        return qtn.MatrixProductOperator([X.reshape(1, 2, 2), Z.reshape(1, 2, 2)])
+        return qtn.MatrixProductOperator([SP.reshape(1, 2, 2), Z.reshape(1, 2, 2)])
 
-    u_dense = np.kron(X, Z)
+    u_dense = np.kron(SP, Z)
 
     # "before" adds the control as the first qubit: |0><0|⊗I + |1><1|⊗U
     before = add_cqubit_mpo(two_site_u(), "before").to_dense()
