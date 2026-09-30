@@ -58,6 +58,9 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `two_qubit_rand_layer`: the `reverse` argument. It only changed the order in
   which overlapping gates were applied, and never the control direction its
   documentation claimed.
+- Unused internal helpers with no remaining call site: `count_gates_qft_swapped`
+  (`estimation.qft`), `make_fermionic_hamiltonian_auto`
+  (`hamiltonian.pyscf_converter`) and `add_creg_mpo` (`tensor.mpomps_tools`).
 
 ### Fixed
 
