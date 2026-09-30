@@ -74,10 +74,13 @@ def test_get_integrals_rhf_cas_full_space():
 
 def test_get_integrals_uhf_cas_full_space():
     # Full-space UCASCI must reproduce the plain UHF integrals.
+    # Linear H3 doublet: UHF is genuinely spin-polarised, unlike closed-shell H2
+    # where the alpha and beta integrals coincide and cannot detect a channel swap.
     molecule = gto.M(
-        atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.735))],
+        atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.9)), ("H", (0.0, 0.0, 1.8))],
         unit="A",
         basis="sto-3g",
+        spin=1,
     )
     uhf = scf.UHF(molecule)
     uhf.verbose = 0
@@ -85,8 +88,14 @@ def test_get_integrals_uhf_cas_full_space():
 
     norb, nelec, e_nuc, hpq, hpqrs = get_integrals_uhf(uhf)
     ncas, ncas_nelec, ecore, hpq_cas, hpqrs_cas = get_integrals_uhf_cas(
-        uhf, norb, (nelec // 2, nelec // 2), ncore=0
+        uhf, norb, uhf.nelec, ncore=0
     )
+
+    # the spin channels must differ, else the comparisons below prove nothing
+    assert not np.allclose(hpq[0], hpq[1])
+    assert not np.allclose(hpqrs[0], hpqrs[1])
+    assert not np.allclose(hpqrs[0], hpqrs[2])
+    assert not np.allclose(hpqrs[1], hpqrs[2])
 
     assert ncas == norb
     assert sum(ncas_nelec) == nelec
@@ -95,6 +104,23 @@ def test_get_integrals_uhf_cas_full_space():
         assert np.allclose(h_cas, h)
     for g_cas, g in zip(hpqrs_cas, hpqrs, strict=True):
         assert np.allclose(g_cas, g)
+
+    # the integrals must rebuild the UHF energy, not merely agree with each other
+    n_up, n_down = uhf.nelec
+    up = slice(0, n_up)
+    down = slice(0, n_down)
+    g_uu, g_ud, g_dd = hpqrs_cas
+    energy = ecore + np.trace(hpq_cas[0][up, up]) + np.trace(hpq_cas[1][down, down])
+    energy += 0.5 * (
+        np.einsum("iijj->", g_uu[up, up, up, up])
+        - np.einsum("ijji->", g_uu[up, up, up, up])
+    )
+    energy += 0.5 * (
+        np.einsum("iijj->", g_dd[down, down, down, down])
+        - np.einsum("ijji->", g_dd[down, down, down, down])
+    )
+    energy += np.einsum("iijj->", g_ud[up, up, down, down])
+    assert np.isclose(energy, uhf.e_tot)
 
     # the CAS integrals feed the documented make_fermionic_hamiltonian_uhf path
     fermionic_operator = make_fermionic_hamiltonian_uhf(ecore, hpq_cas, hpqrs_cas)
