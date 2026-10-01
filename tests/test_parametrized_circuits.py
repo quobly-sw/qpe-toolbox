@@ -2,9 +2,21 @@
 
 import autoray
 import numpy as np
+import pytest
 import quimb.tensor as qtn
 
-from qpe_toolbox.circuit import ansatz_circuit, ansatz_circuit_su4, ansatz_circuit_sym
+from qpe_toolbox.circuit import (
+    ansatz_circuit,
+    ansatz_circuit_su4,
+    ansatz_circuit_sym,
+    generate_brickwall_circuit,
+    generate_rand_circuit,
+)
+from qpe_toolbox.circuit.parametrized_circuits import (
+    one_qubit_layer,
+    two_qubit_nn_layer,
+    two_qubit_rand_layer,
+)
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
 
 opt = "auto-hq"
@@ -71,8 +83,128 @@ def test_ansatz_circuit_opt():
     assert np.isclose(circuit_optimizer.loss, 0.25)
 
 
+def test_one_qubit_layer():
+    # parametrized gate, rng defaulted internally
+    circ = qtn.Circuit(3)
+    one_qubit_layer(circ, "RX")
+    assert len(circ.gates) == 3
+
+    # non-parametrized gate
+    circ = qtn.Circuit(3)
+    one_qubit_layer(circ, "H")
+    assert len(circ.gates) == 3
+
+    with pytest.raises(KeyError, match="Unknown gate_label"):
+        one_qubit_layer(qtn.Circuit(2), "NOTAGATE")
+
+
+def test_two_qubit_nn_layer():
+    # parametrized gate, rng defaulted internally
+    circ = qtn.Circuit(4)
+    two_qubit_nn_layer(circ, 0, "RZZ")
+    assert len(circ.gates) == 2
+
+    # non-parametrized gate, odd start
+    circ = qtn.Circuit(4)
+    two_qubit_nn_layer(circ, 1, "CNOT")
+    assert len(circ.gates) == 1
+
+    with pytest.raises(KeyError, match="Unknown gate_label"):
+        two_qubit_nn_layer(qtn.Circuit(2), 0, "NOTAGATE")
+
+
+def test_two_qubit_rand_layer():
+    # parametrized gate
+    circ = qtn.Circuit(4)
+    two_qubit_rand_layer(circ, "RZZ", 2, 1.0, rng=np.random.default_rng(42))
+    assert len(circ.gates) > 0
+
+    # non-parametrized gate, rng defaulted internally
+    circ = qtn.Circuit(4)
+    two_qubit_rand_layer(circ, "CNOT", 2, 1.0)
+
+    # zero probability applies nothing
+    circ = qtn.Circuit(4)
+    two_qubit_rand_layer(circ, "CNOT", 2, 0.0, rng=np.random.default_rng(1))
+    assert len(circ.gates) == 0
+
+    with pytest.raises(KeyError, match="Unknown gate_label"):
+        two_qubit_rand_layer(qtn.Circuit(2), "NOTAGATE", 1, 1.0)
+
+    # a one-qubit parametrized gate cannot be applied to a pair of qubits
+    with pytest.raises(KeyError, match="Unknown gate_label"):
+        two_qubit_rand_layer(
+            qtn.Circuit(4), "RX", 2, 1.0, rng=np.random.default_rng(42)
+        )
+
+
+def test_generate_brickwall_circuit():
+    # valid build, rng defaulted internally
+    circ = generate_brickwall_circuit(4, 2, "H", "CNOT")
+    assert circ.N == 4
+    assert len(circ.gates) > 0
+
+    # explicit rng, and entangling-only layers (no single-body gates)
+    entangling_only = generate_brickwall_circuit(
+        4, 2, "H", "CNOT", include_1qubit_gates=False, rng=np.random.default_rng(42)
+    )
+    assert all(g.label == "CNOT" for g in entangling_only.gates)
+
+    with pytest.raises(ValueError, match="single-body gate"):
+        generate_brickwall_circuit(4, 1, "CNOT", "CNOT")
+    with pytest.raises(ValueError, match="two-body gate"):
+        generate_brickwall_circuit(4, 1, "H", "H")
+
+
+def test_generate_rand_circuit():
+    # valid build, rng defaulted internally
+    circ = generate_rand_circuit(4, 2, "RX", "RZZ", 2, 1.0)
+    assert circ.N == 4
+
+    # explicit rng
+    circ = generate_rand_circuit(
+        4, 2, "RX", "RZZ", 2, 1.0, rng=np.random.default_rng(42)
+    )
+    assert circ.N == 4
+
+    with pytest.raises(ValueError, match="single-body gate"):
+        generate_rand_circuit(4, 1, "CNOT", "RZZ", 2, 1.0)
+    with pytest.raises(ValueError, match="two-body gate"):
+        generate_rand_circuit(4, 1, "RX", "RX", 2, 1.0)
+
+
+def test_ansatz_circuits_with_psi0():
+    # psi0 branch + rng defaulted internally, for the three ansatz builders
+    for builder in (ansatz_circuit, ansatz_circuit_su4, ansatz_circuit_sym):
+        # identical seeded gates on orthogonal inputs must stay orthogonal: this
+        # fails if psi0 is used only for its size and its amplitudes are dropped
+        circ_00 = builder(
+            2, 1, psi0=qtn.MPS_computational_state("00"), rng=np.random.default_rng(42)
+        )
+        circ_11 = builder(
+            2, 1, psi0=qtn.MPS_computational_state("11"), rng=np.random.default_rng(42)
+        )
+        assert abs(circ_00.psi.overlap(circ_11.psi)) < 1e-10
+
+        with pytest.raises(ValueError, match="expected n_qubits=2"):
+            builder(2, 1, psi0=qtn.MPS_computational_state("000"))
+
+
+def test_ansatz_circuit_sym_gate_round():
+    # gate_round != 0 skips the initial X layer applied at gate_round == 0
+    circ = ansatz_circuit_sym(2, 1, gate_round=1, rng=np.random.default_rng(42))
+    assert all(g.label != "X" for g in circ.gates)
+
+
 if __name__ == "__main__":
     test_ansatz_circuit()
     test_ansatz_circuit_su4()
     test_ansatz_circuit_sym()
     test_ansatz_circuit_opt()
+    test_one_qubit_layer()
+    test_two_qubit_nn_layer()
+    test_two_qubit_rand_layer()
+    test_generate_brickwall_circuit()
+    test_generate_rand_circuit()
+    test_ansatz_circuits_with_psi0()
+    test_ansatz_circuit_sym_gate_round()

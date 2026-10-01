@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
+import pytest
+
 import qpe_toolbox.estimation as qpe
 from qpe_toolbox.hamiltonian import do_dmrg, heisenberg_hamiltonian
 
 
-def test_walk_qpe():
+# m_ph = 1 puts the control on the boundary tensor of the phase register
+@pytest.mark.parametrize("m_ph", [1, 2])
+def test_walk_qpe(m_ph):
     n_qubits = 2
-    m_ph = 2
 
     H = heisenberg_hamiltonian(n_qubits)
     E0, psi0_mps = do_dmrg(H)
@@ -20,4 +23,5 @@ def test_walk_qpe():
 
 
 if __name__ == "__main__":
-    test_walk_qpe()
+    test_walk_qpe(1)
+    test_walk_qpe(2)

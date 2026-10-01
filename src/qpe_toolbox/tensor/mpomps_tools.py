@@ -228,70 +228,6 @@ def apply_gate_from_mpo(circ, mpo, *, compress=False, cutoff=1e-10, max_bond=0):
 #
 ## When the ancilla register is not implemented
 #
-### add extra control qubits
-
-
-def add_creg_mpo(mpo, mpo_reg, creg, cket):
-    """
-    Add multiple control qubits to an MPO.
-
-    The resulting MPO represents a controlled operation acting on the original
-    MPO, conditioned on the control register being in a specified computational
-    basis state.
-
-    Parameters
-    ----------
-    mpo : :quimb-api:`MatrixProductOperator`
-        Base MPO representing the target operation.
-    mpo_reg : list[int]
-        Indices of the physical register acted on by ``mpo``.
-    creg : list[int]
-        Control qubit indices, indexed with respect to the MPO ordering.
-    cket : str or int
-        Control state. Can be a bitstring (e.g. ``"11"``) or an integer encoding
-        the computational basis state.
-
-    Returns
-    -------
-    :quimb-api:`MatrixProductOperator`
-        MPO with added control qubits.
-
-    Raises
-    ------
-    ValueError
-        If an unsupported control state is requested.
-    TypeError
-        If ``cket`` is neither ``str`` nor ``int``.
-
-    Notes
-    -----
-    This function is not fully tested and should be used with care for
-    multi-control configurations.
-    """
-    # make sure indices of each tensor in the MPO are in the order left, right, up, down
-    mpo.permute_arrays("lrud")
-
-    if len(creg) == 1:
-        if cket in ["1", 1]:
-            location = "after" if (mpo_reg[-1] < creg[0]) else "before"
-            return add_cqubit_mpo(mpo, location)
-        raise ValueError(f"{cket} on one control bit not implemented")
-
-    m_c = len(creg)
-    if isinstance(cket, str):
-        ctrl_mps = qtn.MPS_computational_state(cket)
-    elif isinstance(cket, (int, np.integer)):
-        ctrl_mps = qtn.MPS_computational_state(f"{cket:0{m_c}b}")
-    else:
-        raise TypeError("cket must be int or str")
-    projector = ctrl_mps.partial_trace_to_mpo(keep=list(range(m_c)))
-    Id_creg = qtn.MPO_identity(m_c)
-    Id_mpo = qtn.MPO_identity(mpo.L)
-    if mpo_reg[-1] < creg[0]:
-        return kron_mpos(Id_mpo, Id_creg - projector) + kron_mpos(mpo, projector)
-    return kron_mpos(Id_creg - projector, Id_mpo) + kron_mpos(projector, mpo)
-
-
 ### add a single control qubit
 
 
@@ -355,23 +291,19 @@ def add_cqubit_mpo(mpo, location):
 ### control on one qubit being in a given value
 
 
-def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
+def controlled_mpo(mpo, k_ctrl, *, ctrl=1):
     """
-    Construct an MPO controlled on an auxiliary qubit being in a given state.
+    Construct an MPO controlled on one of its qubits being in a given state.
 
-    The MPO is assumed to be of the form ``Id ⊗ U``, where ``Id`` acts on the
-    auxiliary register and ``U`` acts on the physical register.
+    The control qubit must carry the identity in ``mpo``, which is replaced by a
+    projector; the rest of ``mpo`` becomes the controlled operation.
 
     Parameters
     ----------
     mpo : :quimb-api:`MatrixProductOperator`
-        Input MPO in the form ``Id ⊗ U``.
-    phys_reg : list[int]
-        Indices of the physical register qubits.
-    aux_reg : list[int]
-        Indices of the auxiliary (control) register qubits.
+        Input MPO, acting as the identity on site ``k_ctrl``.
     k_ctrl : int
-        Index of the control qubit relative to ``aux_reg``.
+        Site index of the control qubit.
     ctrl : int, default ``1``
         Control value (``0`` or ``1``) conditioning the operation.
 
@@ -383,33 +315,27 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
     Raises
     ------
     ValueError
-        If the register ordering assumption is violated.
-
-    Notes
-    -----
-    This implementation assumes that all auxiliary-register tensors initially
-    correspond to identity operators.
+        If ``mpo`` does not factorize as the identity on site ``k_ctrl``.
     """
     # make sure indices of each tensor in the MPO are in the order left, right, up, down
     mpo.permute_arrays("lrud")
 
     sites = list(mpo.gen_sites_present())
-    if phys_reg[0] < aux_reg[-1]:
-        raise ValueError("only implemented for min(phys_reg) > max(aux_reg)")
-    if mpo[sites[aux_reg[-1]]].data.shape != (1, 1, 2, 2):
+    # the control tensor is replaced by a projector, which is only valid if the MPO
+    # factorizes there: trivial bonds on both sides and the identity acting on it
+    sh = mpo[sites[k_ctrl]].data.shape
+    if sh[:-2] != (1,) * (len(sh) - 2):
         raise ValueError("Invalid MPO tensor shape")
-    if not np.allclose(mpo[sites[aux_reg[-1]]].data, np.eye(2), atol=1e-12):
-        raise ValueError("Invalid last MPO tensor")
+    if not np.allclose(mpo[sites[k_ctrl]].data, np.eye(2), atol=1e-12):
+        raise ValueError("Invalid control MPO tensor")
 
     projectors = np.array([[[1, 0], [0, 0]], [[0, 0], [0, 1]]], dtype=mpo.dtype)
     arrays1 = [mpo[s].data for s in sites]
 
     # due to quimb data structure, need to access tensor.data to avoid aliasing
-    mpo2 = qtn.MPO_identity(len(phys_reg + aux_reg), dtype=mpo.dtype)
+    mpo2 = qtn.MPO_identity(len(sites), dtype=mpo.dtype)
     arrays2 = [mpo2[s].data for s in sites]
 
-    # first site has only 3 legs
-    sh = (1,) * (k_ctrl != aux_reg[0]) + (1, 2, 2)
     arrays1[sites[k_ctrl]] = projectors[ctrl].reshape(sh)
     arrays2[sites[k_ctrl]] = projectors[(ctrl + 1) % 2].reshape(sh)
 

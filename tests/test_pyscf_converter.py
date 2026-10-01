@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy as np
 from openfermion.transforms import jordan_wigner
 from pyscf import gto, scf
 
@@ -7,7 +8,11 @@ from qpe_toolbox.hamiltonian.pyscf_converter import (
     do_df,
     do_sf,
     get_integrals_rhf,
+    get_integrals_rhf_cas,
+    get_integrals_uhf,
+    get_integrals_uhf_cas,
     make_fermionic_hamiltonian_rhf,
+    make_fermionic_hamiltonian_uhf,
 )
 
 
@@ -39,5 +44,90 @@ def test_basics_H2():
     _qubit_operator = jordan_wigner(fermionic_operator)
 
 
+def test_get_integrals_rhf_cas_full_space():
+    # A CASCI over the full orbital space (no frozen core) must reproduce the
+    # plain RHF integrals.
+    molecule = gto.M(
+        atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.735))],
+        unit="A",
+        basis="sto-3g",
+    )
+    hf = scf.RHF(molecule)
+    hf.verbose = 0
+    hf.kernel()
+
+    norb, nelec, e_nuc, hpq, hpqrs = get_integrals_rhf(hf)
+    ncas, ncas_nelec, ecore, hpq_cas, hpqrs_cas = get_integrals_rhf_cas(
+        hf, norb, nelec, ncore=0
+    )
+
+    assert ncas == norb
+    assert sum(ncas_nelec) == nelec
+    assert np.isclose(ecore, e_nuc)
+    assert np.allclose(hpq_cas, hpq)
+    assert np.allclose(hpqrs_cas, hpqrs)
+
+    # the CAS integrals feed the documented make_fermionic_hamiltonian_rhf path
+    fermionic_operator = make_fermionic_hamiltonian_rhf(ecore, hpq_cas, hpqrs_cas)
+    jordan_wigner(fermionic_operator)
+
+
+def test_get_integrals_uhf_cas_full_space():
+    # Full-space UCASCI must reproduce the plain UHF integrals.
+    # Linear H3 doublet: UHF is genuinely spin-polarised, unlike closed-shell H2
+    # where the alpha and beta integrals coincide and cannot detect a channel swap.
+    molecule = gto.M(
+        atom=[("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.9)), ("H", (0.0, 0.0, 1.8))],
+        unit="A",
+        basis="sto-3g",
+        spin=1,
+    )
+    uhf = scf.UHF(molecule)
+    uhf.verbose = 0
+    uhf.kernel()
+
+    norb, nelec, e_nuc, hpq, hpqrs = get_integrals_uhf(uhf)
+    ncas, ncas_nelec, ecore, hpq_cas, hpqrs_cas = get_integrals_uhf_cas(
+        uhf, norb, uhf.nelec, ncore=0
+    )
+
+    # the spin channels must differ, else the comparisons below prove nothing
+    assert not np.allclose(hpq[0], hpq[1])
+    assert not np.allclose(hpqrs[0], hpqrs[1])
+    assert not np.allclose(hpqrs[0], hpqrs[2])
+    assert not np.allclose(hpqrs[1], hpqrs[2])
+
+    assert ncas == norb
+    assert sum(ncas_nelec) == nelec
+    assert np.isclose(ecore, e_nuc)
+    for h_cas, h in zip(hpq_cas, hpq, strict=True):
+        assert np.allclose(h_cas, h)
+    for g_cas, g in zip(hpqrs_cas, hpqrs, strict=True):
+        assert np.allclose(g_cas, g)
+
+    # the integrals must rebuild the UHF energy, not merely agree with each other
+    n_up, n_down = uhf.nelec
+    up = slice(0, n_up)
+    down = slice(0, n_down)
+    g_uu, g_ud, g_dd = hpqrs_cas
+    energy = ecore + np.trace(hpq_cas[0][up, up]) + np.trace(hpq_cas[1][down, down])
+    energy += 0.5 * (
+        np.einsum("iijj->", g_uu[up, up, up, up])
+        - np.einsum("ijji->", g_uu[up, up, up, up])
+    )
+    energy += 0.5 * (
+        np.einsum("iijj->", g_dd[down, down, down, down])
+        - np.einsum("ijji->", g_dd[down, down, down, down])
+    )
+    energy += np.einsum("iijj->", g_ud[up, up, down, down])
+    assert np.isclose(energy, uhf.e_tot)
+
+    # the CAS integrals feed the documented make_fermionic_hamiltonian_uhf path
+    fermionic_operator = make_fermionic_hamiltonian_uhf(ecore, hpq_cas, hpqrs_cas)
+    jordan_wigner(fermionic_operator)
+
+
 if __name__ == "__main__":
     test_basics_H2()
+    test_get_integrals_rhf_cas_full_space()
+    test_get_integrals_uhf_cas_full_space()
