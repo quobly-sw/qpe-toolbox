@@ -7,8 +7,13 @@ import scipy.linalg
 from qpe_toolbox import EXACT
 from qpe_toolbox.estimation import (
     angular_distance,
+    exact_evolution_powers,
+    measure_rpe_phases,
+    refine_rpe_phases,
     robust_phase_estimation,
+    rpe_get_hadamard_output,
     rpe_update_theta,
+    run_hadamard_test,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian, do_dmrg, heisenberg_hamiltonian
 
@@ -86,6 +91,48 @@ def test_rpe_seed_deterministic():
     assert not np.array_equal(a, c)  # different seed -> different sampling
 
 
+def test_rpe_two_stage_composes():
+    # robust_phase_estimation == refine_rpe_phases o measure_rpe_phases
+    H = heisenberg_hamiltonian(4)
+    _E0, psi0 = do_dmrg(H)
+
+    phi = measure_rpe_phases(H, psi0, 5, EXACT, 4, rng=np.random.default_rng(7))
+    theta = refine_rpe_phases(phi)
+
+    full = robust_phase_estimation(H, psi0, 5, EXACT, 4, rng=np.random.default_rng(7))
+    assert np.array_equal(theta, full)
+
+
+def test_rpe_control_free_matches_hadamard_test():
+    # the control-free overlap phase equals the two-Hadamard-test phase (EXACT)
+    H = heisenberg_hamiltonian(4)
+    _E0, psi0 = do_dmrg(H)
+    unitaries = exact_evolution_powers(H, 1.0, 3)
+
+    for m in range(3):
+        (u_gate,) = unitaries[m]
+        X = run_hadamard_test(psi0, u_gate, 0, EXACT)
+        Y = run_hadamard_test(psi0, u_gate, -np.pi / 2, EXACT)
+        phi_ref = -np.angle(X + 1j * Y)
+
+        phi = rpe_get_hadamard_output(psi0, unitaries[m], EXACT)
+        assert np.isclose(phi, phi_ref)
+
+
+def test_rpe_bernoulli_converges_to_exact():
+    # finite-shot phases converge to the exact phase as n_shots grows
+    H = heisenberg_hamiltonian(4)
+    _E0, psi0 = do_dmrg(H)
+
+    phi_exact = measure_rpe_phases(H, psi0, 4, EXACT, EXACT)
+    rng = np.random.default_rng(0)
+    phi_sampled = np.mean(
+        [measure_rpe_phases(H, psi0, 4, EXACT, 4000, rng=rng) for _ in range(50)],
+        axis=0,
+    )
+    assert np.allclose(phi_sampled, phi_exact, atol=0.05)
+
+
 def test_rpe_update_theta_matches_bruteforce():
     # the closed-form update must agree with an explicit O(2**m) candidate scan
     rng = np.random.default_rng(0)
@@ -107,4 +154,7 @@ if __name__ == "__main__":
     test_rpe()
     test_rpe_trotter()
     test_rpe_seed_deterministic()
+    test_rpe_two_stage_composes()
+    test_rpe_control_free_matches_hadamard_test()
+    test_rpe_bernoulli_converges_to_exact()
     test_rpe_update_theta_matches_bruteforce()

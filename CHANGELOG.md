@@ -20,6 +20,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `state_preparation_mpo` is now re-exported from `qpe_toolbox.tensor`.
 - `trotter_approx_as_MPO` is now re-exported from `qpe_toolbox.hamiltonian`.
 - `optimize_single_gate_update` / `transpile_mpo_to_circuit`: keyword-only `optimize` argument selecting the contraction strategy of each gate's local environment.
+- `measure_rpe_phases` and `refine_rpe_phases`, splitting `robust_phase_estimation` into a measurement stage (raw phases `phi_m`) and a simulation-free classical retrieval stage (refined phases `theta_m`).
 
 ### Changed
 
@@ -45,6 +46,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now returning a single angle.
 - `Hamiltonian.to_dense` and `Hamiltonian.get_exact_unitary` are faster for larger systems.
 - `optuna` dependency moved from core dependency to recommended.
+- RPE now measures each phase from a single control-free `CircuitMPS` simulation of the overlap `⟨ψ₀|U|ψ₀⟩` (no ancilla qubit) instead of two Hadamard-test circuits; finite `n_shots` are emulated from the exact expectation via the Bernoulli law rather than by circuit sampling. `rpe_get_hadamard_output` keeps its signature `(psi0, unitary, n_shots, *, cutoff, max_bond, rng)` but now computes a single overlap.
 
 ### Removed
 

@@ -280,18 +280,14 @@ rng = np.random.default_rng(42)
 t0 = 1.0
 theta_exact = E0 * t0
 
-# m = 0, evolution time = t0 * 2**0
-phi_0 = qpe.rpe_get_hadamard_output(psi0, H.get_exact_unitary(t0), n_shots, rng=rng)
+# measure the raw phases phi_m for the first two iterations m = 0, 1
+phi_0, phi_1 = qpe.measure_rpe_phases(H, psi0, 2, EXACT, n_shots, t0=t0, rng=rng)
 theta_0 = phi_0
 
 m = 1
-# m = 1, evolution time = t0 * 2**m
-phi_1 = qpe.rpe_get_hadamard_output(
-    psi0, H.get_exact_unitary(t0 * 2**m), n_shots, rng=rng
-)
-possible_phases_looped = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
+possible_phases = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
 # candidate phases, wrapped into (-pi, pi]
-possible_phases = (possible_phases_looped + np.pi) % (2 * np.pi) - np.pi
+possible_phases = (possible_phases + np.pi) % (2 * np.pi) - np.pi
 
 # %% [markdown]
 # Let us visualize how the different possible phases compare to $\theta_0$
