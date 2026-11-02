@@ -248,11 +248,11 @@ def rpe_get_hadamard_output(
     Estimate minus the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` for one RPE iteration.
 
     The overlap :math:`z = \bra{\psi_0} U \ket{\psi_0}` is obtained from a single
-    control-free :quimb-api:`CircuitMPS` simulation (no ancilla qubit). Its real
-    and imaginary parts are the exact Hadamard-test expectation values
-    :math:`X = \mathrm{Re}\,z` and :math:`Y = \mathrm{Im}\,z`; with finite
-    ``n_shots`` each is replaced by a Bernoulli-sampled estimate. The returned
-    phase is :math:`\phi = -\arg(X + iY)`. For :math:`U = e^{-iHt}` and an
+    control-free :quimb-api:`CircuitMPS` simulation (no ancilla qubit), with both
+    states normalized. Its real and imaginary parts are the exact Hadamard-test
+    expectation values :math:`X = \mathrm{Re}\,z` and :math:`Y = \mathrm{Im}\,z`;
+    with finite ``n_shots`` each is replaced by a Bernoulli-sampled estimate. The
+    returned phase is :math:`\phi = -\arg(X + iY)`. For :math:`U = e^{-iHt}` and an
     eigenstate :math:`\ket{\psi_0}` of energy :math:`E_0`, this is :math:`E_0 t`.
 
     Parameters
@@ -304,10 +304,18 @@ def _rpe_overlap(psi0, unitary, *, cutoff, max_bond):
     r"""Return :math:`\bra{\psi_0} U \ket{\psi_0}` from a control-free simulation."""
     if isinstance(unitary, qtn.Gate):
         unitary = [unitary]
-    circ = qtn.CircuitMPS(psi0=psi0.copy(), cutoff=cutoff, max_bond=max_bond)
+    circ = qtn.CircuitMPS(psi0=psi0, cutoff=cutoff, max_bond=max_bond)
     for gate in unitary:
         circ.apply_gate(gate)
-    return psi0.H @ circ.psi
+    # quimb never renormalizes a truncated MPS: the discarded weight is left out
+    # of the state and used as its error estimate. Normalizing both states keeps
+    # z a genuine expectation value, bounded by 1 and independent of the norm of
+    # psi0, as measured by a Hadamard test on hardware.
+    bra = psi0.copy()
+    bra.normalize()
+    ket = circ.psi
+    ket.normalize()
+    return bra.H @ ket
 
 
 def _sample_hadamard(z_component, n_shots, rng):
@@ -318,7 +326,7 @@ def _sample_hadamard(z_component, n_shots, rng):
     :math:`\mathrm{Binomial}(n_{\rm shots}, P(1))` and the estimated expectation
     is :math:`(n_{\rm shots} - 2\,\mathrm{popcount})/n_{\rm shots}`.
     """
-    # clip guards a truncated MPS returning |Z| slightly above 1
+    # z_component is bounded by 1 up to rounding: clip absorbs the overshoot
     p1 = np.clip((1.0 - z_component) / 2.0, 0.0, 1.0)
     popcount = rng.binomial(n_shots, p1)
     return (n_shots - 2 * popcount) / n_shots
