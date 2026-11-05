@@ -337,7 +337,8 @@ def _sample_hadamard(z_component, n_shots, rng):
     :math:`\mathrm{Binomial}(n_{\rm shots}, P(1))` and the estimated expectation
     is :math:`(n_{\rm shots} - 2\,\mathrm{popcount})/n_{\rm shots}`.
     """
-    # z_component is bounded by 1 up to rounding: clip absorbs the overshoot
+    # both states are normalized, hence |z| <= 1 and p1 in [0, 1]; clip only
+    # absorbs the rounding overshoot at |z| = 1, which rng.binomial rejects
     p1 = np.clip((1.0 - z_component) / 2.0, 0.0, 1.0)
     popcount = rng.binomial(n_shots, p1)
     return (n_shots - 2 * popcount) / n_shots
