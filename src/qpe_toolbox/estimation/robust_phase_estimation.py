@@ -87,7 +87,8 @@ def robust_phase_estimation(
         Random generator for the finite-shot sampling. Ignored when
         ``n_shots`` is ``EXACT``.
     verbosity : int, default ``0``
-        Verbosity level. If >= 1, print intermediate phase estimates.
+        Verbosity level. If >= 1, print the measured and refined phases of every
+        iteration. If >= 2, also print the measured phases as they are computed.
 
     Returns
     -------
@@ -109,7 +110,14 @@ def robust_phase_estimation(
         rng=rng,
         verbosity=verbosity,
     )
-    return refine_rpe_phases(phi_values)
+    theta_values = refine_rpe_phases(phi_values)
+
+    if verbosity >= 1:
+        print(f"m \t {'phi_m':<6} \t {'theta_m':<6}")
+        for m, (phi, theta) in enumerate(zip(phi_values, theta_values, strict=True)):
+            print(f"{m} \t {np.round(phi, 4): 6} \t {np.round(theta, 4): 6}")
+
+    return theta_values
 
 
 def measure_rpe_phases(
@@ -168,7 +176,7 @@ def measure_rpe_phases(
         Random generator for the finite-shot sampling. Ignored when
         ``n_shots`` is ``EXACT``.
     verbosity : int, default ``0``
-        Verbosity level. If >= 1, print the phase measured at each iteration.
+        Verbosity level. If >= 2, print the phase measured at each iteration.
 
     Returns
     -------
@@ -184,7 +192,7 @@ def measure_rpe_phases(
     )
 
     phi_values = np.empty(n_repetitions)
-    if verbosity >= 1:
+    if verbosity >= 2:
         print(f"m \t {'phi_m':<6} \t {'time (s)'}")
 
     for m in range(n_repetitions):
@@ -196,7 +204,7 @@ def measure_rpe_phases(
             max_bond=max_bond,
             rng=rng,
         )
-        if verbosity >= 1:
+        if verbosity >= 2:
             et = time.time() - st
             print(f"{m} \t {np.round(phi_values[m], 4): 6} \t {et:<6.1f}")
 

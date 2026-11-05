@@ -355,7 +355,7 @@ theta_values = qpe.robust_phase_estimation(
 # this simulation introduces an error at step 7
 # consequently `theta_m` converge to a wrong value
 print(f"Target phase {theta_exact=:.4f}")
-rng = np.random.default_rng(31)
+rng = np.random.default_rng(18)
 errored_theta = qpe.robust_phase_estimation(
     H, psi0, 14, EXACT, 1, t0=t0, verbosity=1, rng=rng
 )
@@ -623,7 +623,7 @@ thetas_trotter_H2 = qpe.robust_phase_estimation(
     n_shots,
     t0=t0,
     trotter_order=2,
-    verbosity=1,
+    verbosity=2,
     rng=rng,
 )
 distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, theta_exact_H2)
