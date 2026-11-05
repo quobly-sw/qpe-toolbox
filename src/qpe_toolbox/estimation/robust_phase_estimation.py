@@ -309,6 +309,8 @@ def _rpe_overlap(psi0, unitary, *, cutoff, max_bond):
     r"""Return :math:`\bra{\psi_0} U \ket{\psi_0}` from a control-free simulation."""
     if isinstance(unitary, qtn.Gate):
         unitary = [unitary]
+    # quimb copies psi0 into the circuit and returns another copy from circ.psi:
+    # no explicit copy is needed and normalizing ket leaves the circuit intact
     circ = qtn.CircuitMPS(psi0=psi0, cutoff=cutoff, max_bond=max_bond)
     for gate in unitary:
         circ.apply_gate(gate)
