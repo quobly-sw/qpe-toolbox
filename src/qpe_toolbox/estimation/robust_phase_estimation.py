@@ -234,6 +234,9 @@ def refine_rpe_phases(phi_values):
         element is the most accurate estimate.
     """
     phi_values = np.asarray(phi_values)
+    if phi_values.ndim != 1 or phi_values.size < 1:
+        raise ValueError(f"Invalid phi_values shape: {phi_values.shape}")
+
     theta_values = np.empty_like(phi_values, dtype=float)
     # initialization theta_{-1} = 0, hence theta_0 = phi_0
     theta_values[0] = phi_values[0]
