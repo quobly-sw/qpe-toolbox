@@ -137,13 +137,10 @@ def measure_rpe_phases(
     r"""
     Measure the raw RPE phases :math:`\phi_m` for :math:`m = 0, \dots, M-1`.
 
-    This is the measurement stage of Robust Phase Estimation. For each
-    iteration :math:`m` the unitary :math:`U^{2^m}` (built from ``hamiltonian``)
-    is applied to :math:`\ket{\psi_0}` by a control-free
-    :quimb-api:`CircuitMPS` simulation, and the phase of the overlap
-    :math:`\bra{\psi_0} U^{2^m} \ket{\psi_0}` is returned as
-    :math:`\phi_m = -\arg \bra{\psi_0} U^{2^m} \ket{\psi_0}`. Feed the result to
-    ``refine_rpe_phases`` to obtain the refined phase estimates.
+    This is the measurement stage of Robust Phase Estimation, returning
+    :math:`\phi_m = -\arg \bra{\psi_0} U^{2^m} \ket{\psi_0}` with
+    :math:`U = e^{-iHt_0}`. Feed the result to ``refine_rpe_phases`` to obtain
+    the refined phase estimates.
 
     Parameters
     ----------
@@ -216,10 +213,9 @@ def refine_rpe_phases(phi_values):
     Refine the raw RPE phases :math:`\phi_m` into the estimates :math:`\theta_m`.
 
     This is the classical, simulation-free retrieval stage of Robust Phase
-    Estimation. Starting from :math:`\theta_0 = \phi_0` (i.e. the convention
-    :math:`\theta_{-1} = 0`), each :math:`\theta_m` is the candidate
-    :math:`(\phi_m + 2\pi k)/2^m` nearest to the previous estimate
-    :math:`\theta_{m-1}`, computed by ``rpe_update_theta``.
+    Estimation. Starting from :math:`\theta_0 = \phi_0`, each :math:`\theta_m`
+    is the candidate :math:`(\phi_m + 2\pi k)/2^m` nearest to the previous
+    estimate :math:`\theta_{m-1}`.
 
     Parameters
     ----------
@@ -258,13 +254,11 @@ def rpe_get_hadamard_output(
     r"""
     Estimate minus the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` for one RPE iteration.
 
-    The overlap :math:`z = \bra{\psi_0} U \ket{\psi_0}` is obtained from a single
-    control-free :quimb-api:`CircuitMPS` simulation (no ancilla qubit), with both
-    states normalized. Its real and imaginary parts are the exact Hadamard-test
-    expectation values :math:`X = \mathrm{Re}\,z` and :math:`Y = \mathrm{Im}\,z`;
-    with finite ``n_shots`` each is replaced by a Bernoulli-sampled estimate. The
-    returned phase is :math:`\phi = -\arg(X + iY)`. For :math:`U = e^{-iHt}` and an
-    eigenstate :math:`\ket{\psi_0}` of energy :math:`E_0`, this is :math:`E_0 t`.
+    The returned phase is :math:`\phi = -\arg \bra{\psi_0} U \ket{\psi_0}`,
+    independent of the norm of ``psi0``. With ``EXACT`` it is exact; with finite
+    ``n_shots`` the real and imaginary parts of the overlap each carry the shot
+    noise of a Hadamard test. For :math:`U = e^{-iHt}` and an eigenstate
+    :math:`\ket{\psi_0}` of energy :math:`E_0`, the result is :math:`E_0 t`.
 
     Parameters
     ----------
