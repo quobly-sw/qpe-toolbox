@@ -509,7 +509,7 @@ ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"{n_samples = }, most likely outcome");
 
 # %% [markdown]
-# Here, we see that adding more shots increases the probability of success (=probability of converging to $\theta_{\rm ex}$ as `m` grows) and reduces the chance to have an error at a given stage `m`, but also increases the accuracy of the most likely case. However, the simulation cost grows linearly with `n_shots`, as on a quantum computer each shot corresponds to a different run of the quantum algorithm.
+# Here, we see that adding more shots increases the probability of success (= the probability of converging to $\theta_{\rm ex}$ as `m` grows), reduces the chance of an error at a given stage `m`, and improves the accuracy of the most likely outcome. On a quantum computer this comes at a price: each shot is a separate run of the circuit, so the cost grows linearly with `n_shots` (in this classical emulation the cost does not depend on `n_shots` as we directly access the full probability distribution).
 #
 # To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. Let us mention that it is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
 
@@ -583,7 +583,7 @@ shot_counts_H2 = [2, 3, 1000]
 t0 = 1.0
 theta_exact_H2 = E0_H2 * t0
 
-# results are seed dependent when n_shot is small
+# results are seed dependent when n_shots is small
 # Here we pick a seed representative of the most common case.
 rng = np.random.default_rng(2)
 for n_shots in shot_counts_H2:
