@@ -89,8 +89,8 @@ def run_hadamard_test(
         Z(\beta) = P(0) - P(1)
                   = \mathrm{Re} \left[e^{i\beta} \bra{\psi} U \ket{\psi} \right]
 
-    where :math:`P(0)` and :math:`P(1)` are the probabilities of measuring
-    the ancilla qubit in states :math:`\ket{0}` and :math:`\ket{1}`.
+    where :math:`P(0)` and :math:`P(1)` are the normalized probabilities of
+    measuring the ancilla qubit in states :math:`\ket{0}` and :math:`\ket{1}`.
 
     Parameters
     ----------
@@ -128,8 +128,12 @@ def run_hadamard_test(
     aux_ind = 0  # as imposed by make_circMPS
 
     if n_shots is EXACT:
+        # quimb never renormalizes a truncated MPS: the discarded weight is left
+        # out of the state and used as its error estimate, so the marginals sum
+        # to the squared norm rather than to 1. ``circ.sample`` below normalizes
+        # its local probabilities, so only this branch needs the correction.
         probs = circ.compute_marginal(where=[aux_ind])
-        return probs[0] - probs[1]
+        return (probs[0] - probs[1]) / probs.sum()
 
     popcount = 0
     # as of quimb 1.13.0, arg qubits=[phase_qubit] is unsupported for circuitMPS

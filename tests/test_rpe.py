@@ -7,8 +7,13 @@ import scipy.linalg
 from qpe_toolbox import EXACT
 from qpe_toolbox.estimation import (
     angular_distance,
+    estimate_overlap_phase,
+    exact_evolution_powers,
+    measure_rpe_phases,
+    refine_rpe_phases,
     robust_phase_estimation,
     rpe_update_theta,
+    run_hadamard_test,
 )
 from qpe_toolbox.hamiltonian import Hamiltonian, do_dmrg, heisenberg_hamiltonian
 
@@ -86,6 +91,64 @@ def test_rpe_seed_deterministic():
     assert not np.array_equal(a, c)  # different seed -> different sampling
 
 
+def test_rpe_two_stage_composes():
+    # robust_phase_estimation == refine_rpe_phases o measure_rpe_phases. Every
+    # forwarded keyword is set away from its default, so dropping one from the
+    # delegation changes the phases and breaks the identity.
+    H = heisenberg_hamiltonian(4)
+    _E0, psi0 = do_dmrg(H)
+
+    cases = [
+        # exact evolution with finite shots pins t0 and rng
+        (EXACT, 1000, {"t0": 0.7}),
+        # Trotterization pins trotter_order and cutoff
+        (2, EXACT, {"trotter_order": 2, "cutoff": 1e-2}),
+        # max_bond only pins when it is the active truncation, so cutoff stays
+        # at its default here
+        (2, EXACT, {"max_bond": 3}),
+    ]
+    for n_trotter_steps, n_shots, opts in cases:
+        phi = measure_rpe_phases(
+            H, psi0, 5, n_trotter_steps, n_shots, rng=np.random.default_rng(7), **opts
+        )
+        theta = refine_rpe_phases(phi)
+
+        full = robust_phase_estimation(
+            H, psi0, 5, n_trotter_steps, n_shots, rng=np.random.default_rng(7), **opts
+        )
+        assert np.array_equal(theta, full)
+
+
+def test_rpe_control_free_matches_hadamard_test():
+    # the control-free overlap phase equals the two-Hadamard-test phase (EXACT)
+    H = heisenberg_hamiltonian(4)
+    _E0, psi0 = do_dmrg(H)
+    unitaries = exact_evolution_powers(H, 1.0, 3)
+
+    for m in range(3):
+        (u_gate,) = unitaries[m]
+        X = run_hadamard_test(psi0, u_gate, 0, EXACT)
+        Y = run_hadamard_test(psi0, u_gate, -np.pi / 2, EXACT)
+        phi_ref = -np.angle(X + 1j * Y)
+
+        phi = estimate_overlap_phase(psi0, unitaries[m], EXACT)
+        assert np.isclose(phi, phi_ref)
+
+
+def test_rpe_bernoulli_converges_to_exact():
+    # finite-shot phases converge to the exact phase as n_shots grows
+    H = heisenberg_hamiltonian(4)
+    _E0, psi0 = do_dmrg(H)
+
+    phi_exact = measure_rpe_phases(H, psi0, 4, EXACT, EXACT)
+    rng = np.random.default_rng(0)
+    samples = [measure_rpe_phases(H, psi0, 4, EXACT, 4000, rng=rng) for _ in range(50)]
+    # phases live on a circle: average and compare them modulo 2*pi, else a single
+    # sample crossing the +-pi cut drags the mean toward 0
+    phi_sampled = np.angle(np.mean(np.exp(1j * np.array(samples)), axis=0))
+    assert np.all(angular_distance(phi_sampled, phi_exact) < 0.05)
+
+
 def test_rpe_update_theta_matches_bruteforce():
     # the closed-form update must agree with an explicit O(2**m) candidate scan
     rng = np.random.default_rng(0)
@@ -107,4 +170,7 @@ if __name__ == "__main__":
     test_rpe()
     test_rpe_trotter()
     test_rpe_seed_deterministic()
+    test_rpe_two_stage_composes()
+    test_rpe_control_free_matches_hadamard_test()
+    test_rpe_bernoulli_converges_to_exact()
     test_rpe_update_theta_matches_bruteforce()

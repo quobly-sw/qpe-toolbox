@@ -280,18 +280,14 @@ rng = np.random.default_rng(42)
 t0 = 1.0
 theta_exact = E0 * t0
 
-# m = 0, evolution time = t0 * 2**0
-phi_0 = qpe.rpe_get_hadamard_output(psi0, H.get_exact_unitary(t0), n_shots, rng=rng)
+# measure the raw phases phi_m for the first two iterations m = 0, 1
+phi_0, phi_1 = qpe.measure_rpe_phases(H, psi0, 2, EXACT, n_shots, t0=t0, rng=rng)
 theta_0 = phi_0
 
 m = 1
-# m = 1, evolution time = t0 * 2**m
-phi_1 = qpe.rpe_get_hadamard_output(
-    psi0, H.get_exact_unitary(t0 * 2**m), n_shots, rng=rng
-)
-possible_phases_looped = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
+possible_phases = (phi_1 + 2 * np.pi * np.arange(2**m)) / 2**m
 # candidate phases, wrapped into (-pi, pi]
-possible_phases = (possible_phases_looped + np.pi) % (2 * np.pi) - np.pi
+possible_phases = (possible_phases + np.pi) % (2 * np.pi) - np.pi
 
 # %% [markdown]
 # Let us visualize how the different possible phases compare to $\theta_0$
@@ -359,7 +355,7 @@ theta_values = qpe.robust_phase_estimation(
 # this simulation introduces an error at step 7
 # consequently `theta_m` converge to a wrong value
 print(f"Target phase {theta_exact=:.4f}")
-rng = np.random.default_rng(31)
+rng = np.random.default_rng(18)
 errored_theta = qpe.robust_phase_estimation(
     H, psi0, 14, EXACT, 1, t0=t0, verbosity=1, rng=rng
 )
@@ -513,7 +509,7 @@ ax.set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$")
 ax.set_title(f"{n_samples = }, most likely outcome");
 
 # %% [markdown]
-# Here, we see that adding more shots increases the probability of success (=probability of converging to $\theta_{\rm ex}$ as `m` grows) and reduces the chance to have an error at a given stage `m`, but also increases the accuracy of the most likely case. However, the simulation cost grows linearly with `n_shots`, as on a quantum computer each shot corresponds to a different run of the quantum algorithm.
+# Here, we see that adding more shots increases the probability of success (= the probability of converging to $\theta_{\rm ex}$ as `m` grows), reduces the chance of an error at a given stage `m`, and improves the accuracy of the most likely outcome. On a quantum computer this comes at a price: each shot is a separate run of the circuit, so the cost grows linearly with `n_shots` (in this classical emulation the cost does not depend on `n_shots` as we directly access the full probability distribution).
 #
 # To conclude this section, the robust phase estimation works surprisingly well even for small values of `n_shots`, although errors are still possible. Let us mention that it is possible to write consistency checks in order to detect an error at step `m`. We will not discuss this here and refer to [Phys. Rev. A 103, 042609](https://doi.org/10.1103/PhysRevA.103.042609) for more details.
 
@@ -587,7 +583,7 @@ shot_counts_H2 = [2, 3, 1000]
 t0 = 1.0
 theta_exact_H2 = E0_H2 * t0
 
-# results are seed dependent when n_shot is small
+# results are seed dependent when n_shots is small
 # Here we pick a seed representative of the most common case.
 rng = np.random.default_rng(2)
 for n_shots in shot_counts_H2:
@@ -611,7 +607,7 @@ plt.ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 #
 # The `n_trotter_steps` argument in the `robust_phase_estimation` function sets the number of Trotter steps for $m=0$. The number of steps is multiplied by $2$ at each iteration to keep the Trotter timestep constant.
 #
-# The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative of the most likely case. The following run will take a minute.
+# The computation will now take longer since the number of gates for the time evolution grows like $2^m$. Here for simplicity we choose a single seed which happens to be representative of the most likely case.
 
 # %%
 # %%time
@@ -627,7 +623,7 @@ thetas_trotter_H2 = qpe.robust_phase_estimation(
     n_shots,
     t0=t0,
     trotter_order=2,
-    verbosity=1,
+    verbosity=2,
     rng=rng,
 )
 distances_trotter_H2 = qpe.angular_distance(thetas_trotter_H2, theta_exact_H2)
