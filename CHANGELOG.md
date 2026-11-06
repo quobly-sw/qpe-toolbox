@@ -47,6 +47,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `Hamiltonian.to_dense` and `Hamiltonian.get_exact_unitary` are faster for larger systems.
 - `optuna` dependency moved from core dependency to recommended.
 - RPE now measures each phase from a single control-free `CircuitMPS` simulation of the overlap `⟨ψ₀|U|ψ₀⟩` (no ancilla qubit) instead of two Hadamard-test circuits; finite `n_shots` are emulated from the exact expectation via the Bernoulli law rather than by circuit sampling. `rpe_get_hadamard_output` keeps its signature `(psi0, unitary, n_shots, *, cutoff, max_bond, rng)` but now computes a single overlap.
+- `robust_phase_estimation`: `verbosity=1` now prints the measured and refined phases (`phi_m` and `theta_m`) in a single table once the run is over, while `verbosity=2` additionally prints each `phi_m` with its elapsed time as it is measured. `measure_rpe_phases` prints that per-iteration table at `verbosity=2` and nothing at `verbosity=1`.
 
 ### Removed
 
@@ -79,6 +80,11 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
   now only truncated at machine precision.
 - `optimize_single_gate_update`: optimized gate tensors could end up with their
   input legs swapped, so reading their data as a gate matrix gave the wrong gate.
+- `run_hadamard_test` (with `n_shots=EXACT`) and `rpe_get_hadamard_output`: the
+  measured expectation values were not normalized by the state norm. quimb leaves a
+  truncated MPS sub-normalized, so both were biased by the discarded weight (a
+  10-site chain at `max_bond=2` shrank them by about 20%), and a `psi0` whose norm
+  differs from 1 could clamp a sampled phase onto a wrong deterministic value.
 
 ## [1.1.0] - 2026-04-02
 
