@@ -126,11 +126,11 @@ def test_rpe_bernoulli_converges_to_exact():
 
     phi_exact = measure_rpe_phases(H, psi0, 4, EXACT, EXACT)
     rng = np.random.default_rng(0)
-    phi_sampled = np.mean(
-        [measure_rpe_phases(H, psi0, 4, EXACT, 4000, rng=rng) for _ in range(50)],
-        axis=0,
-    )
-    assert np.allclose(phi_sampled, phi_exact, atol=0.05)
+    samples = [measure_rpe_phases(H, psi0, 4, EXACT, 4000, rng=rng) for _ in range(50)]
+    # phases live on a circle: average and compare them modulo 2*pi, else a single
+    # sample crossing the +-pi cut drags the mean toward 0
+    phi_sampled = np.angle(np.mean(np.exp(1j * np.array(samples)), axis=0))
+    assert np.all(angular_distance(phi_sampled, phi_exact) < 0.05)
 
 
 def test_rpe_update_theta_matches_bruteforce():
