@@ -306,16 +306,14 @@ def _rpe_overlap(psi0, unitary, *, cutoff, max_bond):
     r"""Return :math:`\bra{\psi_0} U \ket{\psi_0}` from a control-free simulation."""
     if isinstance(unitary, qtn.Gate):
         unitary = [unitary]
-    # quimb copies psi0 into the circuit and returns another copy from circ.psi:
-    # no explicit copy is needed and normalizing ket leaves the circuit intact
-    circ = qtn.CircuitMPS(psi0=psi0, cutoff=cutoff, max_bond=max_bond)
-    circ.apply_gates(unitary)
-    # quimb never renormalizes a truncated MPS: the discarded weight is left out
-    # of the state and used as its error estimate. Normalizing both states keeps
-    # z a genuine expectation value, bounded by 1 and independent of the norm of
-    # psi0, as measured by a Hadamard test on hardware.
+    # normalize up front so that z, and quimb's own truncation error estimate, do
+    # not depend on the norm of psi0
     bra = psi0.copy()
     bra.normalize()
+    circ = qtn.CircuitMPS(psi0=bra, cutoff=cutoff, max_bond=max_bond)
+    circ.apply_gates(unitary)
+    # quimb never renormalizes a truncated MPS, it keeps the discarded weight as
+    # its error estimate. circ.psi is a copy, so this leaves the circuit intact.
     ket = circ.psi
     ket.normalize()
     return bra.H @ ket
