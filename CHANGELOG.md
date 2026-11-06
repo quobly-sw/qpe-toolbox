@@ -47,7 +47,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `Hamiltonian.to_dense` and `Hamiltonian.get_exact_unitary` are faster for larger systems.
 - `optuna` dependency moved from core dependency to recommended.
 - RPE now measures each phase from a single control-free `CircuitMPS` simulation of the overlap `⟨ψ₀|U|ψ₀⟩` (no ancilla qubit) instead of two Hadamard-test circuits; finite `n_shots` are emulated from the exact expectation via the Bernoulli law rather than by circuit sampling. Without an ancilla to entangle, the simulated state carries less entanglement, so the result is more accurate at a given `max_bond`.
-- `robust_phase_estimation`: `verbosity=1` now prints the measured and refined phases (`phi_m` and `theta_m`) in a single table once the run is over, while `verbosity=2` additionally prints each `phi_m` with its elapsed time as it is measured. `measure_rpe_phases` prints that per-iteration table at `verbosity=2` and nothing at `verbosity=1`.
+- `robust_phase_estimation`: `verbosity=1` now prints both `phi_m` and `theta_m`; the per-iteration progress moved to `verbosity=2`.
 
 ### Removed
 
