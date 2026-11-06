@@ -92,15 +92,31 @@ def test_rpe_seed_deterministic():
 
 
 def test_rpe_two_stage_composes():
-    # robust_phase_estimation == refine_rpe_phases o measure_rpe_phases
+    # robust_phase_estimation == refine_rpe_phases o measure_rpe_phases. Every
+    # forwarded keyword is set away from its default, so dropping one from the
+    # delegation changes the phases and breaks the identity.
     H = heisenberg_hamiltonian(4)
     _E0, psi0 = do_dmrg(H)
 
-    phi = measure_rpe_phases(H, psi0, 5, EXACT, 4, rng=np.random.default_rng(7))
-    theta = refine_rpe_phases(phi)
+    cases = [
+        # exact evolution with finite shots pins t0 and rng
+        (EXACT, 1000, {"t0": 0.7}),
+        # Trotterization pins trotter_order and cutoff
+        (2, EXACT, {"trotter_order": 2, "cutoff": 1e-2}),
+        # max_bond only pins when it is the active truncation, so cutoff stays
+        # at its default here
+        (2, EXACT, {"max_bond": 3}),
+    ]
+    for n_trotter_steps, n_shots, opts in cases:
+        phi = measure_rpe_phases(
+            H, psi0, 5, n_trotter_steps, n_shots, rng=np.random.default_rng(7), **opts
+        )
+        theta = refine_rpe_phases(phi)
 
-    full = robust_phase_estimation(H, psi0, 5, EXACT, 4, rng=np.random.default_rng(7))
-    assert np.array_equal(theta, full)
+        full = robust_phase_estimation(
+            H, psi0, 5, n_trotter_steps, n_shots, rng=np.random.default_rng(7), **opts
+        )
+        assert np.array_equal(theta, full)
 
 
 def test_rpe_control_free_matches_hadamard_test():
