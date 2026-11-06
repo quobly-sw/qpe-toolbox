@@ -181,9 +181,6 @@ def measure_rpe_phases(
         Raw phase estimates :math:`\phi_0, \dots, \phi_{M-1}` in radians.
     """
     st = time.time()
-    if rng is None:
-        rng = np.random.default_rng()
-
     unitaries = evolution_powers(
         hamiltonian, t0, n_trotter_steps, n_repetitions, trotter_order=trotter_order
     )
