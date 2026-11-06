@@ -8,6 +8,7 @@
 # --------------------------------------------------------------------------------------
 
 import time
+import warnings
 
 import numpy as np
 import quimb.tensor as qtn
@@ -316,7 +317,14 @@ def _rpe_overlap(psi0, unitary, *, cutoff, max_bond):
     # its error estimate. circ.psi is a copy, so this leaves the circuit intact.
     ket = circ.psi
     ket.normalize()
-    return bra.H @ ket
+    z = bra.H @ ket
+    if abs(z) < 1e-12:
+        warnings.warn(
+            "<psi0|U|psi0> vanishes: the phase is undefined and the returned "
+            "estimate cannot be trusted.",
+            stacklevel=3,
+        )
+    return z
 
 
 def _sample_hadamard(z_component, n_shots, rng):
