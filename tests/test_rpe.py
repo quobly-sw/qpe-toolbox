@@ -7,11 +7,11 @@ import scipy.linalg
 from qpe_toolbox import EXACT
 from qpe_toolbox.estimation import (
     angular_distance,
+    estimate_overlap_phase,
     exact_evolution_powers,
     measure_rpe_phases,
     refine_rpe_phases,
     robust_phase_estimation,
-    rpe_get_hadamard_output,
     rpe_update_theta,
     run_hadamard_test,
 )
@@ -131,7 +131,7 @@ def test_rpe_control_free_matches_hadamard_test():
         Y = run_hadamard_test(psi0, u_gate, -np.pi / 2, EXACT)
         phi_ref = -np.angle(X + 1j * Y)
 
-        phi = rpe_get_hadamard_output(psi0, unitaries[m], EXACT)
+        phi = estimate_overlap_phase(psi0, unitaries[m], EXACT)
         assert np.isclose(phi, phi_ref)
 
 

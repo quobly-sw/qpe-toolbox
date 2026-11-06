@@ -191,7 +191,7 @@ def measure_rpe_phases(
         print(f"m \t {'phi_m':<6} \t {'time (s)'}")
 
     for m in range(n_repetitions):
-        phi_values[m] = rpe_get_hadamard_output(
+        phi_values[m] = estimate_overlap_phase(
             psi0,
             unitaries[m],
             n_shots,
@@ -240,7 +240,7 @@ def refine_rpe_phases(phi_values):
     return theta_values
 
 
-def rpe_get_hadamard_output(
+def estimate_overlap_phase(
     psi0,
     unitary,
     n_shots,
@@ -250,7 +250,7 @@ def rpe_get_hadamard_output(
     rng=None,
 ):
     r"""
-    Estimate minus the phase of :math:`\bra{\psi_0} U \ket{\psi_0}` for one RPE iteration.
+    Estimate minus the phase of :math:`\bra{\psi_0} U \ket{\psi_0}`.
 
     The returned phase is :math:`\phi = -\arg \bra{\psi_0} U \ket{\psi_0}`,
     independent of the norm of ``psi0``. With ``EXACT`` it is exact; with finite
