@@ -259,7 +259,6 @@ def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
     Run robust phase estimation using the LCU walk operator.
     Returns array of phase estimates after each iteration.
     """
-    print(k_state)
     k_round = 8 * k_state
 
     mps_prep = lcu.prepare_mps
@@ -285,7 +284,7 @@ def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
         ind = sp.linalg.hankel(np.arange(k_round + 2))[
             : k_round // 2 + 1, : k_round // 2 + 1
         ]
-        u, *_ = np.linalg.svd(phi[ind], full_matrices=True)
+        u, *_ = np.linalg.svd(phi[ind], full_matrices=False)
         u0 = u[0 : k_round // 2, 0 : 2 * k_state]
         u0 = np.linalg.pinv(u0)
         u1 = u[-k_round // 2 :, 0 : 2 * k_state]

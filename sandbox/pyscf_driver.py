@@ -717,8 +717,6 @@ class PySCFDriver:
             self._mo_occ = self._mo_occ[best_perm]
 
         self.molecule.orbital_energies = None
-        self.df_factors = None
-        self.molecule._df_factors = None
         self.orbital_permutation = best_perm
         # Invalidate BLISS state (integrals have been permuted)
         self._bliss_applied = False
@@ -794,8 +792,6 @@ class PySCFDriver:
 
         # Invalidate derived data
         self.molecule.orbital_energies = None
-        self.df_factors = None
-        self.molecule._df_factors = None
         self._bliss_applied = True
         self._bliss_params = (new_core, new_one, new_two_chem)
 
@@ -864,7 +860,8 @@ def get_quimb_hamiltonian(interaction_op, n_qubits, cutoff):
 # Example
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
-    geometry = [("H", (0, 0, 0)), ("H", (0, 0, 0.7414))]
+    # geometry = [("H", (0, 0, 0)), ("H", (0, 0, 0.7414))]
+    geometry = [("H", (0, 0, 0)), ("F", (0, 0, 0.956))]
     basis = "sto-3g"
 
     # 1. Driver + SCF
@@ -885,5 +882,5 @@ if __name__ == "__main__":
     dmrg = DMRG2(mpo_H)
     dmrg.solve(max_sweeps=64, tol=1e-8, bond_dims=128, cutoffs=1e-12, verbosity=0)
     dmrg_energy = np.real(dmrg.energy) + np.real(mat_H.e_const)
-    print("DMRG energy :", dmrg.energy)
+    print("DMRG energy :", np.real(dmrg.energy))
     print("DMRG energy (including E_core):", dmrg_energy)
