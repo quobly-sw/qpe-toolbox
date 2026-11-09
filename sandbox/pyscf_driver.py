@@ -44,14 +44,15 @@ def _symmetry_shift_terms(params, xi_idx, norb):
 
 def _symmetry_shift_two_body_loss(params, two, xi_idx):
     _, k2, _, _, N2, F_ = _symmetry_shift_terms(params, xi_idx, two.shape[0])
-    return np.linalg.norm(two - k2 * N2 - F_ / 4)
+    new_two = two - k2 * N2 - F_ / 4
+    return np.sum(np.abs(new_two))
 
 
 def _symmetry_shift_one_body_loss(x, one, xi, k2, n_elec, norb):
     """Step-2 loss; only k1 = x[0] is free, ξ and k2 are frozen."""
     k1 = x[0]
     new_one = one - k1 * np.eye(norb) - k2 * np.eye(norb) + (n_elec - 1) * xi / 4
-    return np.linalg.norm(new_one)
+    return np.sum(np.abs(new_one))
 
 
 def symmetry_shift(
@@ -718,6 +719,7 @@ class PySCFDriver:
 
         self.molecule.orbital_energies = None
         self.orbital_permutation = best_perm
+
         # Invalidate BLISS state (integrals have been permuted)
         self._bliss_applied = False
         self._bliss_params = None
@@ -761,7 +763,7 @@ class PySCFDriver:
         two_chem = np.asarray(two_of.transpose(0, 3, 1, 2), order="C")
 
         # Record original one-norm for reporting
-        orig_one_norm = np.sum(np.abs(two_chem)) + np.sum(np.abs(one)) + abs(core)
+        orig_one_norm = np.sum(np.abs(two_chem)) + np.sum(np.abs(one))  # + abs(core)
 
         # Call BLISS
         if self.verbose:
@@ -782,7 +784,7 @@ class PySCFDriver:
 
         # Compute new one-norm
         new_one_norm = (
-            np.sum(np.abs(new_two_of)) + np.sum(np.abs(new_one)) + abs(new_core)
+            np.sum(np.abs(new_two_of)) + np.sum(np.abs(new_one))  # + abs(new_core)
         )
 
         # Write back into MolecularData
@@ -860,8 +862,7 @@ def get_quimb_hamiltonian(interaction_op, n_qubits, cutoff):
 # Example
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
-    # geometry = [("H", (0, 0, 0)), ("H", (0, 0, 0.7414))]
-    geometry = [("H", (0, 0, 0)), ("F", (0, 0, 0.956))]
+    geometry = [("H", (0, 0, 0)), ("F", (0, 0, 0.956))]  # -98.60179315888999
     basis = "sto-3g"
 
     # 1. Driver + SCF
