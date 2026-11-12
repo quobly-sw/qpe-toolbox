@@ -21,7 +21,7 @@ factorization (SF) and double factorization (DF).
 import numpy as np
 import scipy as sp
 from openfermion.ops import InteractionOperator
-from pyscf import ao2mo, mcscf, scf
+from pyscf import ao2mo, mcscf
 
 # pyscf lib.einsum is almost the same with np.einsum
 # output subscripts must be explicit
@@ -294,44 +294,6 @@ def make_fermionic_hamiltonian_uhf(energy_constant, hpq, hpqrs, *, orbital_major
     two_elec_tensor[dw, dw, dw, dw] = hpqrs_dd.transpose((0, 2, 3, 1)) / 2.0
 
     return InteractionOperator(energy_constant, one_elec_tensor, two_elec_tensor)
-
-
-# can select the get_integrals_rhf/get_integrals_uhf function manually
-# or automatically
-def make_fermionic_hamiltonian_auto(mf, *, orbital_major=True):
-    """
-    Construct an :openfermion-ops:`InteractionOperator` from any PySCF mean-field object.
-
-    Dispatches to :func:`make_fermionic_hamiltonian_rhf` for
-    :pyscf-api:`pyscf.scf.RHF <scf.html>` /
-    :pyscf-api:`pyscf.scf.ROHF <scf.html>` objects and to
-    :func:`make_fermionic_hamiltonian_uhf` for
-    :pyscf-api:`pyscf.scf.UHF <scf.html>` objects.
-
-    Parameters
-    ----------
-    mf : :pyscf-api:`pyscf.scf.RHF <scf.html>` or :pyscf-api:`pyscf.scf.ROHF <scf.html>` or :pyscf-api:`pyscf.scf.UHF <scf.html>`
-        Converged PySCF mean-field object.
-    orbital_major : bool, default: True
-        Spin-to-qubit mapping convention passed through to the underlying
-        assembly function. See :func:`make_fermionic_hamiltonian_rhf`.
-
-    Returns
-    -------
-    :openfermion-ops:`InteractionOperator`
-        Second-quantised fermionic Hamiltonian.
-    """
-    if isinstance(mf, (scf.hf.RHF, scf.rohf.ROHF)):
-        _, _, ecore, hpq, hpqrs = get_integrals_rhf(mf)
-        return make_fermionic_hamiltonian_rhf(
-            ecore, hpq, hpqrs, orbital_major=orbital_major
-        )
-    if isinstance(mf, scf.uhf.UHF):
-        _, _, ecore, hpq, hpqrs = get_integrals_uhf(mf)
-        return make_fermionic_hamiltonian_uhf(
-            ecore, hpq, hpqrs, orbital_major=orbital_major
-        )
-    raise NotImplementedError(f"get_integrals for {mf.__class__} not implemented")
 
 
 # for rhf, input the hpqrs

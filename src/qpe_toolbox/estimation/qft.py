@@ -141,27 +141,3 @@ def iqft(wires):
             iqft_routine.append(gate)
 
     return iqft_routine
-
-
-def count_gates_qft_swapped(m):
-    """
-    Compute the number of gates in the recursive QFT (reversed bit ordering).
-
-    Parameters
-    ----------
-    m : int
-        Number of qubits in the QFT.
-
-    Returns
-    -------
-    dict[str, int]
-        Dictionary with keys:
-        - ``'H'`` : number of Hadamard gates
-        - ``'CPHASE'`` : number of controlled-phase gates
-
-    Notes
-    -----
-    - SWAP gates are **not** counted.
-    - Gate count corresponds to the reversed-output QFT.
-    """
-    return {"H": m, "CPHASE": (m * (m - 1)) // 2}

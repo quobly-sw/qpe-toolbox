@@ -496,9 +496,7 @@ def qpe_first_stage_walk(
         circ.apply_gate("H", k)
     # sequence of controlled-W
     for k in regs["phase"]:
-        cRLk_mpo = controlled_mpo(
-            RL_mpo, phys_reg=regs["L"] + regs["phys"], aux_reg=regs["phase"], k_ctrl=k
-        )
+        cRLk_mpo = controlled_mpo(RL_mpo, k)
         cRLk_mpo.compress(cutoff=cutoff)
         # consumed once per repetition below, so the generator must be materialized
         cSELECTk = list(shift_control_gates(select_gates, m_aux=m_ph, k_ctrl=k))
