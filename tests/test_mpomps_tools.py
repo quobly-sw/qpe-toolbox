@@ -5,7 +5,20 @@ import pytest
 import quimb.tensor as qtn
 
 from qpe_toolbox.hamiltonian import heisenberg_hamiltonian
-from qpe_toolbox.tensor import kron_mpos, kron_mps, state_preparation_mpo
+from qpe_toolbox.tensor import (
+    add_cqubit_mpo,
+    controlled_mpo,
+    kron_mpos,
+    kron_mps,
+    state_preparation_mpo,
+)
+
+X = np.array([[0, 1], [1, 0]], dtype=complex)
+Z = np.diag([1.0, -1.0]).astype(complex)
+P0 = np.array([[1, 0], [0, 0]], dtype=complex)
+P1 = np.array([[0, 0], [0, 1]], dtype=complex)
+# raising operator S+, deliberately non-symmetric to catch a u/d leg swap
+SP = np.array([[0, 1], [0, 0]], dtype=complex)
 
 # define
 
@@ -72,8 +85,114 @@ def test_state_preparation_mpo():
     assert np.allclose(dense @ e0, 2**n * mps.to_dense().reshape(-1), atol=1e-8)
 
 
+def test_kron_verbosity(capsys):
+    # verbosity > 0 prints the resulting tensor shapes
+    res = kron_mps(
+        qtn.MPS_computational_state("0"),
+        qtn.MPS_computational_state("1"),
+        verbosity=1,
+    )
+    assert res.L == 2
+    assert capsys.readouterr().out.strip() != ""
+
+
+def test_kron_weird_shapes():
+    # single-site qudit (dim 3) violates the qubit boundary conventions
+    qudit_mpo = qtn.MatrixProductOperator([np.eye(3)])
+    with pytest.raises(ValueError, match="Weird shape mpo1"):
+        kron_mpos(qudit_mpo, qtn.MPO_identity(2))
+    with pytest.raises(ValueError, match="Weird shape mpo2"):
+        kron_mpos(qtn.MPO_identity(2), qudit_mpo)
+
+    qudit_mps = qtn.MatrixProductState([np.array([1.0, 0, 0])])
+    with pytest.raises(ValueError, match="Weird shape mps1"):
+        kron_mps(qudit_mps, qtn.MPS_computational_state("0"))
+    with pytest.raises(ValueError, match="Weird shape mps2"):
+        kron_mps(qtn.MPS_computational_state("0"), qudit_mps)
+
+
+def test_add_cqubit_mpo():
+    # U = S+ ⊗ Z as a two-site MPO
+    def two_site_u():
+        return qtn.MatrixProductOperator([SP.reshape(1, 2, 2), Z.reshape(1, 2, 2)])
+
+    u_dense = np.kron(SP, Z)
+
+    # "before" adds the control as the first qubit: |0><0|⊗I + |1><1|⊗U
+    before = add_cqubit_mpo(two_site_u(), "before").to_dense()
+    expected_first = np.kron(P0, np.eye(4)) + np.kron(P1, u_dense)
+    assert np.allclose(before, expected_first)
+
+    # "after" adds the control as the last qubit: I⊗|0><0| + U⊗|1><1|
+    after = add_cqubit_mpo(two_site_u(), "after").to_dense()
+    expected_last = np.kron(np.eye(4), P0) + np.kron(u_dense, P1)
+    assert np.allclose(after, expected_last)
+
+    with pytest.raises(ValueError, match="Invalid location"):
+        add_cqubit_mpo(two_site_u(), "sideways")
+
+
+def test_controlled_mpo():
+    # U = S+ ⊗ Z, preceded or followed by the identity on the control qubit
+    u_dense = np.kron(SP, Z)
+    eye = np.eye(2, dtype=complex)
+
+    def id_then_u():
+        return qtn.MatrixProductOperator(
+            [eye.reshape(1, 2, 2), SP.reshape(1, 1, 2, 2), Z.reshape(1, 2, 2)]
+        )
+
+    def u_then_id():
+        return qtn.MatrixProductOperator(
+            [SP.reshape(1, 2, 2), Z.reshape(1, 1, 2, 2), eye.reshape(1, 2, 2)]
+        )
+
+    for ctrl, proj, anti in ((0, P0, P1), (1, P1, P0)):
+        # control on the first site, whose tensor has only three legs
+        res = controlled_mpo(id_then_u(), 0, ctrl=ctrl).to_dense()
+        assert np.allclose(res, np.kron(proj, u_dense) + np.kron(anti, np.eye(4)))
+
+        # control on the last site, likewise a boundary tensor
+        res = controlled_mpo(u_then_id(), 2, ctrl=ctrl).to_dense()
+        assert np.allclose(res, np.kron(u_dense, proj) + np.kron(np.eye(4), anti))
+
+
+def test_controlled_mpo_interior_control():
+    # control on an interior site, whose tensor has four legs
+    eye = np.eye(2, dtype=complex)
+    mpo = qtn.MatrixProductOperator(
+        [SP.reshape(1, 2, 2), eye.reshape(1, 1, 2, 2), Z.reshape(1, 2, 2)]
+    )
+    res = controlled_mpo(mpo, 1).to_dense()
+    expected = np.kron(np.kron(SP, P1), Z) + np.kron(np.kron(eye, P0), eye)
+    assert np.allclose(res, expected)
+
+
+def test_controlled_mpo_guards():
+    # the control tensor must carry trivial bonds on both sides
+    eye = np.eye(2, dtype=complex)
+    zero = np.zeros((2, 2), dtype=complex)
+    mpo_wide = qtn.MatrixProductOperator(
+        [np.array([eye, zero]), np.array([[eye], [zero]]), eye.reshape(1, 2, 2)]
+    )
+    with pytest.raises(ValueError, match="Invalid MPO tensor shape"):
+        controlled_mpo(mpo_wide, 1)
+
+    # the control tensor must be the identity
+    mpo_bad = qtn.MatrixProductOperator(
+        [eye.reshape(1, 2, 2), X.reshape(1, 1, 2, 2), eye.reshape(1, 2, 2)]
+    )
+    with pytest.raises(ValueError, match="Invalid control MPO tensor"):
+        controlled_mpo(mpo_bad, 1)
+
+
 # run
 if __name__ == "__main__":
     test_kronmps()
     test_kronmpos()
     test_state_preparation_mpo()
+    test_kron_weird_shapes()
+    test_add_cqubit_mpo()
+    test_controlled_mpo()
+    test_controlled_mpo_interior_control()
+    test_controlled_mpo_guards()

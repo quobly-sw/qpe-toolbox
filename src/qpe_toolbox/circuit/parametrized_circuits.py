@@ -200,12 +200,12 @@ def two_qubit_rand_layer(
         Label identifying the two-body entangling gate.
 
     gate_range : int
-        Sets a maximum interaction range ``(gate_range+1)`` for two-body entangling gates,
-        measured in qubit index separation.
+        Maximum qubit index separation between the two qubits of an entangling gate.
+        Separations are drawn uniformly between ``1`` and ``gate_range``.
 
     gate_prob : float
         Probability threshold controlling whether an entangling gate is
-        applied. A gate is applied if ``rng_prob.random() <= gate_prob``.
+        applied. A gate is applied if ``rng.random() < gate_prob``.
 
     rng : :numpy-random:`numpy.random.Generator <generator>`, default ``None``
         Random number generator for ``gate_range`` and ``gate_prob``. If None a new
@@ -232,7 +232,7 @@ def two_qubit_rand_layer(
 
     gate_label = gate_label.upper()
     extra_kwargs = {}
-    if gate_label in qtn.circuit.ALL_PARAM_GATES:
+    if gate_label in qtn.circuit.TWO_QUBIT_PARAM_GATES:
         params = param_scaling * rng.random(_gate_parameter_numbers[gate_label])
         extra_kwargs["parametrize"] = bool(parametrize)
     elif gate_label in qtn.circuit.TWO_QUBIT_GATES:
@@ -307,10 +307,10 @@ def generate_brickwall_circuit(
     two_qubit_gate_label : str
         Label identifying the two-body entangling gate.
 
-    include_1qubit_gates : bool, optional
+    include_1qubit_gates : bool, default ``True``
         If ``True``, each layer includes both single-body and entangling rotations.
-        Otherwise (default ``False``), the circuit will be purely constituted by
-        even and odd layers of entangling rotations.
+        Otherwise, the circuit will be purely constituted by even and odd layers
+        of entangling rotations.
 
     param_scaling : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
@@ -416,8 +416,8 @@ def generate_rand_circuit(
         Label identifying the two-body entangling gate.
 
     two_qubit_gate_range : int
-        Sets a maximum interaction range ``(two_qubit_gate_range+1)`` for two-body entangling gates,
-        measured in qubit index separation.
+        Maximum qubit index separation between the two qubits of an entangling gate.
+        Separations are drawn uniformly between ``1`` and ``two_qubit_gate_range``.
 
     two_qubit_gate_prob : float
         Probability threshold controlling the application of an entangling
@@ -426,7 +426,7 @@ def generate_rand_circuit(
     param_scaling : float, default ``1.0``
         Scaling factor for randomly initialized parameters.
 
-    parametrize : bool, default ``True``
+    parametrize : bool, default ``False``
         If ``True``, gate parameters are marked as variational (parametrized)
         for use in an Ansatz. When ``False``, the circuit is fixed with random
         parameters (not trainable).
