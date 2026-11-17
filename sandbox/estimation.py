@@ -220,18 +220,15 @@ def _rmpe_update_thetas(phi_ms, theta_refs, m=None, M=None):
     phi_ms = np.atleast_1d(phi_ms).astype(float)
     theta_refs = np.atleast_1d(theta_refs).astype(float)
 
-    # One-to-one matching, useful after the S eigenvalues are resolved.
-    cost = np.empty((len(phi_ms), len(theta_refs)))
-    for i, phi in enumerate(phi_ms):
-        for j, ref in enumerate(theta_refs):
-            cand = _rmpe_update_theta_M(phi, ref, M)
-            cost[i, j] = abs(cand - ref)
+    # One-to-one matching
+    cands = np.array(
+        [[_rmpe_update_theta_M(phi, ref, M) for ref in theta_refs] for phi in phi_ms]
+    )
 
+    # Optimal assignment
+    cost = np.abs(cands - theta_refs[None, :])
     row_ind, col_ind = sp.optimize.linear_sum_assignment(cost)
-    out = [None] * len(phi_ms)
-    for i, j in zip(row_ind, col_ind, strict=True):
-        out[i] = _rmpe_update_theta_M(phi_ms[i], theta_refs[j], M)
-    return out
+    return [cands[i, j] for i, j in zip(row_ind, col_ind, strict=True)]
 
 
 def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
@@ -261,7 +258,7 @@ def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
                 rng=rng,
             )
 
-        ## Signal processing routine [PRA.108.062409 Sec IV]
+        ## Signal processing ESPRIT routine [PRA.108.062409 Sec IV]
         ind = sp.linalg.hankel(np.arange(k_round + 2))[
             : k_round // 2 + 1, : k_round // 2 + 1
         ]
