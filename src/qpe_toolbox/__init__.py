@@ -22,22 +22,9 @@ Subpackages are loaded lazily on first attribute access.
 """
 
 import enum
-import importlib
 
 __version__ = "1.1.0"
 """QPE Toolbox version string"""
-
-_SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
-
-
-def __getattr__(name):
-    if name in _SUBPACKAGES:
-        return importlib.import_module(f"{__name__}.{name}")
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
-def __dir__():
-    return [*globals(), *_SUBPACKAGES]
 
 
 class _Exact(enum.Enum):
@@ -51,3 +38,17 @@ Sentinel constant for requesting exact computation.
 Use ``EXACT`` to replace an approximation in real world quantum computation
 (e.g., time evolution or sampling)
 """
+
+del enum
+
+_SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
+
+
+def __getattr__(name):
+    if name in _SUBPACKAGES:
+        return __import__(f"{__name__}.{name}", fromlist=(name,))
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(_SUBPACKAGES))
