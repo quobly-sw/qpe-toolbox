@@ -6,12 +6,14 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import importlib
+import importlib.metadata
 import inspect
 
 project = "qpe-toolbox"
 project_copyright = "2026, Quobly and Foxconn"
 author = "Quobly"
-release = "2026, Quobly"
+release = importlib.metadata.version("qpe_toolbox")
+version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -162,3 +164,15 @@ myst_enable_extensions = [
     "dollarmath",
     "html_image",
 ]
+
+
+# -- AutoAPI member filtering ---------------------------------------------------
+# Document qpe_toolbox.__version__, which AutoAPI skips as private.
+def keep_package_version(app, what, name, obj, skip, options):
+    if name == "qpe_toolbox.__version__":
+        return False
+    return None
+
+
+def setup(app):
+    app.connect("autoapi-skip-member", keep_package_version)
