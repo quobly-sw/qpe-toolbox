@@ -32,8 +32,6 @@ extensions = [
     "sphinx.ext.extlinks",
 ]
 
-templates_path = ["_templates"]
-
 # -- Link to other documentation -----------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
