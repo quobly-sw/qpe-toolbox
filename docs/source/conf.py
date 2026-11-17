@@ -125,7 +125,6 @@ autoapi_python_class_content = "both"
 autoapi_member_order = "bysource"
 autoapi_keep_files = True
 autoapi_generate_api_docs = True
-autoapi_template_dir = "_templates/autoapi"
 autoapi_ignore = ["*.ipynb_checkpoints*"]
 
 
