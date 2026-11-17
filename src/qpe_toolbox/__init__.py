@@ -12,7 +12,7 @@ QPE Toolbox: A Quantum Phase Estimation Toolbox.
 Documentation is available in the doscstrings and online
 at https://quobly-sw.github.io/qpe-toolbox/
 
-Subpackages must be explicitly imported:
+Subpackages are loaded lazily on first attribute access.
 ::
 
 - qpe_toolbox.circuit           --- creation and manipulation of `quimb` circuits.
@@ -22,8 +22,22 @@ Subpackages must be explicitly imported:
 """
 
 import enum
+import importlib
 
 __version__ = "1.1.0"
+"""QPE Toolbox version string"""
+
+_SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
+
+
+def __getattr__(name):
+    if name in _SUBPACKAGES:
+        return importlib.import_module(f"{__name__}.{name}")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return [*globals(), *_SUBPACKAGES]
 
 
 class _Exact(enum.Enum):
