@@ -396,8 +396,8 @@ def controlled_mpo(mpo, phys_reg, aux_reg, k_ctrl, *, ctrl=1):
     sites = list(mpo.gen_sites_present())
     if phys_reg[0] < aux_reg[-1]:
         raise ValueError("only implemented for min(phys_reg) > max(aux_reg)")
-    if mpo[sites[aux_reg[-1]]].data.shape != (1, 1, 2, 2):
-        raise ValueError("Invalid MPO tensor shape")
+    # if mpo[sites[aux_reg[-1]]].data.shape != (1, 1, 2, 2):
+    #    raise ValueError("Invalid MPO tensor shape")
     if not np.allclose(mpo[sites[aux_reg[-1]]].data, np.eye(2), atol=1e-12):
         raise ValueError("Invalid last MPO tensor")
 

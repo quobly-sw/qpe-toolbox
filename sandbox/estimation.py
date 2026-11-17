@@ -10,11 +10,6 @@ from lcu import LCU
 from qpe_toolbox.estimation.qft import iqft_swapped
 from qpe_toolbox.tensor import kron_mps
 
-try:
-    from scipy.optimize import linear_sum_assignment
-except ImportError:  # pragma: no cover - scipy is a hard dependency
-    linear_sum_assignment = None
-
 
 def _fold_state(state, nbits):
     """Fold a bitstring integer into the range [0, 2^{nbits-1}]."""
@@ -81,118 +76,9 @@ def run_qpe_lcu(lcu: LCU, config: QPEConfig, mps_init, *, rng=None):
     return result.theta
 
 
-def _rpe_update_theta(phi_m, theta_ref, m):
-    """Original single-phase RPE update."""
-    n_plus = round((2**m * theta_ref - phi_m) / (2 * np.pi))
-    theta_plus = (phi_m + 2 * np.pi * n_plus) / 2**m
-
-    n_minus = round((2**m * theta_ref - (2 * np.pi - phi_m)) / (2 * np.pi))
-    theta_minus = (2 * np.pi - phi_m + 2 * np.pi * n_minus) / 2**m
-
-    candidates = []
-    for cand in (theta_plus, theta_minus):
-        if 0 <= cand <= np.pi:
-            candidates.append(cand)
-        elif cand < 0 and cand > -1e-12:
-            candidates.append(0.0)
-        elif cand > np.pi and cand < np.pi + 1e-12:
-            candidates.append(np.pi)
-
-    return min(candidates, key=lambda c: abs(c - theta_ref))
-
-
-def _rpe_update_theta_M(phi_m, theta_ref, M):
-    """
-    Generalized single-phase update with arbitrary amplification factor M.
-    This is useful for the RMPE setting where M_l is a product of integers
-    or a real runtime factor, rather than necessarily 2**m.
-    """
-    n_plus = round((M * theta_ref - phi_m) / (2 * np.pi))
-    theta_plus = (phi_m + 2 * np.pi * n_plus) / M
-
-    n_minus = round((M * theta_ref - (2 * np.pi - phi_m)) / (2 * np.pi))
-    theta_minus = (2 * np.pi - phi_m + 2 * np.pi * n_minus) / M
-
-    candidates = []
-    for cand in (theta_plus, theta_minus):
-        if 0 <= cand <= np.pi:
-            candidates.append(cand)
-        elif cand < 0 and cand > -1e-12:
-            candidates.append(0.0)
-        elif cand > np.pi and cand < np.pi + 1e-12:
-            candidates.append(np.pi)
-
-    if not candidates:
-        candidates = [theta_plus, theta_minus]
-
-    return min(candidates, key=lambda c: abs(c - theta_ref))
-
-
-def _rpe_update_thetas(phi_ms, theta_refs, m=None, M=None):
-    """
-    Multiple-eigenvalue RPE update.
-
-    Parameters
-    ----------
-    phi_ms : sequence of float
-        Measured phases in [0, 2*pi), one per detected eigenvalue/interval.
-    theta_refs : sequence of float
-        Previous phase estimates in [0, pi].
-    m : int, optional
-        Stage index. If M is None, then M = 2**m.
-    M : float, optional
-        Amplification factor M_l. Overrides m.
-    one_to_one : bool, default=False
-        If True and len(phi_ms) == len(theta_refs), solve a linear
-        assignment so that each measured phase is matched to a distinct
-        previous estimate. Otherwise, each phi is matched independently
-        to its closest previous estimate.
-
-    Returns
-    -------
-    theta_new : list of float
-        Updated estimates, same length as phi_ms.
-    """
-    if M is None:
-        if m is None:
-            raise ValueError("Either m or M must be provided.")
-        M = 2**m
-
-    phi_ms = np.atleast_1d(phi_ms).astype(float)
-    theta_refs = np.atleast_1d(theta_refs).astype(float)
-
-    # One-to-one matching, useful after the S eigenvalues are resolved.
-    cost = np.empty((len(phi_ms), len(theta_refs)))
-    for i, phi in enumerate(phi_ms):
-        for j, ref in enumerate(theta_refs):
-            cand = _rpe_update_theta_M(phi, ref, M)
-            cost[i, j] = abs(cand - ref)
-
-    if linear_sum_assignment is not None:
-        row_ind, col_ind = linear_sum_assignment(cost)
-    else:
-        # Simple greedy fallback for small S.
-        pairs = [
-            (cost[i, j], i, j)
-            for i in range(cost.shape[0])
-            for j in range(cost.shape[1])
-        ]
-        pairs.sort()
-        used_i, used_j = set(), set()
-        row_ind, col_ind = [], []
-        for _, i, j in pairs:
-            if i not in used_i and j not in used_j:
-                used_i.add(i)
-                used_j.add(j)
-                row_ind.append(i)
-                col_ind.append(j)
-        row_ind = np.array(row_ind)
-        col_ind = np.array(col_ind)
-
-    out = [None] * len(phi_ms)
-    for i, j in zip(row_ind, col_ind, strict=True):
-        out[i] = _rpe_update_theta_M(phi_ms[i], theta_refs[j], M)
-    return out
+###########
+##  RPE  ##
+###########
 
 
 def _get_hadamard_output(
@@ -222,6 +108,26 @@ def _get_hadamard_output(
 
     # Clip to avoid numerical issues outside [-1, 1]
     return np.clip(X_m, -1.0, 1.0)
+
+
+def _rpe_update_theta(phi_m, theta_ref, m):
+    """Original single-phase RPE update."""
+    n_plus = round((2**m * theta_ref - phi_m) / (2 * np.pi))
+    theta_plus = (phi_m + 2 * np.pi * n_plus) / 2**m
+
+    n_minus = round((2**m * theta_ref - (2 * np.pi - phi_m)) / (2 * np.pi))
+    theta_minus = (2 * np.pi - phi_m + 2 * np.pi * n_minus) / 2**m
+
+    candidates = []
+    for cand in (theta_plus, theta_minus):
+        if 0 <= cand <= np.pi:
+            candidates.append(cand)
+        elif cand < 0 and cand > -1e-12:
+            candidates.append(0.0)
+        elif cand > np.pi and cand < np.pi + 1e-12:
+            candidates.append(np.pi)
+
+    return min(candidates, key=lambda c: abs(c - theta_ref))
 
 
 def run_rpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, rng=None):
@@ -254,6 +160,80 @@ def run_rpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, rng=None):
     return theta_values
 
 
+############
+##  RMPE  ##
+############
+
+
+def _rmpe_update_theta_M(phi_m, theta_ref, M):
+    """
+    Generalized single-phase update with arbitrary amplification factor M.
+    This is useful for the RMPE setting where M_l is a product of integers
+    or a real runtime factor, rather than necessarily 2**m.
+    """
+    n_plus = round((M * theta_ref - phi_m) / (2 * np.pi))
+    theta_plus = (phi_m + 2 * np.pi * n_plus) / M
+
+    n_minus = round((M * theta_ref - (2 * np.pi - phi_m)) / (2 * np.pi))
+    theta_minus = (2 * np.pi - phi_m + 2 * np.pi * n_minus) / M
+
+    candidates = []
+    for cand in (theta_plus, theta_minus):
+        if 0 <= cand <= np.pi:
+            candidates.append(cand)
+        elif cand < 0 and cand > -1e-12:
+            candidates.append(0.0)
+        elif cand > np.pi and cand < np.pi + 1e-12:
+            candidates.append(np.pi)
+
+    if not candidates:
+        candidates = [theta_plus, theta_minus]
+
+    return min(candidates, key=lambda c: abs(c - theta_ref))
+
+
+def _rmpe_update_thetas(phi_ms, theta_refs, m=None, M=None):
+    """
+    Multiple-eigenvalue RPE update.
+
+    Parameters
+    ----------
+    phi_ms : sequence of float
+        Measured phases in [0, 2*pi), one per detected eigenvalue/interval.
+    theta_refs : sequence of float
+        Previous phase estimates in [0, pi].
+    m : int, optional
+        Stage index. If M is None, then M = 2**m.
+    M : float, optional
+        Amplification factor M_l. Overrides m.
+
+    Returns
+    -------
+    theta_new : list of float
+        Updated estimates, same length as phi_ms.
+    """
+    if M is None:
+        if m is None:
+            raise ValueError("Either m or M must be provided.")
+        M = 2**m
+
+    phi_ms = np.atleast_1d(phi_ms).astype(float)
+    theta_refs = np.atleast_1d(theta_refs).astype(float)
+
+    # One-to-one matching, useful after the S eigenvalues are resolved.
+    cost = np.empty((len(phi_ms), len(theta_refs)))
+    for i, phi in enumerate(phi_ms):
+        for j, ref in enumerate(theta_refs):
+            cand = _rmpe_update_theta_M(phi, ref, M)
+            cost[i, j] = abs(cand - ref)
+
+    row_ind, col_ind = sp.optimize.linear_sum_assignment(cost)
+    out = [None] * len(phi_ms)
+    for i, j in zip(row_ind, col_ind, strict=True):
+        out[i] = _rmpe_update_theta_M(phi_ms[i], theta_refs[j], M)
+    return out
+
+
 def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
     """
     Run robust phase estimation using the LCU walk operator.
@@ -281,6 +261,7 @@ def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
                 rng=rng,
             )
 
+        ## Signal processing routine [PRA.108.062409 Sec IV]
         ind = sp.linalg.hankel(np.arange(k_round + 2))[
             : k_round // 2 + 1, : k_round // 2 + 1
         ]
@@ -289,11 +270,12 @@ def run_rmpe_lcu(lcu: LCU, config: RPEConfig, mps_init, *, k_state=2, rng=None):
         u0 = np.linalg.pinv(u0)
         u1 = u[-k_round // 2 :, 0 : 2 * k_state]
         phi, *_ = np.linalg.eig(u0 @ u1)
+
         phi = np.angle(phi)
         phi = phi[0::2]  # [x for x in phi if x > 0.0]
 
         if m == 0:
             theta[0, :] = phi
         else:
-            theta[m] = _rpe_update_thetas(phi_ms=phi, theta_refs=theta[m - 1], m=m)
+            theta[m] = _rmpe_update_thetas(phi_ms=phi, theta_refs=theta[m - 1], m=m)
     return theta
