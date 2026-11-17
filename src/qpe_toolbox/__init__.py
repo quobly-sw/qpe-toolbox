@@ -39,6 +39,7 @@ Use ``EXACT`` to replace an approximation in real world quantum computation
 (e.g., time evolution or sampling)
 """
 
+# avoid enum inside dir(qpe_toolbox)
 del enum
 
 _SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
