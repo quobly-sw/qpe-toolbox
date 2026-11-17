@@ -5,9 +5,11 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
+import ast
 import importlib
 import importlib.metadata
 import inspect
+import os
 
 project = "qpe-toolbox"
 project_copyright = "2026, Quobly and Foxconn"
@@ -46,12 +48,42 @@ napoleon_attr_annotations = False
 # -- Linkcode (GitHub source links) ------------------------------------------
 
 
+# Line of the module-level or class-level assignment to `qualname`, or None.
+# Used for data (EXACT, __version__, class attributes) that have no code object.
+def _find_assignment_line(mod, qualname):
+    try:
+        body = ast.parse(inspect.getsource(mod)).body
+    except Exception:
+        return None
+    *parents, name = qualname.split(".")
+    for parent in parents:
+        body = next(
+            (n.body for n in body if isinstance(n, ast.ClassDef) and n.name == parent),
+            None,
+        )
+        if body is None:
+            return None
+    for node in body:
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+        elif isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+        else:
+            continue
+        if any(isinstance(t, ast.Name) and t.id == name for t in targets):
+            return node.lineno
+    return None
+
+
 def linkcode_resolve(domain, info):
     if domain != "py" or not info["module"]:
         return None
     try:
         mod = importlib.import_module(info["module"])
-        obj = mod
+    except Exception:
+        return None
+    obj = mod
+    try:
         for part in info["fullname"].split("."):
             obj = getattr(obj, part)
         if isinstance(obj, property):
@@ -59,11 +91,17 @@ def linkcode_resolve(domain, info):
         lines, start = inspect.getsourcelines(obj)
         lineno = f"#L{start}-L{start + len(lines) - 1}"
     except Exception:
-        lineno = ""
-    filename = info["module"].replace(".", "/")
-    return (
-        f"https://github.com/quobly-sw/qpe-toolbox/blob/main/src/{filename}.py{lineno}"
+        line = _find_assignment_line(mod, info["fullname"])
+        lineno = f"#L{line}" if line else ""
+    # Resolve the module's real file so package __init__.py maps correctly.
+    mod_file = getattr(mod, "__file__", None)
+    if not mod_file:
+        return None
+    src_root = os.path.dirname(
+        os.path.dirname(importlib.import_module("qpe_toolbox").__file__)
     )
+    rel = os.path.relpath(mod_file, src_root)
+    return f"https://github.com/quobly-sw/qpe-toolbox/blob/main/src/{rel}{lineno}"
 
 
 # -- External links -------------------------------------------------------
