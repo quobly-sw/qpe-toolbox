@@ -7,6 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import ast
 import os
+import tomllib
 
 # design: entirely rely on ast to find version, modules and link lines
 
@@ -17,7 +18,15 @@ _REPO_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
 _SRC = os.path.join(_REPO_ROOT, "src")
-_GITHUB_BLOB = "https://github.com/quobly-sw/qpe-toolbox/blob/main"
+
+# Project metadata is declared once, in pyproject.toml; read it rather than
+# repeating the URLs and the version source path here.
+with open(os.path.join(_REPO_ROOT, "pyproject.toml"), "rb") as f:
+    _PYPROJECT = tomllib.load(f)
+
+_URLS = _PYPROJECT["project"]["urls"]
+_GITHUB_BLOB = f"{_URLS['Repository']}/blob/main"
+_VERSION_FILE = os.path.join(_REPO_ROOT, _PYPROJECT["tool"]["hatch"]["version"]["path"])
 
 
 # Parsed syntax tree of a source file.
@@ -51,10 +60,10 @@ def _bound_names(node):
 project = "QPE Toolbox"
 project_copyright = "2025-%Y, Quobly and Foxconn"
 author = "Quobly and Foxconn"
-# Read __version__ from the same file `[tool.hatch.version]` derives version
+# Read __version__ from the file `[tool.hatch.version]` points at
 release = next(
     ast.literal_eval(node.value)
-    for node in _parse(_module_file("qpe_toolbox")).body
+    for node in _parse(_VERSION_FILE).body
     if "__version__" in _bound_names(node)
 )
 version = ".".join(release.split(".")[:2])
@@ -187,6 +196,7 @@ autoapi_ignore = ["*.ipynb_checkpoints*"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
+html_baseurl = f"{_URLS['Documentation']}/"
 html_theme = "furo"
 html_title = "QPE Toolbox"
 html_theme_options = {
