@@ -34,7 +34,7 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Quantum Computing",
 ]
 license = "Apache-2.0"
-license-files = ["LICENSE.txt"]
+license-files = ["LICENSE.txt", "NOTICE.txt"]
 dependencies = [
   "jax>=0.8.1",
   "numpy>=2.0.0",
