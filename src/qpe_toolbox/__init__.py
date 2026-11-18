@@ -9,7 +9,7 @@
 """
 QPE Toolbox: A Quantum Phase Estimation Toolbox.
 
-Documentation is available in the doscstrings and online
+Documentation is available in the docstrings and online
 at https://quobly-sw.github.io/qpe-toolbox/
 
 Subpackages are loaded lazily on first attribute access.

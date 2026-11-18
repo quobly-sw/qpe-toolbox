@@ -111,7 +111,7 @@ build-backend = "hatchling.build"
       "all",   # report on all checks, except the below
       "EX01",  # missing examples
       "SA01",  # missing See also
-      "ES01",  # mussing extended summary
+      "ES01",  # missing extended summary
       "GL08",  # missing docstring (for module docstring)
       "RT02",  # keep value name when returning 1 value
   ]
