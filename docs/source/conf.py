@@ -32,7 +32,7 @@ _VERSION_FILE = os.path.join(_REPO_ROOT, _PYPROJECT["tool"]["hatch"]["version"][
 # Parsed syntax tree of a source file.
 def _parse(path):
     with open(path, encoding="utf-8") as f:
-        return ast.parse(f.read(), filename=path)
+        return ast.parse(f.read(), path)
 
 
 # Source file of a dotted module name, either `pkg/mod.py` or
