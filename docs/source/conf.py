@@ -6,15 +6,55 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import ast
-import importlib
-import importlib.metadata
-import inspect
 import os
+
+# -- Source tree access -------------------------------------------------------
+# conf.py is docs/source/conf.py, so the repository root sits three levels up.
+# The package is read from source with `ast` and never imported
+_REPO_ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
+_SRC = os.path.join(_REPO_ROOT, "src")
+_GITHUB_BLOB = "https://github.com/quobly-sw/qpe-toolbox/blob/main"
+
+
+# Parsed syntax tree of a source file.
+def _parse(path):
+    with open(path, encoding="utf-8") as f:
+        return ast.parse(f.read(), filename=path)
+
+
+# Source file of a dotted module name, either `pkg/mod.py` or
+# `pkg/mod/__init__.py`, or None when neither exists.
+def _module_file(module):
+    rel = module.replace(".", os.sep)
+    for candidate in (f"{rel}.py", os.path.join(rel, "__init__.py")):
+        path = os.path.join(_SRC, candidate)
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+# Names a syntax node binds: a def/class name, or the targets of an assignment.
+def _bound_names(node):
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        return [node.name]
+    if isinstance(node, ast.Assign):
+        return [t.id for t in node.targets if isinstance(t, ast.Name)]
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+        return [node.target.id]
+    return []
+
 
 project = "qpe-toolbox"
 project_copyright = "2026, Quobly and Foxconn"
 author = "Quobly"
-release = importlib.metadata.version("qpe_toolbox")
+# Read __version__ from the same file `[tool.hatch.version]` derives version
+release = next(
+    ast.literal_eval(node.value)
+    for node in _parse(_module_file("qpe_toolbox")).body
+    if "__version__" in _bound_names(node)
+)
 version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
@@ -46,60 +86,36 @@ napoleon_attr_annotations = False
 # -- Linkcode (GitHub source links) ------------------------------------------
 
 
-# Line of the module-level or class-level assignment to `qualname`, or None.
-# Used for data (EXACT, __version__, class attributes) that have no code object.
-def _find_assignment_line(mod, qualname):
-    try:
-        body = ast.parse(inspect.getsource(mod)).body
-    except Exception:
-        return None
-    *parents, name = qualname.split(".")
-    for parent in parents:
-        body = next(
-            (n.body for n in body if isinstance(n, ast.ClassDef) and n.name == parent),
-            None,
+# First and last line of `qualname` in `path`, or None when it is not defined
+# there. Covers functions, classes, methods and data (EXACT, __version__) alike,
+# and starts the range at the first decorator so properties read correctly.
+def _find_definition(path, qualname):
+    node = _parse(path)
+    for part in qualname.split("."):
+        node = next(
+            (c for c in ast.iter_child_nodes(node) if part in _bound_names(c)), None
         )
-        if body is None:
+        if node is None:
             return None
-    for node in body:
-        if isinstance(node, ast.Assign):
-            targets = node.targets
-        elif isinstance(node, ast.AnnAssign):
-            targets = [node.target]
-        else:
-            continue
-        if any(isinstance(t, ast.Name) and t.id == name for t in targets):
-            return node.lineno
-    return None
+    decorators = getattr(node, "decorator_list", [])
+    return min([node.lineno, *(d.lineno for d in decorators)]), node.end_lineno
 
 
 def linkcode_resolve(domain, info):
     if domain != "py" or not info["module"]:
         return None
-    try:
-        mod = importlib.import_module(info["module"])
-    except Exception:
+    path = _module_file(info["module"])
+    if path is None:
         return None
-    obj = mod
-    try:
-        for part in info["fullname"].split("."):
-            obj = getattr(obj, part)
-        if isinstance(obj, property):
-            obj = obj.fget
-        lines, start = inspect.getsourcelines(obj)
-        lineno = f"#L{start}-L{start + len(lines) - 1}"
-    except Exception:
-        line = _find_assignment_line(mod, info["fullname"])
-        lineno = f"#L{line}" if line else ""
-    # Resolve the module's real file so package __init__.py maps correctly.
-    mod_file = getattr(mod, "__file__", None)
-    if not mod_file:
-        return None
-    src_root = os.path.dirname(
-        os.path.dirname(importlib.import_module("qpe_toolbox").__file__)
-    )
-    rel = os.path.relpath(mod_file, src_root)
-    return f"https://github.com/quobly-sw/qpe-toolbox/blob/main/src/{rel}{lineno}"
+    rel = os.path.relpath(path, _REPO_ROOT).replace(os.sep, "/")
+    # A name only re-exported by this module has no definition to point at, so
+    # the link degrades to the file rather than to unrelated line numbers.
+    span = _find_definition(path, info["fullname"]) if info["fullname"] else None
+    anchor = ""
+    if span:
+        start, end = span
+        anchor = f"#L{start}-L{end}" if end and end != start else f"#L{start}"
+    return f"{_GITHUB_BLOB}/{rel}{anchor}"
 
 
 # -- External links -------------------------------------------------------
