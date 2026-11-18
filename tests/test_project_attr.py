@@ -22,7 +22,7 @@ SUBPACKAGES = {"circuit", "estimation", "hamiltonian", "tensor"}
 
 
 def test_package_contains_submodules():
-    submodules = {m.name for m in pkgutil.iter_modules(qpe_toolbox.__path__)}
+    submodules = {m.name for m in pkgutil.iter_modules(qpe_toolbox.__path__) if m.ispkg}
     assert submodules == SUBPACKAGES
 
 
@@ -60,9 +60,13 @@ def test_subpackages_loaded_lazily():
 
 
 def test_unknown_attribute_raises():
-    missing = "does_not_exist"
-    with pytest.raises(AttributeError):
-        getattr(qpe_toolbox, missing)
+    # Must stay indistinguishable from what a plain module raises, payload
+    # included: `name` is what the interpreter uses to suggest a close match.
+    with pytest.raises(
+        AttributeError, match="has no attribute 'does_not_exist'"
+    ) as err:
+        _ = qpe_toolbox.does_not_exist
+    assert err.value.name == "does_not_exist"
 
 
 if __name__ == "__main__":
