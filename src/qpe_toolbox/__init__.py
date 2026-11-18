@@ -21,6 +21,8 @@ Subpackages are loaded lazily on first attribute access.
 """
 
 import enum
+import importlib
+import types
 
 __version__ = "1.1.0"
 """QPE Toolbox version string"""
@@ -38,17 +40,23 @@ Use ``EXACT`` to replace an approximation in real world quantum computation
 (e.g., time evolution or sampling)
 """
 
-# avoid enum inside dir(qpe_toolbox)
-del enum
-
 _SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
 
 
 def __getattr__(name):
     if name in _SUBPACKAGES:
-        return __import__(f"{__name__}.{name}", fromlist=(name,))
+        return importlib.import_module(f".{name}", __name__)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def __dir__():
-    return sorted(set(globals()) | set(_SUBPACKAGES))
+    # Advertise the public API only. Imported modules and private helpers are
+    # implementation details, and the dunders Python puts in every module
+    # namespace are noise; the subpackages are added back since they are
+    # reachable through __getattr__ without being bound yet.
+    public = {
+        name
+        for name, value in globals().items()
+        if not name.startswith("_") and not isinstance(value, types.ModuleType)
+    }
+    return sorted(public | {"__version__"} | set(_SUBPACKAGES))

@@ -177,7 +177,7 @@ autoapi_options = [
 
 autoapi_python_class_content = "both"
 autoapi_member_order = "bysource"
-autoapi_keep_files = True
+autoapi_keep_files = False  # no cache is more convenient for local checks
 autoapi_generate_api_docs = True
 autoapi_ignore = ["*.ipynb_checkpoints*"]
 
