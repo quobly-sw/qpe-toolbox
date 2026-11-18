@@ -72,7 +72,7 @@ docs = [
   "sphinx-autoapi>=3.6",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
-  "sphinx>=8",
+  "sphinx>=8.1",  # 8.1 added the %Y placeholder in project_copyright
   {include-group = "jupytext"},
 ]
 examples = [
