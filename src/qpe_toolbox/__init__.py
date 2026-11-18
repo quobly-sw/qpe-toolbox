@@ -13,7 +13,6 @@ Documentation is available in the doscstrings and online
 at https://quobly-sw.github.io/qpe-toolbox/
 
 Subpackages are loaded lazily on first attribute access.
-::
 
 - qpe_toolbox.circuit           --- creation and manipulation of `quimb` circuits.
 - qpe_toolbox.estimation        --- perform different flavors of Quantum Phase Estimation.
