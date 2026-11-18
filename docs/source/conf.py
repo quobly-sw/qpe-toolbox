@@ -73,7 +73,6 @@ version = ".".join(release.split(".")[:2])
 
 extensions = [
     "sphinx.ext.napoleon",  # NumPy / Google style docstrings
-    "sphinx.ext.autosummary",  # auto-generate API stub pages
     "sphinx.ext.linkcode",  # [source] buttons linking to GitHub
     "autoapi.extension",  # AutoAPI for automatic API documentation
     "myst_nb",  # For notebooks integration
