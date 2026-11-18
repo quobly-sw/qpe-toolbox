@@ -49,8 +49,8 @@ def _bound_names(node):
 
 
 project = "QPE Toolbox"
-project_copyright = "2026, Quobly and Foxconn"
-author = "Quobly"
+project_copyright = "2025-%Y, Quobly and Foxconn"
+author = "Quobly and Foxconn"
 # Read __version__ from the same file `[tool.hatch.version]` derives version
 release = next(
     ast.literal_eval(node.value)
