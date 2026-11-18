@@ -131,9 +131,12 @@ build-backend = "hatchling.build"
   [tool.hatch.version]
   path = "src/qpe_toolbox/__init__.py"
 
-  # docs/ is excluded on purpose: it links a large binary asset we do not ship.
+  # Sdist ships the library and its fast unit tests only. examples/ (tutorials,
+  # tracked as docs) and docs/ are left out; test_examples.py runs those examples
+  # and is dropped with them so the shipped suite stays dependency-light.
   [tool.hatch.build.targets.sdist]
-  only-include = ["src", "tests", "examples", "CHANGELOG.md", "CONTRIBUTING.md"]
+  only-include = ["src", "tests", "CHANGELOG.md", "CONTRIBUTING.md"]
+  exclude = ["tests/test_examples.py"]
 
   [tool.jupytext]
   # Pair ipynb notebooks to py:percent text notebooks
