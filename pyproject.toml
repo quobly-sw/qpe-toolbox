@@ -137,7 +137,7 @@ build-backend = "hatchling.build"
 
   [tool.ruff]
   line-length = 88
-  target-version = "py313"
+  # target-version is inferred from project.requires-python (single source of truth)
 
     [tool.ruff.format]
     exclude = ["examples/*py"]
