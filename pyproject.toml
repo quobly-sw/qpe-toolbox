@@ -193,7 +193,7 @@ build-backend = "hatchling.build"
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["linux-64"]
+platforms = ["linux-64", "osx-arm64", "osx-64"]
 
 [tool.pixi.pypi-dependencies]
 qpe-toolbox = { path = ".", editable = true }
@@ -207,5 +207,3 @@ jupytext = { features = ["jupytext"], solve-group = "default" }
 lint = { features = ["lint"], solve-group = "default" }
 recommended = { features = ["recommended"], solve-group = "default" }
 test = { features = ["test"], solve-group = "default" }
-
-[tool.pixi.tasks]
