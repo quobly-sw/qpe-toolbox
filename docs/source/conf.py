@@ -8,6 +8,8 @@
 import ast
 import os
 
+# design: entirely rely on ast to find version, modules and link lines
+
 # -- Source tree access -------------------------------------------------------
 # conf.py is docs/source/conf.py, so the repository root sits three levels up.
 # The package is read from source with `ast` and never imported
