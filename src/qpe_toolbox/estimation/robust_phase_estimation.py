@@ -285,30 +285,31 @@ def estimate_overlap_phase(
         Estimated phase angle in radians.
     """
     # This is an optimization of the classical simulation, not a faithful
-    # emulation of the quantum computation. On real hardware, X and Y would each
-    # come from an independent Hadamard test (ancilla qubit, controlled-U, and
-    # n_shots projective measurements). Here we instead compute the exact overlap
-    # z = <psi|U|psi> from a single control-free simulation, then draw X and Y
-    # from their exact Bernoulli distributions. This is statistically equivalent
-    # (the ancilla outcome is Bernoulli with P(1) = (1 - Re/Im z) / 2) but avoids
-    # the ancilla qubit and the per-shot sampling loop.
-    z = _rpe_overlap(psi0, unitary, cutoff=cutoff, max_bond=max_bond)
+    # emulation of the quantum computation. On real hardware, the real and
+    # imaginary parts of the overlap would each come from an independent
+    # Hadamard test (ancilla qubit, controlled-U, and n_shots projective
+    # measurements of the ancilla). Here we instead compute the exact overlap
+    # <psi|U|psi> from a single control-free simulation, then draw each part
+    # from the exact distribution of its Hadamard-test estimator. This is
+    # statistically equivalent (the ancilla outcome is Bernoulli with
+    # P(1) = (1 - mean) / 2) but avoids the ancilla qubit and the per-shot loop.
+    overlap = _compute_overlap(psi0, unitary, cutoff=cutoff, max_bond=max_bond)
     if n_shots is EXACT:
-        X, Y = z.real, z.imag
+        re_overlap, im_overlap = overlap.real, overlap.imag
     else:
         if rng is None:
             rng = np.random.default_rng()
-        X = _sample_hadamard(z.real, n_shots, rng)
-        Y = _sample_hadamard(z.imag, n_shots, rng)
-    return -np.angle(X + 1j * Y)
+        re_overlap = _add_shot_noise(overlap.real, n_shots, rng)
+        im_overlap = _add_shot_noise(overlap.imag, n_shots, rng)
+    return -np.angle(re_overlap + 1j * im_overlap)
 
 
-def _rpe_overlap(psi0, unitary, *, cutoff, max_bond):
+def _compute_overlap(psi0, unitary, *, cutoff, max_bond):
     r"""Return :math:`\bra{\psi_0} U \ket{\psi_0}` from a control-free simulation."""
     if isinstance(unitary, qtn.Gate):
         unitary = [unitary]
-    # normalize up front so that z, and quimb's own truncation error estimate, do
-    # not depend on the norm of psi0
+    # normalize up front so that the overlap, and quimb's own truncation error
+    # estimate, do not depend on the norm of psi0
     bra = psi0.copy()
     bra.normalize()
     circ = qtn.CircuitMPS(psi0=bra, cutoff=cutoff, max_bond=max_bond)
@@ -317,27 +318,27 @@ def _rpe_overlap(psi0, unitary, *, cutoff, max_bond):
     # its error estimate. circ.psi is a copy, so this leaves the circuit intact.
     ket = circ.psi
     ket.normalize()
-    z = bra.H @ ket
-    if abs(z) < 1e-12:
+    overlap = bra.H @ ket
+    if abs(overlap) < 1e-12:
         warnings.warn(
             "<psi0|U|psi0> vanishes: the phase is undefined and the returned "
             "estimate cannot be trusted.",
             stacklevel=3,
         )
-    return z
+    return overlap
 
 
-def _sample_hadamard(z_component, n_shots, rng):
-    r"""Emulate ``n_shots`` Hadamard-test shots for an exact expectation value.
+def _add_shot_noise(exact_mean, n_shots, rng):
+    r"""Return a finite-shot estimate of an exact expectation value.
 
-    The ancilla outcome is Bernoulli with :math:`P(1) = (1 - Z)/2`, so the
-    number of ``1`` outcomes over ``n_shots`` shots is
-    :math:`\mathrm{Binomial}(n_{\rm shots}, P(1))` and the estimated expectation
-    is :math:`(n_{\rm shots} - 2\,\mathrm{popcount})/n_{\rm shots}`.
+    ``exact_mean`` is the exact mean of a :math:`\pm 1`-valued observable, in
+    :math:`[-1, 1]`. The returned value is drawn from the distribution of its
+    average over ``n_shots`` projective measurements and lies in the same
+    interval.
     """
-    # both states are normalized, hence |z| <= 1 and p1 in [0, 1]; clip only
-    # absorbs the rounding overshoot at |z| = 1, which rng.binomial rejects
-    p1 = np.clip((1.0 - z_component) / 2.0, 0.0, 1.0)
+    # clip only absorbs the rounding overshoot at |exact_mean| = 1, which
+    # rng.binomial rejects
+    p1 = np.clip((1.0 - exact_mean) / 2.0, 0.0, 1.0)
     popcount = rng.binomial(n_shots, p1)
     return (n_shots - 2 * popcount) / n_shots
 
