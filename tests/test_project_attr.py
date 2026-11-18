@@ -2,6 +2,8 @@
 
 import importlib.metadata
 import pkgutil
+import subprocess
+import sys
 
 import pytest
 
@@ -28,11 +30,33 @@ def test_dir_exposes_public_api():
     assert set(dir(qpe_toolbox)) == SUBPACKAGES | {"EXACT", "__version__"}
 
 
-def test_subpackages_lazily_accessible():
-    for name in sorted(SUBPACKAGES):
-        subpackage = getattr(qpe_toolbox, name)
-        assert subpackage.__name__ == f"qpe_toolbox.{name}"
-        assert name in dir(qpe_toolbox)
+# Run in a fresh interpreter: pytest imports every test module at collection
+# time, which binds the subpackages on the package and would make the accesses
+# below plain dict lookups. Nothing may be loaded before the second loop, since
+# importing one subpackage also imports the ones it depends on.
+_LAZY_SCRIPT = """
+import sys
+
+import qpe_toolbox
+
+for name in sys.argv[1:]:
+    assert name not in vars(qpe_toolbox), f"{name} eagerly bound"
+    assert f"qpe_toolbox.{name}" not in sys.modules, f"{name} eagerly imported"
+
+for name in sys.argv[1:]:
+    assert getattr(qpe_toolbox, name).__name__ == f"qpe_toolbox.{name}"
+    assert f"qpe_toolbox.{name}" in sys.modules, f"{name} not loaded on access"
+"""
+
+
+def test_subpackages_loaded_lazily():
+    result = subprocess.run(
+        [sys.executable, "-c", _LAZY_SCRIPT, *sorted(SUBPACKAGES)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_unknown_attribute_raises():
@@ -45,5 +69,5 @@ if __name__ == "__main__":
     test_version()
     test_package_contains_submodules()
     test_dir_exposes_public_api()
-    test_subpackages_lazily_accessible()
+    test_subpackages_loaded_lazily()
     test_unknown_attribute_raises()

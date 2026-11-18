@@ -189,7 +189,7 @@ build-backend = "hatchling.build"
     [tool.ruff.lint.per-file-ignores]
     "__init__.py" = ["F401"]
     "examples/*py" = ["E703", "S101"]
-    "tests/*py" = ["S101"]
+    "tests/*py" = ["S101", "S603"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
