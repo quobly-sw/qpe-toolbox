@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import importlib.metadata
 import pkgutil
 
 import pytest
@@ -7,9 +8,10 @@ import pytest
 import qpe_toolbox
 
 
-def test_has_version():
-    assert hasattr(qpe_toolbox, "__version__")
-    assert type(qpe_toolbox.__version__) is str
+def test_version():
+    """Test that version attr is accessible and matches distribution"""
+    assert isinstance(qpe_toolbox.__version__, str)
+    assert qpe_toolbox.__version__ == importlib.metadata.version("qpe_toolbox")
 
 
 def test_package_contains_submodules():
@@ -34,7 +36,7 @@ def test_unknown_attribute_raises():
 
 
 if __name__ == "__main__":
-    test_has_version()
+    test_version()
     test_package_contains_submodules()
     test_subpackages_lazily_accessible()
     test_unknown_attribute_raises()
