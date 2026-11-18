@@ -22,6 +22,7 @@ Subpackages are loaded lazily on first attribute access.
 
 import enum
 import importlib
+import pkgutil
 import types
 
 __version__ = "1.1.0"
@@ -40,7 +41,11 @@ Use ``EXACT`` to replace an approximation in real world quantum computation
 (e.g., time evolution or sampling)
 """
 
-_SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
+# Discovered rather than listed, so a new subpackage needs no edit here. The
+# scan reads the directory without importing anything, keeping access lazy.
+_SUBPACKAGES = tuple(
+    module.name for module in pkgutil.iter_modules(__path__) if module.ispkg
+)
 
 
 def __getattr__(name):
