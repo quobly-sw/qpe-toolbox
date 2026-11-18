@@ -25,7 +25,7 @@ with open(os.path.join(_REPO_ROOT, "pyproject.toml"), "rb") as f:
     _PYPROJECT = tomllib.load(f)
 
 _URLS = _PYPROJECT["project"]["urls"]
-_GITHUB_BLOB = f"{_URLS['Repository']}/blob/main"
+_REPO_BLOB = f"{_URLS['Repository']}/blob/main"
 _VERSION_FILE = os.path.join(_REPO_ROOT, _PYPROJECT["tool"]["hatch"]["version"]["path"])
 
 
@@ -126,7 +126,7 @@ def linkcode_resolve(domain, info):
     if span:
         start, end = span
         anchor = f"#L{start}-L{end}" if end and end != start else f"#L{start}"
-    return f"{_GITHUB_BLOB}/{rel}{anchor}"
+    return f"{_REPO_BLOB}/{rel}{anchor}"
 
 
 # -- External links -------------------------------------------------------
