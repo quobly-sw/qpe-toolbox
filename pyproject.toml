@@ -142,8 +142,8 @@ build-backend = "hatchling.build"
   # Pair ipynb notebooks to py:percent text notebooks
   formats = "ipynb,py:percent"
 
+  # Coverage is requested per run, not here; empty table keeps this the configfile.
   [tool.pytest.ini_options]
-  addopts = "--cov=qpe_toolbox --cov-report=term-missing"
 
   [tool.ruff]
   line-length = 88
