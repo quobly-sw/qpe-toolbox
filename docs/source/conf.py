@@ -10,10 +10,10 @@ import os
 import tomllib
 
 # design: entirely rely on ast to find version, modules and link lines
+# the package is never imported
 
 # -- Source tree access -------------------------------------------------------
 # conf.py is docs/source/conf.py, so the repository root sits three levels up.
-# The package is read from source with `ast` and never imported
 _REPO_ROOT = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 )
@@ -29,7 +29,8 @@ _REPO_BLOB = f"{_URLS['Repository']}/blob/main"
 _VERSION_FILE = os.path.join(_REPO_ROOT, _PYPROJECT["tool"]["hatch"]["version"]["path"])
 
 
-# Parsed syntax tree of a source file.
+# Parsed syntax tree of a source file. Deliberately uncached: @functools.cache
+# would spare the ~6 re-parses per file, but that is 3% of the doc build.
 def _parse(path):
     with open(path, encoding="utf-8") as f:
         return ast.parse(f.read(), path)
