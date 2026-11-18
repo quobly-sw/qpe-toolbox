@@ -128,6 +128,10 @@ build-backend = "hatchling.build"
   [tool.hatch.version]
   path = "src/qpe_toolbox/__init__.py"
 
+  # docs/ is excluded on purpose: it links a large binary asset we do not ship.
+  [tool.hatch.build.targets.sdist]
+  only-include = ["src", "tests", "examples", "CHANGELOG.md", "CONTRIBUTING.md"]
+
   [tool.jupytext]
   # Pair ipynb notebooks to py:percent text notebooks
   formats = "ipynb,py:percent"
