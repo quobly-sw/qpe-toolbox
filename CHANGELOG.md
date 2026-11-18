@@ -50,6 +50,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now returning a single angle.
 - `Hamiltonian.to_dense` and `Hamiltonian.get_exact_unitary` are faster for larger systems.
 - `optuna` dependency moved from core dependency to recommended.
+- `qpe_toolbox` subpackages are reachable as attributes without an explicit submodule import (`import qpe_toolbox; qpe_toolbox.estimation`), loaded on first access so `import qpe_toolbox` stays cheap. `dir(qpe_toolbox)` lists only the public API.
 
 ### Removed
 
