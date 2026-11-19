@@ -40,8 +40,9 @@ Use ``EXACT`` to replace an approximation in real world quantum computation
 (e.g., time evolution or sampling)
 """
 
-# Listed rather than discovered: a new subpackage is a deliberate change, and
-# tests/test_project_attr.py checks this tuple against the directory contents.
+# Listed rather than discovered: a new subpackage is a deliberate change.
+# tests/test_project_attr.py keeps its own copy, checked against this tuple
+# (through __dir__) and against the directory contents.
 _SUBPACKAGES = ("circuit", "estimation", "hamiltonian", "tensor")
 
 
