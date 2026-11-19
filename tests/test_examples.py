@@ -9,6 +9,7 @@ import pytest
 
 EXAMPLES_DIR = pathlib.Path(__file__).parents[1] / "examples"
 EXAMPLES = sorted(path.name for path in EXAMPLES_DIR.glob("*.py"))
+assert EXAMPLES, f"no example found in {EXAMPLES_DIR}"
 
 # non-interactive matplotlib backend, silence tqdm
 EXAMPLE_ENV = os.environ | {"MPLBACKEND": "agg", "TQDM_DISABLE": "1"}
