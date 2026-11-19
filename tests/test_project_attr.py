@@ -22,7 +22,7 @@ SUBPACKAGES = {"circuit", "estimation", "hamiltonian", "tensor"}
 
 
 def test_package_contains_submodules():
-    submodules = {m.name for m in pkgutil.iter_modules(qpe_toolbox.__path__) if m.ispkg}
+    submodules = {m.name for m in pkgutil.iter_modules(qpe_toolbox.__path__)}
     assert submodules == SUBPACKAGES
 
 
