@@ -52,11 +52,10 @@ for name in sys.argv[1:]:
 def test_subpackages_loaded_lazily():
     result = subprocess.run(
         [sys.executable, "-c", _LAZY_SCRIPT, *sorted(SUBPACKAGES)],
-        capture_output=True,
         text=True,
         check=False,
     )
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 0
 
 
 def test_unknown_attribute_raises():
