@@ -137,6 +137,10 @@ build-backend = "hatchling.build"
   # runs examples/, which the sdist does not ship
   exclude = ["tests/test_examples.py"]
 
+  [tool.uv]
+  # the default is pyproject.toml only; a version bump must invalidate it too
+  cache-keys = [{ file = "pyproject.toml" }, { file = "src/qpe_toolbox/__init__.py" }]
+
   [tool.jupytext]
   # Pair ipynb notebooks to py:percent text notebooks
   formats = "ipynb,py:percent"
