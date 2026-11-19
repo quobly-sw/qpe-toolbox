@@ -52,7 +52,6 @@ for name in sys.argv[1:]:
 def test_subpackages_loaded_lazily():
     result = subprocess.run(
         [sys.executable, "-c", _LAZY_SCRIPT, *sorted(SUBPACKAGES)],
-        text=True,
         check=False,
     )
     assert result.returncode == 0

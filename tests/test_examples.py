@@ -23,7 +23,6 @@ def test_example_runs(example):
         [sys.executable, example],
         cwd=EXAMPLES_DIR,
         env=EXAMPLE_ENV,
-        text=True,
         check=False,
     )
     assert result.returncode == 0
