@@ -9,6 +9,8 @@ import ast
 import os
 import tomllib
 
+import sphinx.util.logging
+
 # design: entirely rely on ast to find version, modules and link lines
 # the package is never imported
 
@@ -112,20 +114,26 @@ def _find_definition(path, qualname):
     return min([node.lineno, *(d.lineno for d in decorators)]), node.end_lineno
 
 
+_logger = sphinx.util.logging.getLogger(__name__)
+
+
 def linkcode_resolve(domain, info):
     if domain != "py" or not info["module"]:
         return None
     path = _module_file(info["module"])
     if path is None:
+        _logger.warning(f"no source file for module {info['module']}", type="linkcode")
         return None
     rel = os.path.relpath(path, _REPO_ROOT).replace(os.sep, "/")
-    # A name only re-exported by this module has no definition to point at, so
-    # the link degrades to the file rather than to unrelated line numbers.
+    # No definition found (e.g. a plain re-export): link to the file, but warn.
     span = _find_definition(path, info["fullname"]) if info["fullname"] else None
-    anchor = ""
-    if span:
-        start, end = span
-        anchor = f"#L{start}-L{end}" if end and end != start else f"#L{start}"
+    if span is None:
+        _logger.warning(
+            f"no definition of {info['fullname']} in {rel}", type="linkcode"
+        )
+        return f"{_REPO_BLOB}/{rel}"
+    start, end = span
+    anchor = f"#L{start}-L{end}" if end and end != start else f"#L{start}"
     return f"{_REPO_BLOB}/{rel}{anchor}"
 
 
