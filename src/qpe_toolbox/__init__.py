@@ -57,6 +57,8 @@ def __dir__():
     # implementation details, and the dunders Python puts in every module
     # namespace are noise; the subpackages are added back since they are
     # reachable through __getattr__ without being bound yet.
+    # __doc__, __file__ and the other module dunders are hidden from dir() too;
+    # attribute access and help() read them directly and are unaffected.
     public = {
         name
         for name, value in list(globals().items())
