@@ -135,18 +135,25 @@ def test_rpe_control_free_matches_hadamard_test():
         assert np.isclose(phi, phi_ref)
 
 
-def test_rpe_bernoulli_converges_to_exact():
-    # finite-shot phases converge to the exact phase as n_shots grows
+def test_rpe_shot_noise_scales_with_n_shots():
+    # finite-shot phases are unbiased, with an error shrinking as 1/sqrt(n_shots)
     H = heisenberg_hamiltonian(4)
     _E0, psi0 = do_dmrg(H)
 
     phi_exact = measure_rpe_phases(H, psi0, 4, EXACT, EXACT)
     rng = np.random.default_rng(0)
-    samples = [measure_rpe_phases(H, psi0, 4, EXACT, 4000, rng=rng) for _ in range(50)]
-    # phases live on a circle: average and compare them modulo 2*pi, else a single
-    # sample crossing the +-pi cut drags the mean toward 0
-    phi_sampled = np.angle(np.mean(np.exp(1j * np.array(samples)), axis=0))
-    assert np.all(angular_distance(phi_sampled, phi_exact) < 0.05)
+    rms = {}
+    for n_shots in [250, 4000]:
+        samples = np.array(
+            [measure_rpe_phases(H, psi0, 4, EXACT, n_shots, rng=rng) for _ in range(25)]
+        )
+        # phases live on a circle: average and compare them modulo 2*pi, else a
+        # single sample crossing the +-pi cut drags the mean toward 0
+        mean = np.angle(np.mean(np.exp(1j * samples), axis=0))
+        assert np.all(angular_distance(mean, phi_exact) < 2 / np.sqrt(n_shots))
+        rms[n_shots] = np.sqrt(np.mean(angular_distance(samples, phi_exact) ** 2))
+    # 16x more shots divides the error by about 4
+    assert 3.0 < rms[250] / rms[4000] < 5.5
 
 
 def test_rpe_update_theta_matches_bruteforce():
@@ -172,5 +179,5 @@ if __name__ == "__main__":
     test_rpe_seed_deterministic()
     test_rpe_two_stage_composes()
     test_rpe_control_free_matches_hadamard_test()
-    test_rpe_bernoulli_converges_to_exact()
+    test_rpe_shot_noise_scales_with_n_shots()
     test_rpe_update_theta_matches_bruteforce()
