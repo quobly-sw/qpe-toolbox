@@ -239,7 +239,7 @@ myst_enable_extensions = [
 
 
 # -- AutoAPI member filtering ---------------------------------------------------
-# Document qpe_toolbox.__version__, which AutoAPI skips as private.
+# Document qpe_toolbox.__version__, which AutoAPI skips as special (dunder).
 def keep_package_version(app, what, name, obj, skip, options):
     if name == "qpe_toolbox.__version__":
         return False
