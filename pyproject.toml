@@ -131,11 +131,10 @@ build-backend = "hatchling.build"
   [tool.hatch.version]
   path = "src/qpe_toolbox/__init__.py"
 
-  # Sdist ships the library and its fast unit tests only. examples/ (tutorials,
-  # tracked as docs) and docs/ are left out; test_examples.py runs those examples
-  # and is dropped with them so the shipped suite stays dependency-light.
   [tool.hatch.build.targets.sdist]
+  # ship the library and its unit tests, not examples/ or docs/
   only-include = ["src", "tests", "CHANGELOG.md", "CONTRIBUTING.md"]
+  # runs examples/, which the sdist does not ship
   exclude = ["tests/test_examples.py"]
 
   [tool.jupytext]
