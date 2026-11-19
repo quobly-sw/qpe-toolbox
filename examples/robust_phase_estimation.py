@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.19.1
+#       jupytext_version: 1.19.6
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -374,25 +374,6 @@ thetas1 = np.zeros((n_samples, M))
 for i in tqdm.tqdm(range(n_samples)):
     thetas1[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, n_shots, t0=t0, rng=rng)
 
-
-# %%
-def success_prob(thetas, *, verbosity=0):
-    M = thetas.shape[1]
-    mode, success_probs = np.empty(M), np.empty(M)
-    for m in range(M):
-        unique_vals, counts = np.unique(thetas[:, m], return_counts=True)
-        mode_index = counts.argmax()
-        mode[m] = unique_vals[mode_index]
-        success = qpe.angular_distance(unique_vals, theta_exact) < (np.pi / 3 / 2**m)
-        success_probs[m] = counts[success].sum() / thetas.shape[0]
-        if verbosity > 0:
-            print(f"{m = }, mode = {mode[m]: .6f}, count = {counts[mode_index]}")
-    return mode, success_probs
-
-
-# %%
-mode1, success_prob1 = success_prob(thetas1, verbosity=1)
-
 # %%
 m = 7
 fig, ax = plt.subplots(layout="tight")
@@ -447,9 +428,6 @@ for i in tqdm.tqdm(range(n_samples)):
     thetas2[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 2, t0=t0, rng=rng)
     thetas3[i] = qpe.robust_phase_estimation(H, psi0, M, EXACT, 3, t0=t0, rng=rng)
 
-mode2, success_prob2 = success_prob(thetas2)
-mode3, success_prob3 = success_prob(thetas3)
-
 # %%
 colors = ("tab:orange", "tab:green")
 fig, axes = plt.subplots(ncols=2, layout="tight", figsize=(12, 6), sharey=True)
@@ -477,8 +455,29 @@ for i, thetas in enumerate((thetas2, thetas3)):
 axes[0].legend(loc="lower left")
 axes[0].set_ylabel("$d(\\theta_m, \\theta_{\\rm ex})$");
 
+
 # %% [markdown]
 # Let us look at the success probability, ie the probability for $\theta_m$ to be within $2^{-m}\pi/3$ angular distance from $\theta_{\rm ex}$:
+
+# %%
+def success_prob(thetas, *, verbosity=0):
+    M = thetas.shape[1]
+    mode, success_probs = np.empty(M), np.empty(M)
+    for m in range(M):
+        unique_vals, counts = np.unique(thetas[:, m], return_counts=True)
+        mode_index = counts.argmax()
+        mode[m] = unique_vals[mode_index]
+        success = qpe.angular_distance(unique_vals, theta_exact) < (np.pi / 3 / 2**m)
+        success_probs[m] = counts[success].sum() / thetas.shape[0]
+        if verbosity > 0:
+            print(f"{m = }, mode = {mode[m]: .6f}, count = {counts[mode_index]}")
+    return mode, success_probs
+
+
+# %%
+mode1, success_prob1 = success_prob(thetas1)
+mode2, success_prob2 = success_prob(thetas2)
+mode3, success_prob3 = success_prob(thetas3)
 
 # %%
 fig, ax = plt.subplots(layout="tight")
