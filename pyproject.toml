@@ -160,7 +160,7 @@ build-backend = "hatchling.build"
     exclude = ["examples/*.py"]
 
     [tool.ruff.lint]
-      select = [
+    select = [
         "A",
         "B",
         "C",
@@ -187,14 +187,14 @@ build-backend = "hatchling.build"
         "SLF",
         "TRY",
         "W"
-        ]
-      ignore = [
+    ]
+    ignore = [
         "E501",  # rely on format
         "PLC2401", # allow greek letters as variable name
         "SIM108",  # too opinionated
         "TRY003",  # ValueError is good enough
-        ]
-      allowed-confusables = ["α", "γ", "ν", "ρ","σ"]
+    ]
+    allowed-confusables = ["α", "γ", "ν", "ρ", "σ"]
 
     [tool.ruff.lint.isort]
     combine-as-imports = true
