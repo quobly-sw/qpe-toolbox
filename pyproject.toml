@@ -63,11 +63,11 @@ recommended = [
 
   [project.urls]
   Documentation = "https://quobly-sw.github.io/qpe-toolbox"
+  Homepage   = "https://github.com/quobly-sw/qpe-toolbox"
   Repository = "https://github.com/quobly-sw/qpe-toolbox"
-  Issues = "https://github.com/quobly-sw/qpe-toolbox/issues"
 
 [dependency-groups]
-jupytext = ["jupytext>=1.18.1"]  # used in format hook
+jupytext = ["jupytext>=1.18.1"]
 docs = [
   "furo>=2024.6.29",
   "myst-nb>=1.3.0",
@@ -75,7 +75,7 @@ docs = [
   "sphinx-autoapi>=3.6",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
-  "sphinx>=8.1",  # 8.1 added the %Y placeholder in project_copyright
+  "sphinx>=8.1",
   {include-group = "jupytext"},
 ]
 examples = [
