@@ -14,9 +14,9 @@ at https://quobly-sw.github.io/qpe-toolbox/
 
 Subpackages are loaded lazily on first attribute access.
 
-- qpe_toolbox.circuit           --- creation and manipulation of `quimb` circuits.
-- qpe_toolbox.estimation        --- perform different flavors of Quantum Phase Estimation.
-- qpe_toolbox.hamiltonian       --- class for defining Hamiltonians and interface with `pyscf` for chemistry.
+- qpe_toolbox.circuit           --- creation and manipulation of ``quimb`` circuits.
+- qpe_toolbox.estimation        --- flavors of Quantum Phase Estimation.
+- qpe_toolbox.hamiltonian       --- class for defining Hamiltonians and an interface with ``pyscf`` for chemistry.
 - qpe_toolbox.tensor            --- manipulation of Matrix Product Operators (MPO) and Matrix Product States (MPS).
 """
 
@@ -36,8 +36,8 @@ EXACT = _Exact.EXACT
 """
 Sentinel constant for requesting exact computation.
 
-Use ``EXACT`` to replace an approximation in real world quantum computation
-(e.g., time evolution or sampling)
+Use ``EXACT`` to replace an approximation in real-world quantum computation
+(e.g., time evolution or sampling).
 """
 
 # Listed rather than discovered: a new subpackage is a deliberate change.

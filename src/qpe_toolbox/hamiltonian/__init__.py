@@ -6,7 +6,7 @@
 # project root.
 #
 # --------------------------------------------------------------------------------------
-"""Define class for Hamiltonians, and a interface with ``pyscf`` for chemistry."""
+"""Define class for Hamiltonians, and an interface with ``pyscf`` for chemistry."""
 
 from .chemistry import chemistry_hamiltonian, do_pyscf, make_qubit_hamiltonian
 from .hamiltonian import Hamiltonian, do_dmrg, heisenberg_hamiltonian
