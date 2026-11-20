@@ -12,7 +12,12 @@ EXAMPLES = sorted(path.name for path in EXAMPLES_DIR.glob("*.py"))
 assert EXAMPLES, f"no example found in {EXAMPLES_DIR}"
 
 # non-interactive matplotlib backend, silence tqdm
-EXAMPLE_ENV = os.environ | {"MPLBACKEND": "agg", "TQDM_DISABLE": "1"}
+# pyproject's filterwarnings do not reach a subprocess, hence PYTHONWARNINGS
+EXAMPLE_ENV = os.environ | {
+    "MPLBACKEND": "agg",
+    "TQDM_DISABLE": "1",
+    "PYTHONWARNINGS": "error::RuntimeWarning",
+}
 
 
 @pytest.mark.parametrize("example", EXAMPLES)
