@@ -15,4 +15,4 @@ runs:
       shell: bash
       run: |
         echo "UV_NO_SYNC=1" >> "$GITHUB_ENV"
-        echo "PY_COLORS=1" >> "$GITHUB_ENV"
+        echo "FORCE_COLOR=1" >> "$GITHUB_ENV"
