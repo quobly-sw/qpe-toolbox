@@ -163,7 +163,6 @@ build-backend = "hatchling.build"
         "A",
         "B",
         "C",
-        "C90",
         "D202",
         "D209",
         "D403",
