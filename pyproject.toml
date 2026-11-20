@@ -145,12 +145,18 @@ build-backend = "hatchling.build"
 
   [tool.pytest.ini_options]
   testpaths = ["tests"]
+  filterwarnings = [
+    "error",
+    "default::DeprecationWarning",
+    "default::PendingDeprecationWarning",
+    "default::FutureWarning",
+  ]
 
   [tool.ruff]
   line-length = 88
 
     [tool.ruff.format]
-    exclude = ["examples/*py"]
+    exclude = ["examples/*.py"]
 
     [tool.ruff.lint]
       select = [
@@ -198,8 +204,8 @@ build-backend = "hatchling.build"
 
     [tool.ruff.lint.per-file-ignores]
     "__init__.py" = ["F401"]
-    "examples/*py" = ["E703", "S101"]
-    "tests/*py" = [
+    "examples/*.py" = ["E703", "S101"]
+    "tests/*.py" = [
         "S101", # use assert in tests
         "S603"  # call subprocess + assert result
     ]
