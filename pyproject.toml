@@ -9,7 +9,6 @@
 
 [project]
 name = "qpe-toolbox"
-dynamic = ["version"]
 authors = [
   { name = "Thibaud Louvet", email = "thibaud.louvet@quobly.io" },
   { name = "Calvin Ku", email = "calvin.ku@foxconn.com" },
@@ -38,6 +37,7 @@ classifiers = [
 ]
 license = "Apache-2.0"
 license-files = ["LICENSE.txt", "NOTICE.txt"]
+dynamic = ["version"]
 dependencies = [
   "jax>=0.8.1",
   "numpy>=2.0.0",
