@@ -1,5 +1,5 @@
 name: Setup uv
-description: Install uv with Python 3.13 and enable UV_NO_SYNC for the rest of the job.
+description: Install uv with Python 3.13 and export shared environment variables for the rest of the job.
 
 runs:
   using: composite
@@ -9,9 +9,10 @@ runs:
       with:
         python-version: "3.13"
 
-    # Persist to the job so every later `uv run` behaves as `--no-sync`.
     # A composite action's top-level `env:` is not exported to the caller,
     # so we write to $GITHUB_ENV instead.
-    - name: Enable UV_NO_SYNC
+    - name: Export shared environment
       shell: bash
-      run: echo "UV_NO_SYNC=1" >> "$GITHUB_ENV"
+      run: |
+        echo "UV_NO_SYNC=1" >> "$GITHUB_ENV"
+        echo "PY_COLORS=1" >> "$GITHUB_ENV"
