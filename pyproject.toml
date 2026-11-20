@@ -134,23 +134,20 @@ build-backend = "hatchling.build"
   [tool.hatch.build.targets.sdist]
   # ship the library and its unit tests, not examples/ or docs/
   only-include = ["src", "tests", "CHANGELOG.md", "CONTRIBUTING.md"]
-  # runs examples/, which the sdist does not ship
   exclude = ["tests/test_examples.py"]
 
   [tool.uv]
-  # the default is pyproject.toml only; a version bump must invalidate it too
   cache-keys = [{ file = "pyproject.toml" }, { file = "src/qpe_toolbox/__init__.py" }]
 
   [tool.jupytext]
   # Pair ipynb notebooks to py:percent text notebooks
   formats = "ipynb,py:percent"
 
-  # Coverage is requested per run, not here; empty table keeps this the configfile.
   [tool.pytest.ini_options]
+  testpaths = ["tests"]
 
   [tool.ruff]
   line-length = 88
-  # target-version is inferred from project.requires-python
 
     [tool.ruff.format]
     exclude = ["examples/*py"]
