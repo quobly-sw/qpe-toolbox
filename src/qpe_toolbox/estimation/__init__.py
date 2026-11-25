@@ -33,7 +33,9 @@ from .quantum_phase_estimation import (
 )
 from .robust_phase_estimation import (
     angular_distance,
+    estimate_overlap_phase,
+    measure_rpe_phases,
+    refine_rpe_phases,
     robust_phase_estimation,
-    rpe_get_hadamard_output,
     rpe_update_theta,
 )
