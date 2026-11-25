@@ -13,6 +13,7 @@ import sphinx.util.logging
 
 # design: entirely rely on ast to find version, modules and link lines
 # the package is never imported
+# recover project metadata from pyproject intead of duplicating it.
 
 # -- Source tree access -------------------------------------------------------
 # conf.py is docs/source/conf.py, so the repository root sits three levels up.
@@ -21,8 +22,6 @@ _REPO_ROOT = os.path.dirname(
 )
 _SRC = os.path.join(_REPO_ROOT, "src")
 
-# Project metadata is declared once, in pyproject.toml; read it rather than
-# repeating the URLs and the version source path here.
 with open(os.path.join(_REPO_ROOT, "pyproject.toml"), "rb") as f:
     _PYPROJECT = tomllib.load(f)
 
@@ -31,8 +30,7 @@ _REPO_BLOB = f"{_URLS['Repository']}/blob/main"
 _VERSION_FILE = os.path.join(_REPO_ROOT, _PYPROJECT["tool"]["hatch"]["version"]["path"])
 
 
-# Parsed syntax tree of a source file. Deliberately uncached: @functools.cache
-# would spare the ~6 re-parses per file, but that is 3% of the doc build.
+# Parsed syntax tree of a source file. Deliberately uncached: not worth it.
 def _parse(path):
     with open(path, encoding="utf-8") as f:
         return ast.parse(f.read(), path)
@@ -63,7 +61,7 @@ def _bound_names(node):
 project = "QPE Toolbox"
 project_copyright = "2025-%Y, Quobly and Foxconn"
 author = "Quobly and Foxconn"
-# Read __version__ from the file `[tool.hatch.version]` points at
+
 release = next(
     ast.literal_eval(node.value)
     for node in _parse(_VERSION_FILE).body
