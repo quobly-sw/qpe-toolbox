@@ -51,6 +51,7 @@ and this project adheres to [Effort-based versioning](https://jacobtomlinson.dev
 - `rpe_update_theta`: signature changed to `(phi_m, theta_ref, m)`, now returning a single angle.
 - `Hamiltonian.to_dense` and `Hamiltonian.get_exact_unitary` are faster for larger systems.
 - `optuna` dependency moved from core dependency to recommended.
+- `qpe_toolbox` subpackages are reachable as attributes without an explicit submodule import (`import qpe_toolbox; qpe_toolbox.estimation`), loaded on first access so `import qpe_toolbox` stays cheap. `dir(qpe_toolbox)` lists only the public API.
 - RPE now measures each phase from a single control-free `CircuitMPS` simulation of the overlap `⟨ψ₀|U|ψ₀⟩` (no ancilla qubit) instead of two Hadamard-test circuits; finite `n_shots` are emulated from the exact expectation via the Bernoulli law rather than by circuit sampling. Without an ancilla to entangle, the simulated state carries less entanglement, so the result is more accurate at a given `max_bond`.
 - `robust_phase_estimation`: `verbosity=1` now prints both `phi_m` and `theta_m`; the per-iteration progress moved to `verbosity=2`.
 

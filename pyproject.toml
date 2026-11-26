@@ -9,7 +9,6 @@
 
 [project]
 name = "qpe-toolbox"
-dynamic = ["version"]
 authors = [
   { name = "Thibaud Louvet", email = "thibaud.louvet@quobly.io" },
   { name = "Calvin Ku", email = "calvin.ku@foxconn.com" },
@@ -29,12 +28,16 @@ classifiers = [
   "Operating System :: POSIX",
   "Operating System :: Unix",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Chemistry",
   "Topic :: Scientific/Engineering :: Physics",
   "Topic :: Scientific/Engineering :: Quantum Computing",
 ]
 license = "Apache-2.0"
-license-files = ["LICENSE.txt"]
+license-files = ["LICENSE.txt", "NOTICE.txt"]
+dynamic = ["version"]
 dependencies = [
   "jax>=0.8.1",
   "numpy>=2.0.0",
@@ -60,11 +63,11 @@ recommended = [
 
   [project.urls]
   Documentation = "https://quobly-sw.github.io/qpe-toolbox"
+  Homepage   = "https://github.com/quobly-sw/qpe-toolbox"
   Repository = "https://github.com/quobly-sw/qpe-toolbox"
-  Issues = "https://github.com/quobly-sw/qpe-toolbox/issues"
 
 [dependency-groups]
-jupytext = ["jupytext>=1.18.1"]  # used in format hook
+jupytext = ["jupytext>=1.18.1"]
 docs = [
   "furo>=2024.6.29",
   "myst-nb>=1.3.0",
@@ -72,7 +75,7 @@ docs = [
   "sphinx-autoapi>=3.6",
   "sphinx-copybutton>=0.5.2",
   "sphinx-design>=0.6.1",
-  "sphinx>=8",
+  "sphinx>=8.1",
   {include-group = "jupytext"},
 ]
 examples = [
@@ -93,7 +96,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling >= 1.26"]
+requires = ["hatchling >= 1.27"]
 build-backend = "hatchling.build"
 
 [tool]
@@ -111,7 +114,7 @@ build-backend = "hatchling.build"
       "all",   # report on all checks, except the below
       "EX01",  # missing examples
       "SA01",  # missing See also
-      "ES01",  # mussing extended summary
+      "ES01",  # missing extended summary
       "GL08",  # missing docstring (for module docstring)
       "RT02",  # keep value name when returning 1 value
   ]
@@ -128,26 +131,39 @@ build-backend = "hatchling.build"
   [tool.hatch.version]
   path = "src/qpe_toolbox/__init__.py"
 
+  [tool.hatch.build.targets.sdist]
+  # ship the library and its unit tests, not examples/ or docs/
+  only-include = ["src", "tests", "CHANGELOG.md", "CONTRIBUTING.md"]
+  exclude = ["tests/test_examples.py"]
+
+  [tool.uv]
+  # version is dynamic and stored in __init__.py
+  cache-keys = [{ file = "pyproject.toml" }, { file = "src/qpe_toolbox/__init__.py" }]
+
   [tool.jupytext]
   # Pair ipynb notebooks to py:percent text notebooks
   formats = "ipynb,py:percent"
 
-  [tool.pytest.ini_options]
-  addopts = "--cov=qpe_toolbox --cov-report=term-missing"
+  [tool.pytest]
+  testpaths = ["tests"]
+  filterwarnings = [
+    "error",
+    "default::DeprecationWarning",
+    "default::PendingDeprecationWarning",
+    "default::FutureWarning",
+  ]
 
   [tool.ruff]
   line-length = 88
-  target-version = "py313"
 
     [tool.ruff.format]
-    exclude = ["examples/*py"]
+    exclude = ["examples/*.py"]
 
     [tool.ruff.lint]
-      select = [
+    select = [
         "A",
         "B",
         "C",
-        "C90",
         "D202",
         "D209",
         "D403",
@@ -171,14 +187,14 @@ build-backend = "hatchling.build"
         "SLF",
         "TRY",
         "W"
-        ]
-      ignore = [
+    ]
+    ignore = [
         "E501",  # rely on format
         "PLC2401", # allow greek letters as variable name
         "SIM108",  # too opinionated
         "TRY003",  # ValueError is good enough
-        ]
-      allowed-confusables = ["α", "γ", "ν", "ρ","σ"]
+    ]
+    allowed-confusables = ["α", "γ", "ν", "ρ", "σ"]
 
     [tool.ruff.lint.isort]
     combine-as-imports = true
@@ -188,24 +204,25 @@ build-backend = "hatchling.build"
 
     [tool.ruff.lint.per-file-ignores]
     "__init__.py" = ["F401"]
-    "examples/*py" = ["E703", "S101"]
-    "tests/*py" = ["S101"]
+    "examples/*.py" = ["E703", "S101"]
+    "tests/*.py" = [
+        "S101", # use assert in tests
+        "S603"  # call subprocess + assert result
+    ]
 
-[tool.pixi.workspace]
-channels = ["conda-forge"]
-platforms = ["linux-64"]
+  [tool.pixi.workspace]
+  channels = ["conda-forge"]
+  platforms = ["linux-64", "osx-arm64"]
 
-[tool.pixi.pypi-dependencies]
-qpe-toolbox = { path = ".", editable = true }
+  [tool.pixi.pypi-dependencies]
+  qpe-toolbox = { path = ".", editable = true }
 
-[tool.pixi.environments]
-default = { solve-group = "default" }
-dev = { features = ["dev"], solve-group = "default" }
-docs = { features = ["docs"], solve-group = "default" }
-examples = { features = ["examples"], solve-group = "default" }
-jupytext = { features = ["jupytext"], solve-group = "default" }
-lint = { features = ["lint"], solve-group = "default" }
-recommended = { features = ["recommended"], solve-group = "default" }
-test = { features = ["test"], solve-group = "default" }
-
-[tool.pixi.tasks]
+  [tool.pixi.environments]
+  default = { solve-group = "default" }
+  dev = { features = ["dev"], solve-group = "default" }
+  docs = { features = ["docs"], solve-group = "default" }
+  examples = { features = ["examples"], solve-group = "default" }
+  jupytext = { features = ["jupytext"], solve-group = "default" }
+  lint = { features = ["lint"], solve-group = "default" }
+  recommended = { features = ["recommended"], solve-group = "default" }
+  test = { features = ["test"], solve-group = "default" }
