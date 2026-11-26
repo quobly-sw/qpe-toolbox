@@ -144,7 +144,7 @@ build-backend = "hatchling.build"
   # Pair ipynb notebooks to py:percent text notebooks
   formats = "ipynb,py:percent"
 
-  [tool.pytest.ini_options]
+  [tool.pytest]
   testpaths = ["tests"]
   filterwarnings = [
     "error",
