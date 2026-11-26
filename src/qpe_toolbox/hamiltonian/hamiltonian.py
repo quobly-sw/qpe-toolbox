@@ -164,10 +164,7 @@ class Hamiltonian:
         for coeff, paulis, qubits in self.terms:
             builder.add_term(
                 coeff,
-                *(
-                    (sigma.lower(), k)
-                    for (sigma, k) in zip(paulis, qubits, strict=True)
-                ),
+                *((sigma, k) for (sigma, k) in zip(paulis, qubits, strict=True)),
             )
         return builder
 
